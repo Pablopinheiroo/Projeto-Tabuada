@@ -318,8 +318,8 @@ function verify(){
 }
 function judge(ok){
  if(!revealed)return;
- if(ok){hits++;$('answer').classList.add('correct')}
- else{misses++;$('answer').classList.add('wrong')}
+ if(ok){hits++;$('answer').classList.add('correct');playFeedback(true)}
+ else{misses++;$('answer').classList.add('wrong');playFeedback(false)}
  position++;
  next();
 }
