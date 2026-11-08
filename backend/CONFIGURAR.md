@@ -10,20 +10,20 @@ Quando alguém fizer um cadastro pelo site conectado à API, o Worker cria:
 data/
 └── usuarios/
     ├── maria/
-    │   └── dados.json
+    │   └── dados.enc.json
     ├── joao/
     │   └── dados.json
     └── outro-usuario/
         └── dados.json
 ```
 
-Cada arquivo guarda o resumo de autenticação, histórico de acertos e erros, tempo de cada questão e partida salva para continuar depois. O GitHub cria a pasta junto com o arquivo no primeiro cadastro daquele usuário.
+Cada pasta contém um arquivo `dados.enc.json` com o resumo de autenticação, histórico de acertos e erros, tempo de cada questão e partida salva para continuar depois. O Worker criptografa o conteúdo com AES-256-GCM antes de enviar ao GitHub. O GitHub cria a pasta junto com o arquivo no primeiro cadastro daquele usuário.
 
 ## Sobre as senhas
 
-A senha digitada **não é salva em texto aberto**. O arquivo guarda um hash PBKDF2-SHA256 com salt aleatório e 150.000 iterações, além de usar um segredo que fica somente no Cloudflare. Isso permite verificar a senha no login sem guardar a senha original. Não coloque senhas importantes ou reutilizadas neste jogo.
+A senha digitada **não é salva em texto aberto e não pode ser recuperada pelo administrador**. O arquivo guarda somente um hash PBKDF2-SHA256 com salt aleatório e 150.000 iterações. Todo o arquivo é criptografado com AES-256-GCM usando um segredo mantido somente no Cloudflare. Isso permite verificar a senha no login sem guardar a senha original. Não coloque senhas importantes ou reutilizadas neste jogo.
 
-**Atenção: o repositório atual é público.** Portanto, os nomes de usuário, históricos, estatísticas, partidas e também os hashes de senha ficarão visíveis para quem abrir o GitHub. O segredo do Cloudflare e o token de acesso ao GitHub não ficam no repositório. Para que os dados dos jogadores não sejam públicos, o ideal é usar um repositório privado separado para os dados.
+**Atenção: o repositório atual é público.** Portanto, os nomes das pastas dos usuários e os horários/mensagens dos commits podem ser vistos por qualquer pessoa que abrir o GitHub, mas o conteúdo dos arquivos aparece como texto criptografado e não revela os históricos nem os hashes de senha. O segredo do Cloudflare e o token de acesso ao GitHub não ficam no repositório. Para esconder também os nomes das pastas, será necessário usar um repositório privado separado para os dados.
 
 ## Configuração única
 
