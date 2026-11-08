@@ -1,0 +1,202 @@
+[
+  {
+    "id": "pixel-adventure",
+    "name": "Pixel Adventure",
+    "genre": "Chiptune de aventura",
+    "src": "assets/music/pixel-adventure.mp3",
+    "duration_seconds": 69.97,
+    "bpm": 126,
+    "file_bytes": 980890,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "racing-neon",
+    "name": "Racing Neon",
+    "genre": "Corrida eletrônica",
+    "src": "assets/music/racing-neon.mp3",
+    "duration_seconds": 66.85,
+    "bpm": 132,
+    "file_bytes": 937370,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "rpg-kingdom",
+    "name": "Kingdom of Heroes",
+    "genre": "RPG cinematográfico",
+    "src": "assets/music/rpg-kingdom.mp3",
+    "duration_seconds": 78.54,
+    "bpm": 112,
+    "file_bytes": 1100844,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "arcade-bounce",
+    "name": "Arcade Bounce",
+    "genre": "Funk de arcade",
+    "src": "assets/music/arcade-bounce.mp3",
+    "duration_seconds": 71.08,
+    "bpm": 124,
+    "file_bytes": 996250,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "dungeon-boss",
+    "name": "Dungeon Boss",
+    "genre": "Batalha de chefão",
+    "src": "assets/music/dungeon-boss.mp3",
+    "duration_seconds": 68.9,
+    "bpm": 128,
+    "file_bytes": 965895,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "sky-islands",
+    "name": "Sky Islands",
+    "genre": "Exploração e fantasia",
+    "src": "assets/music/sky-islands.mp3",
+    "duration_seconds": 75.88,
+    "bpm": 116,
+    "file_bytes": 1063541,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "speedrun",
+    "name": "Speedrun!",
+    "genre": "Arcade acelerado",
+    "src": "assets/music/speedrun.mp3",
+    "duration_seconds": 66.85,
+    "bpm": 132,
+    "file_bytes": 937370,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "puzzle-funk",
+    "name": "Puzzle Funk",
+    "genre": "Puzzle e groove",
+    "src": "assets/music/puzzle-funk.mp3",
+    "duration_seconds": 73.4,
+    "bpm": 120,
+    "file_bytes": 1028798,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "retro-platform",
+    "name": "Retro Platform",
+    "genre": "Plataforma retrô",
+    "src": "assets/music/retro-platform.mp3",
+    "duration_seconds": 72.22,
+    "bpm": 122,
+    "file_bytes": 1012341,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "cyber-arena",
+    "name": "Cyber Arena",
+    "genre": "Eletrônica futurista",
+    "src": "assets/music/cyber-arena.mp3",
+    "duration_seconds": 67.86,
+    "bpm": 130,
+    "file_bytes": 951267,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "forest-quest",
+    "name": "Forest Quest",
+    "genre": "Aventura na floresta",
+    "src": "assets/music/forest-quest.mp3",
+    "duration_seconds": 77.19,
+    "bpm": 114,
+    "file_bytes": 1081827,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "pixel-rock",
+    "name": "Pixel Rock",
+    "genre": "Rock de videogame",
+    "src": "assets/music/pixel-rock.mp3",
+    "duration_seconds": 68.9,
+    "bpm": 128,
+    "file_bytes": 965895,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "star-runner",
+    "name": "Star Runner",
+    "genre": "Corrida espacial",
+    "src": "assets/music/star-runner.mp3",
+    "duration_seconds": 69.97,
+    "bpm": 126,
+    "file_bytes": 980890,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "victory-lap",
+    "name": "Victory Lap",
+    "genre": "Pop de vitória",
+    "src": "assets/music/victory-lap.mp3",
+    "duration_seconds": 71.08,
+    "bpm": 124,
+    "file_bytes": 996250,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "stealth-mission",
+    "name": "Stealth Mission",
+    "genre": "Missão secreta",
+    "src": "assets/music/stealth-mission.mp3",
+    "duration_seconds": 78.54,
+    "bpm": 112,
+    "file_bytes": 1100844,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "ocean-world",
+    "name": "Ocean World",
+    "genre": "Exploração subaquática",
+    "src": "assets/music/ocean-world.mp3",
+    "duration_seconds": 79.95,
+    "bpm": 110,
+    "file_bytes": 1120593,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desert-rally",
+    "name": "Desert Rally",
+    "genre": "Rally e aventura",
+    "src": "assets/music/desert-rally.mp3",
+    "duration_seconds": 67.86,
+    "bpm": 130,
+    "file_bytes": 951267,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "magic-castle",
+    "name": "Magic Castle",
+    "genre": "Fantasia medieval",
+    "src": "assets/music/magic-castle.mp3",
+    "duration_seconds": 74.62,
+    "bpm": 118,
+    "file_bytes": 1045987,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "neon-drift",
+    "name": "Neon Drift",
+    "genre": "Synthwave gamer",
+    "src": "assets/music/neon-drift.mp3",
+    "duration_seconds": 73.4,
+    "bpm": 120,
+    "file_bytes": 1028798,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "final-boss",
+    "name": "Final Boss",
+    "genre": "Épico de ação",
+    "src": "assets/music/final-boss.mp3",
+    "duration_seconds": 69.97,
+    "bpm": 126,
+    "file_bytes": 980890,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  }
+]
