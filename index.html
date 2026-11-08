@@ -488,9 +488,9 @@ let authUsers={};
 const HISTORY_KEY='projetoTabuadaHistoricoV2';
 let historyData=loadHistory();
 
-// Integração direta com o repositório privado de dados. O token será inserido pelo proprietário.
-const CLOUD={owner:'Pablopinheiroo',repo:'Projeto-Tabuada-Dados',branch:'main',directory:'usuarios',token:'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'};
-const GITHUB_API='https://api.github.com';
+// O endereço do Cloudflare Worker será preenchido após a publicação do servidor seguro.
+const API_BASE='';
+const API_TOKEN_KEY='projetoTabuadaSessaoSeguraV1';
 let remoteUserSha=null,remoteUserData=null,cloudSyncTimer=null,cloudSyncBusy=false,cloudSyncQueued=false,lastCloudSaveAt=0;
 let communityCache=[],communityCacheAt=0;
 let selectedRegisterAvatar='imagem:0',selectedProfileAvatar='imagem:0';
@@ -623,114 +623,95 @@ async function passwordHash(password,saltHex){
 }
 
 function cloudTokenReady(){
- return !!CLOUD.token&&CLOUD.token!=='COLE_SEU_TOKEN_FINE_GRAINED_AQUI'&&CLOUD.token.trim().length>20;
-}
-function cloudFilePath(username){
- return '/repos/'+CLOUD.owner+'/'+CLOUD.repo+'/contents/'+CLOUD.directory+'/'+encodeURIComponent(username)+'/dados.json';
+ return !!API_BASE&&!!sessionStorage.getItem(API_TOKEN_KEY);
 }
 function siteErrorMessage(error){
  const message=String(error&&error.message||error||'');
  const lower=message.toLowerCase();
  const status=Number(error&&error.status)||0;
- if(status===401||lower.includes('bad credentials')||lower.includes('requires authentication')){
-  return 'O GitHub recusou o token de acesso. Isso não é erro da senha escolhida para o jogo. O token de integração precisa ser substituído por um válido.';
+ if(lower.includes('servidor seguro ainda não foi conectado')){
+  return 'O cadastro seguro ainda está sendo configurado. O servidor do Cloudflare precisa ser publicado e conectado ao jogo.';
  }
- if(status===403||lower.includes('resource not accessible')||lower.includes('forbidden')||lower.includes('permission')){
-  return 'O GitHub não autorizou o acesso. Confira se o token tem permissão de leitura e gravação no repositório privado de dados.';
+ if(status===401||lower.includes('sessão expirou')){
+  return 'Sua sessão expirou. Entre novamente na sua conta.';
  }
- if(lower.includes('api rate limit')||lower.includes('rate limit exceeded')){
-  return 'O GitHub recebeu muitas solicitações. Aguarde um pouco e tente novamente.';
+ if(status===502||lower.includes('token do github configurado no servidor')){
+  return 'O servidor seguro não conseguiu acessar o repositório privado. O administrador precisa atualizar a credencial GITHUB_TOKEN no Cloudflare.';
  }
- if(lower.includes('failed to fetch')||lower.includes('networkerror')||lower.includes('load failed')||lower.includes('network request failed')){
-  return 'Não foi possível conectar ao GitHub. Confira sua internet e tente novamente.';
+ if(status===403||lower.includes('não tem permissão')){
+  return 'O servidor não tem permissão para gravar no repositório privado. Confira a permissão Contents: Read and write do token no Cloudflare.';
  }
- if(status===404||lower==='not found')return 'Os dados solicitados não foram encontrados no repositório.';
- if(status===400)return 'O GitHub não aceitou os dados enviados. Confira as informações e tente novamente.';
- if(status===409||status===422||lower.includes('already exists'))return 'Não foi possível gravar os dados. Esse nome de usuário pode já estar cadastrado; atualize a página e tente novamente.';
- if(status>=500)return 'O GitHub está apresentando uma falha temporária. Tente novamente mais tarde.';
+ if(status===404)return 'Os dados ou o caminho da conta não foram encontrados.';
+ if(status===409||status===422)return message||'Não foi possível gravar os dados. Atualize a página e tente novamente.';
+ if(lower.includes('failed to fetch')||lower.includes('networkerror')||lower.includes('load failed')){
+  return 'Não foi possível conectar ao servidor seguro. Confira sua internet e tente novamente.';
+ }
  if(message&&/[ãõáéíóúç]/i.test(message))return message;
- return 'Não foi possível concluir a solicitação ao repositório do jogo. Tente novamente.';
+ return message||'Não foi possível concluir a solicitação ao servidor seguro.';
 }
-
-async function githubRequest(path,options={}){
- if(!cloudTokenReady())throw new Error('O jogo ainda precisa do token do GitHub. Configure o token no arquivo index.html.');
- const headers={Accept:'application/vnd.github+json',Authorization:'Bearer '+CLOUD.token,'X-GitHub-Api-Version':'2022-11-28'};
- if(options.body)headers['Content-Type']='application/json';
- const response=await fetch(GITHUB_API+path,{...options,headers:{...headers,...(options.headers||{})},cache:'no-store'});
+async function apiRequest(path,options={}){
+ if(!API_BASE||API_BASE.includes('URL-DO-WORKER')){
+  const error=new Error('O servidor seguro ainda não foi conectado.');
+  error.status=0;
+  throw error;
+ }
+ const headers={Accept:'application/json'};
+ const sessionToken=sessionStorage.getItem(API_TOKEN_KEY);
+ if(sessionToken)headers.Authorization='Bearer '+sessionToken;
+ if(options.body!==undefined)headers['Content-Type']='application/json';
+ const response=await fetch(API_BASE.replace(/\/$/,'')+path,{
+  ...options,
+  headers:{...headers,...(options.headers||{})},
+  body:options.body===undefined?undefined:JSON.stringify(options.body),
+  cache:'no-store'
+ });
  const raw=await response.text();
  let data={};
- try{data=raw?JSON.parse(raw):{}}catch(e){data={message:raw||'Resposta inválida do GitHub.'}}
+ try{data=raw?JSON.parse(raw):{}}catch(e){data={error:raw||'Resposta inválida do servidor.'}}
  if(!response.ok){
-  const error=new Error(data.message||('GitHub respondeu com HTTP '+response.status));
+  const error=new Error(data.error||data.message||('Servidor respondeu com HTTP '+response.status));
   error.status=response.status;
   throw error;
  }
  return data;
 }
-function encodeBase64Utf8(value){
- const bytes=new TextEncoder().encode(value);
- let binary='';
- for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));
- return btoa(binary);
-}
-function decodeBase64Utf8(value){
- const binary=atob(String(value||'').replace(/\s/g,''));
- const bytes=new Uint8Array(binary.length);
- for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
- return new TextDecoder().decode(bytes);
-}
 function normalizeHistory(value){
  if(!value||typeof value!=='object')return {questions:{},sessions:[]};
  return {questions:value.questions&&typeof value.questions==='object'?value.questions:{},sessions:Array.isArray(value.sessions)?value.sessions:[]};
 }
-function loadLegacyLocalUser(username){
- try{
-  const users=JSON.parse(localStorage.getItem(AUTH_USERS_KEY)||'{}');
-  const auth=users&&users[username];
-  if(!auth||!auth.salt||!auth.hash)return null;
-  const profiles=JSON.parse(localStorage.getItem('projetoTabuadaPerfisV1')||'{}');
-  const history=JSON.parse(localStorage.getItem('projetoTabuadaHistoricoV2_'+username)||'null');
-  return {auth,profile:profiles&&profiles[username]?profiles[username]:{},history:normalizeHistory(history)};
- }catch(error){return null;}
-}
-async function readRemoteUser(username){
- try{
-  const file=await githubRequest(cloudFilePath(username)+'?ref='+encodeURIComponent(CLOUD.branch));
-  const data=JSON.parse(decodeBase64Utf8(file.content));
-  if(!data||data.username!==username||!data.auth||!data.auth.salt||!data.auth.hash)throw new Error('O arquivo da conta está incompleto ou inválido.');
-  return {data,sha:file.sha};
- }catch(error){
-  if(error.status===404)return null;
-  throw error;
- }
-}
-async function writeRemoteUser(username,data,sha=null){
- const body={message:'Atualizar dados do participante '+username,branch:CLOUD.branch,content:encodeBase64Utf8(JSON.stringify(data,null,2))};
- if(sha)body.sha=sha;
- const result=await githubRequest(cloudFilePath(username),{method:'PUT',body:JSON.stringify(body)});
- return result.content.sha;
-}
 function hydrateRemoteUser(username,record){
- remoteUserSha=record.sha;
- remoteUserData=record.data;
- authUsers={[username]:record.data.auth};
- profilesData={[username]:record.data.profile&&typeof record.data.profile==='object'?record.data.profile:{}};
- historyData=normalizeHistory(record.data.history);
+ remoteUserSha=record.sha||null;
+ remoteUserData={
+  version:1,
+  username,
+  profile:record.data.profile&&typeof record.data.profile==='object'?record.data.profile:{},
+  history:normalizeHistory(record.data.history),
+  updatedAt:record.data.updatedAt||new Date().toISOString()
+ };
+ authUsers={};
+ profilesData={[username]:remoteUserData.profile};
+ historyData=normalizeHistory(remoteUserData.history);
  activeProfile=username;
  persistProfiles();
  saveHistory();
  communityCacheAt=0;
 }
 function buildRemoteUserData(){
- const previous=remoteUserData||{};
  return {
   version:1,
   username:activeProfile,
-  auth:authUsers[activeProfile]||previous.auth,
   profile:profilesData[activeProfile]||{},
   history:normalizeHistory(historyData),
   updatedAt:new Date().toISOString()
  };
+}
+async function writeRemoteUser(username,data){
+ if(username!==activeProfile)throw new Error('A sessão não corresponde à conta ativa.');
+ const result=await apiRequest('/api/me',{
+  method:'PUT',
+  body:{profile:data.profile||{},history:normalizeHistory(data.history)}
+ });
+ return result.sha||null;
 }
 function scheduleCloudSave(immediate=false){
  if(!activeProfile||!remoteUserData||!cloudTokenReady())return;
@@ -750,14 +731,14 @@ async function flushCloudSave(){
  try{
   const username=activeProfile;
   const payload=buildRemoteUserData();
-  const newSha=await writeRemoteUser(username,payload,remoteUserSha);
+  const newSha=await writeRemoteUser(username,payload);
   if(activeProfile===username){
    remoteUserSha=newSha;
    remoteUserData=payload;
    lastCloudSaveAt=Date.now();
    communityCacheAt=0;
    const status=$('profileStatus');
-   if(status)status.textContent='Dados de “'+username+'” sincronizados com o GitHub.';
+   if(status)status.textContent='Dados de “'+username+'” sincronizados com o servidor seguro.';
   }
  }catch(error){
   const status=$('profileStatus');
@@ -770,13 +751,9 @@ async function flushCloudSave(){
 }
 async function loadCommunityRecords(force=false){
  if(!force&&communityCacheAt&&Date.now()-communityCacheAt<30000)return communityCache;
- const entries=await githubRequest('/repos/'+CLOUD.owner+'/'+CLOUD.repo+'/contents/'+CLOUD.directory+'?ref='+encodeURIComponent(CLOUD.branch));
- if(!Array.isArray(entries))throw new Error('A pasta de participantes não retornou uma lista.');
- const folders=entries.filter(item=>item.type==='dir'&&/^[a-z0-9_.-]{3,20}$/.test(item.name));
- const records=await Promise.all(folders.map(async item=>{
-  try{return await readRemoteUser(item.name)}catch(error){console.warn('Não foi possível ler o perfil '+item.name,error);return null;}
- }));
- communityCache=records.filter(Boolean).map(record=>record.data);
+ const result=await apiRequest('/api/community');
+ if(!Array.isArray(result.records))throw new Error('O servidor não retornou a lista de participantes.');
+ communityCache=result.records;
  communityCacheAt=Date.now();
  return communityCache;
 }
@@ -820,14 +797,15 @@ async function renderCommunityRanking(){
 }
 async function restoreCloudSession(){
  const rememberedUser=sessionStorage.getItem(AUTH_SESSION_KEY);
- if(!rememberedUser){showLoginScreen();return;}
+ const sessionToken=sessionStorage.getItem(API_TOKEN_KEY);
+ if(!rememberedUser||!sessionToken){showLoginScreen();return;}
  try{
-  const record=await readRemoteUser(rememberedUser);
-  if(!record)throw new Error('A conta salva nesta sessão não foi encontrada no repositório.');
+  const record=await apiRequest('/api/me');
   hydrateRemoteUser(rememberedUser,record);
   enterApp(rememberedUser);
  }catch(error){
   sessionStorage.removeItem(AUTH_SESSION_KEY);
+  sessionStorage.removeItem(API_TOKEN_KEY);
   showLoginScreen();
   $('loginMessage').textContent='Não foi possível restaurar a sessão: '+siteErrorMessage(error);
  }
@@ -837,7 +815,7 @@ function enterApp(username){
  activeProfile=username;$('profileName').value=username;$('currentUsername').textContent=username;
  if(!profilesData[username])profilesData[username]={};
  if(!profilesData[username].displayName)profilesData[username].displayName=username;
- if(!Number.isInteger(profilesData[username].avatar))profilesData[username].avatar=0;
+ if(profilesData[username].avatar===undefined||profilesData[username].avatar===null)profilesData[username].avatar='imagem:0';
  refreshProfileIdentity();
  $('authScreen').classList.add('hidden');$('game').classList.add('hidden');$('report').classList.add('hidden');$('setup').classList.remove('hidden');
  selectProfile();renderCommunityRanking();
@@ -851,26 +829,19 @@ async function handleRegister(event){
  const username=normalizeUsername($('registerUsername').value);
  const password=$('registerPassword').value,confirmPassword=$('registerConfirm').value;
  $('registerMessage').textContent='';
-  if(password.length===0){$('registerMessage').textContent='Digite uma senha.';return;}
+ if(password.length===0){$('registerMessage').textContent='Digite uma senha.';return;}
  if(!/^[a-z0-9_.-]{3,20}$/.test(username)){$('registerMessage').textContent='Use um nome com 3 a 20 caracteres: letras sem acento, números, ponto, traço ou _. ';return;}
  if(password!==confirmPassword){$('registerMessage').textContent='As senhas não são iguais.';return;}
  try{
-  if(await readRemoteUser(username)){$('registerMessage').textContent='Este nome de usuário já está cadastrado.';return;}
-  const legacy=loadLegacyLocalUser(username);
-  let account,profile={displayName:username,avatar:selectedRegisterAvatar},history={questions:{},sessions:[]};
-  if(legacy&&await passwordHash(password,legacy.auth.salt)===legacy.auth.hash){
-   account=legacy.auth;profile=legacy.profile;history=legacy.history;
-  }else{
-   const salt=makeSalt(),hash=await passwordHash(password,salt);
-   account={username,salt,hash,createdAt:new Date().toISOString()};
-  }
-  if(!profile.displayName)profile.displayName=username;
-  if(profile.avatar===undefined||profile.avatar===null)profile.avatar=selectedRegisterAvatar;else profile.avatar=normalizeAvatarKey(profile.avatar);
-  const document={version:1,username,auth:account,profile,history,updatedAt:new Date().toISOString()};
-  const sha=await writeRemoteUser(username,document,null);
-  hydrateRemoteUser(username,{data:document,sha});
+  const result=await apiRequest('/api/auth/register',{
+   method:'POST',
+   body:{username,password,profile:{displayName:username,avatar:normalizeAvatarKey(selectedRegisterAvatar)}}
+  });
+  sessionStorage.setItem(API_TOKEN_KEY,result.sessionToken);
   sessionStorage.setItem(AUTH_SESSION_KEY,username);
-  $('registerForm').reset();enterApp(username);
+  hydrateRemoteUser(username,{data:result.data,sha:result.sha});
+  $('registerForm').reset();
+  enterApp(username);
  }catch(error){$('registerMessage').textContent=siteErrorMessage(error);}
 }
 async function handleLogin(event){
@@ -878,20 +849,10 @@ async function handleLogin(event){
  const username=normalizeUsername($('loginUsername').value),password=$('loginPassword').value;
  $('loginMessage').textContent='';
  try{
-  let record=await readRemoteUser(username);
-  if(!record){
-   const legacy=loadLegacyLocalUser(username);
-   if(!legacy){$('loginMessage').textContent='Nome de usuário ou senha incorretos.';return;}
-   const legacyHash=await passwordHash(password,legacy.auth.salt);
-   if(legacyHash!==legacy.auth.hash){$('loginMessage').textContent='Nome de usuário ou senha incorretos.';return;}
-   const document={version:1,username,auth:legacy.auth,profile:legacy.profile,history:legacy.history,updatedAt:new Date().toISOString()};
-   const sha=await writeRemoteUser(username,document,null);
-   record={data:document,sha};
-  }
-  const hash=await passwordHash(password,record.data.auth.salt);
-  if(hash!==record.data.auth.hash){$('loginMessage').textContent='Nome de usuário ou senha incorretos.';return;}
-  hydrateRemoteUser(username,record);
+  const result=await apiRequest('/api/auth/login',{method:'POST',body:{username,password}});
+  sessionStorage.setItem(API_TOKEN_KEY,result.sessionToken);
   sessionStorage.setItem(AUTH_SESSION_KEY,username);
+  hydrateRemoteUser(username,{data:result.data,sha:result.sha});
   $('loginPassword').value='';
   enterApp(username);
  }catch(error){$('loginMessage').textContent=siteErrorMessage(error);}
@@ -900,7 +861,7 @@ async function logout(){
  if(!$('game').classList.contains('hidden')){alert('Encerre ou salve a partida antes de sair da conta.');return;}
  await flushCloudSave();
  
- sessionStorage.removeItem(AUTH_SESSION_KEY);activeProfile='';historyData=loadHistory();
+ sessionStorage.removeItem(AUTH_SESSION_KEY);sessionStorage.removeItem(API_TOKEN_KEY);activeProfile='';remoteUserData=null;remoteUserSha=null;historyData=loadHistory();
  $('setup').classList.add('hidden');$('report').classList.add('hidden');$('authScreen').classList.remove('hidden');
  $('loginForm').reset();$('registerForm').reset();showLoginScreen();
 }
