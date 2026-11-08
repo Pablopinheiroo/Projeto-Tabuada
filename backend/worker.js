@@ -8,6 +8,7 @@ const API = "https://api.github.com";
 const DEFAULT_REPO = "Pablopinheiroo/Projeto-Tabuada";
 const DEFAULT_BRANCH = "dados";
 const DEFAULT_DIR = "data/usuarios";
+const USER_FILE = "dados.enc.json";
 const DEFAULT_ORIGIN = "https://pablopinheiroo.github.io";
 const ITERATIONS = 150000;
 
@@ -66,12 +67,42 @@ function githubHeaders(env) {
 }
 function userPath(env, username) {
   const c = config(env);
-  return c.dir + "/" + username + "/dados.json";
+  return c.dir + "/" + username + "/" + USER_FILE;
 }
 function contentsUrl(env, path, includeRef = true) {
   const c = config(env);
   const encodedPath = path.split("/").map(encodeURIComponent).join("/");
   return API + "/repos/" + c.repo + "/contents/" + encodedPath + (includeRef ? "?ref=" + encodeURIComponent(c.branch) : "");
+}
+async function encryptionKey(env) {
+  if (!env.AUTH_SECRET || env.AUTH_SECRET.length < 32) throw new Error("Secret AUTH_SECRET deve ter pelo menos 32 caracteres.");
+  const digest = await crypto.subtle.digest("SHA-256", enc.encode("projeto-tabuada-storage-v1:" + env.AUTH_SECRET));
+  return crypto.subtle.importKey("raw", digest, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+}
+async function sealRecord(env, record) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await encryptionKey(env);
+  const plaintext = enc.encode(JSON.stringify(record));
+  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
+  return {
+    version: 1,
+    encrypted: true,
+    algorithm: "AES-256-GCM",
+    iv: b64(iv),
+    ciphertext: b64(new Uint8Array(ciphertext))
+  };
+}
+async function openRecord(env, envelope) {
+  if (!envelope || envelope.encrypted !== true || envelope.algorithm !== "AES-256-GCM") {
+    throw new Error("O arquivo salvo não está no formato criptografado esperado.");
+  }
+  const key = await encryptionKey(env);
+  const plaintext = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: unb64(envelope.iv) },
+    key,
+    unb64(envelope.ciphertext)
+  );
+  return JSON.parse(dec.decode(plaintext));
 }
 async function githubRead(env, path) {
   const response = await fetch(contentsUrl(env, path), { headers: githubHeaders(env) });
@@ -79,13 +110,15 @@ async function githubRead(env, path) {
   if (!response.ok) throw new Error("GitHub não conseguiu ler os dados (" + response.status + ").");
   const file = await response.json();
   if (!file.content) throw new Error("Arquivo de usuário vazio ou inválido.");
-  const bytes = unb64(file.content.replace(/\s/g, ""));
-  return { record: JSON.parse(dec.decode(bytes)), sha: file.sha };
+  const envelopeBytes = unb64(file.content.replace(/\s/g, ""));
+  const envelope = JSON.parse(dec.decode(envelopeBytes));
+  return { record: await openRecord(env, envelope), sha: file.sha };
 }
 async function githubWrite(env, path, record, sha, message) {
+  const envelope = await sealRecord(env, record);
   const body = {
     message,
-    content: b64(enc.encode(JSON.stringify(record, null, 2))),
+    content: b64(enc.encode(JSON.stringify(envelope, null, 2))),
     branch: config(env).branch
   };
   if (sha) body.sha = sha;
