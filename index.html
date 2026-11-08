@@ -568,7 +568,7 @@ function loadAuthUsers(){try{const data=JSON.parse(localStorage.getItem(AUTH_USE
 function saveAuthUsers(){try{localStorage.setItem(AUTH_USERS_KEY,JSON.stringify(authUsers));return true}catch(e){return false}}
 function normalizeUsername(value){return value.trim().toLowerCase()}
 function normalizeAvatarKey(value){
- if(typeof value==='string'&&/^(imagem|gif):\\d+$/.test(value)){
+ if(typeof value==='string'&&/^(imagem|gif):\d+$/.test(value)){
   const [kind,raw]=value.split(':'),index=Number(raw);
   const list=kind==='gif'?GIF_AVATARS:AVATARS;
   if(Number.isInteger(index)&&index>=0&&index<list.length)return kind+':'+index;
