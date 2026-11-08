@@ -7,30 +7,64 @@
 <title>Projeto Tabuada</title>
 <style>
 :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#172554;background:#f3f6fc}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;padding:24px 14px;background:linear-gradient(145deg,#edf3ff,#f8faff)}
-main{width:min(760px,100%);margin:0 auto}.brand{text-align:center;margin:12px 0 22px}.brand h1{margin:0;font-size:clamp(2rem,7vw,3rem);letter-spacing:-1.5px}.brand p{margin:6px 0;color:#64748b}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;padding:24px 14px;background:linear-gradient(145deg,#edf3ff,#f8faff)}
+main{width:min(760px,100%);margin:0 auto}
+.brand{text-align:center;margin:12px 0 22px}
+.brand h1{margin:0;font-size:clamp(2rem,7vw,3rem);letter-spacing:-1.5px}
+.brand p{margin:6px 0;color:#64748b}
 .panel{background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:clamp(18px,4vw,30px);box-shadow:0 12px 35px #1e3a8a12}
-h2{font-size:1.2rem;margin:0 0 8px}.hint{color:#64748b;font-size:.94rem;margin:0 0 20px}
+h2{font-size:1.2rem;margin:0 0 8px}
+.hint{color:#64748b;font-size:.94rem;margin:0 0 20px}
 .tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px}
 .table-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;padding:12px;border:1px solid #e2e8f0;border-radius:13px;background:#fbfdff}
-.check{display:flex;align-items:center;gap:10px;font-weight:650;cursor:pointer}.check input{width:19px;height:19px;accent-color:#2563eb}
+.check{display:flex;align-items:center;gap:10px;font-weight:650;cursor:pointer}
+.check input{width:19px;height:19px;accent-color:#2563eb}
 .mode{border:1px solid #cbd5e1;border-radius:9px;padding:7px 8px;background:#fff;color:#334155;font:inherit;font-size:.84rem}
 button{border:0;border-radius:12px;padding:13px 18px;font:inherit;font-weight:750;cursor:pointer;transition:transform .12s,filter .12s}
-button:active{transform:scale(.98)}button:disabled{opacity:.45;cursor:not-allowed}
-.primary{background:#2563eb;color:white;width:100%;margin-top:20px}.secondary{background:#e2e8f0;color:#1e293b}.stop{background:#fee2e2;color:#991b1b}
-.hidden{display:none!important}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:20px}
-.stat{background:#f1f5f9;border-radius:13px;padding:12px;text-align:center}.stat span{display:block;color:#64748b;font-size:.8rem}.stat strong{font-size:1.55rem}
-.progress{height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin:0 0 22px}.progress div{height:100%;width:0;background:#2563eb;transition:width .2s}
-.question{text-align:center;padding:26px 8px 20px}.question .label{color:#64748b;font-weight:650}.equation{font-size:clamp(2.8rem,12vw,5rem);font-weight:850;letter-spacing:-2px;margin:12px 0;color:#172554}
-.answer{min-height:62px;text-align:center;font-size:1.35rem;font-weight:750;margin:0 0 18px}.correct{color:#15803d}.wrong{color:#b91c1c}
-.actions{display:grid;gap:10px}.verify{background:#172554;color:#fff}.judge{display:grid;grid-template-columns:1fr 1fr;gap:10px}.yes{background:#dcfce7;color:#166534}.no{background:#fee2e2;color:#991b1b}
-.bottom{display:flex;justify-content:center;margin-top:16px}.small{font-size:.88rem;color:#64748b;text-align:center;margin:16px 0 0}
-@media(max-width:420px){.stats{gap:6px}.stat{padding:10px 4px}.stat strong{font-size:1.3rem}.mode{max-width:116px}}
+button:active{transform:scale(.98)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:#2563eb;color:white;width:100%;margin-top:20px}
+.stop{background:#fee2e2;color:#991b1b}
+.hidden{display:none!important}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px}
+.stat{background:#f1f5f9;border-radius:13px;padding:12px;text-align:center}
+.stat span{display:block;color:#64748b;font-size:.8rem}
+.stat strong{font-size:1.55rem}
+.music-box{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 14px;margin-bottom:16px;border:1px solid #dbeafe;border-radius:14px;background:linear-gradient(110deg,#eff6ff,#f5f3ff)}
+.music-info{min-width:0}
+.music-kicker{display:block;color:#64748b;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.music-title{display:block;font-weight:800;font-size:.95rem;overflow-wrap:anywhere}
+.music-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.music-button{padding:9px 12px;background:#fff;color:#1e40af;border:1px solid #bfdbfe;font-size:.84rem}
+.music-button[aria-pressed="false"]{color:#64748b;background:#f1f5f9;border-color:#cbd5e1}
+.progress{height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin:0 0 22px}
+.progress div{height:100%;width:0;background:#2563eb;transition:width .2s}
+.question{text-align:center;padding:26px 8px 20px}
+.question .label{color:#64748b;font-weight:650}
+.equation{font-size:clamp(2.8rem,12vw,5rem);font-weight:850;letter-spacing:-2px;margin:12px 0;color:#172554}
+.answer{min-height:62px;text-align:center;font-size:1.35rem;font-weight:750;margin:0 0 18px}
+.correct{color:#15803d}
+.wrong{color:#b91c1c}
+.actions{display:grid;gap:10px}
+.verify{background:#172554;color:#fff}
+.judge{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.yes{background:#dcfce7;color:#166534}
+.no{background:#fee2e2;color:#991b1b}
+.bottom{display:flex;justify-content:center;margin-top:16px}
+.small{font-size:.88rem;color:#64748b;text-align:center;margin:16px 0 0}
+@media(max-width:420px){
+ .stats{gap:6px}.stat{padding:10px 4px}.stat strong{font-size:1.3rem}
+ .mode{max-width:116px}.music-box{align-items:flex-start}.music-buttons{width:100%}
+ .music-button{flex:1}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
 </style>
 </head>
 <body>
 <main>
 <header class="brand"><h1>📚 Projeto Tabuada</h1><p>Pratique no seu ritmo, uma questão de cada vez.</p></header>
+
 <section id="setup" class="panel">
 <h2>Escolha as tabuadas</h2>
 <p class="hint">Marque uma ou mais tabuadas e escolha como as questões aparecerão.</p>
@@ -38,14 +72,27 @@ button:active{transform:scale(.98)}button:disabled{opacity:.45;cursor:not-allowe
 <button id="start" class="primary">▶ Iniciar jogo</button>
 <p class="small">No modo normal, a tabuada segue de 1 a 10. No aleatório, a ordem muda.</p>
 </section>
+
 <section id="game" class="panel hidden" aria-live="polite">
 <div class="stats">
 <div class="stat"><span>Acertos</span><strong id="hits">0</strong></div>
 <div class="stat"><span>Erros</span><strong id="misses">0</strong></div>
-<div class="stat"><span>Rodadas</span><strong id="round">0</strong></div>
+<div class="stat"><span>Rodadas concluídas</span><strong id="round">0</strong></div>
 </div>
+
+<div class="music-box">
+ <div class="music-info">
+  <span class="music-kicker">Trilha musical da rodada</span>
+  <span id="musicTitle" class="music-title">Trilha 1 de 10</span>
+ </div>
+ <div class="music-buttons">
+  <button id="soundToggle" class="music-button" type="button" aria-pressed="true">♫ Som ligado</button>
+  <button id="replayTune" class="music-button" type="button">▶ Ouvir toque</button>
+ </div>
+</div>
+
 <div class="progress"><div id="bar"></div></div>
-<div class="question"><div class="label" id="counter">Questão 1</div><div class="equation" id="equation">2 × 3</div></div>
+<div class="question"><div class="label" id="counter">Rodada 1 · Questão 1</div><div class="equation" id="equation">2 × 3</div></div>
 <div id="answer" class="answer" aria-live="assertive"></div>
 <div class="actions">
 <button id="verify" class="verify">Verificar</button>
@@ -57,16 +104,38 @@ button:active{transform:scale(.98)}button:disabled{opacity:.45;cursor:not-allowe
 <div class="bottom"><button id="stop" class="stop">Parar jogo</button></div>
 </section>
 </main>
+
 <script>
 const tablesEl=document.getElementById('tables');
 for(let n=1;n<=10;n++){
- const row=document.createElement('div');row.className='table-row';
+ const row=document.createElement('div');
+ row.className='table-row';
  row.innerHTML='<label class="check"><input type="checkbox" value="'+n+'"><span>Tabuada do '+n+'</span></label><select class="mode" aria-label="Modo da tabuada '+n+'"><option value="normal">Normal</option><option value="random">Aleatório</option></select>';
  tablesEl.appendChild(row);
 }
+
 const $=id=>document.getElementById(id);
 let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=0;
+
+// Dez pequenas melodias originais, sintetizadas no próprio navegador: não precisam de arquivos ou internet.
+const musicalTracks=[
+ {name:'Brilho',tempo:.205,wave:'triangle',notes:[72,76,79,84,79,76,74,76],bass:48},
+ {name:'Aventura',tempo:.185,wave:'sine',notes:[67,71,74,79,76,74,71,67],bass:43},
+ {name:'Piano Pop',tempo:.235,wave:'triangle',notes:[60,64,67,72,71,67,64,60],bass:36},
+ {name:'Arcade',tempo:.16,wave:'square',notes:[72,79,84,79,74,81,86,81],bass:48},
+ {name:'Jazz Leve',tempo:.22,wave:'sine',notes:[65,69,72,76,74,72,69,65],bass:41},
+ {name:'Conquista',tempo:.175,wave:'triangle',notes:[72,74,76,79,84,83,84,88],bass:48},
+ {name:'Dia de Sol',tempo:.21,wave:'triangle',notes:[69,72,76,81,79,76,72,69],bass:45},
+ {name:'Mistério',tempo:.24,wave:'sine',notes:[62,65,69,74,72,69,65,62],bass:38},
+ {name:'Dança',tempo:.17,wave:'triangle',notes:[76,79,83,88,86,83,79,76],bass:52},
+ {name:'Grande Final',tempo:.23,wave:'triangle',notes:[60,67,72,76,79,84,79,72],bass:36}
+];
+
+function shuffle(a){
+ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+ return a;
+}
 function makeRound(){
  const allRandom=selected.every(t=>t.mode==='random');
  const questions=[];
@@ -77,41 +146,128 @@ function makeRound(){
  });
  return allRandom?shuffle(questions):questions;
 }
+
+function ensureAudio(){
+ if(!audioContext){
+  const AudioCtx=window.AudioContext||window.webkitAudioContext;
+  if(!AudioCtx){$('musicTitle').textContent='Áudio não disponível neste navegador';return false}
+  audioContext=new AudioCtx();
+  masterGain=audioContext.createGain();
+  masterGain.gain.value=.42;
+  masterGain.connect(audioContext.destination);
+ }
+ if(audioContext.state==='suspended')audioContext.resume();
+ return true;
+}
+function midiToHz(note){return 440*Math.pow(2,(note-69)/12)}
+function playNote(frequency,start,duration,wave,volume){
+ const oscillator=audioContext.createOscillator();
+ const envelope=audioContext.createGain();
+ oscillator.type=wave;
+ oscillator.frequency.setValueAtTime(frequency,start);
+ envelope.gain.setValueAtTime(.0001,start);
+ envelope.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),start+.018);
+ envelope.gain.exponentialRampToValueAtTime(.0001,start+duration);
+ oscillator.connect(envelope);envelope.connect(masterGain);
+ activeSounds.add(oscillator);
+ oscillator.onended=()=>{activeSounds.delete(oscillator);oscillator.disconnect();envelope.disconnect()};
+ oscillator.start(start);oscillator.stop(start+duration+.025);
+}
+function stopMusic(){
+ activeSounds.forEach(node=>{try{node.stop()}catch(e){}});
+ activeSounds.clear();
+}
+function playTrack(index){
+ if(!soundOn||!ensureAudio())return;
+ stopMusic();
+ const track=musicalTracks[index];
+ const startAt=audioContext.currentTime+.035;
+ track.notes.forEach((note,i)=>{
+  const beat=startAt+i*track.tempo;
+  playNote(midiToHz(note),beat,track.tempo*.82,track.wave,.105);
+  // Baixo suave em cada dois tempos para dar sensação de pequena música.
+  if(i%2===0){
+   const bassNote=track.bass+(i%4===0?0:7);
+   playNote(midiToHz(bassNote),beat,track.tempo*1.55,'sine',.052);
+  }
+ });
+}
+function showTrack(){
+ const track=musicalTracks[currentTrackIndex];
+ $('musicTitle').textContent='Trilha '+(currentTrackIndex+1)+' de 10 · '+track.name;
+}
+function startRound(){
+ round++;
+ deck=makeRound();
+ position=0;
+ currentTrackIndex=(round-1)%musicalTracks.length;
+ showTrack();
+ playTrack(currentTrackIndex);
+}
 function updateStats(){
- $('hits').textContent=hits;$('misses').textContent=misses;$('round').textContent=round;
+ $('hits').textContent=hits;
+ $('misses').textContent=misses;
+ $('round').textContent=Math.max(0,round-1);
  $('bar').style.width=(position/(selected.length*10)*100)+'%';
 }
 function next(){
- if(position>=deck.length){round++;deck=makeRound();position=0;}
- current=deck[position];revealed=false;
+ if(position>=deck.length)startRound();
+ current=deck[position];
+ revealed=false;
  $('equation').textContent=current.a+' × '+current.b;
  $('counter').textContent='Rodada '+round+' · Questão '+(position+1)+' de '+deck.length;
- $('answer').textContent='';$('answer').className='answer';
- $('verify').classList.remove('hidden');$('judge').classList.add('hidden');
+ $('answer').textContent='';
+ $('answer').className='answer';
+ $('verify').classList.remove('hidden');
+ $('judge').classList.add('hidden');
  updateStats();
 }
 function start(){
- selected=[...tablesEl.querySelectorAll('.table-row')].filter(r=>r.querySelector('input').checked).map(r=>({n:Number(r.querySelector('input').value),mode:r.querySelector('select').value}));
+ selected=[...tablesEl.querySelectorAll('.table-row')]
+  .filter(r=>r.querySelector('input').checked)
+  .map(r=>({n:Number(r.querySelector('input').value),mode:r.querySelector('select').value}));
  if(!selected.length){alert('Selecione pelo menos uma tabuada para começar.');return}
- hits=0;misses=0;round=1;position=0;deck=makeRound();
- $('setup').classList.add('hidden');$('game').classList.remove('hidden');next();
+ hits=0;misses=0;round=0;position=0;deck=[];
+ $('setup').classList.add('hidden');
+ $('game').classList.remove('hidden');
+ if(soundOn)ensureAudio();
+ next();
 }
 function verify(){
- if(revealed)return;revealed=true;
+ if(revealed)return;
+ revealed=true;
  $('answer').textContent=current.a+' × '+current.b+' = '+(current.a*current.b);
- $('verify').classList.add('hidden');$('judge').classList.remove('hidden');
+ $('verify').classList.add('hidden');
+ $('judge').classList.remove('hidden');
 }
 function judge(ok){
  if(!revealed)return;
- if(ok){hits++;$('answer').classList.add('correct');}else{misses++;$('answer').classList.add('wrong');}
- position++;next();
+ if(ok){hits++;$('answer').classList.add('correct')}
+ else{misses++;$('answer').classList.add('wrong')}
+ position++;
+ next();
 }
+function toggleSound(){
+ soundOn=!soundOn;
+ $('soundToggle').textContent=soundOn?'♫ Som ligado':'♫ Som desligado';
+ $('soundToggle').setAttribute('aria-pressed',String(soundOn));
+ if(soundOn){if(ensureAudio()&&round>0)playTrack(currentTrackIndex)}
+ else stopMusic();
+}
+function replayTune(){if(soundOn)playTrack(currentTrackIndex);else toggleSound()}
 function stop(){
- $('game').classList.add('hidden');$('setup').classList.remove('hidden');
+ stopMusic();
+ $('game').classList.add('hidden');
+ $('setup').classList.remove('hidden');
 }
-$('start').addEventListener('click',start);$('verify').addEventListener('click',verify);
-$('right').addEventListener('click',()=>judge(true));$('wrong').addEventListener('click',()=>judge(false));
+
+$('start').addEventListener('click',start);
+$('verify').addEventListener('click',verify);
+$('right').addEventListener('click',()=>judge(true));
+$('wrong').addEventListener('click',()=>judge(false));
 $('stop').addEventListener('click',stop);
+$('soundToggle').addEventListener('click',toggleSound);
+$('replayTune').addEventListener('click',replayTune);
 </script>
 </body>
 </html>
