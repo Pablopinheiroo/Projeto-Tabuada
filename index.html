@@ -1391,7 +1391,7 @@ function initMusicPlayer(){
   if(currentTrackIndex>=0)$('musicTitle').textContent='Falha ao carregar a música. Tente escolher outra faixa.';
  });
  soundtrackAudio.addEventListener('loadedmetadata',()=>{
-  if(Number.isFinite(soundtrackAudio.duration)&&soundtrackAudio.duration<60){
+  if(Number.isFinite(soundtrackAudio.duration)&&soundtrackAudio.duration<30){
    $('musicTitle').textContent='Esta faixa está incompleta. Escolha outra.';
   }
  });
