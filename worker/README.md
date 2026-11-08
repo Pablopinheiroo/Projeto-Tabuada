@@ -47,8 +47,9 @@ A resposta esperada contém:
 - `"ok": true`
 - `"githubSecretConfigured": true`
 - `"githubConnected": true`
+- `"githubContentReadAccess": true`
 
-Depois, informe somente o endereço público base do Worker (sem `/health`). O site será então ligado a esse endereço em `API_BASE`. Não envie o token.
+Esse teste confirma que o segredo existe e que o Worker consegue ler o diretório `usuarios`. A permissão de gravação será confirmada no primeiro cadastro. Depois, informe somente o endereço público base do Worker (sem `/health`). O site será então ligado a esse endereço em `API_BASE`. Não envie o token.
 
 ## O que a API faz
 - Guarda o token do GitHub somente no segredo do Cloudflare.
