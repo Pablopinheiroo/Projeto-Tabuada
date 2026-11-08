@@ -4,7 +4,7 @@ compatibility_date = "2026-11-08"
 workers_dev = true
 
 [vars]
-GITHUB_REPO = "Pablopinheiroo/Projeto-Tabuada"
-GITHUB_BRANCH = "dados"
+GITHUB_REPO = "Pablopinheiroo/Projeto-Tabuada-Dados"
+GITHUB_BRANCH = "main"
 GITHUB_DIR = "data/usuarios"
 ALLOWED_ORIGIN = "https://pablopinheiroo.github.io"
