@@ -99,6 +99,18 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <section id="setup" class="panel">
 <h2>Escolha as tabuadas</h2>
 <p class="hint">Marque uma ou mais tabuadas e escolha como as questões aparecerão.</p>
+<div class="profile-box" style="padding:14px;border:1px solid #dbeafe;background:#f8fbff;border-radius:14px;margin:0 0 16px">
+ <h2 style="font-size:1rem;margin-bottom:8px">👤 Perfil e progresso</h2>
+ <label style="display:grid;gap:6px;font-weight:700;color:#475569;font-size:.88rem">Nome do perfil
+  <input id="profileName" maxlength="30" placeholder="Digite seu nome" autocomplete="name" style="padding:11px;border:1px solid #cbd5e1;border-radius:10px;font:inherit">
+ </label>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+  <button id="saveProfile" class="music-button" type="button">💾 Salvar dados</button>
+  <button id="resumeProfile" class="music-button" type="button" disabled>▶ Continuar de onde parei</button>
+  <button id="addNumbers" class="music-button" type="button" disabled>＋ Adicionar números à partida</button>
+ </div>
+ <p id="profileStatus" class="small" style="text-align:left;margin:9px 0 0">Crie um perfil para guardar seu progresso e histórico.</p>
+</div>
 <div id="tables" class="tables"></div>
 <button id="start" class="primary">▶ Iniciar jogo</button>
 <div class="music-box" style="margin-top:14px;margin-bottom:0">
@@ -210,7 +222,8 @@ const $=id=>document.getElementById(id);
 let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
 let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=.22;
 let musicTimer=null,nextNoteTime=0,musicStep=0,menuMusicOn=false;
-let questionStartedAt=0,questionTimer=null,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0;
+let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0;
+let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
 const HISTORY_KEY='projetoTabuadaHistoricoV2';
 let historyData=loadHistory();
 
@@ -233,9 +246,12 @@ function shuffle(a){
  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
  return a;
 }
+function loadProfiles(){try{return JSON.parse(localStorage.getItem('projetoTabuadaPerfisV1')||'{}')}catch(e){return {}}}
+function persistProfiles(){try{localStorage.setItem('projetoTabuadaPerfisV1',JSON.stringify(profilesData));return true}catch(e){return false}}
+function profileHistoryKey(){return 'projetoTabuadaHistoricoV2_'+(activeProfile||'sem-perfil')}
 function loadHistory(){
  try{
-  const raw=localStorage.getItem(HISTORY_KEY);
+  const raw=localStorage.getItem(profileHistoryKey());
   if(!raw)return {questions:{},sessions:[]};
   const parsed=JSON.parse(raw);
   if(!parsed||typeof parsed!=='object'||!parsed.questions)return {questions:{},sessions:[]};
@@ -243,7 +259,7 @@ function loadHistory(){
  }catch(error){return {questions:{},sessions:[]}}
 }
 function saveHistory(){
- try{localStorage.setItem(HISTORY_KEY,JSON.stringify(historyData));return true}
+ try{localStorage.setItem(profileHistoryKey(),JSON.stringify(historyData));return true}
  catch(error){return false}
 }
 function formatDuration(milliseconds){
@@ -254,7 +270,7 @@ function formatDuration(milliseconds){
 }
 function updateQuestionClock(){
  if(!questionStartedAt)return;
- $('questionTime').textContent='Tempo nesta questão: '+formatDuration(performance.now()-questionStartedAt);
+ $('questionTime').textContent='Tempo nesta questão: '+formatDuration(questionElapsedBeforeStart+performance.now()-questionStartedAt);
 }
 function beginQuestionClock(){
  questionStartedAt=performance.now();
@@ -263,8 +279,8 @@ function beginQuestionClock(){
  questionTimer=setInterval(updateQuestionClock,250);
 }
 function endQuestionClock(){
- const elapsed=questionStartedAt?Math.max(0,performance.now()-questionStartedAt):0;
- questionStartedAt=0;
+ const elapsed=questionStartedAt?questionElapsedBeforeStart+Math.max(0,performance.now()-questionStartedAt):questionElapsedBeforeStart;
+ questionStartedAt=0;questionElapsedBeforeStart=0;
  if(questionTimer!==null){clearInterval(questionTimer);questionTimer=null}
  $('questionTime').textContent='Tempo nesta questão: '+formatDuration(elapsed);
  return elapsed;
@@ -378,6 +394,59 @@ function finishSession(){
  showReport();
 }
 
+function profileSnapshot(){
+ return {selected,deck,position,round,hits,misses,sessionAnswers,sessionSkipped,sessionQuestionTimeMs,roundCorrect:[...roundCorrect],savedAt:new Date().toISOString()};
+}
+function updateProfileButtons(){
+ const name=$('profileName').value.trim(),profile=profilesData[name];
+ $('resumeProfile').disabled=!(profile&&profile.checkpoint);
+ $('addNumbers').disabled=!(profile&&profile.checkpoint);
+}
+function selectProfile(){
+ const name=$('profileName').value.trim();activeProfile=name;historyData=loadHistory();
+ const c=profilesData[name]?.checkpoint;
+ if(c){
+  selected=c.selected||[];
+  tablesEl.querySelectorAll('.table-row').forEach(row=>{const n=Number(row.querySelector('input').value),item=selected.find(t=>t.n===n);row.querySelector('input').checked=!!item;if(item)row.querySelector('select').value=item.mode;});
+  $('profileStatus').textContent='Progresso encontrado para “'+name+'”. Você pode continuar ou adicionar outras tabuadas.';
+ }else $('profileStatus').textContent=name?'Perfil pronto. Escolha as tabuadas e inicie um novo treino.':'Digite um nome para criar ou selecionar seu perfil.';
+ updateProfileButtons();
+}
+function saveProfile(showMessage=true){
+ const name=$('profileName').value.trim();
+ if(!name){$('profileStatus').textContent='Digite um nome para criar ou selecionar seu perfil.';return false;}
+ activeProfile=name;profilesData[name]=profilesData[name]||{};
+ if(round>0&&!$('game').classList.contains('hidden'))profilesData[name].checkpoint=profileSnapshot();
+ profilesData[name].updatedAt=new Date().toISOString();
+ if(!persistProfiles()){$('profileStatus').textContent='Não foi possível salvar os dados neste navegador.';return false;}
+ historyData=loadHistory();updateProfileButtons();
+ if(showMessage)$('profileStatus').textContent='Perfil “'+name+'” salvo. O progresso será atualizado automaticamente.';
+ return true;
+}
+function saveCheckpoint(){
+ if(!activeProfile||!round||!profilesData[activeProfile]||$('game').classList.contains('hidden'))return;
+ const c=profileSnapshot();
+ c.currentElapsedMs=questionStartedAt?questionElapsedBeforeStart+performance.now()-questionStartedAt:0;
+ profilesData[activeProfile].checkpoint=c;profilesData[activeProfile].updatedAt=new Date().toISOString();persistProfiles();
+}
+function resumeProfile(){
+ const name=$('profileName').value.trim(),c=profilesData[name]?.checkpoint;if(!name||!c)return;
+ activeProfile=name;historyData=loadHistory();selected=c.selected||[];deck=c.deck||[];position=c.position||0;round=c.round||1;
+ hits=c.hits||0;misses=c.misses||0;sessionAnswers=c.sessionAnswers||[];sessionSkipped=c.sessionSkipped||0;sessionQuestionTimeMs=c.sessionQuestionTimeMs||0;roundCorrect=new Set(c.roundCorrect||[]);
+ tablesEl.querySelectorAll('.table-row').forEach(row=>{const n=Number(row.querySelector('input').value),item=selected.find(t=>t.n===n);row.querySelector('input').checked=!!item;if(item)row.querySelector('select').value=item.mode;});
+ $('setup').classList.add('hidden');$('report').classList.add('hidden');$('game').classList.remove('hidden');sessionStartedAt=performance.now();
+ const choices=musicalTracks.map((_,i)=>i);currentTrackIndex=choices[Math.floor(Math.random()*choices.length)];previousTrackIndex=currentTrackIndex;showTrack();if(soundOn)playTrack(currentTrackIndex);
+ current=deck[position];revealed=false;$('equation').textContent=current.a+' × '+current.b;$('counter').textContent='Rodada '+round+' · Questão '+(position+1)+' de '+deck.length;
+ $('answer').textContent='';$('answer').className='answer';$('verify').classList.remove('hidden');$('judge').classList.add('hidden');updateStats();
+ questionElapsedBeforeStart=c.currentElapsedMs||0;beginQuestionClock();$('profileStatus').textContent='Partida retomada. Bom estudo!';
+}
+function addNumbersToSavedGame(){
+ const name=$('profileName').value.trim(),c=profilesData[name]?.checkpoint;if(!c)return;
+ const additions=[...tablesEl.querySelectorAll('.table-row')].filter(r=>r.querySelector('input').checked).map(r=>({n:Number(r.querySelector('input').value),mode:r.querySelector('select').value})).filter(t=>!(c.selected||[]).some(old=>old.n===t.n));
+ if(!additions.length){$('profileStatus').textContent='Marque uma tabuada que ainda não esteja nesta partida.';return;}
+ c.selected=c.selected||[];c.selected.push(...additions);const extra=[];additions.forEach(t=>{for(let b=1;b<=10;b++)extra.push({a:t.n,b});});c.deck.splice(c.position||0,0,...extra);
+ profilesData[name].checkpoint=c;persistProfiles();selectProfile();$('profileStatus').textContent='Novas tabuadas adicionadas. Continue a partida para praticá-las.';
+}
 function makeRound(){
  const allRandom=selected.every(t=>t.mode==='random');
  const questions=[];
@@ -492,6 +561,7 @@ function showTrack(){
 }
 function startRound(){
  round++;
+ roundCorrect=new Set();
  deck=makeRound();
  position=0;
  const choices=musicalTracks.map((_,index)=>index).filter(index=>index!==previousTrackIndex);
@@ -504,7 +574,7 @@ function updateStats(){
  $('hits').textContent=hits;
  $('misses').textContent=misses;
  $('round').textContent=Math.max(0,round-1);
- $('bar').style.width=(position/(selected.length*10)*100)+'%';
+ $('bar').style.width=(roundCorrect.size/(selected.length*10)*100)+'%';
 }
 function next(){
  if(position>=deck.length)startRound();
@@ -525,14 +595,16 @@ function start(){
   .map(r=>({n:Number(r.querySelector('input').value),mode:r.querySelector('select').value}));
  if(!selected.length){alert('Selecione pelo menos uma tabuada para começar.');return}
  if(menuMusicOn){stopMusic()}
- hits=0;misses=0;round=0;position=0;deck=[];
+ hits=0;misses=0;round=0;position=0;deck=[];roundCorrect=new Set();
  sessionAnswers=[];sessionSkipped=0;sessionQuestionTimeMs=0;sessionStartedAt=performance.now();
  previousTrackIndex=-1;currentTrackIndex=-1;
  $('report').classList.add('hidden');
  $('setup').classList.add('hidden');
  $('game').classList.remove('hidden');
  if(soundOn)ensureAudio();
- next();
+ if(!$('profileName').value.trim())activeProfile='';
+ else {activeProfile=$('profileName').value.trim();profilesData[activeProfile]=profilesData[activeProfile]||{};}
+ next();saveCheckpoint();
 }
 function verify(){
  if(revealed)return;
@@ -548,10 +620,10 @@ function judge(ok){
  sessionAnswers.push(entry);
  sessionQuestionTimeMs+=timeMs;
  addAnswerToHistory(entry);
- if(ok){hits++;$('answer').classList.add('correct');playFeedback(true)}
- else{misses++;$('answer').classList.add('wrong');playFeedback(false)}
+ if(ok){hits++;roundCorrect.add(current.a+'x'+current.b);$('answer').classList.add('correct');playFeedback(true)}
+ else{misses++;deck.push({...current});$('answer').classList.add('wrong');playFeedback(false)}
  position++;
- next();
+ next();saveCheckpoint();
 }
 function toggleSound(){
  soundOn=!soundOn;
@@ -565,7 +637,7 @@ function toggleSound(){
  }
 }
 function replayTune(){if(soundOn)playTrack(currentTrackIndex)}
-function stop(){finishSession()}
+function stop(){finishSession();if(activeProfile&&profilesData[activeProfile]){profilesData[activeProfile].checkpoint=null;persistProfiles();updateProfileButtons();}}
 function backToMenu(){
  $('report').classList.add('hidden');
  $('setup').classList.remove('hidden');
@@ -584,7 +656,12 @@ function toggleMenuMusic(){
  else stopMusic();
 }
 
-$('start').addEventListener('click',start);
+$('profileName').addEventListener('input',updateProfileButtons);
+$('profileName').addEventListener('change',selectProfile);
+$('saveProfile').addEventListener('click',()=>saveProfile(true));
+$('resumeProfile').addEventListener('click',resumeProfile);
+$('addNumbers').addEventListener('click',addNumbersToSavedGame);
+$('start').addEventListener('click',()=>{if($('profileName').value.trim())saveProfile(false);start()});
 $('verify').addEventListener('click',verify);
 $('right').addEventListener('click',()=>judge(true));
 $('wrong').addEventListener('click',()=>judge(false));
@@ -597,6 +674,7 @@ $('playAgain').addEventListener('click',playAgain);
 ['reportScope','reportSort','reportTable','reportType'].forEach(id=>$(id).addEventListener('change',renderRanking));
 for(let n=1;n<=10;n++){const option=document.createElement('option');option.value=String(n);option.textContent='Tabuada do '+n;$('reportTable').appendChild(option)}
 $('menuVolume').addEventListener('input',e=>setVolume(e.target.value));
+setInterval(saveCheckpoint,5000);
 $('gameVolume').addEventListener('input',e=>setVolume(e.target.value));
 document.addEventListener('click',e=>{
  const button=e.target.closest('button');
