@@ -251,10 +251,11 @@ function toggleSound(){
  soundOn=!soundOn;
  $('soundToggle').textContent=soundOn?'♫ Som ligado':'♫ Som desligado';
  $('soundToggle').setAttribute('aria-pressed',String(soundOn));
+ $('replayTune').disabled=!soundOn;
  if(soundOn){if(ensureAudio()&&round>0)playTrack(currentTrackIndex)}
  else stopMusic();
 }
-function replayTune(){if(soundOn)playTrack(currentTrackIndex);else toggleSound()}
+function replayTune(){if(soundOn)playTrack(currentTrackIndex)}
 function stop(){
  stopMusic();
  $('game').classList.add('hidden');
