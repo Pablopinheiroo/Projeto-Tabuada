@@ -1,0 +1,39 @@
+name: Gerar GIF animado da abelhinha
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/generate_bee_avatar.py"
+      - "assets/avatars/avatar-abelhinha-imagem.jpg"
+      - ".github/workflows/build-bee-avatar.yml"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: build-bee-avatar
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar projeto
+        uses: actions/checkout@v4
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalar Pillow
+        run: python -m pip install pillow
+      - name: Criar GIF com movimento contínuo
+        run: python tools/generate_bee_avatar.py
+      - name: Salvar GIF no GitHub
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/avatars/avatar-abelhinha-dancando.gif
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração no GIF."
+          else
+            git commit -m "Regenerate animated bee dancer avatar"
+            git push
+          fi
