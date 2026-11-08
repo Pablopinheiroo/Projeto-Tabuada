@@ -76,6 +76,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .secondary{background:#e2e8f0;color:#334155}
 .empty-ranking{padding:18px;border:1px dashed #cbd5e1;border-radius:13px;color:#64748b;text-align:center}
 .report-note{font-size:.82rem;color:#64748b;line-height:1.45;margin-top:12px}
+@media(max-width:600px){
+ .rank-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .rank-header{display:none}
+ .rank-row>div:first-child{grid-column:1/-1;text-align:center}
+ .rank-equation{font-size:1.12rem}
+}
 @media(max-width:420px){
  .stats{gap:6px}.stat{padding:10px 4px}.stat strong{font-size:1.3rem}
  .mode{max-width:116px}.music-box{align-items:flex-start}.music-buttons{width:100%}
@@ -241,10 +247,10 @@ function saveHistory(){
  catch(error){return false}
 }
 function formatDuration(milliseconds){
- const seconds=Math.max(0,Math.floor((Number(milliseconds)||0)/1000));
- const minutes=Math.floor(seconds/60);
- const remainder=seconds%60;
- return String(minutes).padStart(2,'0')+':'+String(remainder).padStart(2,'0');
+ const tenths=Math.max(0,Math.round((Number(milliseconds)||0)/100));
+ const minutes=Math.floor(tenths/600);
+ const seconds=((tenths%600)/10).toFixed(1).padStart(4,'0');
+ return String(minutes).padStart(2,'0')+':'+seconds;
 }
 function updateQuestionClock(){
  if(!questionStartedAt)return;
