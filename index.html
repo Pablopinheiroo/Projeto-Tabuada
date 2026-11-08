@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#172554">
+<title>Projeto Tabuada</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#172554;background:#f3f6fc}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;padding:24px 14px;background:linear-gradient(145deg,#edf3ff,#f8faff)}
+main{width:min(760px,100%);margin:0 auto}.brand{text-align:center;margin:12px 0 22px}.brand h1{margin:0;font-size:clamp(2rem,7vw,3rem);letter-spacing:-1.5px}.brand p{margin:6px 0;color:#64748b}
+.panel{background:#fff;border:1px solid #e2e8f0;border-radius:22px;padding:clamp(18px,4vw,30px);box-shadow:0 12px 35px #1e3a8a12}
+h2{font-size:1.2rem;margin:0 0 8px}.hint{color:#64748b;font-size:.94rem;margin:0 0 20px}
+.tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px}
+.table-row{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px;padding:12px;border:1px solid #e2e8f0;border-radius:13px;background:#fbfdff}
+.check{display:flex;align-items:center;gap:10px;font-weight:650;cursor:pointer}.check input{width:19px;height:19px;accent-color:#2563eb}
+.mode{border:1px solid #cbd5e1;border-radius:9px;padding:7px 8px;background:#fff;color:#334155;font:inherit;font-size:.84rem}
+button{border:0;border-radius:12px;padding:13px 18px;font:inherit;font-weight:750;cursor:pointer;transition:transform .12s,filter .12s}
+button:active{transform:scale(.98)}button:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:#2563eb;color:white;width:100%;margin-top:20px}.secondary{background:#e2e8f0;color:#1e293b}.stop{background:#fee2e2;color:#991b1b}
+.hidden{display:none!important}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:20px}
+.stat{background:#f1f5f9;border-radius:13px;padding:12px;text-align:center}.stat span{display:block;color:#64748b;font-size:.8rem}.stat strong{font-size:1.55rem}
+.progress{height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin:0 0 22px}.progress div{height:100%;width:0;background:#2563eb;transition:width .2s}
+.question{text-align:center;padding:26px 8px 20px}.question .label{color:#64748b;font-weight:650}.equation{font-size:clamp(2.8rem,12vw,5rem);font-weight:850;letter-spacing:-2px;margin:12px 0;color:#172554}
+.answer{min-height:62px;text-align:center;font-size:1.35rem;font-weight:750;margin:0 0 18px}.correct{color:#15803d}.wrong{color:#b91c1c}
+.actions{display:grid;gap:10px}.verify{background:#172554;color:#fff}.judge{display:grid;grid-template-columns:1fr 1fr;gap:10px}.yes{background:#dcfce7;color:#166534}.no{background:#fee2e2;color:#991b1b}
+.bottom{display:flex;justify-content:center;margin-top:16px}.small{font-size:.88rem;color:#64748b;text-align:center;margin:16px 0 0}
+@media(max-width:420px){.stats{gap:6px}.stat{padding:10px 4px}.stat strong{font-size:1.3rem}.mode{max-width:116px}}
+</style>
+</head>
+<body>
+<main>
+<header class="brand"><h1>📚 Projeto Tabuada</h1><p>Pratique no seu ritmo, uma questão de cada vez.</p></header>
+<section id="setup" class="panel">
+<h2>Escolha as tabuadas</h2>
+<p class="hint">Marque uma ou mais tabuadas e escolha como as questões aparecerão.</p>
+<div id="tables" class="tables"></div>
+<button id="start" class="primary">▶ Iniciar jogo</button>
+<p class="small">No modo normal, a tabuada segue de 1 a 10. No aleatório, a ordem muda.</p>
+</section>
+<section id="game" class="panel hidden" aria-live="polite">
+<div class="stats">
+<div class="stat"><span>Acertos</span><strong id="hits">0</strong></div>
+<div class="stat"><span>Erros</span><strong id="misses">0</strong></div>
+<div class="stat"><span>Rodadas</span><strong id="round">0</strong></div>
+</div>
+<div class="progress"><div id="bar"></div></div>
+<div class="question"><div class="label" id="counter">Questão 1</div><div class="equation" id="equation">2 × 3</div></div>
+<div id="answer" class="answer" aria-live="assertive"></div>
+<div class="actions">
+<button id="verify" class="verify">Verificar</button>
+<div id="judge" class="judge hidden">
+<button id="right" class="yes">✓ Acertei</button>
+<button id="wrong" class="no">✕ Errei</button>
+</div>
+</div>
+<div class="bottom"><button id="stop" class="stop">Parar jogo</button></div>
+</section>
+</main>
+<script>
+const tablesEl=document.getElementById('tables');
+for(let n=1;n<=10;n++){
+ const row=document.createElement('div');row.className='table-row';
+ row.innerHTML='<label class="check"><input type="checkbox" value="'+n+'"><span>Tabuada do '+n+'</span></label><select class="mode" aria-label="Modo da tabuada '+n+'"><option value="normal">Normal</option><option value="random">Aleatório</option></select>';
+ tablesEl.appendChild(row);
+}
+const $=id=>document.getElementById(id);
+let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function makeRound(){
+ const allRandom=selected.every(t=>t.mode==='random');
+ const questions=[];
+ selected.forEach(t=>{
+  const part=Array.from({length:10},(_,i)=>({a:t.n,b:i+1}));
+  if(t.mode==='random')shuffle(part);
+  questions.push(...part);
+ });
+ return allRandom?shuffle(questions):questions;
+}
+function updateStats(){
+ $('hits').textContent=hits;$('misses').textContent=misses;$('round').textContent=round;
+ $('bar').style.width=(position/(selected.length*10)*100)+'%';
+}
+function next(){
+ if(position>=deck.length){round++;deck=makeRound();position=0;}
+ current=deck[position];revealed=false;
+ $('equation').textContent=current.a+' × '+current.b;
+ $('counter').textContent='Rodada '+round+' · Questão '+(position+1)+' de '+deck.length;
+ $('answer').textContent='';$('answer').className='answer';
+ $('verify').classList.remove('hidden');$('judge').classList.add('hidden');
+ updateStats();
+}
+function start(){
+ selected=[...tablesEl.querySelectorAll('.table-row')].filter(r=>r.querySelector('input').checked).map(r=>({n:Number(r.querySelector('input').value),mode:r.querySelector('select').value}));
+ if(!selected.length){alert('Selecione pelo menos uma tabuada para começar.');return}
+ hits=0;misses=0;round=1;position=0;deck=makeRound();
+ $('setup').classList.add('hidden');$('game').classList.remove('hidden');next();
+}
+function verify(){
+ if(revealed)return;revealed=true;
+ $('answer').textContent=current.a+' × '+current.b+' = '+(current.a*current.b);
+ $('verify').classList.add('hidden');$('judge').classList.remove('hidden');
+}
+function judge(ok){
+ if(!revealed)return;
+ if(ok){hits++;$('answer').classList.add('correct');}else{misses++;$('answer').classList.add('wrong');}
+ position++;next();
+}
+function stop(){
+ $('game').classList.add('hidden');$('setup').classList.remove('hidden');
+}
+$('start').addEventListener('click',start);$('verify').addEventListener('click',verify);
+$('right').addEventListener('click',()=>judge(true));$('wrong').addEventListener('click',()=>judge(false));
+$('stop').addEventListener('click',stop);
+</script>
+</body>
+</html>
