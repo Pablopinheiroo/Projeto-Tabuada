@@ -58,7 +58,10 @@ function fromB64url(value) {
 }
 
 function encodeUtf8Base64(value) {
-  return b64url(new TextEncoder().encode(value)).replace(/-/g, "+").replace(/_/g, "/");
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary);
 }
 
 function decodeGithubContent(value) {
@@ -314,6 +317,31 @@ async function handleApi(request, env, origin) {
     const username = await verifySession(request, env);
     if (!username) return json({ error: "Sua sessão expirou. Entre novamente na sua conta." }, 401, origin);
 
+    if (route === "/api/me/password" && request.method === "POST") {
+      const body = await readJson(request);
+      const password = typeof body.password === "string" ? body.password : "";
+      if (!password) return json({ error: "Digite uma senha." }, 400, origin);
+
+      const record = await readUser(username, env);
+      if (!record) return json({ error: "A conta não foi encontrada no repositório privado." }, 404, origin);
+
+      const salt = randomHex(16);
+      const hash = await passwordHash(password, salt);
+      const updated = {
+        ...record.data,
+        auth: {
+          ...record.data.auth,
+          username,
+          salt,
+          hash,
+          passwordChangedAt: new Date().toISOString()
+        },
+        updatedAt: new Date().toISOString()
+      };
+      const sha = await writeUser(username, updated, record.sha, env);
+      return json({ ok: true, sha }, 200, origin);
+    }
+
     if (route === "/api/me" && request.method === "GET") {
       const record = await readUser(username, env);
       if (!record) return json({ error: "A conta não foi encontrada no repositório privado." }, 404, origin);
@@ -386,7 +414,7 @@ export default {
       if (!ALLOWED_ORIGINS.has(origin)) return new Response(null, { status: 403 });
       return new Response(null, { status: 204, headers: corsHeaders(origin) });
     }
-    if (!ALLOWED_ORIGINS.has(origin) && request.method !== "GET") {
+    if (origin && !ALLOWED_ORIGINS.has(origin)) {
       return json({ error: "Origem não autorizada." }, 403);
     }
 
