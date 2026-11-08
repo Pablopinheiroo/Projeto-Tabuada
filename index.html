@@ -1307,11 +1307,26 @@ function initMusicPlayer(){
  soundtrackAudio.autoplay=true;
  soundtrackAudio.volume=1;
  watchGameScreenForMusic();
+ soundtrackAudio.setAttribute('autoplay','');
+ soundtrackAudio.setAttribute('playsinline','');
+ soundtrackAudio.addEventListener('canplay',()=>{
+  // Segunda tentativa depois que o arquivo estiver pronto. Alguns navegadores
+  // ignoram a tentativa feita imediatamente após load().
+  if(soundOn&&!document.hidden&&soundtrackAudio.paused&&!musicStartPending)playCurrentTrack();
+ });
+ soundtrackAudio.addEventListener('playing',()=>{
+  $('soundToggle').textContent='♫ Pausar música';
+  $('soundToggle').setAttribute('aria-pressed','true');
+  $('musicMenuLabel').textContent='Alterar música';
+  showTrack();
+  scheduleMainMusicRotation();
+ });
  soundtrackAudio.addEventListener('ended',()=>{
   if(soundOn&&!document.hidden)playNextTrack();
  });
  soundtrackAudio.addEventListener('error',()=>{
-  if(currentTrackIndex>=0)$('musicTitle').textContent='Não foi possível carregar a faixa. Escolha outra música.';
+  clearMainMusicTimer();
+  if(currentTrackIndex>=0)$('musicTitle').textContent='Falha ao carregar a música. Tente escolher outra faixa.';
  });
  soundtrackAudio.addEventListener('loadedmetadata',()=>{
   if(Number.isFinite(soundtrackAudio.duration)&&soundtrackAudio.duration<60){
