@@ -1,29 +1,61 @@
 # API segura do Projeto Tabuada
 
-Este Worker substitui o acesso direto do navegador ao GitHub. O site está preparado para usar esta API; falta publicar o Worker na conta Cloudflare e inserir o endereço público dele no front-end.
+O jogo já está preparado para usar esta API. O servidor será publicado no Cloudflare Workers e conectado ao repositório pelo recurso **Workers Builds**, para que futuras mudanças no código sejam publicadas automaticamente.
 
-## O que ele faz
-- Mantém o token do GitHub apenas como segredo do Cloudflare.
-- Registra novas contas e confere senhas no servidor.
-- Mantém compatibilidade com contas já gravadas no repositório privado, usando PBKDF2-SHA-256 com 180.000 iterações.
-- Entrega sessões assinadas com validade de 7 dias.
-- Só permite que uma sessão altere os próprios dados.
-- Entrega dados de perfil e histórico para o ranking sem enviar hashes de senha ao navegador.
-- Faz o endpoint `/health` testar o acesso real ao repositório privado.
+## Arquivos do servidor
+- `src/index.js`: rotas de cadastro, login, perfil, senha e ranking.
+- `wrangler.toml`: nome e entrada do Worker.
+- `package.json`: versão do Wrangler e comando de publicação.
 
-## Publicar no Cloudflare
-1. Abra o Cloudflare Dashboard: https://dash.cloudflare.com/
-2. Entre em **Workers & Pages** e crie um Worker chamado `projeto-tabuada-api`.
-3. Abra **Edit code** e substitua o exemplo pelo arquivo `worker/src/index.js` deste repositório. Salve e faça **Deploy**.
-4. No Worker, abra **Settings > Variables and Secrets > Add**.
-5. Selecione o tipo **Secret**, nome `GITHUB_TOKEN`, e cole o novo Fine-grained personal access token. Não o coloque em variável de texto simples.
-6. O token precisa ter acesso somente ao repositório privado `Pablopinheiroo/Projeto-Tabuada-Dados`, com **Contents: Read and write** e **Metadata: Read-only**.
-7. Faça Deploy após adicionar o segredo.
-8. Abra `https://ENDERECO-DO-WORKER/health`. A resposta esperada é `ok: true`, `githubSecretConfigured: true` e `githubConnected: true`.
-9. Copie o endereço base `https://....workers.dev` e informe-o ao assistente para finalizar a conexão do site. O arquivo `index.html` contém a constante `API_BASE`, que está intencionalmente vazia até receber o endereço real.
+## 1. Criar o Worker no Cloudflare
+1. Acesse https://dash.cloudflare.com/ e abra **Workers & Pages**.
+2. Crie um Worker com o nome exato `projeto-tabuada-api`. Pode publicar inicialmente o exemplo oferecido pelo Cloudflare.
+3. Abra o Worker criado.
 
-## Obrigatório por segurança
-- Revogue o token antigo que estava no HTML público. Ele foi exposto no histórico do Git e não deve ser reutilizado.
-- Nunca cole o novo token no HTML, no repositório, em variável pública ou nesta conversa.
-- Não conceda acesso a outros repositórios.
-- Quando o token for trocado no futuro, as sessões atuais expiram; os participantes precisarão entrar novamente.
+## 2. Conectar este repositório ao Worker
+1. Dentro do Worker, entre em **Settings > Build**.
+2. Escolha **Connect** para conectar uma conta do GitHub e autorize **Cloudflare Workers and Pages**.
+3. Na autorização do GitHub, limite o acesso a **Only select repositories** e marque somente `Projeto-Tabuada`. Não conceda acesso a todos os repositórios.
+4. Nas configurações de build, selecione:
+   - **Git repository:** `Pablopinheiroo/Projeto-Tabuada`
+   - **Branch:** `main`
+   - **Root directory:** `worker`
+   - **Build command:** deixe vazio
+   - **Deploy command:** `npm run deploy`
+5. Salve as configurações. O Cloudflare usará `worker/wrangler.toml` e `worker/package.json` para publicar o código. O nome do Worker deve continuar sendo `projeto-tabuada-api`, igual ao nome no arquivo Wrangler.
+
+Depois dessa conexão, alterações futuras enviadas à pasta `worker/` na branch `main` serão publicadas automaticamente pelo Cloudflare Workers Builds.
+
+## 3. Configurar a credencial privada do GitHub
+1. No Worker, abra **Settings > Variables and Secrets**.
+2. Adicione uma variável do tipo **Secret** (segredo de execução):
+   - **Name:** `GITHUB_TOKEN`
+   - **Value:** um novo Fine-grained personal access token do GitHub.
+3. Configure esse token para ter acesso somente ao repositório privado `Pablopinheiroo/Projeto-Tabuada-Dados`, com:
+   - **Contents:** Read and write
+   - **Metadata:** Read-only (normalmente obrigatório e selecionado automaticamente)
+4. Salve o segredo e faça um novo Deploy, caso o Cloudflare solicite.
+
+**Importante:** não use token antigo que já tenha aparecido no HTML ou no histórico do Git. Revogue esse token antigo nas configurações do GitHub. Nunca coloque o novo token no código, no repositório, em variável pública ou nesta conversa. O token deve existir somente como Secret no Cloudflare.
+
+## 4. Testar e ligar o jogo
+Abra o endereço do Worker seguido de `/health`, por exemplo:
+
+`https://projeto-tabuada-api.SUA-CONTA.workers.dev/health`
+
+A resposta esperada contém:
+- `"ok": true`
+- `"githubSecretConfigured": true`
+- `"githubConnected": true`
+
+Depois, informe somente o endereço público base do Worker (sem `/health`). O site será então ligado a esse endereço em `API_BASE`. Não envie o token.
+
+## O que a API faz
+- Guarda o token do GitHub somente no segredo do Cloudflare.
+- Registra contas e confere senhas no servidor.
+- Mantém compatibilidade com contas antigas usando PBKDF2-SHA-256 com 180.000 iterações.
+- Cria sessões assinadas com validade de 7 dias.
+- Permite que cada sessão altere somente os próprios dados.
+- Fornece dados necessários ao ranking sem enviar hashes de senha ao navegador.
+- Testa a conexão com o repositório privado pelo endpoint `/health`.
+
