@@ -1,0 +1,13 @@
+{
+  "name": "projeto-tabuada-api",
+  "private": true,
+  "version": "1.0.0",
+  "description": "API segura do Projeto Tabuada executada no Cloudflare Workers",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.102.0"
+  }
+}
