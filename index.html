@@ -75,6 +75,30 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .report-actions button{flex:1;min-width:150px}
 .secondary{background:#e2e8f0;color:#334155}
 .empty-ranking{padding:18px;border:1px dashed #cbd5e1;border-radius:13px;color:#64748b;text-align:center}
+.auth-form{display:grid;gap:12px;max-width:440px;margin:0 auto}
+.auth-form label{display:grid;gap:6px;color:#475569;font-size:.9rem;font-weight:700}
+.auth-form input{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;background:#fff}
+.auth-form small{color:#64748b;margin-top:-7px}
+.auth-form .primary{margin-top:4px}
+.auth-switch{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:14px;flex-wrap:wrap;color:#64748b;font-size:.9rem}
+.link-button{background:transparent;color:#2563eb;padding:5px 8px}
+.auth-message{min-height:1.3em;text-align:center;margin:0;color:#b91c1c;font-size:.88rem}
+.auth-privacy,.ranking-local-note{font-size:.8rem;color:#64748b;line-height:1.5;margin:20px 0 0;padding:12px;background:#f8fafc;border-radius:11px}
+.community-ranking{border:1px solid #dbeafe;border-radius:17px;padding:16px;background:linear-gradient(135deg,#f8fbff,#f7f7ff);margin-bottom:18px}
+.community-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.community-heading h2{margin:3px 0 0}
+.ranking-sort{display:grid;gap:5px;color:#475569;font-size:.8rem;font-weight:700}
+.ranking-sort select{padding:8px;border:1px solid #cbd5e1;border-radius:9px;background:white;color:#172554;font:inherit}
+.community-list{display:grid;gap:9px;margin-top:14px}
+.community-card{display:grid;grid-template-columns:minmax(110px,1fr) repeat(3,minmax(70px,.6fr));gap:9px;align-items:center;padding:12px;background:white;border:1px solid #e2e8f0;border-radius:12px}
+.community-user{font-weight:850;overflow-wrap:anywhere}
+.community-user small{display:block;color:#64748b;font-weight:500;font-size:.75rem;margin-top:3px}
+.community-metric{text-align:center;display:grid;gap:2px;font-variant-numeric:tabular-nums}
+.community-metric strong{font-size:1rem}
+.community-metric small{font-size:.72rem;color:#64748b}
+.community-hard{grid-column:1/-1;border-top:1px solid #f1f5f9;padding-top:8px;font-size:.8rem;color:#475569}
+.community-empty{padding:17px;text-align:center;color:#64748b;border:1px dashed #cbd5e1;border-radius:12px}
+@media(max-width:560px){.community-card{grid-template-columns:1fr 1fr}.community-user{grid-column:1/-1}.community-hard{grid-column:1/-1}.community-heading{align-items:stretch}.ranking-sort{width:100%}.ranking-sort select{width:100%}}
 .report-note{font-size:.82rem;color:#64748b;line-height:1.45;margin-top:12px}
 @media(max-width:600px){
  .rank-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -96,7 +120,47 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <main>
 <header class="brand"><h1>📚 Projeto Tabuada</h1><p>Pratique no seu ritmo, uma questão de cada vez.</p></header>
 
-<section id="setup" class="panel">
+<section id="authScreen" class="panel">
+ <div style="text-align:center;margin-bottom:20px"><div style="font-size:2.3rem">🔐</div><h2 style="font-size:1.45rem">Acesse sua conta</h2><p class="hint" style="margin:6px 0 0">Entre para acompanhar seu progresso e participar do ranking.</p></div>
+ <form id="loginForm" class="auth-form">
+  <label>Nome de usuário<input id="loginUsername" maxlength="20" autocomplete="username" required placeholder="Seu nome de usuário"></label>
+  <label>Senha<input id="loginPassword" type="password" minlength="8" autocomplete="current-password" required placeholder="Sua senha"></label>
+  <button class="primary" type="submit">Entrar</button>
+  <p id="loginMessage" class="auth-message" role="status"></p>
+ </form>
+ <div class="auth-switch"><span>Ainda não tem uma conta?</span><button id="showRegister" type="button" class="link-button">Cadastrar</button></div>
+ <form id="registerForm" class="auth-form hidden">
+  <h2>📝 Criar novo perfil</h2>
+  <label>Nome de usuário<input id="registerUsername" maxlength="20" autocomplete="username" required placeholder="Ex.: maria_27"></label>
+  <small>Use de 3 a 20 caracteres: letras sem acento, números, ponto, traço ou sublinhado.</small>
+  <label>Senha<input id="registerPassword" type="password" minlength="8" autocomplete="new-password" required placeholder="Mínimo de 8 caracteres"></label>
+  <label>Confirme a senha<input id="registerConfirm" type="password" minlength="8" autocomplete="new-password" required placeholder="Digite a senha novamente"></label>
+  <button class="primary" type="submit">Criar conta</button>
+  <p id="registerMessage" class="auth-message" role="status"></p>
+  <div class="auth-switch"><span>Já tem uma conta?</span><button id="showLogin" type="button" class="link-button">Voltar ao login</button></div>
+ </form>
+ <p class="auth-privacy">Nesta versão inicial, as contas e o ranking ficam somente neste navegador e dispositivo. As senhas são armazenadas como códigos protegidos, não em texto aberto. Para reunir participantes de celulares e computadores diferentes, será necessário ativar um banco de dados compartilhado.</p>
+</section>
+
+<section id="setup" class="panel hidden">
+<div class="community-ranking">
+ <div class="community-heading"><div><span class="music-kicker">🏆 Comunidade</span><h2>Ranking dos participantes</h2><p class="hint" style="margin:5px 0 0">Veja o tempo de estudo e as contas que mais exigem prática.</p></div>
+  <label class="ranking-sort">Ordenar por<select id="communitySort"><option value="time">Mais tempo estudado</option><option value="correct">Mais acertos</option><option value="wrong">Mais erros</option></select></label>
+ </div>
+ <div id="communityRanking" class="community-list"></div>
+ <p class="ranking-local-note">Ranking dos perfis cadastrados neste navegador. A classificação entre todos os visitantes do site será compartilhada quando o banco de dados online for conectado.</p>
+</div>
+<div class="profile-box" style="padding:14px;border:1px solid #dbeafe;background:#f8fbff;border-radius:14px;margin:16px 0">
+ <h2 style="font-size:1rem;margin-bottom:8px">👤 Perfil atual: <span id="currentUsername"></span></h2>
+ <input id="profileName" type="hidden">
+ <div style="display:flex;gap:8px;flex-wrap:wrap">
+  <button id="saveProfile" class="music-button" type="button">💾 Salvar dados</button>
+  <button id="resumeProfile" class="music-button" type="button" disabled>▶ Continuar de onde parei</button>
+  <button id="addNumbers" class="music-button" type="button" disabled>＋ Adicionar números à partida</button>
+  <button id="logout" class="music-button" type="button">Sair da conta</button>
+ </div>
+ <p id="profileStatus" class="small" style="text-align:left;margin:9px 0 0">Seu progresso fica salvo no perfil.</p>
+</div>
 <h2>Escolha as tabuadas</h2>
 <p class="hint">Marque uma ou mais tabuadas e escolha como as questões aparecerão.</p>
 <div class="profile-box" style="padding:14px;border:1px solid #dbeafe;background:#f8fbff;border-radius:14px;margin:0 0 16px">
@@ -224,6 +288,9 @@ let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),curren
 let musicTimer=null,nextNoteTime=0,musicStep=0,menuMusicOn=false;
 let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0;
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
+const AUTH_USERS_KEY='projetoTabuadaUsuariosV1';
+const AUTH_SESSION_KEY='projetoTabuadaSessaoV1';
+let authUsers=loadAuthUsers();
 const HISTORY_KEY='projetoTabuadaHistoricoV2';
 let historyData=loadHistory();
 
@@ -246,6 +313,89 @@ function shuffle(a){
  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
  return a;
 }
+function loadAuthUsers(){try{const data=JSON.parse(localStorage.getItem(AUTH_USERS_KEY)||'{}');return data&&typeof data==='object'?data:{}}catch(e){return {}}}
+function saveAuthUsers(){try{localStorage.setItem(AUTH_USERS_KEY,JSON.stringify(authUsers));return true}catch(e){return false}}
+function normalizeUsername(value){return value.trim().toLowerCase()}
+function makeSalt(){return [...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,'0')).join('')}
+async function passwordHash(password,saltHex){
+ if(!window.crypto||!crypto.subtle)throw new Error('Este navegador não oferece proteção de senha compatível. Atualize o navegador e tente novamente.');
+ const salt=new Uint8Array(saltHex.match(/.{2}/g).map(x=>parseInt(x,16)));
+ const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);
+ const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:180000,hash:'SHA-256'},key,256);
+ return [...new Uint8Array(bits)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function enterApp(username){
+ activeProfile=username;$('profileName').value=username;$('currentUsername').textContent=username;
+ historyData=loadHistory();$('authScreen').classList.add('hidden');$('game').classList.add('hidden');$('report').classList.add('hidden');$('setup').classList.remove('hidden');
+ selectProfile();renderCommunityRanking();
+}
+function showLoginScreen(){
+ $('registerForm').classList.add('hidden');$('loginForm').classList.remove('hidden');
+ $('registerMessage').textContent='';$('loginMessage').textContent='';
+}
+async function handleRegister(event){
+ event.preventDefault();
+ const username=normalizeUsername($('registerUsername').value);
+ const password=$('registerPassword').value,confirmPassword=$('registerConfirm').value;
+ $('registerMessage').textContent='';
+ if(!/^[a-z0-9_.-]{3,20}$/.test(username)){$('registerMessage').textContent='Use um nome com 3 a 20 caracteres: letras sem acento, números, ponto, traço ou _. ';return;}
+ if(password.length<8){$('registerMessage').textContent='A senha precisa ter pelo menos 8 caracteres.';return;}
+ if(password!==confirmPassword){$('registerMessage').textContent='As senhas não são iguais.';return;}
+ if(authUsers[username]){$('registerMessage').textContent='Este nome de usuário já está cadastrado neste navegador.';return;}
+ try{
+  const salt=makeSalt(),hash=await passwordHash(password,salt);
+  authUsers[username]={username,salt,hash,createdAt:new Date().toISOString()};
+  if(!saveAuthUsers())throw new Error('Não foi possível salvar o cadastro no armazenamento do navegador.');
+  profilesData[username]=profilesData[username]||{};persistProfiles();
+  sessionStorage.setItem(AUTH_SESSION_KEY,username);
+  $('registerForm').reset();enterApp(username);
+ }catch(error){$('registerMessage').textContent=error.message||'Não foi possível criar a conta.';}
+}
+async function handleLogin(event){
+ event.preventDefault();
+ const username=normalizeUsername($('loginUsername').value),password=$('loginPassword').value;
+ $('loginMessage').textContent='';
+ const account=authUsers[username];
+ if(!account){$('loginMessage').textContent='Nome de usuário ou senha incorretos.';return;}
+ try{
+  const hash=await passwordHash(password,account.salt);
+  if(hash!==account.hash){$('loginMessage').textContent='Nome de usuário ou senha incorretos.';return;}
+  sessionStorage.setItem(AUTH_SESSION_KEY,username);$('loginPassword').value='';enterApp(username);
+ }catch(error){$('loginMessage').textContent=error.message||'Não foi possível entrar.';}
+}
+function logout(){
+ if(!$('game').classList.contains('hidden')){alert('Encerre ou salve a partida antes de sair da conta.');return;}
+ stopMusic();menuMusicOn=false;$('menuMusic').textContent='♫ Ouvir música';$('menuMusic').setAttribute('aria-pressed','false');
+ sessionStorage.removeItem(AUTH_SESSION_KEY);activeProfile='';historyData=loadHistory();
+ $('setup').classList.add('hidden');$('report').classList.add('hidden');$('authScreen').classList.remove('hidden');
+ $('loginForm').reset();$('registerForm').reset();showLoginScreen();
+}
+function communityStats(username){
+ let history={questions:{},sessions:[]};
+ try{history=JSON.parse(localStorage.getItem('projetoTabuadaHistoricoV2_'+username)||'null')||history}catch(e){}
+ const questions=Object.values(history.questions||{});
+ const correct=questions.reduce((sum,q)=>sum+(Number(q.correct)||0),0);
+ const wrong=questions.reduce((sum,q)=>sum+(Number(q.wrong)||0),0);
+ const sessions=Array.isArray(history.sessions)?history.sessions:[];
+ const checkpoint=profilesData[username]?.checkpoint;
+ let timeMs=sessions.reduce((sum,item)=>sum+(Number(item.timeMs)||0),0);
+ if(checkpoint)timeMs+=(Number(checkpoint.sessionQuestionTimeMs)||0)+(Number(checkpoint.currentElapsedMs)||0);
+ const hard=questions.filter(q=>(Number(q.wrong)||0)>0).sort((a,b)=>b.wrong-a.wrong||(b.wrong/Math.max(1,b.attempts))-(a.wrong/Math.max(1,a.attempts))).slice(0,3);
+ return {username,correct,wrong,attempts:correct+wrong,timeMs,hard};
+}
+function renderCommunityRanking(){
+ const box=$('communityRanking');if(!box)return;
+ const users=Object.keys(authUsers).map(communityStats);
+ const mode=$('communitySort')?.value||'time';
+ const sorters={time:(a,b)=>b.timeMs-a.timeMs||b.correct-a.correct,correct:(a,b)=>b.correct-a.correct||b.timeMs-a.timeMs,wrong:(a,b)=>b.wrong-a.wrong||b.timeMs-a.timeMs};
+ users.sort(sorters[mode]||sorters.time);
+ if(!users.length){box.innerHTML='<div class="community-empty">Ainda não há participantes. Seja o primeiro a criar um perfil!</div>';return;}
+ box.innerHTML=users.map((user,index)=>{
+  const hard=user.hard.length?user.hard.map(q=>q.a+'×'+q.b+' ('+q.wrong+' erro'+(q.wrong===1?'':'s')+')').join(' · '):'Sem erros registrados';
+  return '<div class="community-card"><div class="community-user">#'+(index+1)+' · '+escapeHtml(user.username)+'<small>'+user.attempts+' questões respondidas</small></div><div class="community-metric"><strong>'+formatDuration(user.timeMs)+'</strong><small>tempo estudado</small></div><div class="community-metric"><strong>'+user.correct+'</strong><small>acertos</small></div><div class="community-metric"><strong>'+user.wrong+'</strong><small>erros</small></div><div class="community-hard"><b>Maiores dificuldades:</b> '+escapeHtml(hard)+'</div></div>';
+ }).join('');
+}
+function escapeHtml(value){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
 function loadProfiles(){try{return JSON.parse(localStorage.getItem('projetoTabuadaPerfisV1')||'{}')}catch(e){return {}}}
 function persistProfiles(){try{localStorage.setItem('projetoTabuadaPerfisV1',JSON.stringify(profilesData));return true}catch(e){return false}}
 function profileHistoryKey(){return 'projetoTabuadaHistoricoV2_'+(activeProfile||'sem-perfil')}
@@ -409,7 +559,10 @@ function selectProfile(){
   selected=c.selected||[];
   tablesEl.querySelectorAll('.table-row').forEach(row=>{const n=Number(row.querySelector('input').value),item=selected.find(t=>t.n===n);row.querySelector('input').checked=!!item;if(item)row.querySelector('select').value=item.mode;});
   $('profileStatus').textContent='Progresso encontrado para “'+name+'”. Você pode continuar ou adicionar outras tabuadas.';
- }else $('profileStatus').textContent=name?'Perfil pronto. Escolha as tabuadas e inicie um novo treino.':'Digite um nome para criar ou selecionar seu perfil.';
+ }else {
+  tablesEl.querySelectorAll('.table-row').forEach(row=>{row.querySelector('input').checked=false;row.querySelector('select').value='normal';});
+  $('profileStatus').textContent='Perfil pronto. Escolha as tabuadas e inicie um novo treino.';
+ }
  updateProfileButtons();
 }
 function saveProfile(showMessage=true){
@@ -620,6 +773,7 @@ function judge(ok){
  sessionAnswers.push(entry);
  sessionQuestionTimeMs+=timeMs;
  addAnswerToHistory(entry);
+ renderCommunityRanking();
  if(ok){hits++;roundCorrect.add(current.a+'x'+current.b);$('answer').classList.add('correct');playFeedback(true)}
  else{misses++;deck.push({...current});$('answer').classList.add('wrong');playFeedback(false)}
  position++;
@@ -656,8 +810,12 @@ function toggleMenuMusic(){
  else stopMusic();
 }
 
-$('profileName').addEventListener('input',updateProfileButtons);
-$('profileName').addEventListener('change',selectProfile);
+$('loginForm').addEventListener('submit',handleLogin);
+$('registerForm').addEventListener('submit',handleRegister);
+$('showRegister').addEventListener('click',()=>{$('loginForm').classList.add('hidden');$('registerForm').classList.remove('hidden');$('registerMessage').textContent='';});
+$('showLogin').addEventListener('click',showLoginScreen);
+$('logout').addEventListener('click',logout);
+$('communitySort').addEventListener('change',renderCommunityRanking);
 $('saveProfile').addEventListener('click',()=>saveProfile(true));
 $('resumeProfile').addEventListener('click',resumeProfile);
 $('addNumbers').addEventListener('click',addNumbersToSavedGame);
@@ -675,6 +833,9 @@ $('playAgain').addEventListener('click',playAgain);
 for(let n=1;n<=10;n++){const option=document.createElement('option');option.value=String(n);option.textContent='Tabuada do '+n;$('reportTable').appendChild(option)}
 $('menuVolume').addEventListener('input',e=>setVolume(e.target.value));
 setInterval(saveCheckpoint,5000);
+const rememberedUser=sessionStorage.getItem(AUTH_SESSION_KEY);
+if(rememberedUser&&authUsers[rememberedUser])enterApp(rememberedUser);
+else showLoginScreen();
 $('gameVolume').addEventListener('input',e=>setVolume(e.target.value));
 document.addEventListener('click',e=>{
  const button=e.target.closest('button');
