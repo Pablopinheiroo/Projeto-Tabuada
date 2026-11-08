@@ -493,7 +493,9 @@ const AVATARS=[
  {name:'Leão',emoji:'🦁',bg:['#b45309','#f59e0b']},
  {name:'Lobo',emoji:'🐺',bg:['#475569','#94a3b8']},
  {name:'Pinguim',emoji:'🐧',bg:['#0f766e','#67e8f9']},
- {name:'Unicórnio',emoji:'🦄',bg:['#7e22ce','#f0abfc']}
+ {name:'Unicórnio',emoji:'🦄',bg:['#7e22ce','#f0abfc']},
+ {name:'Favo de Mel',src:'assets/avatars/avatar-favo-mel.png',bg:['#f59e0b','#92400e']},
+ {name:'Dançarino',src:'assets/avatars/avatar-abelhinha-dancando.gif',bg:['#7c3aed','#ec4899']}
 ];
 
 // Trilhas originais mais longas: cada uma tem oito compassos, harmonia, baixo e melodia.
@@ -529,6 +531,7 @@ function saveAuthUsers(){try{localStorage.setItem(AUTH_USERS_KEY,JSON.stringify(
 function normalizeUsername(value){return value.trim().toLowerCase()}
 function avatarImage(index){
  const avatar=AVATARS[Number.isInteger(Number(index))&&AVATARS[Number(index)]?Number(index):0];
+ if(avatar.src)return avatar.src;
  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+avatar.bg[0]+'"/><stop offset="1" stop-color="'+avatar.bg[1]+'"/></linearGradient></defs><rect width="128" height="128" rx="64" fill="url(#g)"/><circle cx="64" cy="64" r="54" fill="#ffffff" fill-opacity=".13"/><circle cx="64" cy="64" r="48" fill="none" stroke="#ffffff" stroke-opacity=".55" stroke-width="3"/><text x="64" y="83" text-anchor="middle" font-size="66">'+avatar.emoji+'</text><circle cx="100" cy="27" r="7" fill="#ffffff" fill-opacity=".8"/><circle cx="26" cy="94" r="4" fill="#ffffff" fill-opacity=".65"/></svg>';
  return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
 }
