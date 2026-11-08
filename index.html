@@ -142,7 +142,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <p id="registerMessage" class="auth-message" role="status"></p>
   <div class="auth-switch"><span>Já tem uma conta?</span><button id="showLogin" type="button" class="link-button">Voltar ao login</button></div>
  </form>
- <p class="auth-privacy"><b>Aviso:</b> este cadastro ainda é um protótipo local, não uma conta online. Os perfis e o ranking só aparecem neste navegador e dispositivo. Não use uma senha que você já utiliza em outros serviços. Para compartilhar o ranking entre todos os aparelhos, será preciso conectar um banco de dados com autenticação no servidor.</p>
+ <p class="auth-privacy"><b>Aviso:</b> as contas e os resultados são armazenados online no repositório privado do jogo. O token de acesso fica visível no código público e pode ser copiado por visitantes, que poderão ler, alterar ou apagar os dados desse repositório. Não use uma senha de outros serviços; escolha uma senha exclusiva e simples apenas para este jogo.</p>
 </section>
 
 <section id="setup" class="panel hidden">
@@ -151,7 +151,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <label class="ranking-sort">Ordenar por<select id="communitySort"><option value="time">Mais tempo estudado</option><option value="correct">Mais acertos</option><option value="wrong">Mais erros</option></select></label>
  </div>
  <div id="communityRanking" class="community-list"></div>
- <p class="ranking-local-note">Ranking dos perfis cadastrados neste navegador. A classificação entre todos os visitantes do site será compartilhada quando o banco de dados online for conectado.</p>
+ <p class="ranking-local-note">Ranking compartilhado entre os participantes cadastrados. Os dados são lidos do repositório privado de dados.</p>
 </div>
 <div class="profile-box" style="padding:14px;border:1px solid #dbeafe;background:#f8fbff;border-radius:14px;margin:16px 0">
  <h2 style="font-size:1rem;margin-bottom:8px">👤 Perfil atual: <span id="currentUsername"></span></h2>
@@ -260,7 +260,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <button id="backToMenu" class="secondary" type="button">Voltar ao menu</button>
   <button id="playAgain" class="primary" type="button" style="margin-top:0">Fazer outro treino</button>
  </div>
- <p class="report-note">Os dados ficam salvos neste navegador e neste dispositivo. Eles não são enviados para nenhum servidor. Para manter seu histórico, use o mesmo navegador e não apague os dados do site.</p>
+ <p class="report-note">Seu histórico e seu progresso são sincronizados com o GitHub. Use seu nome de usuário e senha para acessar a mesma conta em outros dispositivos.</p>
 </section>
 </main>
 
@@ -281,9 +281,15 @@ let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,sessionS
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
 const AUTH_USERS_KEY='projetoTabuadaUsuariosV1';
 const AUTH_SESSION_KEY='projetoTabuadaSessaoV1';
-let authUsers=loadAuthUsers();
+let authUsers={};
 const HISTORY_KEY='projetoTabuadaHistoricoV2';
 let historyData=loadHistory();
+
+// Integração direta com o repositório privado de dados. O token será inserido pelo proprietário.
+const CLOUD={owner:'Pablopinheiroo',repo:'Projeto-Tabuada-Dados',branch:'main',directory:'usuarios',token:'COLE_SEU_TOKEN_FINE_GRAINED_AQUI'};
+const GITHUB_API='https://api.github.com';
+let remoteUserSha=null,remoteUserData=null,cloudSyncTimer=null,cloudSyncBusy=false,cloudSyncQueued=false,lastCloudSaveAt=0;
+let communityCache=[],communityCacheAt=0;
 
 // Trilhas originais mais longas: cada uma tem oito compassos, harmonia, baixo e melodia.
 const musicalTracks=[
@@ -315,9 +321,187 @@ async function passwordHash(password,saltHex){
  const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:180000,hash:'SHA-256'},key,256);
  return [...new Uint8Array(bits)].map(b=>b.toString(16).padStart(2,'0')).join('');
 }
+
+function cloudTokenReady(){
+ return !!CLOUD.token&&CLOUD.token!=='COLE_SEU_TOKEN_FINE_GRAINED_AQUI'&&CLOUD.token.trim().length>20;
+}
+function cloudFilePath(username){
+ return '/repos/'+CLOUD.owner+'/'+CLOUD.repo+'/contents/'+CLOUD.directory+'/'+encodeURIComponent(username)+'/dados.json';
+}
+async function githubRequest(path,options={}){
+ if(!cloudTokenReady())throw new Error('O jogo ainda precisa do token do GitHub. Configure o token no arquivo index.html.');
+ const headers={Accept:'application/vnd.github+json',Authorization:'Bearer '+CLOUD.token,'X-GitHub-Api-Version':'2022-11-28'};
+ if(options.body)headers['Content-Type']='application/json';
+ const response=await fetch(GITHUB_API+path,{...options,headers:{...headers,...(options.headers||{})},cache:'no-store'});
+ const raw=await response.text();
+ let data={};
+ try{data=raw?JSON.parse(raw):{}}catch(e){data={message:raw||'Resposta inválida do GitHub.'}}
+ if(!response.ok){
+  const error=new Error(data.message||('GitHub respondeu com HTTP '+response.status));
+  error.status=response.status;
+  throw error;
+ }
+ return data;
+}
+function encodeBase64Utf8(value){
+ const bytes=new TextEncoder().encode(value);
+ let binary='';
+ for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));
+ return btoa(binary);
+}
+function decodeBase64Utf8(value){
+ const binary=atob(String(value||'').replace(/\s/g,''));
+ const bytes=new Uint8Array(binary.length);
+ for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+ return new TextDecoder().decode(bytes);
+}
+function normalizeHistory(value){
+ if(!value||typeof value!=='object')return {questions:{},sessions:[]};
+ return {questions:value.questions&&typeof value.questions==='object'?value.questions:{},sessions:Array.isArray(value.sessions)?value.sessions:[]};
+}
+async function readRemoteUser(username){
+ try{
+  const file=await githubRequest(cloudFilePath(username)+'?ref='+encodeURIComponent(CLOUD.branch));
+  const data=JSON.parse(decodeBase64Utf8(file.content));
+  if(!data||data.username!==username||!data.auth||!data.auth.salt||!data.auth.hash)throw new Error('O arquivo da conta está incompleto ou inválido.');
+  return {data,sha:file.sha};
+ }catch(error){
+  if(error.status===404)return null;
+  throw error;
+ }
+}
+async function writeRemoteUser(username,data,sha=null){
+ const body={message:'Atualizar dados do participante '+username,branch:CLOUD.branch,content:encodeBase64Utf8(JSON.stringify(data,null,2))};
+ if(sha)body.sha=sha;
+ const result=await githubRequest(cloudFilePath(username),{method:'PUT',body:JSON.stringify(body)});
+ return result.content.sha;
+}
+function hydrateRemoteUser(username,record){
+ remoteUserSha=record.sha;
+ remoteUserData=record.data;
+ authUsers={[username]:record.data.auth};
+ profilesData={[username]:record.data.profile&&typeof record.data.profile==='object'?record.data.profile:{}};
+ historyData=normalizeHistory(record.data.history);
+ activeProfile=username;
+ persistProfiles();
+ saveHistory();
+ communityCacheAt=0;
+}
+function buildRemoteUserData(){
+ const previous=remoteUserData||{};
+ return {
+  version:1,
+  username:activeProfile,
+  auth:authUsers[activeProfile]||previous.auth,
+  profile:profilesData[activeProfile]||{},
+  history:normalizeHistory(historyData),
+  updatedAt:new Date().toISOString()
+ };
+}
+function scheduleCloudSave(immediate=false){
+ if(!activeProfile||!remoteUserData||!cloudTokenReady())return;
+ if(immediate){
+  if(cloudSyncTimer!==null){clearTimeout(cloudSyncTimer);cloudSyncTimer=null;}
+  flushCloudSave();
+  return;
+ }
+ if(cloudSyncTimer!==null)return;
+ const wait=Math.max(2500,15000-(Date.now()-lastCloudSaveAt));
+ cloudSyncTimer=setTimeout(()=>{cloudSyncTimer=null;flushCloudSave();},wait);
+}
+async function flushCloudSave(){
+ if(!activeProfile||!remoteUserData||!cloudTokenReady())return;
+ if(cloudSyncBusy){cloudSyncQueued=true;return;}
+ cloudSyncBusy=true;
+ try{
+  const username=activeProfile;
+  const payload=buildRemoteUserData();
+  const newSha=await writeRemoteUser(username,payload,remoteUserSha);
+  if(activeProfile===username){
+   remoteUserSha=newSha;
+   remoteUserData=payload;
+   lastCloudSaveAt=Date.now();
+   communityCacheAt=0;
+   const status=$('profileStatus');
+   if(status)status.textContent='Dados de “'+username+'” sincronizados com o GitHub.';
+  }
+ }catch(error){
+  const status=$('profileStatus');
+  if(status)status.textContent='Falha ao sincronizar: '+(error.message||'verifique o token e as permissões do repositório.');
+  console.error('Falha na sincronização do Projeto Tabuada:',error);
+ }finally{
+  cloudSyncBusy=false;
+  if(cloudSyncQueued){cloudSyncQueued=false;scheduleCloudSave();}
+ }
+}
+async function loadCommunityRecords(force=false){
+ if(!force&&communityCacheAt&&Date.now()-communityCacheAt<30000)return communityCache;
+ const entries=await githubRequest('/repos/'+CLOUD.owner+'/'+CLOUD.repo+'/contents/'+CLOUD.directory+'?ref='+encodeURIComponent(CLOUD.branch));
+ if(!Array.isArray(entries))throw new Error('A pasta de participantes não retornou uma lista.');
+ const folders=entries.filter(item=>item.type==='dir'&&/^[a-z0-9_.-]{3,20}$/.test(item.name));
+ const records=await Promise.all(folders.map(async item=>{
+  try{return await readRemoteUser(item.name)}catch(error){console.warn('Não foi possível ler o perfil '+item.name,error);return null;}
+ }));
+ communityCache=records.filter(Boolean).map(record=>record.data);
+ communityCacheAt=Date.now();
+ return communityCache;
+}
+function communityStatsFromRecord(record){
+ const history=normalizeHistory(record.history);
+ const questions=Object.values(history.questions||{});
+ const correct=questions.reduce((sum,q)=>sum+(Number(q.correct)||0),0);
+ const wrong=questions.reduce((sum,q)=>sum+(Number(q.wrong)||0),0);
+ const sessions=Array.isArray(history.sessions)?history.sessions:[];
+ const checkpoint=record.profile&&record.profile.checkpoint;
+ let timeMs=sessions.reduce((sum,item)=>sum+(Number(item.timeMs)||0),0);
+ if(checkpoint)timeMs+=(Number(checkpoint.sessionQuestionTimeMs)||0)+(Number(checkpoint.currentElapsedMs)||0);
+ const hard=questions.filter(q=>(Number(q.wrong)||0)>0)
+  .sort((a,b)=>b.wrong-a.wrong||(b.wrong/Math.max(1,b.attempts))-(a.wrong/Math.max(1,a.attempts))).slice(0,3);
+ return {username:record.username,correct,wrong,attempts:correct+wrong,timeMs,hard};
+}
+async function renderCommunityRanking(){
+ const box=$('communityRanking');if(!box)return;
+ box.innerHTML='<div class="community-empty">Carregando ranking compartilhado...</div>';
+ try{
+  const records=await loadCommunityRecords();
+  const visible=records.slice();
+  if(activeProfile){
+   const localRecord=buildRemoteUserData();
+   const index=visible.findIndex(item=>item.username===activeProfile);
+   if(index>=0)visible[index]=localRecord;else visible.push(localRecord);
+  }
+  const users=visible.map(communityStatsFromRecord);
+  const mode=$('communitySort')?.value||'time';
+  const sorters={time:(a,b)=>b.timeMs-a.timeMs||b.correct-a.correct,correct:(a,b)=>b.correct-a.correct||b.timeMs-a.timeMs,wrong:(a,b)=>b.wrong-a.wrong||b.timeMs-a.timeMs};
+  users.sort(sorters[mode]||sorters.time);
+  if(!users.length){box.innerHTML='<div class="community-empty">Ainda não há participantes. Seja o primeiro a criar um perfil!</div>';return;}
+  box.innerHTML=users.map((user,index)=>{
+   const hard=user.hard.length?user.hard.map(q=>q.a+'×'+q.b+' ('+q.wrong+' erro'+(q.wrong===1?'':'s')+')').join(' · '):'Sem erros registrados';
+   return '<div class="community-card"><div class="community-user">#'+(index+1)+' · '+escapeHtml(user.username)+'<small>'+user.attempts+' questões respondidas</small></div><div class="community-metric"><strong>'+formatDuration(user.timeMs)+'</strong><small>tempo estudado</small></div><div class="community-metric"><strong>'+user.correct+'</strong><small>acertos</small></div><div class="community-metric"><strong>'+user.wrong+'</strong><small>erros</small></div><div class="community-hard"><b>Maiores dificuldades:</b> '+escapeHtml(hard)+'</div></div>';
+  }).join('');
+ }catch(error){
+  box.innerHTML='<div class="community-empty">Não foi possível carregar o ranking online. Confira o token e a permissão Contents: Read and write.</div>';
+  console.error('Falha ao carregar o ranking:',error);
+ }
+}
+async function restoreCloudSession(){
+ const rememberedUser=sessionStorage.getItem(AUTH_SESSION_KEY);
+ if(!rememberedUser){showLoginScreen();return;}
+ try{
+  const record=await readRemoteUser(rememberedUser);
+  if(!record)throw new Error('A conta salva nesta sessão não foi encontrada no repositório.');
+  hydrateRemoteUser(rememberedUser,record);
+  enterApp(rememberedUser);
+ }catch(error){
+  sessionStorage.removeItem(AUTH_SESSION_KEY);
+  showLoginScreen();
+  $('loginMessage').textContent='Não foi possível restaurar a sessão: '+(error.message||'verifique a conexão e o token.');
+ }
+}
+
 function enterApp(username){
  activeProfile=username;$('profileName').value=username;$('currentUsername').textContent=username;
- historyData=loadHistory();$('authScreen').classList.add('hidden');$('game').classList.add('hidden');$('report').classList.add('hidden');$('setup').classList.remove('hidden');
+ $('authScreen').classList.add('hidden');$('game').classList.add('hidden');$('report').classList.add('hidden');$('setup').classList.remove('hidden');
  selectProfile();renderCommunityRanking();
 }
 function showLoginScreen(){
@@ -332,60 +516,41 @@ async function handleRegister(event){
  if(!/^[a-z0-9_.-]{3,20}$/.test(username)){$('registerMessage').textContent='Use um nome com 3 a 20 caracteres: letras sem acento, números, ponto, traço ou _. ';return;}
  if(password.length<8){$('registerMessage').textContent='A senha precisa ter pelo menos 8 caracteres.';return;}
  if(password!==confirmPassword){$('registerMessage').textContent='As senhas não são iguais.';return;}
- if(authUsers[username]){$('registerMessage').textContent='Este nome de usuário já está cadastrado neste navegador.';return;}
  try{
+  if(await readRemoteUser(username)){$('registerMessage').textContent='Este nome de usuário já está cadastrado.';return;}
   const salt=makeSalt(),hash=await passwordHash(password,salt);
-  authUsers[username]={username,salt,hash,createdAt:new Date().toISOString()};
-  if(!saveAuthUsers())throw new Error('Não foi possível salvar o cadastro no armazenamento do navegador.');
-  profilesData[username]=profilesData[username]||{};persistProfiles();
+  const account={username,salt,hash,createdAt:new Date().toISOString()};
+  const document={version:1,username,auth:account,profile:{},history:{questions:{},sessions:[]},updatedAt:new Date().toISOString()};
+  const sha=await writeRemoteUser(username,document,null);
+  hydrateRemoteUser(username,{data:document,sha});
   sessionStorage.setItem(AUTH_SESSION_KEY,username);
   $('registerForm').reset();enterApp(username);
- }catch(error){$('registerMessage').textContent=error.message||'Não foi possível criar a conta.';}
+ }catch(error){$('registerMessage').textContent=error.message||'Não foi possível criar a conta. Confira o token e a permissão Contents: Read and write.';}
 }
 async function handleLogin(event){
  event.preventDefault();
  const username=normalizeUsername($('loginUsername').value),password=$('loginPassword').value;
  $('loginMessage').textContent='';
- const account=authUsers[username];
- if(!account){$('loginMessage').textContent='Nome de usuário ou senha incorretos.';return;}
  try{
-  const hash=await passwordHash(password,account.salt);
-  if(hash!==account.hash){$('loginMessage').textContent='Nome de usuário ou senha incorretos.';return;}
-  sessionStorage.setItem(AUTH_SESSION_KEY,username);$('loginPassword').value='';enterApp(username);
- }catch(error){$('loginMessage').textContent=error.message||'Não foi possível entrar.';}
+  const record=await readRemoteUser(username);
+  if(!record){$('loginMessage').textContent='Nome de usuário ou senha incorretos.';return;}
+  const hash=await passwordHash(password,record.data.auth.salt);
+  if(hash!==record.data.auth.hash){$('loginMessage').textContent='Nome de usuário ou senha incorretos.';return;}
+  hydrateRemoteUser(username,record);
+  sessionStorage.setItem(AUTH_SESSION_KEY,username);
+  $('loginPassword').value='';
+  enterApp(username);
+ }catch(error){$('loginMessage').textContent=error.message||'Não foi possível entrar. Confira a conexão e o token.';}
 }
-function logout(){
+async function logout(){
  if(!$('game').classList.contains('hidden')){alert('Encerre ou salve a partida antes de sair da conta.');return;}
+ await flushCloudSave();
  stopMusic();menuMusicOn=false;$('menuMusic').textContent='♫ Ouvir música';$('menuMusic').setAttribute('aria-pressed','false');
  sessionStorage.removeItem(AUTH_SESSION_KEY);activeProfile='';historyData=loadHistory();
  $('setup').classList.add('hidden');$('report').classList.add('hidden');$('authScreen').classList.remove('hidden');
  $('loginForm').reset();$('registerForm').reset();showLoginScreen();
 }
-function communityStats(username){
- let history={questions:{},sessions:[]};
- try{history=JSON.parse(localStorage.getItem('projetoTabuadaHistoricoV2_'+username)||'null')||history}catch(e){}
- const questions=Object.values(history.questions||{});
- const correct=questions.reduce((sum,q)=>sum+(Number(q.correct)||0),0);
- const wrong=questions.reduce((sum,q)=>sum+(Number(q.wrong)||0),0);
- const sessions=Array.isArray(history.sessions)?history.sessions:[];
- const checkpoint=profilesData[username]?.checkpoint;
- let timeMs=sessions.reduce((sum,item)=>sum+(Number(item.timeMs)||0),0);
- if(checkpoint)timeMs+=(Number(checkpoint.sessionQuestionTimeMs)||0)+(Number(checkpoint.currentElapsedMs)||0);
- const hard=questions.filter(q=>(Number(q.wrong)||0)>0).sort((a,b)=>b.wrong-a.wrong||(b.wrong/Math.max(1,b.attempts))-(a.wrong/Math.max(1,a.attempts))).slice(0,3);
- return {username,correct,wrong,attempts:correct+wrong,timeMs,hard};
-}
-function renderCommunityRanking(){
- const box=$('communityRanking');if(!box)return;
- const users=Object.keys(authUsers).map(communityStats);
- const mode=$('communitySort')?.value||'time';
- const sorters={time:(a,b)=>b.timeMs-a.timeMs||b.correct-a.correct,correct:(a,b)=>b.correct-a.correct||b.timeMs-a.timeMs,wrong:(a,b)=>b.wrong-a.wrong||b.timeMs-a.timeMs};
- users.sort(sorters[mode]||sorters.time);
- if(!users.length){box.innerHTML='<div class="community-empty">Ainda não há participantes. Seja o primeiro a criar um perfil!</div>';return;}
- box.innerHTML=users.map((user,index)=>{
-  const hard=user.hard.length?user.hard.map(q=>q.a+'×'+q.b+' ('+q.wrong+' erro'+(q.wrong===1?'':'s')+')').join(' · '):'Sem erros registrados';
-  return '<div class="community-card"><div class="community-user">#'+(index+1)+' · '+escapeHtml(user.username)+'<small>'+user.attempts+' questões respondidas</small></div><div class="community-metric"><strong>'+formatDuration(user.timeMs)+'</strong><small>tempo estudado</small></div><div class="community-metric"><strong>'+user.correct+'</strong><small>acertos</small></div><div class="community-metric"><strong>'+user.wrong+'</strong><small>erros</small></div><div class="community-hard"><b>Maiores dificuldades:</b> '+escapeHtml(hard)+'</div></div>';
- }).join('');
-}
+
 function escapeHtml(value){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
 function loadProfiles(){try{return JSON.parse(localStorage.getItem('projetoTabuadaPerfisV1')||'{}')}catch(e){return {}}}
 function persistProfiles(){try{localStorage.setItem('projetoTabuadaPerfisV1',JSON.stringify(profilesData));return true}catch(e){return false}}
@@ -400,7 +565,7 @@ function loadHistory(){
  }catch(error){return {questions:{},sessions:[]}}
 }
 function saveHistory(){
- try{localStorage.setItem(profileHistoryKey(),JSON.stringify(historyData));return true}
+ try{localStorage.setItem(profileHistoryKey(),JSON.stringify(historyData));scheduleCloudSave();return true}
  catch(error){return false}
 }
 function formatDuration(milliseconds){
@@ -544,7 +709,7 @@ function updateProfileButtons(){
  $('addNumbers').disabled=!(profile&&profile.checkpoint);
 }
 function selectProfile(){
- const name=$('profileName').value.trim();activeProfile=name;historyData=loadHistory();
+ const name=$('profileName').value.trim();activeProfile=name;
  const c=profilesData[name]?.checkpoint;
  if(c){
   selected=c.selected||[];
@@ -564,14 +729,15 @@ function saveProfile(showMessage=true){
  profilesData[name].updatedAt=new Date().toISOString();
  if(!persistProfiles()){$('profileStatus').textContent='Não foi possível salvar os dados neste navegador.';return false;}
  historyData=loadHistory();updateProfileButtons();
- if(showMessage)$('profileStatus').textContent='Perfil “'+name+'” salvo. O progresso será atualizado automaticamente.';
+ scheduleCloudSave();
+ if(showMessage)$('profileStatus').textContent='Perfil “'+name+'” salvo. O progresso será sincronizado online.';
  return true;
 }
 function saveCheckpoint(){
  if(!activeProfile||!round||!profilesData[activeProfile]||$('game').classList.contains('hidden'))return;
  const c=profileSnapshot();
  c.currentElapsedMs=questionStartedAt?questionElapsedBeforeStart+performance.now()-questionStartedAt:0;
- profilesData[activeProfile].checkpoint=c;profilesData[activeProfile].updatedAt=new Date().toISOString();persistProfiles();
+ profilesData[activeProfile].checkpoint=c;profilesData[activeProfile].updatedAt=new Date().toISOString();persistProfiles();scheduleCloudSave();
 }
 function resumeProfile(){
  const name=$('profileName').value.trim(),c=profilesData[name]?.checkpoint;if(!name||!c)return;
@@ -782,7 +948,7 @@ function toggleSound(){
  }
 }
 function replayTune(){if(soundOn)playTrack(currentTrackIndex)}
-function stop(){finishSession();if(activeProfile&&profilesData[activeProfile]){profilesData[activeProfile].checkpoint=null;persistProfiles();updateProfileButtons();}}
+function stop(){finishSession();if(activeProfile&&profilesData[activeProfile]){profilesData[activeProfile].checkpoint=null;persistProfiles();updateProfileButtons();}scheduleCloudSave(true);}
 function backToMenu(){
  $('report').classList.add('hidden');
  $('setup').classList.remove('hidden');
@@ -824,9 +990,7 @@ $('playAgain').addEventListener('click',playAgain);
 for(let n=1;n<=10;n++){const option=document.createElement('option');option.value=String(n);option.textContent='Tabuada do '+n;$('reportTable').appendChild(option)}
 $('menuVolume').addEventListener('input',e=>setVolume(e.target.value));
 setInterval(saveCheckpoint,5000);
-const rememberedUser=sessionStorage.getItem(AUTH_SESSION_KEY);
-if(rememberedUser&&authUsers[rememberedUser])enterApp(rememberedUser);
-else showLoginScreen();
+restoreCloudSession();
 $('gameVolume').addEventListener('input',e=>setVolume(e.target.value));
 document.addEventListener('click',e=>{
  const button=e.target.closest('button');
