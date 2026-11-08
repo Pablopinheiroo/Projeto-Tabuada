@@ -260,11 +260,20 @@ async function handleApi(request, env, origin) {
         }, 503, origin);
       }
       await githubRequest("/repos/" + GH_OWNER + "/" + GH_REPO, env);
+      const usersDirectory = await githubRequest(
+        "/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" +
+        GH_DIRECTORY + "?ref=" + encodeURIComponent(GH_BRANCH),
+        env
+      );
+      if (!Array.isArray(usersDirectory)) {
+        throw new Error("O diretório usuarios do repositório privado não retornou uma lista.");
+      }
       return json({
         ok: true,
         service: "Projeto Tabuada API",
         githubSecretConfigured: true,
-        githubConnected: true
+        githubConnected: true,
+        githubContentReadAccess: true
       }, 200, origin);
     }
 
@@ -408,7 +417,7 @@ async function handleApi(request, env, origin) {
       return json({ error: "O token do servidor não tem permissão de leitura e gravação no repositório privado Projeto-Tabuada-Dados." }, 502, origin);
     }
     if (error.status === 404) {
-      return json({ error: "O repositório privado de dados ou o caminho de armazenamento não foi encontrado." }, 502, origin);
+      return json({ error: "O repositório privado ou o diretório usuarios não foi encontrado. Confira também se o token tem permissão Contents: Read and write." }, 502, origin);
     }
     if (error.status === 409 || error.status === 422) {
       return json({ error: "O GitHub recusou a gravação. Atualize a página e tente novamente." }, 409, origin);
