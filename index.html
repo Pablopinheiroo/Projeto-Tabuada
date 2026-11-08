@@ -37,7 +37,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .music-title{display:block;font-weight:800;font-size:.95rem;overflow-wrap:anywhere}
 .music-buttons{display:flex;gap:8px;flex-wrap:wrap}
 .music-button{padding:9px 12px;background:#fff;color:#1e40af;border:1px solid #bfdbfe;font-size:.84rem}
-.music-button[aria-pressed="false"]{color:#64748b;background:#f1f5f9;border-color:#cbd5e1}
+ .music-button[aria-pressed="false"]{color:#64748b;background:#f1f5f9;border-color:#cbd5e1}\n.volume-control{display:flex;align-items:center;gap:8px;color:#475569;font-size:.82rem;font-weight:650}\n.volume-control input{width:92px;accent-color:#2563eb}
 .progress{height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin:0 0 22px}
 .progress div{height:100%;width:0;background:#2563eb;transition:width .2s}
 .question{text-align:center;padding:26px 8px 20px}
@@ -56,7 +56,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:420px){
  .stats{gap:6px}.stat{padding:10px 4px}.stat strong{font-size:1.3rem}
  .mode{max-width:116px}.music-box{align-items:flex-start}.music-buttons{width:100%}
- .music-button{flex:1}
+ .music-button{flex:1}\n .volume-control{width:100%;justify-content:space-between}\n .volume-control input{width:65%}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
 </style>
@@ -76,7 +76,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <span class="music-title">Uma trilha para acompanhar sua preparação</span>
  </div>
  <div class="music-buttons">
-  <button id="menuMusic" class="music-button" type="button" aria-pressed="false">♫ Ouvir música</button>
+  <button id="menuMusic" class="music-button" type="button" aria-pressed="false">♫ Ouvir música</button>\n  <label class="volume-control" for="menuVolume">Volume <input id="menuVolume" type="range" min="0" max="100" value="28"></label>
  </div>
 </div>
 <p class="small">No modo normal, a tabuada segue de 1 a 10. No aleatório, a ordem muda.</p>
@@ -96,7 +96,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
  </div>
  <div class="music-buttons">
   <button id="soundToggle" class="music-button" type="button" aria-pressed="true">♫ Som ligado</button>
-  <button id="replayTune" class="music-button" type="button">▶ Ouvir toque</button>
+  <button id="replayTune" class="music-button" type="button">↻ Reiniciar faixa</button>\n  <label class="volume-control" for="gameVolume">Volume <input id="gameVolume" type="range" min="0" max="100" value="28"></label>
  </div>
 </div>
 
@@ -125,21 +125,21 @@ for(let n=1;n<=10;n++){
 
 const $=id=>document.getElementById(id);
 let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
-let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=0;
+let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=0,volumeLevel=.28;
 let musicTimer=null,nextNoteTime=0,musicStep=0,menuMusicOn=false;
 
-// Dez pequenas melodias originais, sintetizadas no próprio navegador: não precisam de arquivos ou internet.
+// Trilhas originais mais longas: cada uma tem oito compassos, harmonia, baixo e melodia.
 const musicalTracks=[
- {name:'Brilho',tempo:.205,wave:'triangle',notes:[72,76,79,84,79,76,74,76],bass:48},
- {name:'Aventura',tempo:.185,wave:'sine',notes:[67,71,74,79,76,74,71,67],bass:43},
- {name:'Piano Pop',tempo:.235,wave:'triangle',notes:[60,64,67,72,71,67,64,60],bass:36},
- {name:'Arcade',tempo:.16,wave:'square',notes:[72,79,84,79,74,81,86,81],bass:48},
- {name:'Jazz Leve',tempo:.22,wave:'sine',notes:[65,69,72,76,74,72,69,65],bass:41},
- {name:'Conquista',tempo:.175,wave:'triangle',notes:[72,74,76,79,84,83,84,88],bass:48},
- {name:'Dia de Sol',tempo:.21,wave:'triangle',notes:[69,72,76,81,79,76,72,69],bass:45},
- {name:'Mistério',tempo:.24,wave:'sine',notes:[62,65,69,74,72,69,65,62],bass:38},
- {name:'Dança',tempo:.17,wave:'triangle',notes:[76,79,83,88,86,83,79,76],bass:52},
- {name:'Grande Final',tempo:.23,wave:'triangle',notes:[60,67,72,76,79,84,79,72],bass:36}
+ {name:'Brisa',root:60,scale:[0,2,4,5,7,9,11],tempo:.29,progression:[0,4,5,3,0,5,3,4],melody:[7,null,9,null,11,9,7,null,5,null,7,9,7,null,5,null],lead:'sine'},
+ {name:'Aventura',root:62,scale:[0,2,4,5,7,9,11],tempo:.255,progression:[0,5,3,4,0,3,5,4],melody:[0,2,4,null,7,4,2,null,4,5,7,null,9,7,5,null],lead:'triangle'},
+ {name:'Piano Pop',root:57,scale:[0,2,4,5,7,9,11],tempo:.28,progression:[0,3,4,0,5,3,4,0],melody:[7,9,null,7,4,null,2,4,5,7,null,9,7,5,null,4],lead:'sine'},
+ {name:'Arcade',root:60,scale:[0,2,4,5,7,9,11],tempo:.225,progression:[0,4,5,4,0,3,5,4],melody:[12,null,9,7,12,null,9,7,11,9,7,null,9,7,5,null],lead:'triangle'},
+ {name:'Jazz Leve',root:65,scale:[0,2,4,5,7,9,11],tempo:.305,progression:[0,3,5,4,0,4,3,5],melody:[7,null,9,11,null,9,7,null,5,7,null,9,11,null,9,7],lead:'sine'},
+ {name:'Conquista',root:55,scale:[0,2,4,5,7,9,11],tempo:.26,progression:[0,4,5,3,0,3,4,0],melody:[7,9,11,null,12,11,9,null,7,9,11,12,null,11,9,7],lead:'triangle'},
+ {name:'Dia de Sol',root:69,scale:[0,2,4,5,7,9,11],tempo:.295,progression:[0,5,3,4,0,4,5,3],melody:[9,null,7,5,null,7,9,null,12,11,9,null,7,5,7,null],lead:'sine'},
+ {name:'Mistério',root:57,scale:[0,2,3,5,7,8,10],tempo:.31,progression:[0,5,3,6,0,3,5,6],melody:[7,null,8,10,null,8,7,null,5,null,7,8,10,null,8,7],lead:'sine'},
+ {name:'Dança',root:64,scale:[0,2,4,5,7,9,11],tempo:.235,progression:[0,4,5,3,0,5,4,3],melody:[12,9,7,null,9,12,11,null,9,7,5,null,7,9,12,null],lead:'triangle'},
+ {name:'Grande Final',root:60,scale:[0,2,4,5,7,9,11],tempo:.285,progression:[0,3,4,5,0,5,3,4],melody:[0,4,7,null,9,7,4,null,7,9,12,null,11,9,7,4],lead:'triangle'}
 ];
 
 function shuffle(a){
@@ -163,25 +163,49 @@ function ensureAudio(){
   if(!AudioCtx){$('musicTitle').textContent='Áudio não disponível neste navegador';return false}
   audioContext=new AudioCtx();
   masterGain=audioContext.createGain();
-  masterGain.gain.value=.42;
+  masterGain.gain.value=volumeLevel;
   masterGain.connect(audioContext.destination);
  }
  if(audioContext.state==='suspended')audioContext.resume();
  return true;
 }
 function midiToHz(note){return 440*Math.pow(2,(note-69)/12)}
+function scaleNote(track,degree,octave=0){
+ const index=((degree%7)+7)%7;
+ const extra=Math.floor(degree/7);
+ return track.root+track.scale[index]+12*(extra+octave);
+}
 function playNote(frequency,start,duration,wave,volume){
  const oscillator=audioContext.createOscillator();
  const envelope=audioContext.createGain();
  oscillator.type=wave;
  oscillator.frequency.setValueAtTime(frequency,start);
  envelope.gain.setValueAtTime(.0001,start);
- envelope.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),start+.018);
+ envelope.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),start+.025);
  envelope.gain.exponentialRampToValueAtTime(.0001,start+duration);
  oscillator.connect(envelope);envelope.connect(masterGain);
  activeSounds.add(oscillator);
  oscillator.onended=()=>{activeSounds.delete(oscillator);oscillator.disconnect();envelope.disconnect()};
- oscillator.start(start);oscillator.stop(start+duration+.025);
+ oscillator.start(start);oscillator.stop(start+duration+.035);
+}
+function playUiClick(){
+ if(!soundOn||!ensureAudio())return;
+ const t=audioContext.currentTime+.005;
+ // Clique discreto, curto e macio; sem aquele apito alto e repetitivo.
+ playNote(740,t,.045,'triangle',.012);
+ playNote(990,t+.018,.035,'sine',.006);
+}
+function playFeedback(correct){
+ if(!soundOn||!ensureAudio())return;
+ const t=audioContext.currentTime+.01;
+ const notes=correct?[72,76,79]:[62,58];
+ notes.forEach((note,i)=>playNote(midiToHz(note),t+i*.085,.12,'sine',correct?.035:.022));
+}
+function setVolume(value){
+ volumeLevel=Math.max(0,Math.min(1,Number(value)/100));
+ if(masterGain)masterGain.gain.setTargetAtTime(volumeLevel,audioContext.currentTime,.04);
+ $('menuVolume').value=String(Math.round(volumeLevel*100));
+ $('gameVolume').value=String(Math.round(volumeLevel*100));
 }
 function stopMusic(){
  if(musicTimer!==null){clearInterval(musicTimer);musicTimer=null}
@@ -189,14 +213,34 @@ function stopMusic(){
  activeSounds.clear();
 }
 function scheduleMusicStep(track){
- const beat=nextNoteTime;
- const i=musicStep%track.notes.length;
- const note=track.notes[i];
- playNote(midiToHz(note),beat,track.tempo*.88,track.wave,.105);
- // Acompanhamento grave em cada dois tempos.
- if(i%2===0){
-  const bassNote=track.bass+(i%4===0?0:7);
-  playNote(midiToHz(bassNote),beat,track.tempo*1.65,'sine',.052);
+ const step=musicStep%64;
+ const bar=Math.floor(step/8);
+ const beatInBar=step%8;
+ const when=nextNoteTime;
+ const chordDegree=track.progression[bar];
+ // Acorde suave e sustentado no começo de cada compasso.
+ if(beatInBar===0){
+  [chordDegree,chordDegree+2,chordDegree+4].forEach((degree,i)=>{
+   playNote(midiToHz(scaleNote(track,degree,0)),when,track.tempo*7.6,'sine',i===0?.012:.008);
+  });
+ }
+ // Baixo em dois tempos de cada compasso para dar movimento sem pesar.
+ if(beatInBar===0||beatInBar===4){
+  const bassDegree=chordDegree+(beatInBar===4?4:0);
+  playNote(midiToHz(scaleNote(track,bassDegree,-2)),when,track.tempo*1.75,'sine',.038);
+ }
+ // Melodia de 16 passos com pequenas variações ao longo dos oito compassos.
+ const motif=track.melody[step%16];
+ if(motif!==null){
+  const phrase=Math.floor(step/16);
+  const variation=[0,1,-1,2][phrase];
+  const adjusted=motif+(step%8===6?variation:0);
+  playNote(midiToHz(scaleNote(track,adjusted,1)),when,track.tempo*.72,track.lead,.041);
+ }
+ // Notas leves de acompanhamento entre as frases da melodia.
+ if(beatInBar===2||beatInBar===6){
+  const colorTone=chordDegree+(beatInBar===2?2:4);
+  playNote(midiToHz(scaleNote(track,colorTone,1)),when,track.tempo*.42,'sine',.012);
  }
  nextNoteTime+=track.tempo;
  musicStep++;
@@ -205,13 +249,13 @@ function startMusicLoop(track){
  if(!soundOn||!ensureAudio())return;
  stopMusic();
  musicStep=0;
- nextNoteTime=audioContext.currentTime+.05;
- // Agenda continuamente os próximos sons; a música só para ao trocar de rodada,
- // desligar o som ou sair do jogo.
+ nextNoteTime=audioContext.currentTime+.06;
+ // Mantém uma faixa completa em reprodução: oito compassos, com harmonia e variações.
  musicTimer=setInterval(()=>{
   if(!audioContext||audioContext.state!=='running')return;
-  while(nextNoteTime<audioContext.currentTime+.22)scheduleMusicStep(track);
- },80);
+  if(nextNoteTime<audioContext.currentTime-.35)nextNoteTime=audioContext.currentTime+.04;
+  while(nextNoteTime<audioContext.currentTime+.28)scheduleMusicStep(track);
+ },50);
 }
 function playTrack(index){
  if(!soundOn)return;
@@ -219,7 +263,7 @@ function playTrack(index){
 }
 function showTrack(){
  const track=musicalTracks[currentTrackIndex];
- $('musicTitle').textContent='Trilha '+(currentTrackIndex+1)+' de 10 · '+track.name;
+ $('musicTitle').textContent='Faixa '+(currentTrackIndex+1)+' de 10 · '+track.name;
 }
 function startRound(){
  round++;
@@ -303,7 +347,7 @@ $('wrong').addEventListener('click',()=>judge(false));
 $('stop').addEventListener('click',stop);
 $('soundToggle').addEventListener('click',toggleSound);
 $('replayTune').addEventListener('click',replayTune);
-$('menuMusic').addEventListener('click',toggleMenuMusic);
+$('menuMusic').addEventListener('click',toggleMenuMusic);\n$('menuVolume').addEventListener('input',e=>setVolume(e.target.value));\n$('gameVolume').addEventListener('input',e=>setVolume(e.target.value));\ndocument.addEventListener('click',e=>{\n const button=e.target.closest('button');\n if(!button||button.disabled||['right','wrong','soundToggle','menuMusic','replayTune'].includes(button.id))return;\n playUiClick();\n},true);
 </script>
 </body>
 </html>
