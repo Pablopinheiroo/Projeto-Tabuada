@@ -248,11 +248,11 @@ function next(){
  updateStats();
 }
 function start(){
- if(menuMusicOn){menuMusicOn=false;$('menuMusic').textContent='♫ Ouvir música';$('menuMusic').setAttribute('aria-pressed','false')}
  selected=[...tablesEl.querySelectorAll('.table-row')]
   .filter(r=>r.querySelector('input').checked)
   .map(r=>({n:Number(r.querySelector('input').value),mode:r.querySelector('select').value}));
  if(!selected.length){alert('Selecione pelo menos uma tabuada para começar.');return}
+ if(menuMusicOn){menuMusicOn=false;$('menuMusic').textContent='♫ Ouvir música';$('menuMusic').setAttribute('aria-pressed','false')}
  hits=0;misses=0;round=0;position=0;deck=[];
  $('setup').classList.add('hidden');
  $('game').classList.remove('hidden');
