@@ -309,7 +309,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  <div style="text-align:center;margin-bottom:20px"><div style="font-size:2.3rem">🔐</div><h2 style="font-size:1.45rem">Acesse sua conta</h2><p class="hint" style="margin:6px 0 0">Entre para acompanhar seu progresso e participar do ranking.</p></div>
  <form id="loginForm" class="auth-form">
   <label>Nome de usuário<input id="loginUsername" maxlength="20" autocomplete="username" required placeholder="Seu nome de usuário"></label>
-  <label>Senha<input id="loginPassword" type="password" minlength="4" autocomplete="current-password" required placeholder="Sua senha"></label>
+  <label>Senha<input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Sua senha"></label>
   <button class="primary" type="submit">Entrar</button>
   <p id="loginMessage" class="auth-message" role="status"></p>
  </form>
@@ -319,11 +319,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <div class="avatar-field">Escolha seu avatar<div id="registerAvatarGrid" class="avatar-grid" role="group" aria-label="Escolha um avatar"></div></div>
   <label>Nome de usuário<input id="registerUsername" maxlength="20" autocomplete="username" required placeholder="Ex.: maria_27"></label>
   <small>Use de 3 a 20 caracteres: letras sem acento, números, ponto, traço ou sublinhado.</small>
-  <label>Senha<input id="registerPassword" type="password" minlength="4" autocomplete="new-password" required placeholder="Mínimo de 4 caracteres"></label>
+  <label>Senha<input id="registerPassword" type="password" autocomplete="new-password" required placeholder="Digite uma senha de sua escolha"></label>
   <div style="margin:-5px 0 4px;padding:10px 12px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:.82rem;line-height:1.45">
    ⚠️ <b>Use uma senha simples e exclusiva para este jogo.</b> Não coloque a senha do seu e-mail, banco, redes sociais ou de qualquer outro serviço. É um projeto informal entre amigos; não use nenhuma senha importante.
   </div>
-  <label>Confirme a senha<input id="registerConfirm" type="password" minlength="4" autocomplete="new-password" required placeholder="Digite a senha novamente"></label>
+  <label>Confirme a senha<input id="registerConfirm" type="password" autocomplete="new-password" required placeholder="Digite a senha novamente"></label>
   <button class="primary" type="submit">Criar conta</button>
   <p id="registerMessage" class="auth-message" role="status"></p>
   <div class="auth-switch"><span>Já tem uma conta?</span><button id="showLogin" type="button" class="link-button">Voltar ao login</button></div>
@@ -347,8 +347,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  <h2 class="profile-section-title">🔑 Alterar senha</h2>
  <p class="hint">Digite a nova senha e confirme. Não é necessário informar a senha atual.</p>
  <form id="changePasswordForm" class="auth-form">
-  <label>Nova senha<input id="newPassword" type="password" minlength="4" autocomplete="new-password" required placeholder="Mínimo de 4 caracteres"></label>
-  <label>Confirmar nova senha<input id="confirmNewPassword" type="password" minlength="4" autocomplete="new-password" required placeholder="Digite novamente a nova senha"></label>
+  <label>Nova senha<input id="newPassword" type="password" autocomplete="new-password" required placeholder="Digite a nova senha"></label>
+  <label>Confirmar nova senha<input id="confirmNewPassword" type="password" autocomplete="new-password" required placeholder="Digite novamente a nova senha"></label>
   <button class="primary" type="submit">Alterar senha</button>
   <p id="passwordMessage" class="auth-message" role="status"></p>
  </form>
@@ -483,12 +483,12 @@ let remoteUserSha=null,remoteUserData=null,cloudSyncTimer=null,cloudSyncBusy=fal
 let communityCache=[],communityCacheAt=0;
 let selectedRegisterAvatar=0,selectedProfileAvatar=0;
 const AVATARS=[
- {name:'Gamer',emoji:'🎧',bg:['#2563eb','#7c3aed']},
+ {name:'Jogador',emoji:'🎧',bg:['#2563eb','#7c3aed']},
  {name:'Raposa',emoji:'🦊',bg:['#f97316','#fbbf24']},
  {name:'Coroa',emoji:'👑',bg:['#ca8a04','#facc15']},
  {name:'Controle',emoji:'🎮',bg:['#1d4ed8','#06b6d4']},
  {name:'Panda',emoji:'🐼',bg:['#475569','#cbd5e1']},
- {name:'Pixel',emoji:'👾',bg:['#15803d','#86efac']},
+ {name:'Píxel',emoji:'👾',bg:['#15803d','#86efac']},
  {name:'Leão',emoji:'🦁',bg:['#b45309','#f59e0b']},
  {name:'Lobo',emoji:'🐺',bg:['#475569','#94a3b8']},
  {name:'Pinguim',emoji:'🐧',bg:['#0f766e','#67e8f9']},
@@ -497,26 +497,26 @@ const AVATARS=[
 
 // Trilhas originais mais longas: cada uma tem oito compassos, harmonia, baixo e melodia.
 const musicalTracks=[
- {name:"Pixel Adventure",genre:"Chiptune de aventura",src:'assets/music/pixel-adventure.mp3'},
- {name:"Racing Neon",genre:"Corrida eletrônica",src:'assets/music/racing-neon.mp3'},
- {name:"Kingdom of Heroes",genre:"RPG cinematográfico",src:'assets/music/rpg-kingdom.mp3'},
- {name:"Arcade Bounce",genre:"Funk de arcade",src:'assets/music/arcade-bounce.mp3'},
- {name:"Dungeon Boss",genre:"Batalha de chefão",src:'assets/music/dungeon-boss.mp3'},
- {name:"Sky Islands",genre:"Exploração e fantasia",src:'assets/music/sky-islands.mp3'},
- {name:"Speedrun!",genre:"Arcade acelerado",src:'assets/music/speedrun.mp3'},
- {name:"Puzzle Funk",genre:"Puzzle e groove",src:'assets/music/puzzle-funk.mp3'},
- {name:"Retro Platform",genre:"Plataforma retrô",src:'assets/music/retro-platform.mp3'},
- {name:"Cyber Arena",genre:"Eletrônica futurista",src:'assets/music/cyber-arena.mp3'},
- {name:"Forest Quest",genre:"Aventura na floresta",src:'assets/music/forest-quest.mp3'},
- {name:"Pixel Rock",genre:"Rock de videogame",src:'assets/music/pixel-rock.mp3'},
- {name:"Star Runner",genre:"Corrida espacial",src:'assets/music/star-runner.mp3'},
- {name:"Victory Lap",genre:"Pop de vitória",src:'assets/music/victory-lap.mp3'},
- {name:"Stealth Mission",genre:"Missão secreta",src:'assets/music/stealth-mission.mp3'},
- {name:"Ocean World",genre:"Exploração subaquática",src:'assets/music/ocean-world.mp3'},
- {name:"Desert Rally",genre:"Rally e aventura",src:'assets/music/desert-rally.mp3'},
- {name:"Magic Castle",genre:"Fantasia medieval",src:'assets/music/magic-castle.mp3'},
- {name:"Neon Drift",genre:"Synthwave gamer",src:'assets/music/neon-drift.mp3'},
- {name:"Final Boss",genre:"Épico de ação",src:'assets/music/final-boss.mp3'}
+ {name:"Aventura em Pixel",genre:"Aventura retrô",src:'assets/music/pixel-adventure.mp3'},
+ {name:"Corrida Neon",genre:"Corrida eletrônica",src:'assets/music/racing-neon.mp3'},
+ {name:"Reino dos Heróis",genre:"Aventura épica",src:'assets/music/rpg-kingdom.mp3'},
+ {name:"Salto no Fliperama",genre:"Funk de fliperama",src:'assets/music/arcade-bounce.mp3'},
+ {name:"Chefe da Masmorra",genre:"Batalha contra o chefão",src:'assets/music/dungeon-boss.mp3'},
+ {name:"Ilhas do Céu",genre:"Exploração fantástica",src:'assets/music/sky-islands.mp3'},
+ {name:"Corrida Relâmpago",genre:"Ritmo acelerado",src:'assets/music/speedrun.mp3'},
+ {name:"Ritmo dos Quebra-Cabeças",genre:"Quebra-cabeça e ritmo",src:'assets/music/puzzle-funk.mp3'},
+ {name:"Plataforma Retrô",genre:"Plataforma retrô",src:'assets/music/retro-platform.mp3'},
+ {name:"Arena Cibernética",genre:"Música eletrônica futurista",src:'assets/music/cyber-arena.mp3'},
+ {name:"Missão na Floresta",genre:"Aventura na floresta",src:'assets/music/forest-quest.mp3'},
+ {name:"Rock dos Jogos",genre:"Rock de videogame",src:'assets/music/pixel-rock.mp3'},
+ {name:"Corredor das Estrelas",genre:"Corrida espacial",src:'assets/music/star-runner.mp3'},
+ {name:"Volta da Vitória",genre:"Pop de vitória",src:'assets/music/victory-lap.mp3'},
+ {name:"Missão Silenciosa",genre:"Missão furtiva",src:'assets/music/stealth-mission.mp3'},
+ {name:"Mundo dos Oceanos",genre:"Exploração submarina",src:'assets/music/ocean-world.mp3'},
+ {name:"Rali no Deserto",genre:"Corrida no deserto",src:'assets/music/desert-rally.mp3'},
+ {name:"Castelo Mágico",genre:"Fantasia medieval",src:'assets/music/magic-castle.mp3'},
+ {name:"Deslize Neon",genre:"Música eletrônica neon",src:'assets/music/neon-drift.mp3'},
+ {name:"Chefe Final",genre:"Ação épica",src:'assets/music/final-boss.mp3'}
 ];
 
 function shuffle(a){
@@ -565,6 +565,27 @@ function cloudTokenReady(){
 function cloudFilePath(username){
  return '/repos/'+CLOUD.owner+'/'+CLOUD.repo+'/contents/'+CLOUD.directory+'/'+encodeURIComponent(username)+'/dados.json';
 }
+function siteErrorMessage(error){
+ const message=String(error&&error.message||error||'');
+ const lower=message.toLowerCase();
+ const status=Number(error&&error.status)||0;
+ if(status===401||lower.includes('bad credentials')||lower.includes('requires authentication')){
+  return 'O GitHub recusou o token de acesso. Isso não é erro da senha escolhida para o jogo. O token de integração precisa ser substituído por um válido.';
+ }
+ if(status===403||lower.includes('resource not accessible')||lower.includes('forbidden')||lower.includes('permission')){
+  return 'O GitHub não autorizou o acesso. Confira se o token tem permissão de leitura e gravação no repositório privado de dados.';
+ }
+ if(lower.includes('api rate limit')||lower.includes('rate limit exceeded')){
+  return 'O GitHub recebeu muitas solicitações. Aguarde um pouco e tente novamente.';
+ }
+ if(lower.includes('failed to fetch')||lower.includes('networkerror')||lower.includes('load failed')||lower.includes('network request failed')){
+  return 'Não foi possível conectar ao GitHub. Confira sua internet e tente novamente.';
+ }
+ if(status===404||lower==='not found')return 'Os dados solicitados não foram encontrados no repositório.';
+ if(status>=500)return 'O GitHub está apresentando uma falha temporária. Tente novamente mais tarde.';
+ return message||'Ocorreu um erro inesperado. Tente novamente.';
+}
+
 async function githubRequest(path,options={}){
  if(!cloudTokenReady())throw new Error('O jogo ainda precisa do token do GitHub. Configure o token no arquivo index.html.');
  const headers={Accept:'application/vnd.github+json',Authorization:'Bearer '+CLOUD.token,'X-GitHub-Api-Version':'2022-11-28'};
@@ -674,7 +695,7 @@ async function flushCloudSave(){
   }
  }catch(error){
   const status=$('profileStatus');
-  if(status)status.textContent='Falha ao sincronizar: '+(error.message||'verifique o token e as permissões do repositório.');
+  if(status)status.textContent='Falha ao sincronizar: '+siteErrorMessage(error);
   console.error('Falha na sincronização do Projeto Tabuada:',error);
  }finally{
   cloudSyncBusy=false;
@@ -742,7 +763,7 @@ async function restoreCloudSession(){
  }catch(error){
   sessionStorage.removeItem(AUTH_SESSION_KEY);
   showLoginScreen();
-  $('loginMessage').textContent='Não foi possível restaurar a sessão: '+(error.message||'verifique a conexão e o token.');
+  $('loginMessage').textContent='Não foi possível restaurar a sessão: '+siteErrorMessage(error);
  }
 }
 
@@ -765,7 +786,6 @@ async function handleRegister(event){
  const password=$('registerPassword').value,confirmPassword=$('registerConfirm').value;
  $('registerMessage').textContent='';
  if(!/^[a-z0-9_.-]{3,20}$/.test(username)){$('registerMessage').textContent='Use um nome com 3 a 20 caracteres: letras sem acento, números, ponto, traço ou _. ';return;}
- if(password.length<4){$('registerMessage').textContent='A senha precisa ter pelo menos 4 caracteres.';return;}
  if(password!==confirmPassword){$('registerMessage').textContent='As senhas não são iguais.';return;}
  try{
   if(await readRemoteUser(username)){$('registerMessage').textContent='Este nome de usuário já está cadastrado.';return;}
@@ -784,7 +804,7 @@ async function handleRegister(event){
   hydrateRemoteUser(username,{data:document,sha});
   sessionStorage.setItem(AUTH_SESSION_KEY,username);
   $('registerForm').reset();enterApp(username);
- }catch(error){$('registerMessage').textContent=error.message||'Não foi possível criar a conta. Confira o token e a permissão Contents: Read and write.';}
+ }catch(error){$('registerMessage').textContent=siteErrorMessage(error);}
 }
 async function handleLogin(event){
  event.preventDefault();
@@ -807,7 +827,7 @@ async function handleLogin(event){
   sessionStorage.setItem(AUTH_SESSION_KEY,username);
   $('loginPassword').value='';
   enterApp(username);
- }catch(error){$('loginMessage').textContent=error.message||'Não foi possível entrar. Confira a conexão e o token.';}
+ }catch(error){$('loginMessage').textContent=siteErrorMessage(error);}
 }
 async function logout(){
  if(!$('game').classList.contains('hidden')){alert('Encerre ou salve a partida antes de sair da conta.');return;}
@@ -1057,7 +1077,7 @@ async function saveProfileEdits(event){
   communityCacheAt=0;
   renderCommunityRanking();
  }catch(error){
-  $('profileMessage').textContent='Não foi possível salvar o perfil: '+(error.message||'verifique a conexão.');
+  $('profileMessage').textContent='Não foi possível salvar o perfil: '+siteErrorMessage(error);
  }
 }
 async function changePassword(event){
@@ -1065,7 +1085,6 @@ async function changePassword(event){
  const password=$('newPassword').value;
  const confirmPassword=$('confirmNewPassword').value;
  $('passwordMessage').textContent='';
- if(password.length<4){$('passwordMessage').textContent='A nova senha precisa ter pelo menos 4 caracteres.';return;}
  if(password!==confirmPassword){$('passwordMessage').textContent='As senhas não são iguais.';return;}
  try{
   const salt=makeSalt();
@@ -1078,7 +1097,7 @@ async function changePassword(event){
   $('changePasswordForm').reset();
   $('passwordMessage').textContent='Senha alterada com sucesso. Use a nova senha no próximo acesso.';
  }catch(error){
-  $('passwordMessage').textContent='Não foi possível alterar a senha: '+(error.message||'verifique a conexão.');
+  $('passwordMessage').textContent='Não foi possível alterar a senha: '+siteErrorMessage(error);
  }
 }
 function closeProfileScreen(){
