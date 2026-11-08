@@ -77,7 +77,8 @@ async function readStore(env) {
   return { data, sha: file.sha };
 }
 function encodeUtf8Base64(value) {
-  return b64url(enc.encode(value)).replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - b64url(enc.encode(value)).length % 4) % 4);
+  const encoded = b64url(enc.encode(value));
+  return encoded.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - encoded.length % 4) % 4);
 }
 async function writeStore(env, data, sha) {
   const cfg = repoConfig(env);
@@ -223,11 +224,7 @@ export default {
       }
       if (path === "/api/me" && request.method === "PUT") {
         const body = await readJson(request, 350000);
-        const result = await mutateStore(env, data => {
-          const usernamePromise = authenticate(request, env, data.users || {});
-          return usernamePromise;
-        });
-        // A validação da sessão é repetida com o estado mais recente antes de salvar.
+        // Confere a sessão no estado atual do arquivo antes de salvar.
         const store = await readStore(env);
         const username = await authenticate(request, env, store.data);
         if (!username) return json({ error: "Sessão inválida. Entre novamente." }, 401, cors);
