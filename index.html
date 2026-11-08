@@ -70,6 +70,15 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <p class="hint">Marque uma ou mais tabuadas e escolha como as questões aparecerão.</p>
 <div id="tables" class="tables"></div>
 <button id="start" class="primary">▶ Iniciar jogo</button>
+<div class="music-box" style="margin-top:14px;margin-bottom:0">
+ <div class="music-info">
+  <span class="music-kicker">Música do menu</span>
+  <span class="music-title">Uma trilha para acompanhar sua preparação</span>
+ </div>
+ <div class="music-buttons">
+  <button id="menuMusic" class="music-button" type="button" aria-pressed="false">♫ Ouvir música</button>
+ </div>
+</div>
 <p class="small">No modo normal, a tabuada segue de 1 a 10. No aleatório, a ordem muda.</p>
 </section>
 
@@ -117,6 +126,7 @@ for(let n=1;n<=10;n++){
 const $=id=>document.getElementById(id);
 let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
 let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=0;
+let musicTimer=null,nextNoteTime=0,musicStep=0,menuMusicOn=false;
 
 // Dez pequenas melodias originais, sintetizadas no próprio navegador: não precisam de arquivos ou internet.
 const musicalTracks=[
@@ -174,23 +184,38 @@ function playNote(frequency,start,duration,wave,volume){
  oscillator.start(start);oscillator.stop(start+duration+.025);
 }
 function stopMusic(){
+ if(musicTimer!==null){clearInterval(musicTimer);musicTimer=null}
  activeSounds.forEach(node=>{try{node.stop()}catch(e){}});
  activeSounds.clear();
 }
-function playTrack(index){
+function scheduleMusicStep(track){
+ const beat=nextNoteTime;
+ const i=musicStep%track.notes.length;
+ const note=track.notes[i];
+ playNote(midiToHz(note),beat,track.tempo*.88,track.wave,.105);
+ // Acompanhamento grave em cada dois tempos.
+ if(i%2===0){
+  const bassNote=track.bass+(i%4===0?0:7);
+  playNote(midiToHz(bassNote),beat,track.tempo*1.65,'sine',.052);
+ }
+ nextNoteTime+=track.tempo;
+ musicStep++;
+}
+function startMusicLoop(track){
  if(!soundOn||!ensureAudio())return;
  stopMusic();
- const track=musicalTracks[index];
- const startAt=audioContext.currentTime+.035;
- track.notes.forEach((note,i)=>{
-  const beat=startAt+i*track.tempo;
-  playNote(midiToHz(note),beat,track.tempo*.82,track.wave,.105);
-  // Baixo suave em cada dois tempos para dar sensação de pequena música.
-  if(i%2===0){
-   const bassNote=track.bass+(i%4===0?0:7);
-   playNote(midiToHz(bassNote),beat,track.tempo*1.55,'sine',.052);
-  }
- });
+ musicStep=0;
+ nextNoteTime=audioContext.currentTime+.05;
+ // Agenda continuamente os próximos sons; a música só para ao trocar de rodada,
+ // desligar o som ou sair do jogo.
+ musicTimer=setInterval(()=>{
+  if(!audioContext||audioContext.state!=='running')return;
+  while(nextNoteTime<audioContext.currentTime+.22)scheduleMusicStep(track);
+ },80);
+}
+function playTrack(index){
+ if(!soundOn)return;
+ startMusicLoop(musicalTracks[index]);
 }
 function showTrack(){
  const track=musicalTracks[currentTrackIndex];
@@ -223,6 +248,7 @@ function next(){
  updateStats();
 }
 function start(){
+ if(menuMusicOn){menuMusicOn=false;$('menuMusic').textContent='♫ Ouvir música';$('menuMusic').setAttribute('aria-pressed','false')}
  selected=[...tablesEl.querySelectorAll('.table-row')]
   .filter(r=>r.querySelector('input').checked)
   .map(r=>({n:Number(r.querySelector('input').value),mode:r.querySelector('select').value}));
@@ -260,6 +286,14 @@ function stop(){
  stopMusic();
  $('game').classList.add('hidden');
  $('setup').classList.remove('hidden');
+ if(menuMusicOn&&soundOn)startMusicLoop(musicalTracks[0]);
+}
+function toggleMenuMusic(){
+ menuMusicOn=!menuMusicOn;
+ $('menuMusic').textContent=menuMusicOn?'♫ Parar música':'♫ Ouvir música';
+ $('menuMusic').setAttribute('aria-pressed',String(menuMusicOn));
+ if(menuMusicOn){soundOn=true;$('soundToggle').textContent='♫ Som ligado';$('soundToggle').setAttribute('aria-pressed','true');$('replayTune').disabled=false;startMusicLoop(musicalTracks[0])}
+ else stopMusic();
 }
 
 $('start').addEventListener('click',start);
@@ -269,6 +303,7 @@ $('wrong').addEventListener('click',()=>judge(false));
 $('stop').addEventListener('click',stop);
 $('soundToggle').addEventListener('click',toggleSound);
 $('replayTune').addEventListener('click',replayTune);
+$('menuMusic').addEventListener('click',toggleMenuMusic);
 </script>
 </body>
 </html>
