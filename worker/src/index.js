@@ -251,10 +251,20 @@ async function handleApi(request, env, origin) {
 
   try {
     if (route === "/health" && request.method === "GET") {
+      if (!env.GITHUB_TOKEN) {
+        return json({
+          ok: false,
+          service: "Projeto Tabuada API",
+          githubSecretConfigured: false,
+          githubConnected: false
+        }, 503, origin);
+      }
+      await githubRequest("/repos/" + GH_OWNER + "/" + GH_REPO, env);
       return json({
         ok: true,
         service: "Projeto Tabuada API",
-        githubSecretConfigured: Boolean(env.GITHUB_TOKEN)
+        githubSecretConfigured: true,
+        githubConnected: true
       }, 200, origin);
     }
 
