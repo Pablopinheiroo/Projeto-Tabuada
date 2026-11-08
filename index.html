@@ -302,7 +302,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   </div>
   <p class="music-note">🎧 Faixas completas com mais de 60 segundos. A próxima música é sorteada ao terminar a atual, sem repetir até percorrer a lista.</p>
  </div>
- <audio id="soundtrackAudio" preload="none" playsinline></audio>
+ <audio id="soundtrackAudio" preload="auto" autoplay playsinline></audio>
 </div>
 
 <section id="authScreen" class="panel">
@@ -466,7 +466,8 @@ for(let n=1;n<=10;n++){
 const $=id=>document.getElementById(id);
 let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
 let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=1;
-let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueuePosition=0;
+let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueuePosition=0,musicStartPending=false;
+const LAST_TRACK_STORAGE_KEY='projetoTabuadaUltimaFaixaV1';
 let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0;
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
 const AUTH_USERS_KEY='projetoTabuadaUsuariosV1';
@@ -1155,27 +1156,46 @@ function prepareTrackQueue(excludeIndex){
 }
 function playCurrentTrack(){
  if(!soundtrackAudio||currentTrackIndex<0||!soundOn||document.hidden)return Promise.resolve(false);
+ if(musicStartPending)return Promise.resolve(false);
  soundtrackAudio.volume=volumeLevel;
- const result=soundtrackAudio.play();
+ musicStartPending=true;
+ let result;
+ try{result=soundtrackAudio.play()}catch(error){musicStartPending=false;showAutoplayHint();return Promise.resolve(false)}
  if(result&&typeof result.then==='function'){
   return result.then(()=>{
+   musicStartPending=false;
+   $('soundToggle').textContent='♫ Pausar música';
+   $('soundToggle').setAttribute('aria-pressed','true');
    showTrack();
    return true;
   }).catch(()=>{
-   $('musicTitle').textContent='Toque na página para iniciar a faixa: '+musicalTracks[currentTrackIndex].name;
+   musicStartPending=false;
+   showAutoplayHint();
    return false;
   });
  }
+ musicStartPending=false;
+ showTrack();
  return Promise.resolve(true);
+}
+function showAutoplayHint(){
+ const track=musicalTracks[currentTrackIndex];
+ if(!track)return;
+ $('musicTitle').textContent='▶ Toque na página para iniciar: '+track.name;
+ $('musicMenuLabel').textContent='Iniciar música';
+ $('soundToggle').textContent='▶ Iniciar música';
+ $('soundToggle').setAttribute('aria-pressed','false');
 }
 function playTrack(index,resetQueue=true){
  if(!Number.isInteger(index)||index<0||index>=musicalTracks.length)return;
  currentTrackIndex=index;
  previousTrackIndex=index;
+ try{localStorage.setItem(LAST_TRACK_STORAGE_KEY,String(index))}catch(e){}
  if(resetQueue)prepareTrackQueue(index);
  showTrack();
  if(soundtrackAudio){
   soundtrackAudio.pause();
+  musicStartPending=false;
   soundtrackAudio.src=new URL(musicalTracks[index].src,document.baseURI).href;
   soundtrackAudio.load();
   soundtrackAudio.volume=volumeLevel;
@@ -1211,13 +1231,25 @@ function resumeAudioWhenVisible(){
   if(!ok)musicWasPlayingBeforeHide=true;
  });
 }
+function getRandomTrackIndex(excludeIndex=-1){
+ const choices=musicalTracks.map((_,index)=>index).filter(index=>index!==excludeIndex);
+ return choices[Math.floor(Math.random()*choices.length)];
+}
+function readLastTrackIndex(){
+ try{
+  const saved=Number(localStorage.getItem(LAST_TRACK_STORAGE_KEY));
+  return Number.isInteger(saved)&&saved>=0&&saved<musicalTracks.length?saved:-1;
+ }catch(e){return -1}
+}
 function initMusicPlayer(){
- currentTrackIndex=Math.floor(Math.random()*musicalTracks.length);
+ const lastTrackIndex=readLastTrackIndex();
+ currentTrackIndex=getRandomTrackIndex(lastTrackIndex);
  previousTrackIndex=currentTrackIndex;
  trackQueue=[];
  trackQueuePosition=0;
  soundtrackAudio=$('soundtrackAudio');
- soundtrackAudio.preload='none';
+ soundtrackAudio.preload='auto';
+ soundtrackAudio.autoplay=true;
  soundtrackAudio.volume=1;
  soundtrackAudio.addEventListener('ended',()=>{
   if(soundOn&&!document.hidden)playNextTrack();
@@ -1235,7 +1267,10 @@ function initMusicPlayer(){
  ).join('');
  $('globalVolume').value='100';
  setVolume(100);
+ // Em Android/Chrome, o navegador pode exigir um toque após recarregar.
  document.addEventListener('pointerdown',unlockMusic,true);
+ document.addEventListener('touchstart',unlockMusic,{capture:true,passive:true});
+ document.addEventListener('click',unlockMusic,true);
  document.addEventListener('keydown',unlockMusic,true);
  document.addEventListener('visibilitychange',()=>{
   if(document.hidden)pauseAudioForBackground();
@@ -1243,7 +1278,10 @@ function initMusicPlayer(){
  });
  window.addEventListener('pagehide',pauseAudioForBackground);
  window.addEventListener('pageshow',()=>{
-  if(!document.hidden)resumeAudioWhenVisible();
+  if(!document.hidden){
+   if(musicWasPlayingBeforeHide)resumeAudioWhenVisible();
+   else if(soundOn&&soundtrackAudio.paused)playCurrentTrack();
+  }
  });
  playTrack(currentTrackIndex,true);
 }
