@@ -5,8 +5,8 @@
  * Configure GITHUB_TOKEN e AUTH_SECRET como Secrets no Cloudflare.
  */
 const API = "https://api.github.com";
-const DEFAULT_REPO = "Pablopinheiroo/Projeto-Tabuada";
-const DEFAULT_BRANCH = "dados";
+const DATA_REPO = "Pablopinheiroo/Projeto-Tabuada-Dados";
+const DATA_BRANCH = "main";
 const DEFAULT_DIR = "data/usuarios";
 const USER_FILE = "dados.enc.json";
 const DEFAULT_ORIGIN = "https://pablopinheiroo.github.io";
@@ -51,8 +51,8 @@ function getCors(request, env) {
 }
 function config(env) {
   return {
-    repo: env.GITHUB_REPO || DEFAULT_REPO,
-    branch: env.GITHUB_BRANCH || DEFAULT_BRANCH,
+    repo: DATA_REPO,
+    branch: DATA_BRANCH,
     dir: (env.GITHUB_DIR || DEFAULT_DIR).replace(/^\/+|\/+$/g, "")
   };
 }
