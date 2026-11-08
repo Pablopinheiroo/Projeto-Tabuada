@@ -300,7 +300,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
    <button id="replayTune" class="music-button" type="button">⏭ Próxima faixa</button>
    <label class="volume-control" for="globalVolume">🔊 Volume <input id="globalVolume" type="range" min="0" max="100" value="100"><strong id="volumeValue">100%</strong></label>
   </div>
-  <p class="music-note">🎧 Faixas completas com mais de 60 segundos. A próxima música é sorteada ao terminar a atual, sem repetir até percorrer a lista.</p>
+  <p class="music-note">🎧 Nas telas principais, a música muda aleatoriamente a cada 20 segundos. Durante o jogo, ela segue até terminar. As faixas não se repetem até percorrer a lista.</p>
  </div>
  <audio id="soundtrackAudio" preload="auto" autoplay playsinline></audio>
 </div>
@@ -466,7 +466,7 @@ for(let n=1;n<=10;n++){
 const $=id=>document.getElementById(id);
 let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
 let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=1;
-let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueuePosition=0,musicStartPending=false;
+let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueuePosition=0,musicStartPending=false,mainMusicTimer=null;
 const LAST_TRACK_STORAGE_KEY='projetoTabuadaUltimaFaixaV1';
 let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0;
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
@@ -1154,6 +1154,30 @@ function prepareTrackQueue(excludeIndex){
  trackQueue=shuffle(musicalTracks.map((_,index)=>index).filter(index=>index!==excludeIndex));
  trackQueuePosition=0;
 }
+function isGameScreenActive(){
+ const game=$('game');
+ return !!game&&!game.classList.contains('hidden');
+}
+function clearMainMusicTimer(){
+ if(mainMusicTimer!==null){clearTimeout(mainMusicTimer);mainMusicTimer=null;}
+}
+function scheduleMainMusicRotation(){
+ clearMainMusicTimer();
+ if(!soundOn||!soundtrackAudio||soundtrackAudio.paused||document.hidden||isGameScreenActive())return;
+ mainMusicTimer=setTimeout(()=>{
+  mainMusicTimer=null;
+  if(soundOn&&!document.hidden&&!isGameScreenActive()&&!soundtrackAudio.paused)playNextTrack();
+ },20000);
+}
+function watchGameScreenForMusic(){
+ const game=$('game');
+ if(!game||typeof MutationObserver==='undefined')return;
+ const observer=new MutationObserver(()=>{
+  if(isGameScreenActive())clearMainMusicTimer();
+  else scheduleMainMusicRotation();
+ });
+ observer.observe(game,{attributes:true,attributeFilter:['class']});
+}
 function playCurrentTrack(){
  if(!soundtrackAudio||currentTrackIndex<0||!soundOn||document.hidden)return Promise.resolve(false);
  if(musicStartPending)return Promise.resolve(false);
@@ -1168,15 +1192,18 @@ function playCurrentTrack(){
    $('soundToggle').setAttribute('aria-pressed','true');
    $('musicMenuLabel').textContent='Alterar música';
    showTrack();
+   scheduleMainMusicRotation();
    return true;
   }).catch(()=>{
    musicStartPending=false;
+   clearMainMusicTimer();
    showAutoplayHint();
    return false;
   });
  }
  musicStartPending=false;
  showTrack();
+ scheduleMainMusicRotation();
  return Promise.resolve(true);
 }
 function showAutoplayHint(){
@@ -1189,6 +1216,7 @@ function showAutoplayHint(){
 }
 function playTrack(index,resetQueue=true){
  if(!Number.isInteger(index)||index<0||index>=musicalTracks.length)return;
+ clearMainMusicTimer();
  currentTrackIndex=index;
  previousTrackIndex=index;
  try{localStorage.setItem(LAST_TRACK_STORAGE_KEY,String(index))}catch(e){}
@@ -1217,6 +1245,7 @@ function unlockMusic(){
  if(soundtrackAudio.paused)playCurrentTrack();
 }
 function pauseAudioForBackground(){
+ clearMainMusicTimer();
  if(!soundtrackAudio)return;
  const wasPlaying=!soundtrackAudio.paused&&!soundtrackAudio.ended;
  musicWasPlayingBeforeHide=soundOn&&(wasPlaying||musicWasPlayingBeforeHide);
@@ -1252,6 +1281,7 @@ function initMusicPlayer(){
  soundtrackAudio.preload='auto';
  soundtrackAudio.autoplay=true;
  soundtrackAudio.volume=1;
+ watchGameScreenForMusic();
  soundtrackAudio.addEventListener('ended',()=>{
   if(soundOn&&!document.hidden)playNextTrack();
  });
@@ -1365,7 +1395,7 @@ function toggleSound(){
  $('replayTune').disabled=!soundOn;
  musicWasPlayingBeforeHide=false;
  if(soundOn)playCurrentTrack();
- else if(soundtrackAudio)soundtrackAudio.pause();
+ else {clearMainMusicTimer();if(soundtrackAudio)soundtrackAudio.pause();}
 }
 function replayTune(){if(soundOn)playNextTrack()}
 function stop(){finishSession();if(activeProfile&&profilesData[activeProfile]){profilesData[activeProfile].checkpoint=null;persistProfiles();updateProfileButtons();}scheduleCloudSave(true);}
