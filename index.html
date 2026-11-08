@@ -37,7 +37,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .music-title{display:block;font-weight:800;font-size:.95rem;overflow-wrap:anywhere}
 .music-buttons{display:flex;gap:8px;flex-wrap:wrap}
 .music-button{padding:9px 12px;background:#fff;color:#1e40af;border:1px solid #bfdbfe;font-size:.84rem}
- .music-button[aria-pressed="false"]{color:#64748b;background:#f1f5f9;border-color:#cbd5e1}\n.volume-control{display:flex;align-items:center;gap:8px;color:#475569;font-size:.82rem;font-weight:650}\n.volume-control input{width:92px;accent-color:#2563eb}
+ .music-button[aria-pressed="false"]{color:#64748b;background:#f1f5f9;border-color:#cbd5e1}
+.volume-control{display:flex;align-items:center;gap:8px;color:#475569;font-size:.82rem;font-weight:650}
+.volume-control input{width:92px;accent-color:#2563eb}
 .progress{height:8px;background:#e2e8f0;border-radius:99px;overflow:hidden;margin:0 0 22px}
 .progress div{height:100%;width:0;background:#2563eb;transition:width .2s}
 .question{text-align:center;padding:26px 8px 20px}
@@ -56,7 +58,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:420px){
  .stats{gap:6px}.stat{padding:10px 4px}.stat strong{font-size:1.3rem}
  .mode{max-width:116px}.music-box{align-items:flex-start}.music-buttons{width:100%}
- .music-button{flex:1}\n .volume-control{width:100%;justify-content:space-between}\n .volume-control input{width:65%}
+ .music-button{flex:1}
+ .volume-control{width:100%;justify-content:space-between}
+ .volume-control input{width:65%}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
 </style>
@@ -76,7 +80,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <span class="music-title">Uma trilha para acompanhar sua preparação</span>
  </div>
  <div class="music-buttons">
-  <button id="menuMusic" class="music-button" type="button" aria-pressed="false">♫ Ouvir música</button>\n  <label class="volume-control" for="menuVolume">Volume <input id="menuVolume" type="range" min="0" max="100" value="28"></label>
+  <button id="menuMusic" class="music-button" type="button" aria-pressed="false">♫ Ouvir música</button>
+  <label class="volume-control" for="menuVolume">Volume <input id="menuVolume" type="range" min="0" max="100" value="28"></label>
  </div>
 </div>
 <p class="small">No modo normal, a tabuada segue de 1 a 10. No aleatório, a ordem muda.</p>
@@ -96,7 +101,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
  </div>
  <div class="music-buttons">
   <button id="soundToggle" class="music-button" type="button" aria-pressed="true">♫ Som ligado</button>
-  <button id="replayTune" class="music-button" type="button">↻ Reiniciar faixa</button>\n  <label class="volume-control" for="gameVolume">Volume <input id="gameVolume" type="range" min="0" max="100" value="28"></label>
+  <button id="replayTune" class="music-button" type="button">↻ Reiniciar faixa</button>
+  <label class="volume-control" for="gameVolume">Volume <input id="gameVolume" type="range" min="0" max="100" value="28"></label>
  </div>
 </div>
 
@@ -347,7 +353,14 @@ $('wrong').addEventListener('click',()=>judge(false));
 $('stop').addEventListener('click',stop);
 $('soundToggle').addEventListener('click',toggleSound);
 $('replayTune').addEventListener('click',replayTune);
-$('menuMusic').addEventListener('click',toggleMenuMusic);\n$('menuVolume').addEventListener('input',e=>setVolume(e.target.value));\n$('gameVolume').addEventListener('input',e=>setVolume(e.target.value));\ndocument.addEventListener('click',e=>{\n const button=e.target.closest('button');\n if(!button||button.disabled||['right','wrong','soundToggle','menuMusic','replayTune'].includes(button.id))return;\n playUiClick();\n},true);
+$('menuMusic').addEventListener('click',toggleMenuMusic);
+$('menuVolume').addEventListener('input',e=>setVolume(e.target.value));
+$('gameVolume').addEventListener('input',e=>setVolume(e.target.value));
+document.addEventListener('click',e=>{
+ const button=e.target.closest('button');
+ if(!button||button.disabled||['right','wrong','soundToggle','menuMusic','replayTune'].includes(button.id))return;
+ playUiClick();
+},true);
 </script>
 </body>
 </html>
