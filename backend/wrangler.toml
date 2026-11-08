@@ -1,0 +1,10 @@
+name = "projeto-tabuada-dados"
+main = "worker.js"
+compatibility_date = "2026-11-08"
+workers_dev = true
+
+[vars]
+GITHUB_REPO = "Pablopinheiroo/Projeto-Tabuada"
+GITHUB_BRANCH = "dados"
+GITHUB_FILE = "data/usuarios.json"
+ALLOWED_ORIGIN = "https://pablopinheiroo.github.io"
