@@ -359,6 +359,16 @@ function normalizeHistory(value){
  if(!value||typeof value!=='object')return {questions:{},sessions:[]};
  return {questions:value.questions&&typeof value.questions==='object'?value.questions:{},sessions:Array.isArray(value.sessions)?value.sessions:[]};
 }
+function loadLegacyLocalUser(username){
+ try{
+  const users=JSON.parse(localStorage.getItem(AUTH_USERS_KEY)||'{}');
+  const auth=users&&users[username];
+  if(!auth||!auth.salt||!auth.hash)return null;
+  const profiles=JSON.parse(localStorage.getItem('projetoTabuadaPerfisV1')||'{}');
+  const history=JSON.parse(localStorage.getItem('projetoTabuadaHistoricoV2_'+username)||'null');
+  return {auth,profile:profiles&&profiles[username]?profiles[username]:{},history:normalizeHistory(history)};
+ }catch(error){return null;}
+}
 async function readRemoteUser(username){
  try{
   const file=await githubRequest(cloudFilePath(username)+'?ref='+encodeURIComponent(CLOUD.branch));
@@ -518,9 +528,15 @@ async function handleRegister(event){
  if(password!==confirmPassword){$('registerMessage').textContent='As senhas não são iguais.';return;}
  try{
   if(await readRemoteUser(username)){$('registerMessage').textContent='Este nome de usuário já está cadastrado.';return;}
-  const salt=makeSalt(),hash=await passwordHash(password,salt);
-  const account={username,salt,hash,createdAt:new Date().toISOString()};
-  const document={version:1,username,auth:account,profile:{},history:{questions:{},sessions:[]},updatedAt:new Date().toISOString()};
+  const legacy=loadLegacyLocalUser(username);
+  let account,profile={},history={questions:{},sessions:[]};
+  if(legacy&&await passwordHash(password,legacy.auth.salt)===legacy.auth.hash){
+   account=legacy.auth;profile=legacy.profile;history=legacy.history;
+  }else{
+   const salt=makeSalt(),hash=await passwordHash(password,salt);
+   account={username,salt,hash,createdAt:new Date().toISOString()};
+  }
+  const document={version:1,username,auth:account,profile,history,updatedAt:new Date().toISOString()};
   const sha=await writeRemoteUser(username,document,null);
   hydrateRemoteUser(username,{data:document,sha});
   sessionStorage.setItem(AUTH_SESSION_KEY,username);
@@ -532,8 +548,16 @@ async function handleLogin(event){
  const username=normalizeUsername($('loginUsername').value),password=$('loginPassword').value;
  $('loginMessage').textContent='';
  try{
-  const record=await readRemoteUser(username);
-  if(!record){$('loginMessage').textContent='Nome de usuário ou senha incorretos.';return;}
+  let record=await readRemoteUser(username);
+  if(!record){
+   const legacy=loadLegacyLocalUser(username);
+   if(!legacy){$('loginMessage').textContent='Nome de usuário ou senha incorretos.';return;}
+   const legacyHash=await passwordHash(password,legacy.auth.salt);
+   if(legacyHash!==legacy.auth.hash){$('loginMessage').textContent='Nome de usuário ou senha incorretos.';return;}
+   const document={version:1,username,auth:legacy.auth,profile:legacy.profile,history:legacy.history,updatedAt:new Date().toISOString()};
+   const sha=await writeRemoteUser(username,document,null);
+   record={data:document,sha};
+  }
   const hash=await passwordHash(password,record.data.auth.salt);
   if(hash!==record.data.auth.hash){$('loginMessage').textContent='Nome de usuário ou senha incorretos.';return;}
   hydrateRemoteUser(username,record);
