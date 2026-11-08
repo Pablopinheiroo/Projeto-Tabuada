@@ -232,7 +232,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <header class="brand"><h1>📚 Projeto Tabuada</h1><p>Pratique no seu ritmo, uma questão de cada vez.</p></header>
 <div class="music-box" id="siteMusicBox">
  <div class="music-info">
-  <span class="music-kicker">🎮 ARCADE SOUNDTRACK · 20 trilhas originais</span>
+  <span class="music-kicker">🎮 ARCADE SOUNDTRACK · 20 faixas completas</span>
   <span id="musicTitle" class="music-title">Escolhendo uma trilha...</span>
   <select id="trackSelect" class="music-select" aria-label="Escolher música"></select>
  </div>
@@ -241,7 +241,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <button id="replayTune" class="music-button" type="button">⏭ Próxima faixa</button>
   <label class="volume-control" for="globalVolume">🔊 Volume <input id="globalVolume" type="range" min="0" max="100" value="100"><strong id="volumeValue">100%</strong></label>
  </div>
- <p class="music-note">🎧 Temas de arcade, corrida, ação, RPG, batalha e aventura. Troca automática após 60 segundos. Ao sair desta aba, a música pausa e tenta voltar quando você retornar. Alguns navegadores exigem um toque inicial.</p>
+ <p class="music-note">🎧 Músicas instrumentais completas, com mais de 60 segundos cada. Ao terminar uma faixa, outra é sorteada sem repetir até percorrer a lista. Volume inicial: 100%.</p>
+ <audio id="soundtrackAudio" preload="none" playsinline></audio>
 </div>
 
 <section id="authScreen" class="panel">
@@ -405,8 +406,7 @@ for(let n=1;n<=10;n++){
 const $=id=>document.getElementById(id);
 let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
 let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=1;
-let musicTimer=null,nextNoteTime=0,musicStep=0,musicTrackStartedAt=0;
-const TRACK_DURATION_SECONDS=60;
+let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueuePosition=0;
 let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0;
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
 const AUTH_USERS_KEY='projetoTabuadaUsuariosV1';
@@ -436,27 +436,28 @@ const AVATARS=[
 
 // Trilhas originais mais longas: cada uma tem oito compassos, harmonia, baixo e melodia.
 const musicalTracks=[
- {name:'Pixel Adventure',genre:'Chiptune animado',root:60,scale:[0,2,4,5,7,9,11],tempo:.29,progression:[0,4,5,3,0,5,3,4],melody:[7,null,9,null,11,9,7,null,5,null,7,9,7,null,5,null],lead:'square',chordWave:'triangle',bassWave:'sawtooth',drums:'arcade',energy:1.05,bassPulse:true,chordPulse:true},
- {name:'Mundo Aberto',genre:'Aventura cinematográfica',root:62,scale:[0,2,4,5,7,9,11],tempo:.49,progression:[0,5,3,4,0,3,5,4],melody:[0,2,4,null,7,4,2,null,4,5,7,null,9,7,5,null],lead:'sine',chordWave:'sine',bassWave:'sine',drums:'none',energy:.78},
- {name:'Menu RPG',genre:'Fantasia RPG',root:57,scale:[0,2,4,5,7,9,11],tempo:.38,progression:[0,3,4,0,5,3,4,0],melody:[7,9,null,7,4,null,2,4,5,7,null,9,7,5,null,4],lead:'triangle',chordWave:'sine',bassWave:'triangle',drums:'none',energy:.82},
- {name:'Ilha Flutuante',genre:'Plataforma e exploração',root:60,scale:[0,2,4,5,7,9,11],tempo:.46,progression:[0,4,5,4,0,3,5,4],melody:[12,null,9,7,12,null,9,7,11,9,7,null,9,7,5,null],lead:'sine',chordWave:'sine',bassWave:'triangle',drums:'none',energy:.78},
- {name:'Arcade Bounce',genre:'Arcade e funk',root:65,scale:[0,2,4,5,7,9,11],tempo:.31,progression:[0,3,5,4,0,4,3,5],melody:[7,null,9,11,null,9,7,null,5,7,null,9,11,null,9,7],lead:'square',chordWave:'square',bassWave:'sawtooth',drums:'funk',energy:1.05,bassPulse:true,chordPulse:true},
- {name:'Racing Neon',genre:'Corrida eletrônica',root:55,scale:[0,2,4,5,7,9,11],tempo:.265,progression:[0,4,5,3,0,3,4,0],melody:[7,9,11,null,12,11,9,null,7,9,11,12,null,11,9,7],lead:'sawtooth',chordWave:'square',bassWave:'sawtooth',drums:'dance',energy:1.12,bassPulse:true,chordPulse:true},
- {name:'Puzzle Funk',genre:'Puzzle divertido',root:69,scale:[0,2,4,5,7,9,11],tempo:.325,progression:[0,5,3,4,0,4,5,3],melody:[9,null,7,5,null,7,9,null,12,11,9,null,7,5,7,null],lead:'square',chordWave:'triangle',bassWave:'triangle',drums:'funk',energy:.96,bassPulse:true,chordPulse:true},
- {name:'Floresta Mágica',genre:'Aventura mágica',root:57,scale:[0,2,3,5,7,8,10],tempo:.445,progression:[0,5,3,6,0,3,5,6],melody:[7,null,8,10,null,8,7,null,5,null,7,8,10,null,8,7],lead:'triangle',chordWave:'sine',bassWave:'sine',drums:'none',energy:.78},
- {name:'Exploração',genre:'Ação e aventura',root:64,scale:[0,2,4,5,7,9,11],tempo:.32,progression:[0,4,5,3,0,5,4,3],melody:[12,9,7,null,9,12,11,null,9,7,5,null,7,9,12,null],lead:'triangle',chordWave:'sawtooth',bassWave:'sawtooth',drums:'rock',energy:1.04,bassPulse:true,chordPulse:true},
- {name:'Level Up',genre:'Pop de vitória',root:60,scale:[0,2,4,5,7,9,11],tempo:.29,progression:[0,3,4,5,0,5,3,4],melody:[0,4,7,null,9,7,4,null,7,9,12,null,11,9,7,4],lead:'square',chordWave:'triangle',bassWave:'sawtooth',drums:'dance',energy:1.08,bassPulse:true,chordPulse:true},
- {name:'Dungeon Pixel',genre:'Batalha de chefão',root:53,scale:[0,2,3,5,7,8,10],tempo:.31,progression:[0,3,5,4,0,5,3,4],melody:[0,null,3,5,7,5,3,null,0,3,5,null,7,10,7,null],lead:'square',chordWave:'sawtooth',bassWave:'sawtooth',drums:'battle',energy:1.12,bassPulse:true,chordPulse:true},
- {name:'Neon Arcade',genre:'Eletrônica retrô',root:60,scale:[0,2,4,7,9,10,12],tempo:.25,progression:[0,3,4,2,0,4,3,2],melody:[0,4,7,null,9,7,4,null,12,9,7,4,null,7,9,null],lead:'square',chordWave:'square',bassWave:'sawtooth',drums:'dance',energy:1.12,bassPulse:true,chordPulse:true},
- {name:'Speedrun',genre:'Arcade acelerado',root:57,scale:[0,2,4,5,7,9,10],tempo:.235,progression:[0,4,5,3,0,5,4,3],melody:[7,9,10,null,9,7,5,null,7,10,12,null,10,9,7,null],lead:'sawtooth',chordWave:'square',bassWave:'sawtooth',drums:'dance',energy:1.14,bassPulse:true,chordPulse:true},
- {name:'Espaço 8-Bit',genre:'Aventura espacial',root:62,scale:[0,2,4,6,7,9,11],tempo:.30,progression:[0,4,2,5,0,5,4,2],melody:[12,null,11,9,7,null,9,11,12,null,14,12,11,null,9,7],lead:'square',chordWave:'triangle',bassWave:'triangle',drums:'arcade',energy:.96,bassPulse:true,chordPulse:true},
- {name:'Vila dos Heróis',genre:'Marcha de heróis',root:55,scale:[0,2,4,5,7,9,11],tempo:.39,progression:[0,3,4,0,5,3,4,0],melody:[0,2,4,null,7,9,7,null,4,5,7,null,9,7,5,null],lead:'triangle',chordWave:'triangle',bassWave:'sine',drums:'march',energy:.96,chordPulse:true},
- {name:'Batalha Leve',genre:'Rock de batalha',root:59,scale:[0,2,3,5,7,8,10],tempo:.29,progression:[0,5,3,6,0,3,5,6],melody:[0,3,5,null,7,5,3,null,10,8,7,null,5,3,2,null],lead:'sawtooth',chordWave:'sawtooth',bassWave:'sawtooth',drums:'battle',energy:1.1,bassPulse:true,chordPulse:true},
- {name:'Mundo Subaquático',genre:'Exploração subaquática',root:64,scale:[0,2,4,5,7,9,11],tempo:.47,progression:[0,4,3,5,0,3,4,5],melody:[12,null,9,7,null,9,11,null,12,11,9,null,7,5,7,null],lead:'sine',chordWave:'sine',bassWave:'sine',drums:'none',energy:.72},
- {name:'Rota Secreta',genre:'Furtividade eletrônica',root:57,scale:[0,2,3,5,7,9,10],tempo:.33,progression:[0,3,5,4,0,4,5,3],melody:[7,null,5,3,5,null,7,10,9,null,7,5,3,null,5,7],lead:'square',chordWave:'triangle',bassWave:'sawtooth',drums:'funk',energy:.92,bassPulse:true,chordPulse:true},
- {name:'Castelo Pixel',genre:'Arcade medieval',root:60,scale:[0,2,4,5,7,9,11],tempo:.29,progression:[0,4,3,5,0,3,4,5],melody:[0,4,7,null,11,9,7,null,5,7,9,null,12,11,9,7],lead:'square',chordWave:'square',bassWave:'triangle',drums:'arcade',energy:1.05,bassPulse:true,chordPulse:true},
- {name:'Vitória Épica',genre:'Hino de vitória',root:65,scale:[0,2,4,5,7,9,11],tempo:.28,progression:[0,3,4,0,5,3,4,0],melody:[7,9,11,null,12,11,9,null,7,9,12,null,14,12,11,9],lead:'triangle',chordWave:'triangle',bassWave:'sawtooth',drums:'march',energy:1.08,bassPulse:true,chordPulse:true}
+ {name:"Pixel Adventure",genre:"Chiptune de aventura",src:'assets/music/pixel-adventure.mp3'},
+ {name:"Racing Neon",genre:"Corrida eletrônica",src:'assets/music/racing-neon.mp3'},
+ {name:"Kingdom of Heroes",genre:"RPG cinematográfico",src:'assets/music/rpg-kingdom.mp3'},
+ {name:"Arcade Bounce",genre:"Funk de arcade",src:'assets/music/arcade-bounce.mp3'},
+ {name:"Dungeon Boss",genre:"Batalha de chefão",src:'assets/music/dungeon-boss.mp3'},
+ {name:"Sky Islands",genre:"Exploração e fantasia",src:'assets/music/sky-islands.mp3'},
+ {name:"Speedrun!",genre:"Arcade acelerado",src:'assets/music/speedrun.mp3'},
+ {name:"Puzzle Funk",genre:"Puzzle e groove",src:'assets/music/puzzle-funk.mp3'},
+ {name:"Retro Platform",genre:"Plataforma retrô",src:'assets/music/retro-platform.mp3'},
+ {name:"Cyber Arena",genre:"Eletrônica futurista",src:'assets/music/cyber-arena.mp3'},
+ {name:"Forest Quest",genre:"Aventura na floresta",src:'assets/music/forest-quest.mp3'},
+ {name:"Pixel Rock",genre:"Rock de videogame",src:'assets/music/pixel-rock.mp3'},
+ {name:"Star Runner",genre:"Corrida espacial",src:'assets/music/star-runner.mp3'},
+ {name:"Victory Lap",genre:"Pop de vitória",src:'assets/music/victory-lap.mp3'},
+ {name:"Stealth Mission",genre:"Missão secreta",src:'assets/music/stealth-mission.mp3'},
+ {name:"Ocean World",genre:"Exploração subaquática",src:'assets/music/ocean-world.mp3'},
+ {name:"Desert Rally",genre:"Rally e aventura",src:'assets/music/desert-rally.mp3'},
+ {name:"Magic Castle",genre:"Fantasia medieval",src:'assets/music/magic-castle.mp3'},
+ {name:"Neon Drift",genre:"Synthwave gamer",src:'assets/music/neon-drift.mp3'},
+ {name:"Final Boss",genre:"Épico de ação",src:'assets/music/final-boss.mp3'}
 ];
+
 function shuffle(a){
  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
  return a;
@@ -1040,7 +1041,7 @@ function makeRound(){
 function ensureAudio(){
  if(!audioContext){
   const AudioCtx=window.AudioContext||window.webkitAudioContext;
-  if(!AudioCtx){$('musicTitle').textContent='Áudio não disponível neste navegador';return false}
+  if(!AudioCtx)return false;
   audioContext=new AudioCtx();
   masterGain=audioContext.createGain();
   masterGain.gain.value=volumeLevel;
@@ -1050,12 +1051,8 @@ function ensureAudio(){
  return true;
 }
 function midiToHz(note){return 440*Math.pow(2,(note-69)/12)}
-function scaleNote(track,degree,octave=0){
- const index=((degree%7)+7)%7;
- const extra=Math.floor(degree/7);
- return track.root+track.scale[index]+12*(extra+octave);
-}
 function playNote(frequency,start,duration,wave,volume){
+ if(!ensureAudio())return;
  const oscillator=audioContext.createOscillator();
  const envelope=audioContext.createGain();
  oscillator.type=wave||'sine';
@@ -1068,202 +1065,116 @@ function playNote(frequency,start,duration,wave,volume){
  oscillator.onended=()=>{activeSounds.delete(oscillator);oscillator.disconnect();envelope.disconnect()};
  oscillator.start(start);oscillator.stop(start+duration+.04);
 }
-function createNoiseBuffer(){
- if(noiseBuffer)return noiseBuffer;
- const length=Math.floor(audioContext.sampleRate*.25);
- noiseBuffer=audioContext.createBuffer(1,length,audioContext.sampleRate);
- const data=noiseBuffer.getChannelData(0);
- for(let i=0;i<length;i++)data[i]=(Math.random()*2-1)*(1-i/length);
- return noiseBuffer;
-}
-function playNoiseHit(start,duration,cutoff,volume){
- const source=audioContext.createBufferSource();
- const filter=audioContext.createBiquadFilter();
- const envelope=audioContext.createGain();
- source.buffer=createNoiseBuffer();
- filter.type='highpass';
- filter.frequency.setValueAtTime(cutoff,start);
- envelope.gain.setValueAtTime(.0001,start);
- envelope.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),start+.004);
- envelope.gain.exponentialRampToValueAtTime(.0001,start+duration);
- source.connect(filter);filter.connect(envelope);envelope.connect(masterGain);
- activeSounds.add(source);
- source.onended=()=>{activeSounds.delete(source);source.disconnect();filter.disconnect();envelope.disconnect()};
- source.start(start);source.stop(start+duration+.02);
-}
-function playKick(start,energy){
- const oscillator=audioContext.createOscillator();
- const envelope=audioContext.createGain();
- oscillator.type='sine';
- oscillator.frequency.setValueAtTime(135,start);
- oscillator.frequency.exponentialRampToValueAtTime(48,start+.14);
- envelope.gain.setValueAtTime(.0001,start);
- envelope.gain.exponentialRampToValueAtTime(.075*energy,start+.008);
- envelope.gain.exponentialRampToValueAtTime(.0001,start+.17);
- oscillator.connect(envelope);envelope.connect(masterGain);
- activeSounds.add(oscillator);
- oscillator.onended=()=>{activeSounds.delete(oscillator);oscillator.disconnect();envelope.disconnect()};
- oscillator.start(start);oscillator.stop(start+.19);
-}
-function playPercussion(track,beat,when){
- const style=track.drums||'none';
- if(style==='none')return;
- const energy=Math.min(1.15,track.energy||1);
- let kick=false,snare=false,hat=false;
- if(style==='arcade'){
-  kick=beat===0||beat===4;
-  snare=beat===2||beat===6;
-  hat=beat===1||beat===3||beat===5||beat===7;
- }else if(style==='dance'){
-  kick=beat===0||beat===2||beat===4||beat===6;
-  snare=beat===2||beat===6;
-  hat=beat===1||beat===3||beat===5||beat===7;
- }else if(style==='funk'){
-  kick=beat===0||beat===3||beat===4;
-  snare=beat===2||beat===6;
-  hat=beat%2===1||(beat===4);
- }else if(style==='rock'){
-  kick=beat===0||beat===4;
-  snare=beat===2||beat===6;
-  hat=beat===1||beat===3||beat===5||beat===7;
- }else if(style==='battle'){
-  kick=beat===0||beat===3||beat===4||beat===7;
-  snare=beat===2||beat===6;
-  hat=beat===1||beat===5;
- }else if(style==='march'){
-  kick=beat===0||beat===4;
-  snare=beat===2||beat===6;
- }
- if(kick)playKick(when,energy);
- if(snare)playNoiseHit(when,.105,700,.022*energy);
- if(hat)playNoiseHit(when,.035,5600,.0065*energy);
-}
 function playUiClick(){
- if(!soundOn||!ensureAudio()||document.hidden)return;
- const t=audioContext.currentTime+.005;
- playNote(660,t,.055,'sine',.0045);
+ if(!soundOn||document.hidden||!ensureAudio())return;
+ playNote(660,audioContext.currentTime+.005,.055,'sine',.0045);
 }
 function playFeedback(correct){
- if(!soundOn||!ensureAudio()||document.hidden)return;
- const t=audioContext.currentTime+.01;
- const notes=correct?[72,76]:[62,58];
- notes.forEach((note,i)=>playNote(midiToHz(note),t+i*.105,.16,'sine',correct?.016:.011));
+ if(!soundOn||document.hidden||!ensureAudio())return;
+ const when=audioContext.currentTime+.01;
+ (correct?[72,76]:[62,58]).forEach((note,i)=>
+  playNote(midiToHz(note),when+i*.105,.16,'sine',correct?.016:.011)
+ );
 }
 function setVolume(value){
  volumeLevel=Math.max(0,Math.min(1,Number(value)/100));
  if(masterGain&&audioContext)masterGain.gain.setTargetAtTime(volumeLevel,audioContext.currentTime,.04);
+ if(soundtrackAudio)soundtrackAudio.volume=volumeLevel;
  $('globalVolume').value=String(Math.round(volumeLevel*100));
  if($('volumeValue'))$('volumeValue').textContent=Math.round(volumeLevel*100)+'%';
-}
-function stopMusic(){
- if(musicTimer!==null){clearInterval(musicTimer);musicTimer=null}
- activeSounds.forEach(node=>{try{node.stop()}catch(e){}});
- activeSounds.clear();
-}
-function scheduleMusicStep(track){
- const step=musicStep%64;
- const bar=Math.floor(step/8);
- const beatInBar=step%8;
- const when=nextNoteTime;
- const chordDegree=track.progression[bar];
- const energy=track.energy||1;
- playPercussion(track,beatInBar,when);
- if(beatInBar===0||(track.chordPulse&&beatInBar===4)){
-  const chordVolume=(beatInBar===0?.005:.0036)*energy;
-  [chordDegree,chordDegree+2,chordDegree+4].forEach((degree,i)=>{
-   playNote(midiToHz(scaleNote(track,degree,0)),when,track.tempo*(beatInBar===0?6.8:2.2),track.chordWave||'sine',chordVolume*(i===0?1:.72));
-  });
- }
- if(beatInBar===0||beatInBar===4||(track.bassPulse&&(beatInBar===2||beatInBar===6))){
-  const bassDegree=chordDegree+((beatInBar===4||beatInBar===6)?4:0);
-  playNote(midiToHz(scaleNote(track,bassDegree,-2)),when,track.tempo*(track.bassPulse?1.45:1.8),track.bassWave||'sine',.0105*energy);
- }
- const motif=track.melody[step%16];
- if(motif!==null){
-  const phrase=Math.floor(step/16);
-  const variation=[0,1,-1,0][phrase];
-  const adjusted=motif+(step%8===6?variation:0);
-  playNote(midiToHz(scaleNote(track,adjusted,1)),when,track.tempo*.82,track.lead||'sine',.0135*energy);
- }
- if(beatInBar===2||beatInBar===6){
-  const colorTone=chordDegree+(beatInBar===2?2:4);
-  playNote(midiToHz(scaleNote(track,colorTone,1)),when,track.tempo*.42,'sine',.0045*energy);
- }
- nextNoteTime+=track.tempo;
- musicStep++;
-}
-function startMusicLoop(track){
- if(!soundOn||document.hidden||!ensureAudio())return;
- stopMusic();
- musicStep=0;
- musicTrackStartedAt=audioContext.currentTime;
- nextNoteTime=audioContext.currentTime+.06;
- musicTimer=setInterval(()=>{
-  if(!audioContext||audioContext.state!=='running'||document.hidden)return;
-  if(audioContext.currentTime-musicTrackStartedAt>=TRACK_DURATION_SECONDS){
-   playNextTrack();
-   return;
-  }
-  if(nextNoteTime<audioContext.currentTime-.35)nextNoteTime=audioContext.currentTime+.04;
-  while(nextNoteTime<audioContext.currentTime+.3)scheduleMusicStep(track);
- },50);
 }
 function showTrack(){
  const track=musicalTracks[currentTrackIndex];
  if(!track)return;
- $('musicTitle').textContent='🎵 '+track.name+' · '+track.genre+' · '+(currentTrackIndex+1)+' de '+musicalTracks.length;
+ $('musicTitle').textContent='🎵 '+track.name+' · '+track.genre+' · faixa '+(currentTrackIndex+1)+' de '+musicalTracks.length;
  if($('trackSelect'))$('trackSelect').value=String(currentTrackIndex);
 }
-function playTrack(index){
- if(index<0||index>=musicalTracks.length)return;
+function prepareTrackQueue(excludeIndex){
+ trackQueue=shuffle(musicalTracks.map((_,index)=>index).filter(index=>index!==excludeIndex));
+ trackQueuePosition=0;
+}
+function playCurrentTrack(){
+ if(!soundtrackAudio||currentTrackIndex<0||!soundOn||document.hidden)return Promise.resolve(false);
+ soundtrackAudio.volume=volumeLevel;
+ const result=soundtrackAudio.play();
+ if(result&&typeof result.then==='function'){
+  return result.then(()=>{
+   showTrack();
+   return true;
+  }).catch(()=>{
+   $('musicTitle').textContent='Toque na página para iniciar a faixa: '+musicalTracks[currentTrackIndex].name;
+   return false;
+  });
+ }
+ return Promise.resolve(true);
+}
+function playTrack(index,resetQueue=true){
+ if(!Number.isInteger(index)||index<0||index>=musicalTracks.length)return;
  currentTrackIndex=index;
  previousTrackIndex=index;
+ if(resetQueue)prepareTrackQueue(index);
  showTrack();
- if(soundOn&&!document.hidden)startMusicLoop(musicalTracks[index]);
+ if(soundtrackAudio){
+  soundtrackAudio.pause();
+  soundtrackAudio.src=new URL(musicalTracks[index].src,document.baseURI).href;
+  soundtrackAudio.load();
+  soundtrackAudio.volume=volumeLevel;
+  if(soundOn&&!document.hidden)playCurrentTrack();
+ }
 }
 function playNextTrack(){
- const choices=musicalTracks.map((_,index)=>index).filter(index=>index!==currentTrackIndex);
- const nextIndex=choices[Math.floor(Math.random()*choices.length)];
- playTrack(nextIndex);
+ if(trackQueuePosition>=trackQueue.length)prepareTrackQueue(currentTrackIndex);
+ const nextIndex=trackQueue[trackQueuePosition++];
+ playTrack(nextIndex,false);
 }
 function chooseTrack(value){
  const index=Number(value);
- if(Number.isInteger(index)&&index>=0&&index<musicalTracks.length)playTrack(index);
+ if(Number.isInteger(index)&&index>=0&&index<musicalTracks.length)playTrack(index,true);
 }
 function unlockMusic(){
- if(!soundOn||document.hidden)return;
- ensureAudio();
- if(musicTimer===null)playTrack(currentTrackIndex);
+ if(!soundOn||document.hidden||!soundtrackAudio)return;
+ if(soundtrackAudio.paused)playCurrentTrack();
 }
 function pauseAudioForBackground(){
- if(!audioContext)return;
- const wasAlreadyMarked=musicWasPlayingBeforeHide;
- const wasActivelyPlaying=musicTimer!==null&&audioContext.state==='running';
- musicWasPlayingBeforeHide=soundOn&&(wasActivelyPlaying||wasAlreadyMarked);
- stopMusic();
- if(audioContext.state==='running')audioContext.suspend().catch(()=>{});
- if(musicWasPlayingBeforeHide&&$('musicTitle'))$('musicTitle').textContent='⏸ Música pausada enquanto esta página está em segundo plano';
+ if(!soundtrackAudio)return;
+ const wasPlaying=!soundtrackAudio.paused&&!soundtrackAudio.ended;
+ musicWasPlayingBeforeHide=soundOn&&(wasPlaying||musicWasPlayingBeforeHide);
+ soundtrackAudio.pause();
+ if(audioContext&&audioContext.state==='running')audioContext.suspend().catch(()=>{});
+ if(musicWasPlayingBeforeHide)$('musicTitle').textContent='⏸ Faixa pausada enquanto você está fora da página';
 }
 function resumeAudioWhenVisible(){
  if(!musicWasPlayingBeforeHide||!soundOn||document.hidden)return;
  musicWasPlayingBeforeHide=false;
- if(!audioContext)return;
- audioContext.resume().then(()=>{
-  if(soundOn&&!document.hidden)startMusicLoop(musicalTracks[currentTrackIndex]);
- }).catch(()=>{
-  $('musicTitle').textContent='Toque na página para retomar a música · '+musicalTracks[currentTrackIndex].name;
-  musicWasPlayingBeforeHide=true;
+ if(audioContext&&audioContext.state==='suspended')audioContext.resume().catch(()=>{});
+ playCurrentTrack().then(ok=>{
+  if(!ok)musicWasPlayingBeforeHide=true;
  });
 }
 function initMusicPlayer(){
  currentTrackIndex=Math.floor(Math.random()*musicalTracks.length);
  previousTrackIndex=currentTrackIndex;
- $('trackSelect').innerHTML=musicalTracks.map((track,index)=>'<option value="'+index+'">'+(index+1)+'. '+track.name+' — '+track.genre+'</option>').join('');
+ trackQueue=[];
+ trackQueuePosition=0;
+ soundtrackAudio=$('soundtrackAudio');
+ soundtrackAudio.preload='none';
+ soundtrackAudio.volume=1;
+ soundtrackAudio.addEventListener('ended',()=>{
+  if(soundOn&&!document.hidden)playNextTrack();
+ });
+ soundtrackAudio.addEventListener('error',()=>{
+  if(currentTrackIndex>=0)$('musicTitle').textContent='Não foi possível carregar a faixa. Escolha outra música.';
+ });
+ soundtrackAudio.addEventListener('loadedmetadata',()=>{
+  if(Number.isFinite(soundtrackAudio.duration)&&soundtrackAudio.duration<60){
+   $('musicTitle').textContent='Esta faixa está incompleta. Escolha outra.';
+  }
+ });
+ $('trackSelect').innerHTML=musicalTracks.map((track,index)=>
+  '<option value="'+index+'">'+(index+1)+'. '+track.name+' — '+track.genre+'</option>'
+ ).join('');
  $('globalVolume').value='100';
  setVolume(100);
- showTrack();
- ensureAudio();
- playTrack(currentTrackIndex);
  document.addEventListener('pointerdown',unlockMusic,true);
  document.addEventListener('keydown',unlockMusic,true);
  document.addEventListener('visibilitychange',()=>{
@@ -1274,6 +1185,7 @@ function initMusicPlayer(){
  window.addEventListener('pageshow',()=>{
   if(!document.hidden)resumeAudioWhenVisible();
  });
+ playTrack(currentTrackIndex,true);
 }
 function startRound(){
  round++;
@@ -1341,8 +1253,9 @@ function toggleSound(){
  $('soundToggle').textContent=soundOn?'♫ Pausar música':'♫ Tocar música';
  $('soundToggle').setAttribute('aria-pressed',String(soundOn));
  $('replayTune').disabled=!soundOn;
- if(soundOn){ensureAudio();playTrack(currentTrackIndex)}
- else stopMusic();
+ musicWasPlayingBeforeHide=false;
+ if(soundOn)playCurrentTrack();
+ else if(soundtrackAudio)soundtrackAudio.pause();
 }
 function replayTune(){if(soundOn)playNextTrack()}
 function stop(){finishSession();if(activeProfile&&profilesData[activeProfile]){profilesData[activeProfile].checkpoint=null;persistProfiles();updateProfileButtons();}scheduleCloudSave(true);}
