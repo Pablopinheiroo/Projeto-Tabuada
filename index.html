@@ -32,7 +32,9 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .stat span{display:block;color:#64748b;font-size:.8rem}
 .stat strong{font-size:1.55rem}
 .music-box{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:12px 14px;margin-bottom:16px;border:1px solid #dbeafe;border-radius:14px;background:linear-gradient(110deg,#eff6ff,#f5f3ff)}
-.music-info{min-width:0}
+.music-info{min-width:0;flex:1}
+.music-select{display:block;max-width:100%;margin-top:7px;padding:8px 10px;border:1px solid #bfdbfe;border-radius:9px;background:#fff;color:#1e3a8a;font:inherit;font-size:.84rem}
+.music-note{width:100%;margin:0;color:#64748b;font-size:.76rem;line-height:1.4}
 .music-kicker{display:block;color:#64748b;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
 .music-title{display:block;font-weight:800;font-size:.95rem;overflow-wrap:anywhere}
 .music-buttons{display:flex;gap:8px;flex-wrap:wrap}
@@ -131,12 +133,25 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <body>
 <main>
 <header class="brand"><h1>📚 Projeto Tabuada</h1><p>Pratique no seu ritmo, uma questão de cada vez.</p></header>
+<div class="music-box" id="siteMusicBox">
+ <div class="music-info">
+  <span class="music-kicker">🎮 Trilha sonora do jogo · 20 músicas originais</span>
+  <span id="musicTitle" class="music-title">Escolhendo uma trilha...</span>
+  <select id="trackSelect" class="music-select" aria-label="Escolher música"></select>
+ </div>
+ <div class="music-buttons">
+  <button id="soundToggle" class="music-button" type="button" aria-pressed="true">♫ Pausar música</button>
+  <button id="replayTune" class="music-button" type="button">⏭ Próxima faixa</button>
+  <label class="volume-control" for="globalVolume">Volume <input id="globalVolume" type="range" min="0" max="100" value="65"></label>
+ </div>
+ <p class="music-note">A faixa muda automaticamente após pelo menos 60 segundos. O navegador pode exigir um primeiro toque para liberar o áudio.</p>
+</div>
 
 <section id="authScreen" class="panel">
  <div style="text-align:center;margin-bottom:20px"><div style="font-size:2.3rem">🔐</div><h2 style="font-size:1.45rem">Acesse sua conta</h2><p class="hint" style="margin:6px 0 0">Entre para acompanhar seu progresso e participar do ranking.</p></div>
  <form id="loginForm" class="auth-form">
   <label>Nome de usuário<input id="loginUsername" maxlength="20" autocomplete="username" required placeholder="Seu nome de usuário"></label>
-  <label>Senha<input id="loginPassword" type="password" minlength="8" autocomplete="current-password" required placeholder="Sua senha"></label>
+  <label>Senha<input id="loginPassword" type="password" minlength="4" autocomplete="current-password" required placeholder="Sua senha"></label>
   <button class="primary" type="submit">Entrar</button>
   <p id="loginMessage" class="auth-message" role="status"></p>
  </form>
@@ -146,11 +161,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <div class="avatar-field">Escolha seu avatar<div id="registerAvatarGrid" class="avatar-grid" role="group" aria-label="Escolha um avatar"></div></div>
   <label>Nome de usuário<input id="registerUsername" maxlength="20" autocomplete="username" required placeholder="Ex.: maria_27"></label>
   <small>Use de 3 a 20 caracteres: letras sem acento, números, ponto, traço ou sublinhado.</small>
-  <label>Senha<input id="registerPassword" type="password" minlength="8" autocomplete="new-password" required placeholder="Mínimo de 8 caracteres"></label>
+  <label>Senha<input id="registerPassword" type="password" minlength="4" autocomplete="new-password" required placeholder="Mínimo de 4 caracteres"></label>
   <div style="margin:-5px 0 4px;padding:10px 12px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:.82rem;line-height:1.45">
    ⚠️ <b>Use uma senha simples e exclusiva para este jogo.</b> Não coloque a senha do seu e-mail, banco, redes sociais ou de qualquer outro serviço. É um projeto informal entre amigos; não use nenhuma senha importante.
   </div>
-  <label>Confirme a senha<input id="registerConfirm" type="password" minlength="8" autocomplete="new-password" required placeholder="Digite a senha novamente"></label>
+  <label>Confirme a senha<input id="registerConfirm" type="password" minlength="4" autocomplete="new-password" required placeholder="Digite a senha novamente"></label>
   <button class="primary" type="submit">Criar conta</button>
   <p id="registerMessage" class="auth-message" role="status"></p>
   <div class="auth-switch"><span>Já tem uma conta?</span><button id="showLogin" type="button" class="link-button">Voltar ao login</button></div>
@@ -174,8 +189,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
  <h2 class="profile-section-title">🔑 Alterar senha</h2>
  <p class="hint">Digite a nova senha e confirme. Não é necessário informar a senha atual.</p>
  <form id="changePasswordForm" class="auth-form">
-  <label>Nova senha<input id="newPassword" type="password" minlength="8" autocomplete="new-password" required placeholder="Mínimo de 8 caracteres"></label>
-  <label>Confirmar nova senha<input id="confirmNewPassword" type="password" minlength="8" autocomplete="new-password" required placeholder="Digite novamente a nova senha"></label>
+  <label>Nova senha<input id="newPassword" type="password" minlength="4" autocomplete="new-password" required placeholder="Mínimo de 4 caracteres"></label>
+  <label>Confirmar nova senha<input id="confirmNewPassword" type="password" minlength="4" autocomplete="new-password" required placeholder="Digite novamente a nova senha"></label>
   <button class="primary" type="submit">Alterar senha</button>
   <p id="passwordMessage" class="auth-message" role="status"></p>
  </form>
@@ -207,16 +222,6 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <p class="hint">Marque uma ou mais tabuadas e escolha como as questões aparecerão.</p>
 <div id="tables" class="tables"></div>
 <button id="start" class="primary">▶ Iniciar jogo</button>
-<div class="music-box" style="margin-top:14px;margin-bottom:0">
- <div class="music-info">
-  <span class="music-kicker">Música do menu</span>
-  <span class="music-title">Uma trilha para acompanhar sua preparação</span>
- </div>
- <div class="music-buttons">
-  <button id="menuMusic" class="music-button" type="button" aria-pressed="false">♫ Ouvir música</button>
-  <label class="volume-control" for="menuVolume">Volume <input id="menuVolume" type="range" min="0" max="100" value="28"></label>
- </div>
-</div>
 <p class="small">No modo normal, a tabuada segue de 1 a 10. No aleatório, a ordem muda.</p>
 </section>
 
@@ -225,18 +230,6 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <div class="stat"><span>Acertos</span><strong id="hits">0</strong></div>
 <div class="stat"><span>Erros</span><strong id="misses">0</strong></div>
 <div class="stat"><span>Rodadas concluídas</span><strong id="round">0</strong></div>
-</div>
-
-<div class="music-box">
- <div class="music-info">
-  <span class="music-kicker">Trilha musical da rodada</span>
-  <span id="musicTitle" class="music-title">Trilha 1 de 10</span>
- </div>
- <div class="music-buttons">
-  <button id="soundToggle" class="music-button" type="button" aria-pressed="true">♫ Som ligado</button>
-  <button id="replayTune" class="music-button" type="button">↻ Reiniciar faixa</button>
-  <label class="volume-control" for="gameVolume">Volume <input id="gameVolume" type="range" min="0" max="100" value="28"></label>
- </div>
 </div>
 
 <div class="progress"><div id="bar"></div></div>
@@ -314,8 +307,9 @@ for(let n=1;n<=10;n++){
 
 const $=id=>document.getElementById(id);
 let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
-let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=.22;
-let musicTimer=null,nextNoteTime=0,musicStep=0,menuMusicOn=false;
+let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=.65;
+let musicTimer=null,nextNoteTime=0,musicStep=0,musicTrackStartedAt=0;
+const TRACK_DURATION_SECONDS=60;
 let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0;
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
 const AUTH_USERS_KEY='projetoTabuadaUsuariosV1';
@@ -345,19 +339,27 @@ const AVATARS=[
 
 // Trilhas originais mais longas: cada uma tem oito compassos, harmonia, baixo e melodia.
 const musicalTracks=[
- {name:'Brisa',root:60,scale:[0,2,4,5,7,9,11],tempo:.405,progression:[0,4,5,3,0,5,3,4],melody:[7,null,9,null,11,9,7,null,5,null,7,9,7,null,5,null],lead:'sine'},
- {name:'Aventura Serena',root:62,scale:[0,2,4,5,7,9,11],tempo:.39,progression:[0,5,3,4,0,3,5,4],melody:[0,2,4,null,7,4,2,null,4,5,7,null,9,7,5,null],lead:'sine'},
- {name:'Piano Leve',root:57,scale:[0,2,4,5,7,9,11],tempo:.42,progression:[0,3,4,0,5,3,4,0],melody:[7,9,null,7,4,null,2,4,5,7,null,9,7,5,null,4],lead:'sine'},
- {name:'Nuvens',root:60,scale:[0,2,4,5,7,9,11],tempo:.435,progression:[0,4,5,4,0,3,5,4],melody:[12,null,9,7,12,null,9,7,11,9,7,null,9,7,5,null],lead:'sine'},
- {name:'Jazz Calmo',root:65,scale:[0,2,4,5,7,9,11],tempo:.41,progression:[0,3,5,4,0,4,3,5],melody:[7,null,9,11,null,9,7,null,5,7,null,9,11,null,9,7],lead:'sine'},
- {name:'Pôr do Sol',root:55,scale:[0,2,4,5,7,9,11],tempo:.425,progression:[0,4,5,3,0,3,4,0],melody:[7,9,11,null,12,11,9,null,7,9,11,12,null,11,9,7],lead:'sine'},
- {name:'Dia Tranquilo',root:69,scale:[0,2,4,5,7,9,11],tempo:.4,progression:[0,5,3,4,0,4,5,3],melody:[9,null,7,5,null,7,9,null,12,11,9,null,7,5,7,null],lead:'sine'},
- {name:'Serenidade',root:57,scale:[0,2,3,5,7,8,10],tempo:.445,progression:[0,5,3,6,0,3,5,6],melody:[7,null,8,10,null,8,7,null,5,null,7,8,10,null,8,7],lead:'sine'},
- {name:'Lagoa',root:64,scale:[0,2,4,5,7,9,11],tempo:.415,progression:[0,4,5,3,0,5,4,3],melody:[12,9,7,null,9,12,11,null,9,7,5,null,7,9,12,null],lead:'sine'},
- {name:'Boa Jornada',root:60,scale:[0,2,4,5,7,9,11],tempo:.43,progression:[0,3,4,5,0,5,3,4],melody:[0,4,7,null,9,7,4,null,7,9,12,null,11,9,7,4],lead:'sine'}
+ {name:'Pixel Adventure',root:60,scale:[0,2,4,5,7,9,11],tempo:.405,progression:[0,4,5,3,0,5,3,4],melody:[7,null,9,null,11,9,7,null,5,null,7,9,7,null,5,null],lead:'sine'},
+ {name:'Mundo Aberto',root:62,scale:[0,2,4,5,7,9,11],tempo:.39,progression:[0,5,3,4,0,3,5,4],melody:[0,2,4,null,7,4,2,null,4,5,7,null,9,7,5,null],lead:'sine'},
+ {name:'Menu RPG',root:57,scale:[0,2,4,5,7,9,11],tempo:.42,progression:[0,3,4,0,5,3,4,0],melody:[7,9,null,7,4,null,2,4,5,7,null,9,7,5,null,4],lead:'sine'},
+ {name:'Ilha Flutuante',root:60,scale:[0,2,4,5,7,9,11],tempo:.435,progression:[0,4,5,4,0,3,5,4],melody:[12,null,9,7,12,null,9,7,11,9,7,null,9,7,5,null],lead:'sine'},
+ {name:'Arcade Chill',root:65,scale:[0,2,4,5,7,9,11],tempo:.41,progression:[0,3,5,4,0,4,3,5],melody:[7,null,9,11,null,9,7,null,5,7,null,9,11,null,9,7],lead:'sine'},
+ {name:'Corrida ao Entardecer',root:55,scale:[0,2,4,5,7,9,11],tempo:.425,progression:[0,4,5,3,0,3,4,0],melody:[7,9,11,null,12,11,9,null,7,9,11,12,null,11,9,7],lead:'sine'},
+ {name:'Puzzle Quest',root:69,scale:[0,2,4,5,7,9,11],tempo:.4,progression:[0,5,3,4,0,4,5,3],melody:[9,null,7,5,null,7,9,null,12,11,9,null,7,5,7,null],lead:'sine'},
+ {name:'Floresta Mágica',root:57,scale:[0,2,3,5,7,8,10],tempo:.445,progression:[0,5,3,6,0,3,5,6],melody:[7,null,8,10,null,8,7,null,5,null,7,8,10,null,8,7],lead:'sine'},
+ {name:'Exploração',root:64,scale:[0,2,4,5,7,9,11],tempo:.415,progression:[0,4,5,3,0,5,4,3],melody:[12,9,7,null,9,12,11,null,9,7,5,null,7,9,12,null],lead:'sine'},
+ {name:'Level Up',root:60,scale:[0,2,4,5,7,9,11],tempo:.43,progression:[0,3,4,5,0,5,3,4],melody:[0,4,7,null,9,7,4,null,7,9,12,null,11,9,7,4],lead:'sine'},
+ {name:'Dungeon Pixel',root:53,scale:[0,2,3,5,7,8,10],tempo:.385,progression:[0,3,5,4,0,5,3,4],melody:[0,null,3,5,7,5,3,null,0,3,5,null,7,10,7,null],lead:'triangle'},
+ {name:'Neon Arcade',root:60,scale:[0,2,4,7,9,10,12],tempo:.36,progression:[0,3,4,2,0,4,3,2],melody:[0,4,7,null,9,7,4,null,12,9,7,4,null,7,9,null],lead:'square'},
+ {name:'Speedrun',root:57,scale:[0,2,4,5,7,9,10],tempo:.34,progression:[0,4,5,3,0,5,4,3],melody:[7,9,10,null,9,7,5,null,7,10,12,null,10,9,7,null],lead:'triangle'},
+ {name:'Espaço 8-Bit',root:62,scale:[0,2,4,6,7,9,11],tempo:.455,progression:[0,4,2,5,0,5,4,2],melody:[12,null,11,9,7,null,9,11,12,null,14,12,11,null,9,7],lead:'sine'},
+ {name:'Vila dos Heróis',root:55,scale:[0,2,4,5,7,9,11],tempo:.47,progression:[0,3,4,0,5,3,4,0],melody:[0,2,4,null,7,9,7,null,4,5,7,null,9,7,5,null],lead:'triangle'},
+ {name:'Batalha Leve',root:59,scale:[0,2,3,5,7,8,10],tempo:.375,progression:[0,5,3,6,0,3,5,6],melody:[0,3,5,null,7,5,3,null,10,8,7,null,5,3,2,null],lead:'triangle'},
+ {name:'Mundo Subaquático',root:64,scale:[0,2,4,5,7,9,11],tempo:.49,progression:[0,4,3,5,0,3,4,5],melody:[12,null,9,7,null,9,11,null,12,11,9,null,7,5,7,null],lead:'sine'},
+ {name:'Rota Secreta',root:57,scale:[0,2,3,5,7,9,10],tempo:.405,progression:[0,3,5,4,0,4,5,3],melody:[7,null,5,3,5,null,7,10,9,null,7,5,3,null,5,7],lead:'triangle'},
+ {name:'Castelo Pixel',root:60,scale:[0,2,4,5,7,9,11],tempo:.445,progression:[0,4,3,5,0,3,4,5],melody:[0,4,7,null,11,9,7,null,5,7,9,null,12,11,9,7],lead:'square'},
+ {name:'Vitória Serena',root:65,scale:[0,2,4,5,7,9,11],tempo:.46,progression:[0,3,4,0,5,3,4,0],melody:[7,9,11,null,12,11,9,null,7,9,12,null,14,12,11,9],lead:'sine'}
 ];
-const menuAmbientTrack={name:'Calma',root:60,scale:[0,2,4,5,7,9,11],tempo:.52,progression:[0,4,3,4,0,5,3,4],melody:[null,null,7,null,null,null,9,null,null,null,7,null,null,null,5,null],lead:'sine'};
-
 function shuffle(a){
  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
  return a;
@@ -604,7 +606,7 @@ async function handleRegister(event){
  const password=$('registerPassword').value,confirmPassword=$('registerConfirm').value;
  $('registerMessage').textContent='';
  if(!/^[a-z0-9_.-]{3,20}$/.test(username)){$('registerMessage').textContent='Use um nome com 3 a 20 caracteres: letras sem acento, números, ponto, traço ou _. ';return;}
- if(password.length<8){$('registerMessage').textContent='A senha precisa ter pelo menos 8 caracteres.';return;}
+ if(password.length<4){$('registerMessage').textContent='A senha precisa ter pelo menos 4 caracteres.';return;}
  if(password!==confirmPassword){$('registerMessage').textContent='As senhas não são iguais.';return;}
  try{
   if(await readRemoteUser(username)){$('registerMessage').textContent='Este nome de usuário já está cadastrado.';return;}
@@ -651,7 +653,7 @@ async function handleLogin(event){
 async function logout(){
  if(!$('game').classList.contains('hidden')){alert('Encerre ou salve a partida antes de sair da conta.');return;}
  await flushCloudSave();
- stopMusic();menuMusicOn=false;$('menuMusic').textContent='♫ Ouvir música';$('menuMusic').setAttribute('aria-pressed','false');
+ 
  sessionStorage.removeItem(AUTH_SESSION_KEY);activeProfile='';historyData=loadHistory();
  $('setup').classList.add('hidden');$('report').classList.add('hidden');$('authScreen').classList.remove('hidden');
  $('loginForm').reset();$('registerForm').reset();showLoginScreen();
@@ -802,7 +804,6 @@ function finishSession(){
   historyData.sessions=historyData.sessions.slice(0,300);
   saveHistory();
  }
- stopMusic();
  showReport();
 }
 
@@ -851,7 +852,6 @@ function resumeProfile(){
  hits=c.hits||0;misses=c.misses||0;sessionAnswers=c.sessionAnswers||[];sessionSkipped=c.sessionSkipped||0;sessionQuestionTimeMs=c.sessionQuestionTimeMs||0;roundCorrect=new Set(c.roundCorrect||[]);
  tablesEl.querySelectorAll('.table-row').forEach(row=>{const n=Number(row.querySelector('input').value),item=selected.find(t=>t.n===n);row.querySelector('input').checked=!!item;if(item)row.querySelector('select').value=item.mode;});
  $('setup').classList.add('hidden');$('report').classList.add('hidden');$('game').classList.remove('hidden');sessionStartedAt=performance.now();
- const choices=musicalTracks.map((_,i)=>i);currentTrackIndex=choices[Math.floor(Math.random()*choices.length)];previousTrackIndex=currentTrackIndex;showTrack();if(soundOn)playTrack(currentTrackIndex);
  current=deck[position];revealed=false;$('equation').textContent=current.a+' × '+current.b;$('counter').textContent='Rodada '+round+' · Questão '+(position+1)+' de '+deck.length;
  $('answer').textContent='';$('answer').className='answer';$('verify').classList.remove('hidden');$('judge').classList.add('hidden');updateStats();
  questionElapsedBeforeStart=c.currentElapsedMs||0;beginQuestionClock();$('profileStatus').textContent='Partida retomada. Bom estudo!';
@@ -906,7 +906,7 @@ async function changePassword(event){
  const password=$('newPassword').value;
  const confirmPassword=$('confirmNewPassword').value;
  $('passwordMessage').textContent='';
- if(password.length<8){$('passwordMessage').textContent='A nova senha precisa ter pelo menos 8 caracteres.';return;}
+ if(password.length<4){$('passwordMessage').textContent='A nova senha precisa ter pelo menos 4 caracteres.';return;}
  if(password!==confirmPassword){$('passwordMessage').textContent='As senhas não são iguais.';return;}
  try{
   const salt=makeSalt();
@@ -984,9 +984,8 @@ function playFeedback(correct){
 }
 function setVolume(value){
  volumeLevel=Math.max(0,Math.min(1,Number(value)/100));
- if(masterGain)masterGain.gain.setTargetAtTime(volumeLevel,audioContext.currentTime,.04);
- $('menuVolume').value=String(Math.round(volumeLevel*100));
- $('gameVolume').value=String(Math.round(volumeLevel*100));
+ if(masterGain&&audioContext)masterGain.gain.setTargetAtTime(volumeLevel,audioContext.currentTime,.04);
+ $('globalVolume').value=String(Math.round(volumeLevel*100));
 }
 function stopMusic(){
  if(musicTimer!==null){clearInterval(musicTimer);musicTimer=null}
@@ -1013,7 +1012,7 @@ function scheduleMusicStep(track){
   const phrase=Math.floor(step/16);
   const variation=[0,1,-1,0][phrase];
   const adjusted=motif+(step%8===6?variation:0);
-  playNote(midiToHz(scaleNote(track,adjusted,1)),when,track.tempo*.82,'sine',.016);
+  playNote(midiToHz(scaleNote(track,adjusted,1)),when,track.tempo*.82,track.lead||'sine',.016);
  }
  if(beatInBar===2||beatInBar===6){
   const colorTone=chordDegree+(beatInBar===2?2:4);
@@ -1026,31 +1025,62 @@ function startMusicLoop(track){
  if(!soundOn||!ensureAudio())return;
  stopMusic();
  musicStep=0;
+ musicTrackStartedAt=audioContext.currentTime;
  nextNoteTime=audioContext.currentTime+.06;
  musicTimer=setInterval(()=>{
   if(!audioContext||audioContext.state!=='running')return;
+  if(audioContext.currentTime-musicTrackStartedAt>=TRACK_DURATION_SECONDS){
+   playNextTrack();
+   return;
+  }
   if(nextNoteTime<audioContext.currentTime-.35)nextNoteTime=audioContext.currentTime+.04;
   while(nextNoteTime<audioContext.currentTime+.3)scheduleMusicStep(track);
  },50);
 }
-function playTrack(index){
- if(!soundOn||index<0)return;
- startMusicLoop(musicalTracks[index]);
-}
 function showTrack(){
  const track=musicalTracks[currentTrackIndex];
- $('musicTitle').textContent='Faixa aleatória · '+track.name;
+ if(!track)return;
+ $('musicTitle').textContent='Tocando: '+track.name+' · '+(currentTrackIndex+1)+' de '+musicalTracks.length+' · troca em pelo menos 60s';
+ if($('trackSelect'))$('trackSelect').value=String(currentTrackIndex);
+}
+function playTrack(index){
+ if(index<0||index>=musicalTracks.length)return;
+ currentTrackIndex=index;
+ previousTrackIndex=index;
+ showTrack();
+ if(soundOn)startMusicLoop(musicalTracks[index]);
+}
+function playNextTrack(){
+ const choices=musicalTracks.map((_,index)=>index).filter(index=>index!==currentTrackIndex);
+ const nextIndex=choices[Math.floor(Math.random()*choices.length)];
+ playTrack(nextIndex);
+}
+function chooseTrack(value){
+ const index=Number(value);
+ if(Number.isInteger(index)&&index>=0&&index<musicalTracks.length)playTrack(index);
+}
+function unlockMusic(){
+ if(!soundOn)return;
+ ensureAudio();
+ if(musicTimer===null)playTrack(currentTrackIndex);
+}
+function initMusicPlayer(){
+ currentTrackIndex=Math.floor(Math.random()*musicalTracks.length);
+ previousTrackIndex=currentTrackIndex;
+ $('trackSelect').innerHTML=musicalTracks.map((track,index)=>'<option value="'+index+'">'+(index+1)+'. '+track.name+'</option>').join('');
+ $('globalVolume').value='65';
+ showTrack();
+ ensureAudio();
+ playTrack(currentTrackIndex);
+ document.addEventListener('pointerdown',unlockMusic,true);
+ document.addEventListener('keydown',unlockMusic,true);
 }
 function startRound(){
  round++;
  roundCorrect=new Set();
  deck=makeRound();
  position=0;
- const choices=musicalTracks.map((_,index)=>index).filter(index=>index!==previousTrackIndex);
- currentTrackIndex=choices[Math.floor(Math.random()*choices.length)];
- previousTrackIndex=currentTrackIndex;
- showTrack();
- playTrack(currentTrackIndex);
+
 }
 function updateStats(){
  $('hits').textContent=hits;
@@ -1076,10 +1106,8 @@ function start(){
   .filter(r=>r.querySelector('input').checked)
   .map(r=>({n:Number(r.querySelector('input').value),mode:r.querySelector('select').value}));
  if(!selected.length){alert('Selecione pelo menos uma tabuada para começar.');return}
- if(menuMusicOn){stopMusic()}
  hits=0;misses=0;round=0;position=0;deck=[];roundCorrect=new Set();
  sessionAnswers=[];sessionSkipped=0;sessionQuestionTimeMs=0;sessionStartedAt=performance.now();
- previousTrackIndex=-1;currentTrackIndex=-1;
  $('report').classList.add('hidden');
  $('setup').classList.add('hidden');
  $('game').classList.remove('hidden');
@@ -1110,34 +1138,31 @@ function judge(ok){
 }
 function toggleSound(){
  soundOn=!soundOn;
- $('soundToggle').textContent=soundOn?'♫ Som ligado':'♫ Som desligado';
+ $('soundToggle').textContent=soundOn?'♫ Pausar música':'♫ Tocar música';
  $('soundToggle').setAttribute('aria-pressed',String(soundOn));
  $('replayTune').disabled=!soundOn;
- if(soundOn){if(ensureAudio()&&round>0)playTrack(currentTrackIndex)}
- else{
-  stopMusic();
-  if(menuMusicOn){menuMusicOn=false;$('menuMusic').textContent='♫ Ouvir música';$('menuMusic').setAttribute('aria-pressed','false')}
- }
+ if(soundOn){ensureAudio();playTrack(currentTrackIndex)}
+ else stopMusic();
 }
-function replayTune(){if(soundOn)playTrack(currentTrackIndex)}
+function replayTune(){if(soundOn)playNextTrack()}
 function stop(){finishSession();if(activeProfile&&profilesData[activeProfile]){profilesData[activeProfile].checkpoint=null;persistProfiles();updateProfileButtons();}scheduleCloudSave(true);}
 function backToMenu(){
  $('report').classList.add('hidden');
  $('setup').classList.remove('hidden');
- if(menuMusicOn&&soundOn)startMusicLoop(menuAmbientTrack);
+
 }
 function playAgain(){
  $('report').classList.add('hidden');
  $('setup').classList.remove('hidden');
  start();
 }
-function toggleMenuMusic(){
- menuMusicOn=!menuMusicOn;
- $('menuMusic').textContent=menuMusicOn?'♫ Parar música':'♫ Ouvir música';
- $('menuMusic').setAttribute('aria-pressed',String(menuMusicOn));
- if(menuMusicOn){soundOn=true;$('soundToggle').textContent='♫ Som ligado';$('soundToggle').setAttribute('aria-pressed','true');$('replayTune').disabled=false;startMusicLoop(menuAmbientTrack)}
- else stopMusic();
-}
+
+
+initMusicPlayer();
+$('trackSelect').addEventListener('change',e=>chooseTrack(e.target.value));
+$('globalVolume').addEventListener('input',e=>setVolume(e.target.value));
+$('soundToggle').addEventListener('click',toggleSound);
+$('replayTune').addEventListener('click',replayTune);
 
 renderAvatarGrid('registerAvatarGrid',selectedRegisterAvatar,index=>{selectedRegisterAvatar=index;});
 $('loginForm').addEventListener('submit',handleLogin);
@@ -1158,20 +1183,15 @@ $('verify').addEventListener('click',verify);
 $('right').addEventListener('click',()=>judge(true));
 $('wrong').addEventListener('click',()=>judge(false));
 $('stop').addEventListener('click',stop);
-$('soundToggle').addEventListener('click',toggleSound);
-$('replayTune').addEventListener('click',replayTune);
-$('menuMusic').addEventListener('click',toggleMenuMusic);
 $('backToMenu').addEventListener('click',backToMenu);
 $('playAgain').addEventListener('click',playAgain);
 ['reportScope','reportSort','reportTable','reportType'].forEach(id=>$(id).addEventListener('change',renderRanking));
 for(let n=1;n<=10;n++){const option=document.createElement('option');option.value=String(n);option.textContent='Tabuada do '+n;$('reportTable').appendChild(option)}
-$('menuVolume').addEventListener('input',e=>setVolume(e.target.value));
 setInterval(saveCheckpoint,5000);
 restoreCloudSession();
-$('gameVolume').addEventListener('input',e=>setVolume(e.target.value));
 document.addEventListener('click',e=>{
  const button=e.target.closest('button');
- if(!button||button.disabled||['right','wrong','soundToggle','menuMusic','replayTune'].includes(button.id))return;
+ if(!button||button.disabled||['right','wrong','soundToggle','replayTune'].includes(button.id))return;
  playUiClick();
 },true);
 </script>
