@@ -6,5 +6,5 @@ workers_dev = true
 [vars]
 GITHUB_REPO = "Pablopinheiroo/Projeto-Tabuada"
 GITHUB_BRANCH = "dados"
-GITHUB_FILE = "data/usuarios.json"
+GITHUB_DIR = "data/usuarios"
 ALLOWED_ORIGIN = "https://pablopinheiroo.github.io"
