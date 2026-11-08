@@ -1,68 +1,72 @@
-# Salvar os dados do Projeto Tabuada no GitHub
+# Configuração da API do Projeto Tabuada
 
-O armazenamento foi organizado para criar uma pasta própria para cada usuário no branch `dados`.
+A API foi preparada para usar exclusivamente o repositório privado `Pablopinheiroo/Projeto-Tabuada-Dados`. O código do Worker fixa esse destino: ele não recebe o nome de outro repositório por requisição nem oferece operações genéricas do GitHub.
 
-## Estrutura criada automaticamente
+## O que a API permite
 
-Quando alguém fizer um cadastro pelo site conectado à API, o Worker cria:
+- `POST /api/register`: cadastrar usuário.
+- `POST /api/login`: autenticar usuário.
+- `GET /api/me`: consultar os dados da própria conta autenticada.
+- `PUT /api/me`: atualizar histórico, estatísticas e partida salva da própria conta.
+- `GET /api/ranking`: consultar o ranking agregado.
+- `GET /health`: verificar se a API está ativa.
 
-```
-data/
-└── usuarios/
-    ├── maria/
-    │   └── dados.enc.json
-    ├── joao/
-    │   └── dados.json
-    └── outro-usuario/
-        └── dados.json
-```
+Não existe rota para apagar arquivos, excluir usuários, alterar o código do jogo, listar ou acessar outros repositórios. A API grava os arquivos em `data/usuarios/<usuario>/dados.enc.json` no repositório privado de dados.
 
-Cada pasta contém um arquivo `dados.enc.json` com o resumo de autenticação, histórico de acertos e erros, tempo de cada questão e partida salva para continuar depois. O Worker criptografa o conteúdo com AES-256-GCM antes de enviar ao GitHub. O GitHub cria a pasta junto com o arquivo no primeiro cadastro daquele usuário.
+## 1. Criar o repositório privado de dados
 
-## Sobre as senhas
+Na sua conta GitHub, crie um repositório com estas opções:
 
-A senha digitada **não é salva em texto aberto e não pode ser recuperada pelo administrador**. O arquivo guarda somente um hash PBKDF2-SHA256 com salt aleatório e 150.000 iterações. Todo o arquivo é criptografado com AES-256-GCM usando um segredo mantido somente no Cloudflare. Isso permite verificar a senha no login sem guardar a senha original. Não coloque senhas importantes ou reutilizadas neste jogo.
+- Nome: `Projeto-Tabuada-Dados`
+- Visibilidade: **Private**
+- README: pode deixar desmarcado.
+- Não reutilize o repositório público do jogo.
 
-**Atenção: o repositório atual é público.** Portanto, os nomes das pastas dos usuários e os horários/mensagens dos commits podem ser vistos por qualquer pessoa que abrir o GitHub, mas o conteúdo dos arquivos aparece como texto criptografado e não revela os históricos nem os hashes de senha. O segredo do Cloudflare e o token de acesso ao GitHub não ficam no repositório. Para esconder também os nomes das pastas, será necessário usar um repositório privado separado para os dados.
+O repositório de dados pode ficar vazio. O primeiro cadastro criará automaticamente a estrutura de pastas e arquivos.
 
-## Configuração única
+## 2. Criar o token com acesso limitado
 
-### 1. Criar um token limitado no GitHub
+No GitHub, abra Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token.
 
-1. Abra GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token.
-2. Dê um nome como `Projeto Tabuada Worker`.
-3. Em Repository access, escolha **Only select repositories** e marque somente `Projeto-Tabuada`.
-4. Em Repository permissions, conceda somente **Contents: Read and write**.
-5. Gere o token. Copie-o apenas para cadastrar como Secret no Cloudflare; não o coloque no HTML nem em arquivo do GitHub.
+Configure:
 
-### 2. Publicar o Worker no Cloudflare
+1. Nome: `Projeto Tabuada API`.
+2. Resource owner: sua conta.
+3. Repository access: **Only select repositories**.
+4. Selecione somente `Projeto-Tabuada-Dados`.
+5. Repository permissions: **Contents — Read and write**.
+6. Não conceda permissões de Administration, Metadata além da leitura automática, Actions, Workflows, Issues ou outras permissões.
+7. Gere o token e copie-o diretamente para o Secret do Cloudflare. Não o envie no chat, não o coloque no HTML e não o salve no repositório.
 
-1. Abra Cloudflare → Workers & Pages → Create → Worker.
-2. Dê o nome `projeto-tabuada-dados`.
-3. Abra Edit code e substitua o código de exemplo pelo conteúdo completo de `backend/worker.js` deste repositório.
-4. Em Settings → Variables and Secrets, cadastre:
+**Por que Contents Read and write?** O jogo precisa criar cadastros e atualizar resultados. Um token somente de leitura não conseguiria salvar nada. A permissão fica limitada ao repositório privado de dados; ela não concede acesso de escrita ao repositório do jogo nem aos demais repositórios da conta.
 
-| Nome | Tipo | Valor |
-|---|---|---|
-| `GITHUB_TOKEN` | Secret | Token fine-grained criado acima |
-| `AUTH_SECRET` | Secret | Uma chave aleatória longa, com no mínimo 32 caracteres |
-| `GITHUB_REPO` | Variable | `Pablopinheiroo/Projeto-Tabuada` |
-| `GITHUB_BRANCH` | Variable | `dados` |
-| `GITHUB_DIR` | Variable | `data/usuarios` |
-| `ALLOWED_ORIGIN` | Variable | `https://pablopinheiroo.github.io` |
+A permissão Contents Read and write do token, isoladamente, tecnicamente permite operações de conteúdo no repositório de dados. A API publicada, porém, só expõe as rotas específicas acima e não implementa exclusão. Mantenha o token secreto no Cloudflare.
 
-5. Salve as variáveis e faça Deploy.
-6. Abra `https://ENDERECO-DO-WORKER/health`. Deve aparecer `"ok": true` e `"storage": "one-folder-per-user"`.
+## 3. Configurar o Cloudflare Worker
 
-## Conectar o site
+O código está em `backend/worker.js` e a configuração em `backend/wrangler.toml`.
 
-O código do Worker já está no GitHub, mas precisa ser publicado no Cloudflare. Depois, o endereço `workers.dev` deverá ser conectado ao `index.html) para o cadastro, login, ranking e salvamento do jogo usarem a API. Até essa ligação ser feita, o site publicado continua usando os perfis locais do navegador.
+No Cloudflare → Workers & Pages, crie/abra o Worker `projeto-tabuada-dados`. Use o conteúdo completo de `backend/worker.js` e configure:
 
-## Rotas disponíveis
+**Secrets**
+- `GITHUB_TOKEN`: o token Fine-grained criado acima.
+- `AUTH_SECRET`: uma chave aleatória longa, com pelo menos 32 caracteres. Guarde uma cópia segura; sem ela os dados criptografados não poderão ser lidos.
 
-- `GET /health`: verifica se o Worker está ativo.
-- `POST /api/register`: cria a pasta e o arquivo do novo usuário.
-- `POST /api/login`: verifica a senha e inicia uma sessão.
-- `GET /api/me`: recupera histórico e partida do usuário.
-- `PUT /api/me`: salva histórico e partida.
-- `GET /api/ranking`: retorna o ranking de todos os perfis.
+**Variables**
+- `GITHUB_BRANCH`: `main`
+- `GITHUB_DIR`: `data/usuarios`
+- `ALLOWED_ORIGIN`: `https://pablopinheiroo.github.io`
+
+O repositório de destino já está fixado no código como `Pablopinheiroo/Projeto-Tabuada-Dados`; não é necessário configurar `GITHUB_REPO`.
+
+Faça o Deploy e teste `https://ENDERECO-DO-WORKER/health`. O retorno esperado contém `"ok":true`.
+
+## 4. Armazenamento e senhas
+
+Cada perfil é salvo em arquivo próprio. O conteúdo é criptografado com AES-256-GCM. A senha original nunca é armazenada: o Worker guarda apenas um hash PBKDF2-SHA256 com salt aleatório. Não use senha importante ou reutilizada neste jogo.
+
+Os nomes de usuário aparecem como nomes de pastas no repositório privado, mas o conteúdo dos arquivos fica criptografado.
+
+## 5. Situação da integração
+
+O Worker está preparado no repositório do jogo, mas ainda precisa que você crie o repositório privado, gere o token e configure os Secrets no Cloudflare. Depois disso, será necessário publicar o Worker e conectar o endereço dele ao `index.html`. Até concluir essas etapas, o jogo publicado ainda usa os dados locais do navegador; cadastro e ranking online ainda não estão ativos.
