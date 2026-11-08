@@ -632,6 +632,9 @@ function siteErrorMessage(error){
  if(lower.includes('servidor seguro ainda não foi conectado')){
   return 'O cadastro seguro ainda está sendo configurado. O servidor do Cloudflare precisa ser publicado e conectado ao jogo.';
  }
+ if(lower.includes('nome de usuário ou senha incorretos')){
+  return 'Nome de usuário ou senha incorretos.';
+ }
  if(status===401||lower.includes('sessão expirou')){
   return 'Sua sessão expirou. Entre novamente na sua conta.';
  }
@@ -1113,16 +1116,12 @@ async function changePassword(event){
  const password=$('newPassword').value;
  const confirmPassword=$('confirmNewPassword').value;
  $('passwordMessage').textContent='';
-  if(password.length===0){$('passwordMessage').textContent='Digite uma senha.';return;}
+ if(password.length===0){$('passwordMessage').textContent='Digite uma senha.';return;}
  if(password!==confirmPassword){$('passwordMessage').textContent='As senhas não são iguais.';return;}
  try{
-  const salt=makeSalt();
-  const hash=await passwordHash(password,salt);
-  authUsers[activeProfile]={...authUsers[activeProfile],username:activeProfile,salt,hash,passwordChangedAt:new Date().toISOString()};
-  if(cloudSyncTimer!==null){clearTimeout(cloudSyncTimer);cloudSyncTimer=null;}
-  const payload=buildRemoteUserData();
-  const newSha=await writeRemoteUser(activeProfile,payload,remoteUserSha);
-  remoteUserSha=newSha;remoteUserData=payload;
+  const result=await apiRequest('/api/me/password',{method:'POST',body:{password}});
+  if(result.sha)remoteUserSha=result.sha;
+  if(remoteUserData)remoteUserData.updatedAt=new Date().toISOString();
   $('changePasswordForm').reset();
   $('passwordMessage').textContent='Senha alterada com sucesso. Use a nova senha no próximo acesso.';
  }catch(error){
