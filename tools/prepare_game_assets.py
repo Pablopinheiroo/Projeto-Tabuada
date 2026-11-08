@@ -1,4 +1,5 @@
 from __future__ import annotations
+# Reimportação após atualização concorrente dos arquivos da página.
 import argparse, hashlib, json, math, shutil, subprocess, tempfile, urllib.request
 from pathlib import Path
 from urllib.parse import quote
