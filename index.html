@@ -151,6 +151,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
   <div class="report-stat"><span>Tempo total</span><strong id="reportTime">00:00</strong></div>
   <div class="report-stat"><span>Média por questão</span><strong id="reportAverage">00:00</strong></div>
   <div class="report-stat"><span>Precisão</span><strong id="reportAccuracy">0%</strong></div>
+  <div class="report-stat"><span>Sem classificação</span><strong id="reportSkipped">0</strong></div>
  </div>
  <h2>Ranking das contas</h2>
  <p class="hint" style="margin-bottom:8px">Escolha como deseja analisar seu desempenho. As contas com mais erros aparecem primeiro conforme o filtro selecionado.</p>
@@ -203,7 +204,7 @@ const $=id=>document.getElementById(id);
 let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
 let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=.22;
 let musicTimer=null,nextNoteTime=0,musicStep=0,menuMusicOn=false;
-let questionStartedAt=0,questionTimer=null,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0;
+let questionStartedAt=0,questionTimer=null,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0;
 const HISTORY_KEY='projetoTabuadaHistoricoV2';
 let historyData=loadHistory();
 
@@ -335,14 +336,16 @@ function showReport(){
  $('setup').classList.add('hidden');
  $('report').classList.remove('hidden');
  const answered=sessionAnswers.length;
- const totalTime=sessionStartedAt?performance.now()-sessionStartedAt:0;
+ const totalTime=sessionQuestionTimeMs;
+ const answeredTime=sessionAnswers.reduce((sum,item)=>sum+item.timeMs,0);
  const accuracy=answered?Math.round(hits/answered*100):0;
  $('reportAnswered').textContent=answered;
  $('reportHits').textContent=hits;
  $('reportMisses').textContent=misses;
  $('reportTime').textContent=formatDuration(totalTime);
- $('reportAverage').textContent=formatDuration(answered?totalTime/answered:0);
+ $('reportAverage').textContent=formatDuration(answered?answeredTime/answered:0);
  $('reportAccuracy').textContent=accuracy+'%';
+ $('reportSkipped').textContent=sessionSkipped;
  $('reportIntro').textContent=sessionSkipped
   ?'Treino encerrado. '+sessionSkipped+' questão(ões) ficou(aram) sem classificação; o tempo delas entrou no tempo total.'
   :'Treino encerrado. Confira quais contas precisam de mais atenção.';
@@ -355,11 +358,12 @@ function showReport(){
 function finishSession(){
  const now=performance.now();
  if(questionStartedAt){
-  endQuestionClock();
+  const unfinishedTime=endQuestionClock();
+  sessionQuestionTimeMs+=unfinishedTime;
   sessionSkipped++;
  }
  if(sessionStartedAt){
-  const summary={date:new Date().toISOString(),answered:sessionAnswers.length,hits,misses,skipped:sessionSkipped,timeMs:Math.max(0,now-sessionStartedAt)};
+  const summary={date:new Date().toISOString(),answered:sessionAnswers.length,hits,misses,skipped:sessionSkipped,timeMs:sessionQuestionTimeMs};
   historyData.sessions.unshift(summary);
   historyData.sessions=historyData.sessions.slice(0,300);
   saveHistory();
@@ -516,7 +520,7 @@ function start(){
  if(!selected.length){alert('Selecione pelo menos uma tabuada para começar.');return}
  if(menuMusicOn){stopMusic()}
  hits=0;misses=0;round=0;position=0;deck=[];
- sessionAnswers=[];sessionSkipped=0;sessionStartedAt=performance.now();
+ sessionAnswers=[];sessionSkipped=0;sessionQuestionTimeMs=0;sessionStartedAt=performance.now();
  previousTrackIndex=-1;currentTrackIndex=-1;
  $('report').classList.add('hidden');
  $('setup').classList.add('hidden');
@@ -536,6 +540,7 @@ function judge(ok){
  const timeMs=endQuestionClock();
  const entry={a:current.a,b:current.b,correct:!!ok,timeMs};
  sessionAnswers.push(entry);
+ sessionQuestionTimeMs+=timeMs;
  addAnswerToHistory(entry);
  if(ok){hits++;$('answer').classList.add('correct');playFeedback(true)}
  else{misses++;$('answer').classList.add('wrong');playFeedback(false)}
@@ -548,7 +553,10 @@ function toggleSound(){
  $('soundToggle').setAttribute('aria-pressed',String(soundOn));
  $('replayTune').disabled=!soundOn;
  if(soundOn){if(ensureAudio()&&round>0)playTrack(currentTrackIndex)}
- else stopMusic();
+ else{
+  stopMusic();
+  if(menuMusicOn){menuMusicOn=false;$('menuMusic').textContent='♫ Ouvir música';$('menuMusic').setAttribute('aria-pressed','false')}
+ }
 }
 function replayTune(){if(soundOn)playTrack(currentTrackIndex)}
 function stop(){finishSession()}
