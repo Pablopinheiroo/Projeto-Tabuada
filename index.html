@@ -80,6 +80,18 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .auth-form input{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;background:#fff}
 .auth-form small{color:#64748b;margin-top:-7px}
 .auth-form .primary{margin-top:4px}
+.avatar-field{display:grid;gap:9px;color:#475569;font-size:.9rem;font-weight:750}
+.avatar-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+.avatar-choice{display:grid;place-items:center;gap:4px;padding:7px 5px;border:2px solid #dbeafe;border-radius:14px;background:#f8fbff;color:#334155;font-size:.72rem;font-weight:750;min-width:0}
+.avatar-choice img{width:100%;max-width:66px;aspect-ratio:1;border-radius:50%;display:block}
+.avatar-choice.selected{border-color:#2563eb;background:#eff6ff;box-shadow:0 0 0 3px #2563eb20}
+.profile-identity{display:flex;align-items:center;gap:12px;margin:8px 0 14px}
+.profile-identity img{width:62px;height:62px;border-radius:50%;border:3px solid #bfdbfe;background:#eff6ff}
+.profile-identity strong{display:block;font-size:1.05rem}
+.profile-identity small{display:block;color:#64748b}
+.profile-section-title{margin:22px 0 10px;padding-top:16px;border-top:1px solid #e2e8f0}
+.profile-warning{padding:10px 12px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:.82rem;line-height:1.45}
+@media(max-width:440px){.avatar-grid{gap:6px}.avatar-choice{padding:5px 2px;font-size:.65rem}.avatar-choice img{max-width:56px}}
 .auth-switch{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:14px;flex-wrap:wrap;color:#64748b;font-size:.9rem}
 .link-button{background:transparent;color:#2563eb;padding:5px 8px}
 .auth-message{min-height:1.3em;text-align:center;margin:0;color:#b91c1c;font-size:.88rem}
@@ -131,6 +143,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
  <div class="auth-switch"><span>Ainda não tem uma conta?</span><button id="showRegister" type="button" class="link-button">Cadastrar</button></div>
  <form id="registerForm" class="auth-form hidden">
   <h2>📝 Criar novo perfil</h2>
+  <div class="avatar-field">Escolha seu avatar<div id="registerAvatarGrid" class="avatar-grid" role="group" aria-label="Escolha um avatar"></div></div>
   <label>Nome de usuário<input id="registerUsername" maxlength="20" autocomplete="username" required placeholder="Ex.: maria_27"></label>
   <small>Use de 3 a 20 caracteres: letras sem acento, números, ponto, traço ou sublinhado.</small>
   <label>Senha<input id="registerPassword" type="password" minlength="8" autocomplete="new-password" required placeholder="Mínimo de 8 caracteres"></label>
@@ -145,6 +158,31 @@ button:disabled{opacity:.45;cursor:not-allowed}
  <p class="auth-privacy"><b>Aviso:</b> as contas e os resultados são armazenados online no repositório privado do jogo. O token de acesso fica visível no código público e pode ser copiado por visitantes, que poderão ler, alterar ou apagar os dados desse repositório. Não use uma senha de outros serviços; escolha uma senha exclusiva e simples apenas para este jogo.</p>
 </section>
 
+<section id="profileScreen" class="panel hidden">
+ <h2>👤 Meu perfil</h2>
+ <p class="hint">Personalize como você aparece no jogo.</p>
+ <div class="profile-identity">
+  <img id="profilePreviewAvatar" alt="Avatar escolhido">
+  <div><strong id="profilePreviewName"></strong><small>Seu nome de usuário para entrar não muda.</small></div>
+ </div>
+ <form id="profileEditForm" class="auth-form">
+  <label>Nome que aparece no jogo<input id="profileDisplayName" maxlength="24" required placeholder="Seu nome de exibição"></label>
+  <div class="avatar-field">Escolha outro avatar<div id="profileAvatarGrid" class="avatar-grid" role="group" aria-label="Escolha seu avatar"></div></div>
+  <button class="primary" type="submit">Salvar perfil</button>
+  <p id="profileMessage" class="auth-message" role="status"></p>
+ </form>
+ <h2 class="profile-section-title">🔑 Alterar senha</h2>
+ <p class="hint">Digite a nova senha e confirme. Não é necessário informar a senha atual.</p>
+ <form id="changePasswordForm" class="auth-form">
+  <label>Nova senha<input id="newPassword" type="password" minlength="8" autocomplete="new-password" required placeholder="Mínimo de 8 caracteres"></label>
+  <label>Confirmar nova senha<input id="confirmNewPassword" type="password" minlength="8" autocomplete="new-password" required placeholder="Digite novamente a nova senha"></label>
+  <button class="primary" type="submit">Alterar senha</button>
+  <p id="passwordMessage" class="auth-message" role="status"></p>
+ </form>
+ <div class="profile-warning">A troca de senha só fica disponível enquanto você está conectado à conta. Não existe opção de recuperação ou “esqueci minha senha”. Guarde sua nova senha.</div>
+ <div class="report-actions"><button id="backFromProfile" class="secondary" type="button">Voltar ao jogo</button></div>
+</section>
+
 <section id="setup" class="panel hidden">
 <div class="community-ranking">
  <div class="community-heading"><div><span class="music-kicker">🏆 Comunidade</span><h2>Ranking dos participantes</h2><p class="hint" style="margin:5px 0 0">Veja o tempo de estudo e as contas que mais exigem prática.</p></div>
@@ -154,9 +192,10 @@ button:disabled{opacity:.45;cursor:not-allowed}
  <p class="ranking-local-note">Ranking compartilhado entre os participantes cadastrados. Os dados são lidos do repositório privado de dados.</p>
 </div>
 <div class="profile-box" style="padding:14px;border:1px solid #dbeafe;background:#f8fbff;border-radius:14px;margin:16px 0">
- <h2 style="font-size:1rem;margin-bottom:8px">👤 Perfil atual: <span id="currentUsername"></span></h2>
+ <div class="profile-identity"><img id="currentAvatar" alt="Avatar do perfil"><div><strong id="currentDisplayName"></strong><small>Conta: <span id="currentUsername"></span></small></div></div>
  <input id="profileName" type="hidden">
  <div style="display:flex;gap:8px;flex-wrap:wrap">
+  <button id="openProfile" class="music-button" type="button">👤 Meu perfil</button>
   <button id="saveProfile" class="music-button" type="button">💾 Salvar dados</button>
   <button id="resumeProfile" class="music-button" type="button" disabled>▶ Continuar de onde parei</button>
   <button id="addNumbers" class="music-button" type="button" disabled>＋ Adicionar números à partida</button>
@@ -290,6 +329,19 @@ const CLOUD={owner:'Pablopinheiroo',repo:'Projeto-Tabuada-Dados',branch:'main',d
 const GITHUB_API='https://api.github.com';
 let remoteUserSha=null,remoteUserData=null,cloudSyncTimer=null,cloudSyncBusy=false,cloudSyncQueued=false,lastCloudSaveAt=0;
 let communityCache=[],communityCacheAt=0;
+let selectedRegisterAvatar=0,selectedProfileAvatar=0;
+const AVATARS=[
+ {name:'Gamer',emoji:'🎧',bg:['#2563eb','#7c3aed']},
+ {name:'Raposa',emoji:'🦊',bg:['#f97316','#fbbf24']},
+ {name:'Coroa',emoji:'👑',bg:['#ca8a04','#facc15']},
+ {name:'Controle',emoji:'🎮',bg:['#1d4ed8','#06b6d4']},
+ {name:'Panda',emoji:'🐼',bg:['#475569','#cbd5e1']},
+ {name:'Pixel',emoji:'👾',bg:['#15803d','#86efac']},
+ {name:'Leão',emoji:'🦁',bg:['#b45309','#f59e0b']},
+ {name:'Lobo',emoji:'🐺',bg:['#475569','#94a3b8']},
+ {name:'Pinguim',emoji:'🐧',bg:['#0f766e','#67e8f9']},
+ {name:'Unicórnio',emoji:'🦄',bg:['#7e22ce','#f0abfc']}
+];
 
 // Trilhas originais mais longas: cada uma tem oito compassos, harmonia, baixo e melodia.
 const musicalTracks=[
@@ -313,6 +365,30 @@ function shuffle(a){
 function loadAuthUsers(){try{const data=JSON.parse(localStorage.getItem(AUTH_USERS_KEY)||'{}');return data&&typeof data==='object'?data:{}}catch(e){return {}}}
 function saveAuthUsers(){try{localStorage.setItem(AUTH_USERS_KEY,JSON.stringify(authUsers));return true}catch(e){return false}}
 function normalizeUsername(value){return value.trim().toLowerCase()}
+function avatarImage(index){
+ const avatar=AVATARS[Number.isInteger(Number(index))&&AVATARS[Number(index)]?Number(index):0];
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+avatar.bg[0]+'"/><stop offset="1" stop-color="'+avatar.bg[1]+'"/></linearGradient></defs><rect width="128" height="128" rx="64" fill="url(#g)"/><circle cx="64" cy="64" r="54" fill="#ffffff" fill-opacity=".13"/><circle cx="64" cy="64" r="48" fill="none" stroke="#ffffff" stroke-opacity=".55" stroke-width="3"/><text x="64" y="83" text-anchor="middle" font-size="66">'+avatar.emoji+'</text><circle cx="100" cy="27" r="7" fill="#ffffff" fill-opacity=".8"/><circle cx="26" cy="94" r="4" fill="#ffffff" fill-opacity=".65"/></svg>';
+ return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
+}
+function renderAvatarGrid(containerId,selectedIndex,onSelect){
+ const box=$(containerId);if(!box)return;
+ box.innerHTML=AVATARS.map((avatar,index)=>'<button type="button" class="avatar-choice'+(index===selectedIndex?' selected':'')+'" data-avatar="'+index+'" aria-pressed="'+(index===selectedIndex)+'"><img src="'+avatarImage(index)+'" alt=""><span>'+avatar.name+'</span></button>').join('');
+ box.querySelectorAll('[data-avatar]').forEach(button=>button.addEventListener('click',()=>{
+  const index=Number(button.dataset.avatar);
+  onSelect(index);
+  renderAvatarGrid(containerId,index,onSelect);
+ }));
+}
+function refreshProfileIdentity(){
+ const profile=profilesData[activeProfile]||{};
+ const displayName=profile.displayName||activeProfile;
+ const avatar=avatarImage(Number.isInteger(profile.avatar)?profile.avatar:0);
+ if($('currentUsername'))$('currentUsername').textContent=activeProfile;
+ if($('currentDisplayName'))$('currentDisplayName').textContent=displayName;
+ if($('currentAvatar'))$('currentAvatar').src=avatar;
+ if($('profilePreviewName'))$('profilePreviewName').textContent=displayName;
+ if($('profilePreviewAvatar'))$('profilePreviewAvatar').src=avatar;
+}
 function makeSalt(){return [...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,'0')).join('')}
 async function passwordHash(password,saltHex){
  if(!window.crypto||!crypto.subtle)throw new Error('Este navegador não oferece proteção de senha compatível. Atualize o navegador e tente novamente.');
@@ -467,7 +543,7 @@ function communityStatsFromRecord(record){
  if(checkpoint)timeMs+=(Number(checkpoint.sessionQuestionTimeMs)||0)+(Number(checkpoint.currentElapsedMs)||0);
  const hard=questions.filter(q=>(Number(q.wrong)||0)>0)
   .sort((a,b)=>b.wrong-a.wrong||(b.wrong/Math.max(1,b.attempts))-(a.wrong/Math.max(1,a.attempts))).slice(0,3);
- return {username:record.username,correct,wrong,attempts:correct+wrong,timeMs,hard};
+ return {username:record.username,displayName:record.profile?.displayName||record.username,avatar:Number.isInteger(record.profile?.avatar)?record.profile.avatar:0,correct,wrong,attempts:correct+wrong,timeMs,hard};
 }
 async function renderCommunityRanking(){
  const box=$('communityRanking');if(!box)return;
@@ -487,7 +563,7 @@ async function renderCommunityRanking(){
   if(!users.length){box.innerHTML='<div class="community-empty">Ainda não há participantes. Seja o primeiro a criar um perfil!</div>';return;}
   box.innerHTML=users.map((user,index)=>{
    const hard=user.hard.length?user.hard.map(q=>q.a+'×'+q.b+' ('+q.wrong+' erro'+(q.wrong===1?'':'s')+')').join(' · '):'Sem erros registrados';
-   return '<div class="community-card"><div class="community-user">#'+(index+1)+' · '+escapeHtml(user.username)+'<small>'+user.attempts+' questões respondidas</small></div><div class="community-metric"><strong>'+formatDuration(user.timeMs)+'</strong><small>tempo estudado</small></div><div class="community-metric"><strong>'+user.correct+'</strong><small>acertos</small></div><div class="community-metric"><strong>'+user.wrong+'</strong><small>erros</small></div><div class="community-hard"><b>Maiores dificuldades:</b> '+escapeHtml(hard)+'</div></div>';
+   return '<div class="community-card"><div class="community-user"><img src="'+avatarImage(user.avatar)+'" alt="" style="width:32px;height:32px;vertical-align:middle;margin-right:7px;border-radius:50%">#'+(index+1)+' · '+escapeHtml(user.displayName)+'<small>@'+escapeHtml(user.username)+' · '+user.attempts+' questões respondidas</small></div><div class="community-metric"><strong>'+formatDuration(user.timeMs)+'</strong><small>tempo estudado</small></div><div class="community-metric"><strong>'+user.correct+'</strong><small>acertos</small></div><div class="community-metric"><strong>'+user.wrong+'</strong><small>erros</small></div><div class="community-hard"><b>Maiores dificuldades:</b> '+escapeHtml(hard)+'</div></div>';
   }).join('');
  }catch(error){
   box.innerHTML='<div class="community-empty">Não foi possível carregar o ranking online. Confira o token e a permissão Contents: Read and write.</div>';
@@ -511,6 +587,10 @@ async function restoreCloudSession(){
 
 function enterApp(username){
  activeProfile=username;$('profileName').value=username;$('currentUsername').textContent=username;
+ if(!profilesData[username])profilesData[username]={};
+ if(!profilesData[username].displayName)profilesData[username].displayName=username;
+ if(!Number.isInteger(profilesData[username].avatar))profilesData[username].avatar=0;
+ refreshProfileIdentity();
  $('authScreen').classList.add('hidden');$('game').classList.add('hidden');$('report').classList.add('hidden');$('setup').classList.remove('hidden');
  selectProfile();renderCommunityRanking();
 }
@@ -529,13 +609,15 @@ async function handleRegister(event){
  try{
   if(await readRemoteUser(username)){$('registerMessage').textContent='Este nome de usuário já está cadastrado.';return;}
   const legacy=loadLegacyLocalUser(username);
-  let account,profile={},history={questions:{},sessions:[]};
+  let account,profile={displayName:username,avatar:selectedRegisterAvatar},history={questions:{},sessions:[]};
   if(legacy&&await passwordHash(password,legacy.auth.salt)===legacy.auth.hash){
    account=legacy.auth;profile=legacy.profile;history=legacy.history;
   }else{
    const salt=makeSalt(),hash=await passwordHash(password,salt);
    account={username,salt,hash,createdAt:new Date().toISOString()};
   }
+  if(!profile.displayName)profile.displayName=username;
+  if(!Number.isInteger(profile.avatar))profile.avatar=selectedRegisterAvatar;
   const document={version:1,username,auth:account,profile,history,updatedAt:new Date().toISOString()};
   const sha=await writeRemoteUser(username,document,null);
   hydrateRemoteUser(username,{data:document,sha});
@@ -781,6 +863,72 @@ function addNumbersToSavedGame(){
  c.selected=c.selected||[];c.selected.push(...additions);const extra=[];additions.forEach(t=>{for(let b=1;b<=10;b++)extra.push({a:t.n,b});});c.deck.splice(c.position||0,0,...extra);
  profilesData[name].checkpoint=c;persistProfiles();selectProfile();$('profileStatus').textContent='Novas tabuadas adicionadas. Continue a partida para praticá-las.';
 }
+
+function openProfileScreen(){
+ if(!$('game').classList.contains('hidden')){alert('Encerre a partida antes de editar o perfil.');return;}
+ const profile=profilesData[activeProfile]||{};
+ selectedProfileAvatar=Number.isInteger(profile.avatar)?profile.avatar:0;
+ $('profileDisplayName').value=profile.displayName||activeProfile;
+ $('profileMessage').textContent='';
+ $('passwordMessage').textContent='';
+ $('changePasswordForm').reset();
+ renderAvatarGrid('profileAvatarGrid',selectedProfileAvatar,index=>{selectedProfileAvatar=index;});
+ refreshProfileIdentity();
+ $('setup').classList.add('hidden');
+ $('profileScreen').classList.remove('hidden');
+}
+async function saveProfileEdits(event){
+ event.preventDefault();
+ const displayName=$('profileDisplayName').value.trim();
+ if(displayName.length<2||displayName.length>24){
+  $('profileMessage').textContent='Use um nome de 2 a 24 caracteres.';
+  return;
+ }
+ profilesData[activeProfile]=profilesData[activeProfile]||{};
+ profilesData[activeProfile].displayName=displayName;
+ profilesData[activeProfile].avatar=selectedProfileAvatar;
+ profilesData[activeProfile].updatedAt=new Date().toISOString();
+ persistProfiles();
+ try{
+  const payload=buildRemoteUserData();
+  const newSha=await writeRemoteUser(activeProfile,payload,remoteUserSha);
+  remoteUserSha=newSha;remoteUserData=payload;
+  $('profileMessage').textContent='Perfil atualizado com sucesso!';
+  refreshProfileIdentity();
+  communityCacheAt=0;
+  renderCommunityRanking();
+ }catch(error){
+  $('profileMessage').textContent='Não foi possível salvar o perfil: '+(error.message||'verifique a conexão.');
+ }
+}
+async function changePassword(event){
+ event.preventDefault();
+ const password=$('newPassword').value;
+ const confirmPassword=$('confirmNewPassword').value;
+ $('passwordMessage').textContent='';
+ if(password.length<8){$('passwordMessage').textContent='A nova senha precisa ter pelo menos 8 caracteres.';return;}
+ if(password!==confirmPassword){$('passwordMessage').textContent='As senhas não são iguais.';return;}
+ try{
+  const salt=makeSalt();
+  const hash=await passwordHash(password,salt);
+  authUsers[activeProfile]={...authUsers[activeProfile],username:activeProfile,salt,hash,passwordChangedAt:new Date().toISOString()};
+  if(cloudSyncTimer!==null){clearTimeout(cloudSyncTimer);cloudSyncTimer=null;}
+  const payload=buildRemoteUserData();
+  const newSha=await writeRemoteUser(activeProfile,payload,remoteUserSha);
+  remoteUserSha=newSha;remoteUserData=payload;
+  $('changePasswordForm').reset();
+  $('passwordMessage').textContent='Senha alterada com sucesso. Use a nova senha no próximo acesso.';
+ }catch(error){
+  $('passwordMessage').textContent='Não foi possível alterar a senha: '+(error.message||'verifique a conexão.');
+ }
+}
+function closeProfileScreen(){
+ $('profileScreen').classList.add('hidden');
+ $('setup').classList.remove('hidden');
+ refreshProfileIdentity();
+ renderCommunityRanking();
+}
+
 function makeRound(){
  const allRandom=selected.every(t=>t.mode==='random');
  const questions=[];
@@ -991,11 +1139,16 @@ function toggleMenuMusic(){
  else stopMusic();
 }
 
+renderAvatarGrid('registerAvatarGrid',selectedRegisterAvatar,index=>{selectedRegisterAvatar=index;});
 $('loginForm').addEventListener('submit',handleLogin);
 $('registerForm').addEventListener('submit',handleRegister);
 $('showRegister').addEventListener('click',()=>{$('loginForm').classList.add('hidden');$('registerForm').classList.remove('hidden');$('registerMessage').textContent='';});
 $('showLogin').addEventListener('click',showLoginScreen);
 $('logout').addEventListener('click',logout);
+$('openProfile').addEventListener('click',openProfileScreen);
+$('profileEditForm').addEventListener('submit',saveProfileEdits);
+$('changePasswordForm').addEventListener('submit',changePassword);
+$('backFromProfile').addEventListener('click',closeProfileScreen);
 $('communitySort').addEventListener('change',renderCommunityRanking);
 $('saveProfile').addEventListener('click',()=>saveProfile(true));
 $('resumeProfile').addEventListener('click',resumeProfile);
