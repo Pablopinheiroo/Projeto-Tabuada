@@ -1237,7 +1237,9 @@ function unlockMusic(){
 }
 function pauseAudioForBackground(){
  if(!audioContext)return;
- musicWasPlayingBeforeHide=soundOn&&musicTimer!==null&&audioContext.state==='running';
+ const wasAlreadyMarked=musicWasPlayingBeforeHide;
+ const wasActivelyPlaying=musicTimer!==null&&audioContext.state==='running';
+ musicWasPlayingBeforeHide=soundOn&&(wasActivelyPlaying||wasAlreadyMarked);
  stopMusic();
  if(audioContext.state==='running')audioContext.suspend().catch(()=>{});
  if(musicWasPlayingBeforeHide&&$('musicTitle'))$('musicTitle').textContent='⏸ Música pausada enquanto esta página está em segundo plano';
