@@ -309,7 +309,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  <div style="text-align:center;margin-bottom:20px"><div style="font-size:2.3rem">🔐</div><h2 style="font-size:1.45rem">Acesse sua conta</h2><p class="hint" style="margin:6px 0 0">Entre para acompanhar seu progresso e participar do ranking.</p></div>
  <form id="loginForm" class="auth-form">
   <label>Nome de usuário<input id="loginUsername" maxlength="20" autocomplete="username" required placeholder="Seu nome de usuário"></label>
-  <label>Senha<input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Sua senha"></label>
+  <label>Senha<input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Sua senha cadastrada"></label>
   <button class="primary" type="submit">Entrar</button>
   <p id="loginMessage" class="auth-message" role="status"></p>
  </form>
@@ -323,7 +323,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <div style="margin:-5px 0 4px;padding:10px 12px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:.82rem;line-height:1.45">
    ⚠️ <b>Use uma senha simples e exclusiva para este jogo.</b> Não coloque a senha do seu e-mail, banco, redes sociais ou de qualquer outro serviço. É um projeto informal entre amigos; não use nenhuma senha importante.
   </div>
-  <label>Confirme a senha<input id="registerConfirm" type="password" autocomplete="new-password" required placeholder="Digite a senha novamente"></label>
+  <label>Confirme a senha<input id="registerConfirm" type="password" autocomplete="new-password" required placeholder="Repita a senha escolhida"></label>
+  <small>Você pode escolher qualquer senha, sem tamanho mínimo ou combinação obrigatória. Ela só precisa ser repetida corretamente.</small>
   <button class="primary" type="submit">Criar conta</button>
   <p id="registerMessage" class="auth-message" role="status"></p>
   <div class="auth-switch"><span>Já tem uma conta?</span><button id="showLogin" type="button" class="link-button">Voltar ao login</button></div>
@@ -348,7 +349,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  <p class="hint">Digite a nova senha e confirme. Não é necessário informar a senha atual.</p>
  <form id="changePasswordForm" class="auth-form">
   <label>Nova senha<input id="newPassword" type="password" autocomplete="new-password" required placeholder="Digite a nova senha"></label>
-  <label>Confirmar nova senha<input id="confirmNewPassword" type="password" autocomplete="new-password" required placeholder="Digite novamente a nova senha"></label>
+  <label>Confirmar nova senha<input id="confirmNewPassword" type="password" autocomplete="new-password" required placeholder="Repita a nova senha"></label>
   <button class="primary" type="submit">Alterar senha</button>
   <p id="passwordMessage" class="auth-message" role="status"></p>
  </form>
@@ -582,8 +583,11 @@ function siteErrorMessage(error){
   return 'Não foi possível conectar ao GitHub. Confira sua internet e tente novamente.';
  }
  if(status===404||lower==='not found')return 'Os dados solicitados não foram encontrados no repositório.';
+ if(status===400)return 'O GitHub não aceitou os dados enviados. Confira as informações e tente novamente.';
+ if(status===409||status===422||lower.includes('already exists'))return 'Não foi possível gravar os dados. Esse nome de usuário pode já estar cadastrado; atualize a página e tente novamente.';
  if(status>=500)return 'O GitHub está apresentando uma falha temporária. Tente novamente mais tarde.';
- return message||'Ocorreu um erro inesperado. Tente novamente.';
+ if(message&&/[ãõáéíóúç]/i.test(message))return message;
+ return 'Não foi possível concluir a solicitação ao repositório do jogo. Tente novamente.';
 }
 
 async function githubRequest(path,options={}){
@@ -748,7 +752,7 @@ async function renderCommunityRanking(){
    return '<div class="community-card"><div class="community-user"><img src="'+avatarImage(user.avatar)+'" alt="" style="width:32px;height:32px;vertical-align:middle;margin-right:7px;border-radius:50%">#'+(index+1)+' · '+escapeHtml(user.displayName)+'<small>@'+escapeHtml(user.username)+' · '+user.attempts+' questões respondidas</small></div><div class="community-metric"><strong>'+formatDuration(user.timeMs)+'</strong><small>tempo estudado</small></div><div class="community-metric"><strong>'+user.correct+'</strong><small>acertos</small></div><div class="community-metric"><strong>'+user.wrong+'</strong><small>erros</small></div><div class="community-hard"><b>Maiores dificuldades:</b> '+escapeHtml(hard)+'</div></div>';
   }).join('');
  }catch(error){
-  box.innerHTML='<div class="community-empty">Não foi possível carregar o ranking online. Confira o token e a permissão Contents: Read and write.</div>';
+  box.innerHTML='<div class="community-empty">'+escapeHtml(siteErrorMessage(error))+'</div>';
   console.error('Falha ao carregar o ranking:',error);
  }
 }
@@ -785,6 +789,7 @@ async function handleRegister(event){
  const username=normalizeUsername($('registerUsername').value);
  const password=$('registerPassword').value,confirmPassword=$('registerConfirm').value;
  $('registerMessage').textContent='';
+  if(password.length===0){$('registerMessage').textContent='Digite uma senha.';return;}
  if(!/^[a-z0-9_.-]{3,20}$/.test(username)){$('registerMessage').textContent='Use um nome com 3 a 20 caracteres: letras sem acento, números, ponto, traço ou _. ';return;}
  if(password!==confirmPassword){$('registerMessage').textContent='As senhas não são iguais.';return;}
  try{
@@ -1085,6 +1090,7 @@ async function changePassword(event){
  const password=$('newPassword').value;
  const confirmPassword=$('confirmNewPassword').value;
  $('passwordMessage').textContent='';
+  if(password.length===0){$('passwordMessage').textContent='Digite uma senha.';return;}
  if(password!==confirmPassword){$('passwordMessage').textContent='As senhas não são iguais.';return;}
  try{
   const salt=makeSalt();
