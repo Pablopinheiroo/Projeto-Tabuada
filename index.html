@@ -506,7 +506,7 @@ const AVATARS=[
  {name:'Pinguim',emoji:'🐧',bg:['#0f766e','#67e8f9']},
  {name:'Unicórnio',emoji:'🦄',bg:['#7e22ce','#f0abfc']},
  {name:'Favo de Mel',src:'assets/avatars/avatar-favo-mel.png',bg:['#f59e0b','#92400e']},
- {name:'Abelhinha',src:'assets/avatars/avatar-abelhinha-imagem.png',bg:['#f59e0b','#92400e']}
+ {name:'Abelhinha',src:'assets/avatars/avatar-abelhinha-imagem.jpg?v=2',bg:['#f59e0b','#92400e']}
 ];
 
 const GIF_AVATARS=[
@@ -521,7 +521,7 @@ const GIF_AVATARS=[
  {name:'Pinguim',src:'assets/avatars/gif-pinguim.gif'},
  {name:'Unicórnio',src:'assets/avatars/gif-unicornio.gif'},
  {name:'Favo de Mel',src:'assets/avatars/gif-favo-mel.gif'},
- {name:'Abelhinha dançarina',src:'assets/avatars/avatar-abelhinha-dancando.gif'}
+ {name:'Abelhinha dançarina',src:'assets/avatars/avatar-abelhinha-dancando.gif?v=2'}
 ];
 
 // Trilhas originais mais longas: cada uma tem oito compassos, harmonia, baixo e melodia.
@@ -575,7 +575,7 @@ function normalizeAvatarKey(value){
  }
  const legacy=Number(value);
  if(Number.isInteger(legacy)&&legacy>=0&&legacy<=10)return 'imagem:'+legacy;
- if(legacy===11)return 'gif:11';
+ if(legacy===11)return 'imagem:11';
  return 'imagem:0';
 }
 function isAnimatedAvatar(value){return normalizeAvatarKey(value).startsWith('gif:')}
