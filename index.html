@@ -1166,6 +1166,7 @@ function playCurrentTrack(){
    musicStartPending=false;
    $('soundToggle').textContent='♫ Pausar música';
    $('soundToggle').setAttribute('aria-pressed','true');
+   $('musicMenuLabel').textContent='Alterar música';
    showTrack();
    return true;
   }).catch(()=>{
