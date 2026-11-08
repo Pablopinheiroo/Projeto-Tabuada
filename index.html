@@ -9,7 +9,7 @@
 :root{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#172554;background:#f3f6fc}
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;padding:24px 14px;background:linear-gradient(145deg,#edf3ff,#f8faff)}
-main{width:min(760px,100%);margin:0 auto}
+main{width:min(900px,100%);margin:0 auto}
 .brand{text-align:center;margin:12px 0 22px}
 .brand h1{margin:0;font-size:clamp(2rem,7vw,3rem);letter-spacing:-1.5px}
 .brand p{margin:6px 0;color:#64748b}
@@ -55,6 +55,27 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .no{background:#fee2e2;color:#991b1b}
 .bottom{display:flex;justify-content:center;margin-top:16px}
 .small{font-size:.88rem;color:#64748b;text-align:center;margin:16px 0 0}
+.question-time{margin:-10px 0 14px;text-align:center;color:#64748b;font-size:.9rem;font-variant-numeric:tabular-nums}
+.report-intro{color:#64748b;margin:0 0 18px}
+.report-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:9px;margin:18px 0}
+.report-stat{background:#f1f5f9;border-radius:14px;padding:13px;text-align:center}
+.report-stat span{display:block;color:#64748b;font-size:.8rem}
+.report-stat strong{display:block;font-size:1.4rem;margin-top:3px;font-variant-numeric:tabular-nums}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:18px 0}
+.filters label{display:grid;gap:6px;color:#475569;font-size:.86rem;font-weight:700}
+.filters select{width:100%;min-width:0;padding:10px;border:1px solid #cbd5e1;border-radius:10px;background:white;color:#172554;font:inherit;font-size:.92rem}
+.ranking-list{display:grid;gap:9px;margin-top:12px}
+.rank-row{display:grid;grid-template-columns:minmax(90px,1fr) repeat(4,minmax(62px,.7fr));gap:8px;align-items:center;padding:12px;border:1px solid #e2e8f0;border-radius:13px;background:#fbfdff}
+.rank-equation{font-size:1.05rem;font-weight:850;white-space:nowrap}
+.rank-cell{display:grid;gap:2px;text-align:center;font-variant-numeric:tabular-nums}
+.rank-cell small{color:#64748b;font-size:.7rem}
+.rank-cell strong{font-size:.94rem}
+.rank-header{color:#64748b;font-size:.75rem;font-weight:750;padding:0 12px}
+.report-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.report-actions button{flex:1;min-width:150px}
+.secondary{background:#e2e8f0;color:#334155}
+.empty-ranking{padding:18px;border:1px dashed #cbd5e1;border-radius:13px;color:#64748b;text-align:center}
+.report-note{font-size:.82rem;color:#64748b;line-height:1.45;margin-top:12px}
 @media(max-width:420px){
  .stats{gap:6px}.stat{padding:10px 4px}.stat strong{font-size:1.3rem}
  .mode{max-width:116px}.music-box{align-items:flex-start}.music-buttons{width:100%}
@@ -108,6 +129,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 
 <div class="progress"><div id="bar"></div></div>
 <div class="question"><div class="label" id="counter">Rodada 1 · Questão 1</div><div class="equation" id="equation">2 × 3</div></div>
+<div id="questionTime" class="question-time">Tempo nesta questão: 00:00</div>
 <div id="answer" class="answer" aria-live="assertive"></div>
 <div class="actions">
 <button id="verify" class="verify">Verificar</button>
@@ -116,7 +138,55 @@ button:disabled{opacity:.45;cursor:not-allowed}
 <button id="wrong" class="no">✕ Errei</button>
 </div>
 </div>
-<div class="bottom"><button id="stop" class="stop">Parar jogo</button></div>
+<div class="bottom"><button id="stop" class="stop">Encerrar jogo e ver resultados</button></div>
+</section>
+
+<section id="report" class="panel hidden" aria-live="polite">
+ <h2>📊 Resultado do treino</h2>
+ <p id="reportIntro" class="report-intro">Veja seus acertos, erros e o tempo usado em cada conta.</p>
+ <div class="report-stats">
+  <div class="report-stat"><span>Questões respondidas</span><strong id="reportAnswered">0</strong></div>
+  <div class="report-stat"><span>Acertos</span><strong id="reportHits">0</strong></div>
+  <div class="report-stat"><span>Erros</span><strong id="reportMisses">0</strong></div>
+  <div class="report-stat"><span>Tempo total</span><strong id="reportTime">00:00</strong></div>
+  <div class="report-stat"><span>Média por questão</span><strong id="reportAverage">00:00</strong></div>
+  <div class="report-stat"><span>Precisão</span><strong id="reportAccuracy">0%</strong></div>
+ </div>
+ <h2>Ranking das contas</h2>
+ <p class="hint" style="margin-bottom:8px">Escolha como deseja analisar seu desempenho. As contas com mais erros aparecem primeiro conforme o filtro selecionado.</p>
+ <div class="filters">
+  <label>Período dos dados
+   <select id="reportScope"><option value="session">Somente este treino</option><option value="all">Todo o histórico salvo</option></select>
+  </label>
+  <label>Ordenar por
+   <select id="reportSort">
+    <option value="errors">Maior número de erros</option>
+    <option value="errorRate">Maior porcentagem de erros</option>
+    <option value="correct">Maior número de acertos</option>
+    <option value="accuracy">Maior porcentagem de acertos</option>
+    <option value="slow">Maior tempo médio</option>
+    <option value="fast">Menor tempo médio</option>
+    <option value="attempts">Mais praticadas</option>
+   </select>
+  </label>
+  <label>Filtrar tabuada
+   <select id="reportTable"><option value="all">Todas as tabuadas</option></select>
+  </label>
+  <label>Mostrar questões
+   <select id="reportType">
+    <option value="all">Com acertos e erros</option>
+    <option value="wrong">Somente contas que errei</option>
+    <option value="correct">Somente contas que acertei</option>
+   </select>
+  </label>
+ </div>
+ <div id="rankingCaption" class="small" style="margin:0 0 10px;text-align:left"></div>
+ <div id="ranking" class="ranking-list"></div>
+ <div class="report-actions">
+  <button id="backToMenu" class="secondary" type="button">Voltar ao menu</button>
+  <button id="playAgain" class="primary" type="button" style="margin-top:0">Fazer outro treino</button>
+ </div>
+ <p class="report-note">Os dados ficam salvos neste navegador e neste dispositivo. Eles não são enviados para nenhum servidor. Para manter seu histórico, use o mesmo navegador e não apague os dados do site.</p>
 </section>
 </main>
 
@@ -131,27 +201,173 @@ for(let n=1;n<=10;n++){
 
 const $=id=>document.getElementById(id);
 let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
-let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=0,volumeLevel=.28;
+let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=.22;
 let musicTimer=null,nextNoteTime=0,musicStep=0,menuMusicOn=false;
+let questionStartedAt=0,questionTimer=null,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0;
+const HISTORY_KEY='projetoTabuadaHistoricoV2';
+let historyData=loadHistory();
 
 // Trilhas originais mais longas: cada uma tem oito compassos, harmonia, baixo e melodia.
 const musicalTracks=[
- {name:'Brisa',root:60,scale:[0,2,4,5,7,9,11],tempo:.29,progression:[0,4,5,3,0,5,3,4],melody:[7,null,9,null,11,9,7,null,5,null,7,9,7,null,5,null],lead:'sine'},
- {name:'Aventura',root:62,scale:[0,2,4,5,7,9,11],tempo:.255,progression:[0,5,3,4,0,3,5,4],melody:[0,2,4,null,7,4,2,null,4,5,7,null,9,7,5,null],lead:'triangle'},
- {name:'Piano Pop',root:57,scale:[0,2,4,5,7,9,11],tempo:.28,progression:[0,3,4,0,5,3,4,0],melody:[7,9,null,7,4,null,2,4,5,7,null,9,7,5,null,4],lead:'sine'},
- {name:'Arcade',root:60,scale:[0,2,4,5,7,9,11],tempo:.225,progression:[0,4,5,4,0,3,5,4],melody:[12,null,9,7,12,null,9,7,11,9,7,null,9,7,5,null],lead:'triangle'},
- {name:'Jazz Leve',root:65,scale:[0,2,4,5,7,9,11],tempo:.305,progression:[0,3,5,4,0,4,3,5],melody:[7,null,9,11,null,9,7,null,5,7,null,9,11,null,9,7],lead:'sine'},
- {name:'Conquista',root:55,scale:[0,2,4,5,7,9,11],tempo:.26,progression:[0,4,5,3,0,3,4,0],melody:[7,9,11,null,12,11,9,null,7,9,11,12,null,11,9,7],lead:'triangle'},
- {name:'Dia de Sol',root:69,scale:[0,2,4,5,7,9,11],tempo:.295,progression:[0,5,3,4,0,4,5,3],melody:[9,null,7,5,null,7,9,null,12,11,9,null,7,5,7,null],lead:'sine'},
- {name:'Mistério',root:57,scale:[0,2,3,5,7,8,10],tempo:.31,progression:[0,5,3,6,0,3,5,6],melody:[7,null,8,10,null,8,7,null,5,null,7,8,10,null,8,7],lead:'sine'},
- {name:'Dança',root:64,scale:[0,2,4,5,7,9,11],tempo:.235,progression:[0,4,5,3,0,5,4,3],melody:[12,9,7,null,9,12,11,null,9,7,5,null,7,9,12,null],lead:'triangle'},
- {name:'Grande Final',root:60,scale:[0,2,4,5,7,9,11],tempo:.285,progression:[0,3,4,5,0,5,3,4],melody:[0,4,7,null,9,7,4,null,7,9,12,null,11,9,7,4],lead:'triangle'}
+ {name:'Brisa',root:60,scale:[0,2,4,5,7,9,11],tempo:.405,progression:[0,4,5,3,0,5,3,4],melody:[7,null,9,null,11,9,7,null,5,null,7,9,7,null,5,null],lead:'sine'},
+ {name:'Aventura Serena',root:62,scale:[0,2,4,5,7,9,11],tempo:.39,progression:[0,5,3,4,0,3,5,4],melody:[0,2,4,null,7,4,2,null,4,5,7,null,9,7,5,null],lead:'sine'},
+ {name:'Piano Leve',root:57,scale:[0,2,4,5,7,9,11],tempo:.42,progression:[0,3,4,0,5,3,4,0],melody:[7,9,null,7,4,null,2,4,5,7,null,9,7,5,null,4],lead:'sine'},
+ {name:'Nuvens',root:60,scale:[0,2,4,5,7,9,11],tempo:.435,progression:[0,4,5,4,0,3,5,4],melody:[12,null,9,7,12,null,9,7,11,9,7,null,9,7,5,null],lead:'sine'},
+ {name:'Jazz Calmo',root:65,scale:[0,2,4,5,7,9,11],tempo:.41,progression:[0,3,5,4,0,4,3,5],melody:[7,null,9,11,null,9,7,null,5,7,null,9,11,null,9,7],lead:'sine'},
+ {name:'Pôr do Sol',root:55,scale:[0,2,4,5,7,9,11],tempo:.425,progression:[0,4,5,3,0,3,4,0],melody:[7,9,11,null,12,11,9,null,7,9,11,12,null,11,9,7],lead:'sine'},
+ {name:'Dia Tranquilo',root:69,scale:[0,2,4,5,7,9,11],tempo:.4,progression:[0,5,3,4,0,4,5,3],melody:[9,null,7,5,null,7,9,null,12,11,9,null,7,5,7,null],lead:'sine'},
+ {name:'Serenidade',root:57,scale:[0,2,3,5,7,8,10],tempo:.445,progression:[0,5,3,6,0,3,5,6],melody:[7,null,8,10,null,8,7,null,5,null,7,8,10,null,8,7],lead:'sine'},
+ {name:'Lagoa',root:64,scale:[0,2,4,5,7,9,11],tempo:.415,progression:[0,4,5,3,0,5,4,3],melody:[12,9,7,null,9,12,11,null,9,7,5,null,7,9,12,null],lead:'sine'},
+ {name:'Boa Jornada',root:60,scale:[0,2,4,5,7,9,11],tempo:.43,progression:[0,3,4,5,0,5,3,4],melody:[0,4,7,null,9,7,4,null,7,9,12,null,11,9,7,4],lead:'sine'}
 ];
+const menuAmbientTrack={name:'Calma',root:60,scale:[0,2,4,5,7,9,11],tempo:.52,progression:[0,4,3,4,0,5,3,4],melody:[null,null,7,null,null,null,9,null,null,null,7,null,null,null,5,null],lead:'sine'};
 
 function shuffle(a){
  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
  return a;
 }
+function loadHistory(){
+ try{
+  const raw=localStorage.getItem(HISTORY_KEY);
+  if(!raw)return {questions:{},sessions:[]};
+  const parsed=JSON.parse(raw);
+  if(!parsed||typeof parsed!=='object'||!parsed.questions)return {questions:{},sessions:[]};
+  return {questions:parsed.questions,sessions:Array.isArray(parsed.sessions)?parsed.sessions:[]};
+ }catch(error){return {questions:{},sessions:[]}}
+}
+function saveHistory(){
+ try{localStorage.setItem(HISTORY_KEY,JSON.stringify(historyData));return true}
+ catch(error){return false}
+}
+function formatDuration(milliseconds){
+ const seconds=Math.max(0,Math.floor((Number(milliseconds)||0)/1000));
+ const minutes=Math.floor(seconds/60);
+ const remainder=seconds%60;
+ return String(minutes).padStart(2,'0')+':'+String(remainder).padStart(2,'0');
+}
+function updateQuestionClock(){
+ if(!questionStartedAt)return;
+ $('questionTime').textContent='Tempo nesta questão: '+formatDuration(performance.now()-questionStartedAt);
+}
+function beginQuestionClock(){
+ questionStartedAt=performance.now();
+ if(questionTimer!==null)clearInterval(questionTimer);
+ updateQuestionClock();
+ questionTimer=setInterval(updateQuestionClock,250);
+}
+function endQuestionClock(){
+ const elapsed=questionStartedAt?Math.max(0,performance.now()-questionStartedAt):0;
+ questionStartedAt=0;
+ if(questionTimer!==null){clearInterval(questionTimer);questionTimer=null}
+ $('questionTime').textContent='Tempo nesta questão: '+formatDuration(elapsed);
+ return elapsed;
+}
+function addAnswerToHistory(entry){
+ const key=entry.a+'x'+entry.b;
+ if(!historyData.questions[key]){
+  historyData.questions[key]={a:entry.a,b:entry.b,attempts:0,correct:0,wrong:0,totalTimeMs:0,bestTimeMs:null};
+ }
+ const item=historyData.questions[key];
+ item.attempts++;
+ if(entry.correct){item.correct++}else{item.wrong++}
+ item.totalTimeMs+=entry.timeMs;
+ item.bestTimeMs=item.bestTimeMs===null?entry.timeMs:Math.min(item.bestTimeMs,entry.timeMs);
+ item.lastAt=new Date().toISOString();
+ saveHistory();
+}
+function groupSessionAnswers(entries){
+ const grouped={};
+ entries.forEach(entry=>{
+  const key=entry.a+'x'+entry.b;
+  if(!grouped[key])grouped[key]={a:entry.a,b:entry.b,attempts:0,correct:0,wrong:0,totalTimeMs:0,bestTimeMs:null};
+  const item=grouped[key];
+  item.attempts++;
+  if(entry.correct)item.correct++;else item.wrong++;
+  item.totalTimeMs+=entry.timeMs;
+  item.bestTimeMs=item.bestTimeMs===null?entry.timeMs:Math.min(item.bestTimeMs,entry.timeMs);
+ });
+ return Object.values(grouped);
+}
+function buildRankingData(){
+ const scope=$('reportScope').value;
+ let rows=scope==='session'?groupSessionAnswers(sessionAnswers):Object.values(historyData.questions);
+ const table=$('reportTable').value;
+ const type=$('reportType').value;
+ if(table!=='all')rows=rows.filter(row=>row.a===Number(table));
+ if(type==='wrong')rows=rows.filter(row=>row.wrong>0);
+ if(type==='correct')rows=rows.filter(row=>row.correct>0);
+ return rows.map(row=>({
+  ...row,
+  avgTime:row.attempts?row.totalTimeMs/row.attempts:0,
+  accuracy:row.attempts?row.correct/row.attempts:0,
+  errorRate:row.attempts?row.wrong/row.attempts:0
+ }));
+}
+function renderRanking(){
+ const rows=buildRankingData();
+ const sort=$('reportSort').value;
+ const sorting={
+  errors:(a,b)=>b.wrong-a.wrong||b.errorRate-a.errorRate||b.attempts-a.attempts,
+  errorRate:(a,b)=>b.errorRate-a.errorRate||b.wrong-a.wrong||b.attempts-a.attempts,
+  correct:(a,b)=>b.correct-a.correct||a.wrong-b.wrong,
+  accuracy:(a,b)=>b.accuracy-a.accuracy||b.attempts-a.attempts,
+  slow:(a,b)=>b.avgTime-a.avgTime||b.attempts-a.attempts,
+  fast:(a,b)=>a.avgTime-b.avgTime||b.attempts-a.attempts,
+  attempts:(a,b)=>b.attempts-a.attempts||b.wrong-a.wrong
+ };
+ rows.sort(sorting[sort]||sorting.errors);
+ const shown=rows.slice(0,30);
+ $('rankingCaption').textContent=rows.length+' conta(s) encontrada(s) · exibindo '+shown.length+' no ranking.';
+ if(!shown.length){
+  $('ranking').innerHTML='<div class="empty-ranking">Ainda não há dados para este filtro. Responda algumas questões para criar seu ranking.</div>';
+  return;
+ }
+ $('ranking').innerHTML='<div class="rank-row rank-header"><span>Conta</span><span class="rank-cell">Acertos</span><span class="rank-cell">Erros</span><span class="rank-cell">Média</span><span class="rank-cell">Precisão</span></div>'+shown.map((row,index)=>
+  '<div class="rank-row"><div><div class="rank-equation">#'+(index+1)+' · '+row.a+' × '+row.b+'</div><small style="color:#64748b">'+row.attempts+' tentativa(s)</small></div>'+
+  '<div class="rank-cell"><strong>'+row.correct+'</strong><small>acertos</small></div>'+
+  '<div class="rank-cell"><strong>'+row.wrong+'</strong><small>erros</small></div>'+
+  '<div class="rank-cell"><strong>'+formatDuration(row.avgTime)+'</strong><small>por conta</small></div>'+
+  '<div class="rank-cell"><strong>'+Math.round(row.accuracy*100)+'%</strong><small>de acerto</small></div></div>'
+ ).join('');
+}
+function showReport(){
+ $('game').classList.add('hidden');
+ $('setup').classList.add('hidden');
+ $('report').classList.remove('hidden');
+ const answered=sessionAnswers.length;
+ const totalTime=sessionStartedAt?performance.now()-sessionStartedAt:0;
+ const accuracy=answered?Math.round(hits/answered*100):0;
+ $('reportAnswered').textContent=answered;
+ $('reportHits').textContent=hits;
+ $('reportMisses').textContent=misses;
+ $('reportTime').textContent=formatDuration(totalTime);
+ $('reportAverage').textContent=formatDuration(answered?totalTime/answered:0);
+ $('reportAccuracy').textContent=accuracy+'%';
+ $('reportIntro').textContent=sessionSkipped
+  ?'Treino encerrado. '+sessionSkipped+' questão(ões) ficou(aram) sem classificação; o tempo delas entrou no tempo total.'
+  :'Treino encerrado. Confira quais contas precisam de mais atenção.';
+ $('reportScope').value='session';
+ $('reportTable').value='all';
+ $('reportType').value='all';
+ $('reportSort').value='errors';
+ renderRanking();
+}
+function finishSession(){
+ const now=performance.now();
+ if(questionStartedAt){
+  endQuestionClock();
+  sessionSkipped++;
+ }
+ if(sessionStartedAt){
+  const summary={date:new Date().toISOString(),answered:sessionAnswers.length,hits,misses,skipped:sessionSkipped,timeMs:Math.max(0,now-sessionStartedAt)};
+  historyData.sessions.unshift(summary);
+  historyData.sessions=historyData.sessions.slice(0,300);
+  saveHistory();
+ }
+ stopMusic();
+ showReport();
+}
+
 function makeRound(){
  const allRandom=selected.every(t=>t.mode==='random');
  const questions=[];
@@ -187,25 +403,23 @@ function playNote(frequency,start,duration,wave,volume){
  oscillator.type=wave;
  oscillator.frequency.setValueAtTime(frequency,start);
  envelope.gain.setValueAtTime(.0001,start);
- envelope.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),start+.025);
+ envelope.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),start+.035);
  envelope.gain.exponentialRampToValueAtTime(.0001,start+duration);
  oscillator.connect(envelope);envelope.connect(masterGain);
  activeSounds.add(oscillator);
  oscillator.onended=()=>{activeSounds.delete(oscillator);oscillator.disconnect();envelope.disconnect()};
- oscillator.start(start);oscillator.stop(start+duration+.035);
+ oscillator.start(start);oscillator.stop(start+duration+.04);
 }
 function playUiClick(){
  if(!soundOn||!ensureAudio())return;
  const t=audioContext.currentTime+.005;
- // Clique discreto, curto e macio; sem aquele apito alto e repetitivo.
- playNote(740,t,.045,'triangle',.012);
- playNote(990,t+.018,.035,'sine',.006);
+ playNote(660,t,.055,'sine',.0045);
 }
 function playFeedback(correct){
  if(!soundOn||!ensureAudio())return;
  const t=audioContext.currentTime+.01;
- const notes=correct?[72,76,79]:[62,58];
- notes.forEach((note,i)=>playNote(midiToHz(note),t+i*.085,.12,'sine',correct?.035:.022));
+ const notes=correct?[72,76]:[62,58];
+ notes.forEach((note,i)=>playNote(midiToHz(note),t+i*.105,.16,'sine',correct?.016:.011));
 }
 function setVolume(value){
  volumeLevel=Math.max(0,Math.min(1,Number(value)/100));
@@ -224,29 +438,25 @@ function scheduleMusicStep(track){
  const beatInBar=step%8;
  const when=nextNoteTime;
  const chordDegree=track.progression[bar];
- // Acorde suave e sustentado no começo de cada compasso.
  if(beatInBar===0){
   [chordDegree,chordDegree+2,chordDegree+4].forEach((degree,i)=>{
-   playNote(midiToHz(scaleNote(track,degree,0)),when,track.tempo*7.6,'sine',i===0?.012:.008);
+   playNote(midiToHz(scaleNote(track,degree,0)),when,track.tempo*7.7,'sine',i===0?.007:.0045);
   });
  }
- // Baixo em dois tempos de cada compasso para dar movimento sem pesar.
  if(beatInBar===0||beatInBar===4){
   const bassDegree=chordDegree+(beatInBar===4?4:0);
-  playNote(midiToHz(scaleNote(track,bassDegree,-2)),when,track.tempo*1.75,'sine',.038);
+  playNote(midiToHz(scaleNote(track,bassDegree,-2)),when,track.tempo*1.8,'sine',.014);
  }
- // Melodia de 16 passos com pequenas variações ao longo dos oito compassos.
  const motif=track.melody[step%16];
  if(motif!==null){
   const phrase=Math.floor(step/16);
-  const variation=[0,1,-1,2][phrase];
+  const variation=[0,1,-1,0][phrase];
   const adjusted=motif+(step%8===6?variation:0);
-  playNote(midiToHz(scaleNote(track,adjusted,1)),when,track.tempo*.72,track.lead,.041);
+  playNote(midiToHz(scaleNote(track,adjusted,1)),when,track.tempo*.82,'sine',.016);
  }
- // Notas leves de acompanhamento entre as frases da melodia.
  if(beatInBar===2||beatInBar===6){
   const colorTone=chordDegree+(beatInBar===2?2:4);
-  playNote(midiToHz(scaleNote(track,colorTone,1)),when,track.tempo*.42,'sine',.012);
+  playNote(midiToHz(scaleNote(track,colorTone,1)),when,track.tempo*.48,'sine',.005);
  }
  nextNoteTime+=track.tempo;
  musicStep++;
@@ -256,26 +466,27 @@ function startMusicLoop(track){
  stopMusic();
  musicStep=0;
  nextNoteTime=audioContext.currentTime+.06;
- // Mantém uma faixa completa em reprodução: oito compassos, com harmonia e variações.
  musicTimer=setInterval(()=>{
   if(!audioContext||audioContext.state!=='running')return;
   if(nextNoteTime<audioContext.currentTime-.35)nextNoteTime=audioContext.currentTime+.04;
-  while(nextNoteTime<audioContext.currentTime+.28)scheduleMusicStep(track);
+  while(nextNoteTime<audioContext.currentTime+.3)scheduleMusicStep(track);
  },50);
 }
 function playTrack(index){
- if(!soundOn)return;
+ if(!soundOn||index<0)return;
  startMusicLoop(musicalTracks[index]);
 }
 function showTrack(){
  const track=musicalTracks[currentTrackIndex];
- $('musicTitle').textContent='Faixa '+(currentTrackIndex+1)+' de 10 · '+track.name;
+ $('musicTitle').textContent='Faixa aleatória · '+track.name;
 }
 function startRound(){
  round++;
  deck=makeRound();
  position=0;
- currentTrackIndex=(round-1)%musicalTracks.length;
+ const choices=musicalTracks.map((_,index)=>index).filter(index=>index!==previousTrackIndex);
+ currentTrackIndex=choices[Math.floor(Math.random()*choices.length)];
+ previousTrackIndex=currentTrackIndex;
  showTrack();
  playTrack(currentTrackIndex);
 }
@@ -296,14 +507,18 @@ function next(){
  $('verify').classList.remove('hidden');
  $('judge').classList.add('hidden');
  updateStats();
+ beginQuestionClock();
 }
 function start(){
  selected=[...tablesEl.querySelectorAll('.table-row')]
   .filter(r=>r.querySelector('input').checked)
   .map(r=>({n:Number(r.querySelector('input').value),mode:r.querySelector('select').value}));
  if(!selected.length){alert('Selecione pelo menos uma tabuada para começar.');return}
- if(menuMusicOn){menuMusicOn=false;$('menuMusic').textContent='♫ Ouvir música';$('menuMusic').setAttribute('aria-pressed','false')}
+ if(menuMusicOn){stopMusic()}
  hits=0;misses=0;round=0;position=0;deck=[];
+ sessionAnswers=[];sessionSkipped=0;sessionStartedAt=performance.now();
+ previousTrackIndex=-1;currentTrackIndex=-1;
+ $('report').classList.add('hidden');
  $('setup').classList.add('hidden');
  $('game').classList.remove('hidden');
  if(soundOn)ensureAudio();
@@ -318,6 +533,10 @@ function verify(){
 }
 function judge(ok){
  if(!revealed)return;
+ const timeMs=endQuestionClock();
+ const entry={a:current.a,b:current.b,correct:!!ok,timeMs};
+ sessionAnswers.push(entry);
+ addAnswerToHistory(entry);
  if(ok){hits++;$('answer').classList.add('correct');playFeedback(true)}
  else{misses++;$('answer').classList.add('wrong');playFeedback(false)}
  position++;
@@ -332,17 +551,22 @@ function toggleSound(){
  else stopMusic();
 }
 function replayTune(){if(soundOn)playTrack(currentTrackIndex)}
-function stop(){
- stopMusic();
- $('game').classList.add('hidden');
+function stop(){finishSession()}
+function backToMenu(){
+ $('report').classList.add('hidden');
  $('setup').classList.remove('hidden');
- if(menuMusicOn&&soundOn)startMusicLoop(musicalTracks[0]);
+ if(menuMusicOn&&soundOn)startMusicLoop(menuAmbientTrack);
+}
+function playAgain(){
+ $('report').classList.add('hidden');
+ $('setup').classList.remove('hidden');
+ start();
 }
 function toggleMenuMusic(){
  menuMusicOn=!menuMusicOn;
  $('menuMusic').textContent=menuMusicOn?'♫ Parar música':'♫ Ouvir música';
  $('menuMusic').setAttribute('aria-pressed',String(menuMusicOn));
- if(menuMusicOn){soundOn=true;$('soundToggle').textContent='♫ Som ligado';$('soundToggle').setAttribute('aria-pressed','true');$('replayTune').disabled=false;startMusicLoop(musicalTracks[0])}
+ if(menuMusicOn){soundOn=true;$('soundToggle').textContent='♫ Som ligado';$('soundToggle').setAttribute('aria-pressed','true');$('replayTune').disabled=false;startMusicLoop(menuAmbientTrack)}
  else stopMusic();
 }
 
@@ -354,6 +578,10 @@ $('stop').addEventListener('click',stop);
 $('soundToggle').addEventListener('click',toggleSound);
 $('replayTune').addEventListener('click',replayTune);
 $('menuMusic').addEventListener('click',toggleMenuMusic);
+$('backToMenu').addEventListener('click',backToMenu);
+$('playAgain').addEventListener('click',playAgain);
+['reportScope','reportSort','reportTable','reportType'].forEach(id=>$(id).addEventListener('change',renderRanking));
+for(let n=1;n<=10;n++){const option=document.createElement('option');option.value=String(n);option.textContent='Tabuada do '+n;$('reportTable').appendChild(option)}
 $('menuVolume').addEventListener('input',e=>setVolume(e.target.value));
 $('gameVolume').addEventListener('input',e=>setVolume(e.target.value));
 document.addEventListener('click',e=>{
