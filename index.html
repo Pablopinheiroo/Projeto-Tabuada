@@ -279,6 +279,18 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  .music-controls .volume-control{grid-column:auto}
 }
 
+
+/* Separação dos avatares estáticos e animados */
+.avatar-grid{display:block}
+.avatar-grid-list{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+.avatar-section-title{margin:13px 0 9px;padding:8px 10px;border:1px solid #387c9e;border-radius:10px;background:linear-gradient(100deg,#102d4a,#25204b);color:#67e8f9;font-size:.78rem;font-weight:900;letter-spacing:.07em;text-transform:uppercase}
+.avatar-choice.image-choice img{border:2px solid #67e8f9;box-shadow:0 0 0 2px #0c2340}
+.avatar-choice.gif-choice{border:2px solid #c084fc;background:linear-gradient(145deg,#251b48,#152743);color:#f5eaff}
+.avatar-choice.gif-choice img{border:3px solid #d946ef;outline:2px solid #fbbf24;border-radius:22%;box-shadow:0 0 13px #d946ef55}
+.avatar-choice.gif-choice.selected{border-color:#fbbf24;background:linear-gradient(145deg,#493116,#30204f);box-shadow:0 0 0 3px #fbbf2433,0 0 18px #d946ef44}
+.avatar-choice.image-choice.selected{border-color:#22d3ee;box-shadow:0 0 0 3px #22d3ee33,0 0 15px #22d3ee44}
+.profile-identity img.gif-avatar{border-radius:22%;border-color:#d946ef;outline:2px solid #fbbf24}
+@media(max-width:440px){.avatar-grid-list{gap:6px}}
 </style>
 </head>
 <body>
@@ -329,7 +341,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <p id="registerMessage" class="auth-message" role="status"></p>
   <div class="auth-switch"><span>Já tem uma conta?</span><button id="showLogin" type="button" class="link-button">Voltar ao login</button></div>
  </form>
- <p class="auth-privacy"><b>Aviso:</b> as contas e os resultados são armazenados online no repositório privado do jogo. O token de acesso fica visível no código público e pode ser copiado por visitantes, que poderão ler, alterar ou apagar os dados desse repositório. Não use uma senha de outros serviços; escolha uma senha exclusiva e simples apenas para este jogo.</p>
 </section>
 
 <section id="profileScreen" class="panel hidden">
@@ -482,7 +493,7 @@ const CLOUD={owner:'Pablopinheiroo',repo:'Projeto-Tabuada-Dados',branch:'main',d
 const GITHUB_API='https://api.github.com';
 let remoteUserSha=null,remoteUserData=null,cloudSyncTimer=null,cloudSyncBusy=false,cloudSyncQueued=false,lastCloudSaveAt=0;
 let communityCache=[],communityCacheAt=0;
-let selectedRegisterAvatar=0,selectedProfileAvatar=0;
+let selectedRegisterAvatar='imagem:0',selectedProfileAvatar='imagem:0';
 const AVATARS=[
  {name:'Jogador',emoji:'🎧',bg:['#2563eb','#7c3aed']},
  {name:'Raposa',emoji:'🦊',bg:['#f97316','#fbbf24']},
@@ -495,11 +506,26 @@ const AVATARS=[
  {name:'Pinguim',emoji:'🐧',bg:['#0f766e','#67e8f9']},
  {name:'Unicórnio',emoji:'🦄',bg:['#7e22ce','#f0abfc']},
  {name:'Favo de Mel',src:'assets/avatars/avatar-favo-mel.png',bg:['#f59e0b','#92400e']},
- {name:'Dançarino',src:'assets/avatars/avatar-abelhinha-dancando.gif',bg:['#7c3aed','#ec4899']}
+ {name:'Abelhinha',src:'assets/avatars/avatar-abelhinha-imagem.png',bg:['#f59e0b','#92400e']}
+];
+
+const GIF_AVATARS=[
+ {name:'Jogador',src:'assets/avatars/gif-gamer.gif'},
+ {name:'Raposa',src:'assets/avatars/gif-raposa.gif'},
+ {name:'Coroa',src:'assets/avatars/gif-coroa.gif'},
+ {name:'Controle',src:'assets/avatars/gif-controle.gif'},
+ {name:'Panda',src:'assets/avatars/gif-panda.gif'},
+ {name:'Píxel',src:'assets/avatars/gif-pixel.gif'},
+ {name:'Leão',src:'assets/avatars/gif-leao.gif'},
+ {name:'Lobo',src:'assets/avatars/gif-lobo.gif'},
+ {name:'Pinguim',src:'assets/avatars/gif-pinguim.gif'},
+ {name:'Unicórnio',src:'assets/avatars/gif-unicornio.gif'},
+ {name:'Favo de Mel',src:'assets/avatars/gif-favo-mel.gif'},
+ {name:'Abelhinha dançarina',src:'assets/avatars/avatar-abelhinha-dancando.gif'}
 ];
 
 // Trilhas originais mais longas: cada uma tem oito compassos, harmonia, baixo e melodia.
-const musicalTracks=[
+let musicalTracks=[
  {name:"Aventura em Pixel",genre:"Aventura retrô",src:'assets/music/pixel-adventure.mp3'},
  {name:"Corrida Neon",genre:"Corrida eletrônica",src:'assets/music/racing-neon.mp3'},
  {name:"Reino dos Heróis",genre:"Aventura épica",src:'assets/music/rpg-kingdom.mp3'},
@@ -522,6 +548,18 @@ const musicalTracks=[
  {name:"Chefe Final",genre:"Ação épica",src:'assets/music/final-boss.mp3'}
 ];
 
+async function loadMusicManifest(){
+ try{
+  const response=await fetch('assets/music/manifest.json?rev=20-tracks',{cache:'no-store'});
+  if(!response.ok)throw new Error('Não foi possível carregar a lista de músicas.');
+  const data=await response.json();
+  if(!Array.isArray(data)||data.length!==20||!data.every(track=>track.name&&track.src&&Number(track.duration_seconds)>=30)){
+   throw new Error('A lista precisa ter 20 faixas diferentes com pelo menos 30 segundos.');
+  }
+  musicalTracks=data.map(track=>({name:track.name,genre:track.genre||'Trilha de jogo',src:track.src,duration_seconds:Number(track.duration_seconds),source:track.source||''}));
+ }catch(error){console.error('Falha ao atualizar a biblioteca musical:',error);}
+}
+
 function shuffle(a){
  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
  return a;
@@ -529,30 +567,51 @@ function shuffle(a){
 function loadAuthUsers(){try{const data=JSON.parse(localStorage.getItem(AUTH_USERS_KEY)||'{}');return data&&typeof data==='object'?data:{}}catch(e){return {}}}
 function saveAuthUsers(){try{localStorage.setItem(AUTH_USERS_KEY,JSON.stringify(authUsers));return true}catch(e){return false}}
 function normalizeUsername(value){return value.trim().toLowerCase()}
-function avatarImage(index){
- const avatar=AVATARS[Number.isInteger(Number(index))&&AVATARS[Number(index)]?Number(index):0];
+function normalizeAvatarKey(value){
+ if(typeof value==='string'&&/^(imagem|gif):\\d+$/.test(value)){
+  const [kind,raw]=value.split(':'),index=Number(raw);
+  const list=kind==='gif'?GIF_AVATARS:AVATARS;
+  if(Number.isInteger(index)&&index>=0&&index<list.length)return kind+':'+index;
+ }
+ const legacy=Number(value);
+ if(Number.isInteger(legacy)&&legacy>=0&&legacy<=10)return 'imagem:'+legacy;
+ if(legacy===11)return 'gif:11';
+ return 'imagem:0';
+}
+function isAnimatedAvatar(value){return normalizeAvatarKey(value).startsWith('gif:')}
+function avatarImage(value){
+ const key=normalizeAvatarKey(value),[kind,raw]=key.split(':'),index=Number(raw);
+ const list=kind==='gif'?GIF_AVATARS:AVATARS;
+ const avatar=list[index]||AVATARS[0];
  if(avatar.src)return avatar.src;
  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+avatar.bg[0]+'"/><stop offset="1" stop-color="'+avatar.bg[1]+'"/></linearGradient></defs><rect width="128" height="128" rx="64" fill="url(#g)"/><circle cx="64" cy="64" r="54" fill="#ffffff" fill-opacity=".13"/><circle cx="64" cy="64" r="48" fill="none" stroke="#ffffff" stroke-opacity=".55" stroke-width="3"/><text x="64" y="83" text-anchor="middle" font-size="66">'+avatar.emoji+'</text><circle cx="100" cy="27" r="7" fill="#ffffff" fill-opacity=".8"/><circle cx="26" cy="94" r="4" fill="#ffffff" fill-opacity=".65"/></svg>';
  return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
 }
-function renderAvatarGrid(containerId,selectedIndex,onSelect){
+function renderAvatarGrid(containerId,selectedKey,onSelect){
  const box=$(containerId);if(!box)return;
- box.innerHTML=AVATARS.map((avatar,index)=>'<button type="button" class="avatar-choice'+(index===selectedIndex?' selected':'')+'" data-avatar="'+index+'" aria-pressed="'+(index===selectedIndex)+'"><img src="'+avatarImage(index)+'" alt=""><span>'+avatar.name+'</span></button>').join('');
- box.querySelectorAll('[data-avatar]').forEach(button=>button.addEventListener('click',()=>{
-  const index=Number(button.dataset.avatar);
-  onSelect(index);
-  renderAvatarGrid(containerId,index,onSelect);
+ const selected=normalizeAvatarKey(selectedKey);
+ const renderGroup=(title,list,kind)=>'<div class="avatar-section-title">'+title+'</div><div class="avatar-grid-list">'+list.map((avatar,index)=>{
+  const key=kind+':'+index,active=key===selected;
+  return '<button type="button" class="avatar-choice '+(kind==='gif'?'gif-choice':'image-choice')+(active?' selected':'')+'" data-avatar-key="'+key+'" aria-pressed="'+active+'"><img src="'+avatarImage(key)+'" alt=""><span>'+avatar.name+'</span></button>';
+ }).join('')+'</div>';
+ box.innerHTML=renderGroup('🖼️ Avatares de imagem',AVATARS,'imagem')+renderGroup('✨ Avatares em GIF',GIF_AVATARS,'gif');
+ box.querySelectorAll('[data-avatar-key]').forEach(button=>button.addEventListener('click',()=>{
+  const key=button.dataset.avatarKey;
+  onSelect(key);
+  renderAvatarGrid(containerId,key,onSelect);
  }));
 }
 function refreshProfileIdentity(){
  const profile=profilesData[activeProfile]||{};
  const displayName=profile.displayName||activeProfile;
- const avatar=avatarImage(Number.isInteger(profile.avatar)?profile.avatar:0);
+ const avatarKey=normalizeAvatarKey(profile.avatar);
+ const avatar=avatarImage(avatarKey);
+ const animated=isAnimatedAvatar(avatarKey);
  if($('currentUsername'))$('currentUsername').textContent=activeProfile;
  if($('currentDisplayName'))$('currentDisplayName').textContent=displayName;
- if($('currentAvatar'))$('currentAvatar').src=avatar;
+ if($('currentAvatar')){$('currentAvatar').src=avatar;$('currentAvatar').classList.toggle('gif-avatar',animated);}
  if($('profilePreviewName'))$('profilePreviewName').textContent=displayName;
- if($('profilePreviewAvatar'))$('profilePreviewAvatar').src=avatar;
+ if($('profilePreviewAvatar')){$('profilePreviewAvatar').src=avatar;$('profilePreviewAvatar').classList.toggle('gif-avatar',animated);}
 }
 function makeSalt(){return [...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,'0')).join('')}
 async function passwordHash(password,saltHex){
@@ -732,7 +791,7 @@ function communityStatsFromRecord(record){
  if(checkpoint)timeMs+=(Number(checkpoint.sessionQuestionTimeMs)||0)+(Number(checkpoint.currentElapsedMs)||0);
  const hard=questions.filter(q=>(Number(q.wrong)||0)>0)
   .sort((a,b)=>b.wrong-a.wrong||(b.wrong/Math.max(1,b.attempts))-(a.wrong/Math.max(1,a.attempts))).slice(0,3);
- return {username:record.username,displayName:record.profile?.displayName||record.username,avatar:Number.isInteger(record.profile?.avatar)?record.profile.avatar:0,correct,wrong,attempts:correct+wrong,timeMs,hard};
+ return {username:record.username,displayName:record.profile?.displayName||record.username,avatar:normalizeAvatarKey(record.profile?.avatar),correct,wrong,attempts:correct+wrong,timeMs,hard};
 }
 async function renderCommunityRanking(){
  const box=$('communityRanking');if(!box)return;
@@ -806,7 +865,7 @@ async function handleRegister(event){
    account={username,salt,hash,createdAt:new Date().toISOString()};
   }
   if(!profile.displayName)profile.displayName=username;
-  if(!Number.isInteger(profile.avatar))profile.avatar=selectedRegisterAvatar;
+  if(profile.avatar===undefined||profile.avatar===null)profile.avatar=selectedRegisterAvatar;else profile.avatar=normalizeAvatarKey(profile.avatar);
   const document={version:1,username,auth:account,profile,history,updatedAt:new Date().toISOString()};
   const sha=await writeRemoteUser(username,document,null);
   hydrateRemoteUser(username,{data:document,sha});
@@ -1054,7 +1113,7 @@ function addNumbersToSavedGame(){
 function openProfileScreen(){
  if(!$('game').classList.contains('hidden')){alert('Encerre a partida antes de editar o perfil.');return;}
  const profile=profilesData[activeProfile]||{};
- selectedProfileAvatar=Number.isInteger(profile.avatar)?profile.avatar:0;
+ selectedProfileAvatar=normalizeAvatarKey(profile.avatar);
  $('profileDisplayName').value=profile.displayName||activeProfile;
  $('profileMessage').textContent='';
  $('passwordMessage').textContent='';
@@ -1454,7 +1513,7 @@ function playAgain(){
 }
 
 
-initMusicPlayer();
+loadMusicManifest().finally(initMusicPlayer);
 $('musicMenuToggle').addEventListener('click',toggleMusicMenu);
 $('trackSelect').addEventListener('change',e=>chooseTrack(e.target.value));
 $('globalVolume').addEventListener('input',e=>setVolume(e.target.value));
