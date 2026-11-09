@@ -81,8 +81,20 @@ const logoutStart=html.indexOf("async function logout(){");
 const logoutEnd=html.indexOf("\nfunction escapeHtml",logoutStart);
 const logoutCode=logoutStart>=0&&logoutEnd>logoutStart?html.slice(logoutStart,logoutEnd):"";
 check(html.includes("loadUiSfx();")&&html.includes("playUiSound('key')"),"Efeitos de clique/tecla não ligados.");
+check(html.includes("uiSfxBuffers.set(src,buffer)")&&html.includes("source.start(audioContext.currentTime+.002)"),
+ "Efeitos sonoros não são decodificados e reproduzidos em memória.");
+check(html.includes('id="profileSfxVolume"')&&html.includes("SFX_VOLUME_CACHE_KEY"),
+ "O perfil não oferece volume independente e persistente para os efeitos.");
 check(html.includes("playUiSound('select')")&&html.includes("playUiSound(value===null?'timeout':'select')"),
  "Sons de seleção e tempo esgotado não estão ligados às respostas.");
+check(!html.includes("'<small>@'+escapeHtml(user.username)+'</small>'+"),
+ "A comunidade continua exibindo o @usuário duplicado.");
+check(html.includes("community-rank-title-line")&&html.includes("community-challenge-details"),
+ "A comunidade não apresenta títulos e desafios na nova posição.");
+check(html.includes(".community-rank-public-stats{color:#294967"),
+ "O texto de estatísticas da comunidade continua com contraste baixo.");
+check(html.includes('<button id="navCommunity" type="button">🏆 Comunidade</button>'),
+ "O ícone anterior da comunidade não foi restaurado.");
 check(html.includes("const ACTIVE_TIME_SYNC_MS=30*60*1000;"), "O salvamento automático não está configurado para 30 minutos.");
 check(logoutCode.length>0&&!logoutCode.includes("flushCloudSave(true)"), "Sair da conta ainda força um salvamento antes dos 30 minutos.");
 check(html.includes("pendingActiveMs>0?loadHistory():remoteHistory"), "O login não preserva o histórico local que ainda não foi sincronizado.");
@@ -237,7 +249,10 @@ async function testViewport(name, viewport, mobile = false) {
       { answered: 5, hits: 4, misses: 1 },
       { answered: 6, hits: 5, misses: 1 }
     ];
+    activeProfile = "perfil-smoke";
+    profilesData[activeProfile] = { displayName: "Perfil de teste", sfxVolume: 0.82 };
     document.querySelector("#authScreen").classList.add("hidden");
+    refreshProfileIdentity();
     document.querySelector("#profileScreen").classList.remove("hidden");
   });
   await page.locator("#toggleProfileStats").click();
@@ -246,6 +261,15 @@ async function testViewport(name, viewport, mobile = false) {
   check(await page.locator("#profileStatsLine svg").count() === 1, name + ": gráfico de evolução não foi renderizado.");
   check(await page.locator("#profileStatsPie .stats-pie").count() === 1, name + ": gráfico de acertos e erros não foi renderizado.");
   check(await page.locator("#profileStatsModes .stats-mode-row").count() >= 4, name + ": comparação por modalidade não foi renderizada.");
+  check(await page.locator("#profileSfxVolume").isVisible(), name + ": controle de volume dos efeitos não aparece no perfil.");
+  await page.locator("#profileSfxVolume").evaluate(element => {
+    element.value = "55";
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  check((await page.locator("#profileSfxVolumeValue").textContent()).trim() === "55%",
+    name + ": ajuste de volume dos efeitos não atualizou.");
+  check(await page.evaluate(() => Math.abs(sfxVolumeLevel - .55) < .01),
+    name + ": o volume dos efeitos não foi aplicado.");
 
   const chartOverflow = await page.evaluate(() => ({
     viewport: window.innerWidth,
@@ -257,10 +281,41 @@ async function testViewport(name, viewport, mobile = false) {
   check(chartOverflow.radar <= chartOverflow.radarBox + 1, name + ": gráfico radar ultrapassa o cartão.");
   await page.screenshot({ path: "artifacts/" + name + "-graficos.png", fullPage: true });
 
-  await page.evaluate(() => {
+  await page.evaluate(async () => {
     document.querySelector("#profileScreen").classList.add("hidden");
     document.querySelector("#setup").classList.remove("hidden");
+    communityCache = [{
+      username: "maria_27", displayName: "Maria Silva",
+      profile: { displayName: "Maria Silva", avatar: "imagem:0" },
+      history: { questions: {}, sessions: [] },
+      correct: 120, wrong: 5, timeMs: 123456,
+      coins: 130, totalEarned: 250, challengeTotal: 2,
+      challengeWins: 1, challengeLosses: 1, challengeDraws: 0,
+      titles: ["Primeiro Ciclo"], medals: [], awards: [], featuredAwards: [],
+      achievements: { training_first: true }, economy: { coins: 130, achievements: { training_first: true } }
+    }];
+    communityCacheAt = Date.now();
+    communityPage = 0;
+    await renderCommunityRanking();
   });
+  const communityIdentity = page.locator(".community-rank-identity").first();
+  check(!(await communityIdentity.textContent()).includes("@maria_27"),
+    name + ": a comunidade ainda exibe o @usuário duplicado.");
+  check((await communityIdentity.locator(".community-rank-title-line").textContent()).includes("Primeiro Ciclo"),
+    name + ": o nome do perfil não foi tratado como título.");
+  const communityStatsColor = await page.locator(".community-rank-public-stats").first().evaluate(element => getComputedStyle(element).color);
+  check(communityStatsColor === "rgb(41, 73, 103)",
+    name + ": estatísticas da comunidade continuam com pouco contraste (" + communityStatsColor + ").");
+  await page.locator(".community-rank-summary").first().click();
+  const challengePosition = await page.locator(".community-profile-details").first().evaluate(element => {
+    const challenge = element.querySelector(".community-challenge-details");
+    const metrics = element.querySelector(".community-profile-detail-grid");
+    return !!challenge && !!metrics && element.firstElementChild === challenge &&
+      (challenge.compareDocumentPosition(metrics) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+  });
+  check(challengePosition, name + ": os desafios não aparecem logo abaixo das estatísticas ao expandir o perfil.");
+  await page.screenshot({ path: "artifacts/" + name + "-comunidade.png", fullPage: true });
+
   await page.locator("#openTrainingMode").click();
   check(!(await page.locator("#trainingModePanel").evaluate(el => el.classList.contains("hidden"))), name + ": botão Treinamento não abriu a modalidade.");
   check((await page.locator("#musicCategoryKicker").textContent()).includes("TREINAMENTO"), name + ": música não mudou para Treinamento.");
