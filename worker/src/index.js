@@ -14,7 +14,7 @@ const AVATAR_GIF_COUNT = 12;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
 const CHALLENGE_PLAYER_METADATA_MAX = 45;
-const WORKER_BUILD_ID = "2026-11-09-profile-featured-awards-learning-modes";
+const WORKER_BUILD_ID = "2026-11-09-training-review-login-errors-music-navigation";
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
 const CHALLENGE_DIRECTORY = "desafios/partidas";
@@ -1281,9 +1281,8 @@ async function handleApi(request, env, origin) {
       const body = await readJson(request);
       const username = String(body.username || "").trim().toLowerCase();
       const password = typeof body.password === "string" ? body.password : "";
-      if (!usernameIsValid(username) || !password) {
-        return json({ error: "Nome de usuário ou senha incorretos." }, 401, origin);
-      }
+      if (!usernameIsValid(username)) return json({ error: "Usuário não existe. Confira o nome ou faça seu cadastro." }, 404, origin);
+      if (!password) return json({ error: "Digite sua senha." }, 400, origin);
       const loginLimited = await rateLimitResponse(
         env.LOGIN_USER_LIMITER,
         username,
@@ -1293,12 +1292,12 @@ async function handleApi(request, env, origin) {
       if (loginLimited) return loginLimited;
 
       const record = await readUser(username, env);
-      if (!record) return json({ error: "Nome de usuário ou senha incorretos." }, 401, origin);
+      if (!record) return json({ error: "Usuário não existe. Confira o nome ou faça seu cadastro." }, 404, origin);
 
       const iterations = Number(record.data.auth.iterations) || PASSWORD_ITERATIONS;
       const hash = await passwordHash(password, record.data.auth.salt, iterations);
       if (!constantTimeEqual(hash, record.data.auth.hash)) {
-        return json({ error: "Nome de usuário ou senha incorretos." }, 401, origin);
+        return json({ error: "Senha incorreta. Confira a senha e tente novamente." }, 401, origin);
       }
 
       return json({
@@ -1590,6 +1589,10 @@ async function handleApi(request, env, origin) {
             coinsAdded = 10;
             changed = true;
           }
+          if (body.learningFromErrors === true && !economy.achievements.learning_from_errors) {
+            economy.achievements.learning_from_errors = new Date().toISOString();
+            changed = true;
+          }
         } else if (body.type === "adventure_stage") {
           const stageId = Number(body.stageId);
           if (!Number.isInteger(stageId) || stageId < 1 || stageId > ADVENTURE_STAGE_COUNT) {
@@ -1673,6 +1676,9 @@ async function handleApi(request, env, origin) {
       }
 
       const newAchievements = evaluateGameAchievements(economy);
+      if (body.type === "training_cycle" && body.learningFromErrors === true && economy.achievements.learning_from_errors && !newAchievements.includes("learning_from_errors")) {
+        newAchievements.push("learning_from_errors");
+      }
       if (changed || newAchievements.length) {
         record.data.economy = economy;
         record.data.updatedAt = new Date().toISOString();
