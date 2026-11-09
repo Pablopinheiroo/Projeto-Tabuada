@@ -300,6 +300,118 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .avatar-choice.image-choice.selected{border-color:#22d3ee;box-shadow:0 0 0 3px #22d3ee33,0 0 15px #22d3ee44}
 .profile-identity img.gif-avatar{border-radius:22%;border-color:#d946ef;outline:2px solid #fbbf24}
 @media(max-width:440px){.avatar-grid-list{gap:6px}}
+
+/* Central de modos e aventura de multiplicacao */
+.mode-hub{margin:20px 0 4px;padding:18px;border:1px solid #34577e;border-radius:19px;background:linear-gradient(145deg,#101f3a,#171b3b 62%,#251a46);box-shadow:0 14px 34px #02061755}
+.mode-hub-heading{text-align:center;margin:0 0 15px}
+.mode-hub-heading h2{margin:5px 0 4px;font-size:1.2rem}
+.mode-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.mode-card{display:flex;align-items:flex-start;gap:13px;min-width:0;padding:16px;border:1px solid #3c668f;border-radius:16px;background:linear-gradient(145deg,#142e4d,#172044);color:#edf7ff;text-align:left;box-shadow:0 5px 0 #09152c,0 12px 25px #02061744;transition:transform .16s,border-color .16s,box-shadow .16s}
+.mode-card:hover{transform:translateY(-2px);border-color:#67e8f9;box-shadow:0 7px 0 #09152c,0 16px 30px #02061766}
+.adventure-card{background:linear-gradient(145deg,#28214f,#142c4b);border-color:#7058a8}
+.mode-card-icon{display:grid;place-items:center;flex:0 0 48px;width:48px;height:48px;border:1px solid #4b8caf;border-radius:14px;background:#0a2038;font-size:1.65rem}
+.adventure-card .mode-card-icon{background:#30234d;border-color:#9874d0}
+.mode-card-copy{display:grid;gap:6px;min-width:0}
+.mode-card-copy strong{font-size:1.12rem;color:#fff;font-weight:900;letter-spacing:-.02em}
+.mode-card-copy small{color:#bdd0e9;font-size:.8rem;line-height:1.45}
+.mode-card-copy b{color:#67e8f9;font-size:.82rem;margin-top:3px}
+.adventure-card .mode-card-copy b{color:#d7b8ff}
+.mode-view{margin-top:18px}
+.mode-view-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 14px}
+.mode-view-heading h2{margin:4px 0 0}
+.compact-back{padding:8px 11px;font-size:.8rem;white-space:nowrap}
+.mode-view .tables{margin-top:12px}
+.mode-view .primary{margin-top:14px}
+.adventure-map-hero{display:flex;align-items:center;gap:14px;padding:16px;border:1px solid #3b5c8b;border-radius:17px;background:linear-gradient(115deg,#123452,#20204a 58%,#352050);margin-bottom:13px}
+.adventure-hero-emblem{display:grid;place-items:center;flex:0 0 58px;width:58px;height:58px;border-radius:17px;background:#0a1b35;border:1px solid #4e8ead;font-size:2rem;box-shadow:inset 0 1px #ffffff22,0 6px 15px #02061766}
+.adventure-map-hero strong{display:block;color:#fff;font-size:1.05rem;font-weight:900}
+.adventure-map-hero p{margin:4px 0 0;color:#bdd2ed;font-size:.82rem;line-height:1.5}
+.adventure-map-stats{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 2px 8px;color:#bcd2ef;font-size:.78rem}
+.adventure-map-stats strong{color:#f1e4ff}
+.adventure-map-progress,.adventure-question-progress{height:9px;border-radius:99px;overflow:hidden;background:#263d5f;border:1px solid #3d5e85}
+.adventure-map-progress span,.adventure-question-progress span{display:block;width:0;height:100%;border-radius:99px;background:linear-gradient(90deg,#22d3ee,#8b5cf6);transition:width .3s}
+.adventure-worlds{display:grid;gap:14px;margin-top:17px}
+.adventure-world{overflow:hidden;border:1px solid #38577e;border-radius:17px;background:linear-gradient(140deg,#122641,#161d3b)}
+.adventure-world-head{display:flex;align-items:center;gap:11px;padding:13px 14px;background:linear-gradient(100deg,#1a3652,#242047);border-bottom:1px solid #ffffff16}
+.adventure-world-icon{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:13px;background:#0c2038;border:1px solid #47779c;font-size:1.45rem}
+.adventure-world-head span{display:block;color:#67e8f9;font-size:.63rem;font-weight:900;letter-spacing:.12em}
+.adventure-world-head h3{margin:2px 0 0;color:#fff;font-size:.98rem}
+.adventure-world-head small{display:block;color:#a9c1df;margin-top:2px;font-size:.73rem}
+.adventure-world-progress{margin-left:auto;color:#d5c2ff;font-size:.72rem;font-weight:800;white-space:nowrap}
+.adventure-path{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:13px;position:relative}
+.adventure-node{position:relative;display:grid;justify-items:center;align-content:start;gap:5px;min-width:0;min-height:110px;padding:10px 6px;border:1px solid #45648a;border-radius:14px;background:linear-gradient(145deg,#1b3553,#14203d);color:#dcecff;text-align:center;box-shadow:0 4px 0 #09152b}
+.adventure-node.current{border-color:#67e8f9;background:linear-gradient(145deg,#16415a,#25204d);box-shadow:0 0 0 2px #22d3ee2c,0 5px 0 #09152b,0 0 16px #22d3ee25}
+.adventure-node.completed{border-color:#b38be8;background:linear-gradient(145deg,#2e2956,#18364c)}
+.adventure-node.locked{opacity:.52;filter:saturate(.55);cursor:not-allowed;background:#17233a}
+.adventure-node-icon{display:grid;place-items:center;width:35px;height:35px;border-radius:11px;background:#0b1b32;border:1px solid #52769a;font-size:1.25rem}
+.adventure-node.current .adventure-node-icon{border-color:#67e8f9}
+.adventure-node.completed .adventure-node-icon{border-color:#c4a3f2;background:#392a5c}
+.adventure-node small{color:#8eb1d6;font-size:.61rem;font-weight:900;letter-spacing:.08em}
+.adventure-node strong{color:#f5f8ff;font-size:.73rem;line-height:1.2;overflow-wrap:anywhere}
+.adventure-node-status{color:#f6d77b;font-size:.68rem;font-weight:900}
+.adventure-save-status{margin:12px 2px 0;color:#9eb7d7;font-size:.75rem;text-align:center}
+.adventure-briefing{padding:18px;border:1px solid #48618c;border-radius:18px;background:radial-gradient(circle at 90% 0%,#65419a33,transparent 35%),linear-gradient(145deg,#122b49,#191d42);box-shadow:0 12px 30px #02061755}
+.adventure-briefing-icon{font-size:2.5rem;text-align:center;margin:2px 0 8px}
+.adventure-briefing-label{display:block;text-align:center;color:#67e8f9;font-size:.68rem;font-weight:900;letter-spacing:.16em}
+.adventure-briefing p{margin:12px 0;color:#edf5ff;line-height:1.65;text-align:center}
+.adventure-mission,.adventure-tip{display:grid;gap:5px;padding:11px 13px;margin-top:10px;border-radius:12px;background:#0b2038;border:1px solid #345b80;color:#d7e8fb;font-size:.83rem;line-height:1.5}
+.adventure-mission strong{color:#67e8f9}
+.adventure-tip{background:#30264a;border-color:#6d5590}
+.adventure-tip strong{color:#e2c4ff}
+.adventure-rules{font-size:.75rem!important;color:#a9c1e2!important;margin-bottom:0!important}
+.adventure-start-button{width:100%}
+.adventure-play-top,.adventure-question-meta{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.adventure-play-top{margin-bottom:16px}
+.adventure-play-top>span{color:#67e8f9;font-size:.7rem;font-weight:900;letter-spacing:.1em}
+.adventure-play-top>strong{color:#e8d5ff;font-size:.8rem}
+.adventure-question-meta{margin:0 0 8px;color:#bcd1eb;font-size:.74rem}
+.adventure-question-meta strong{color:#67e8f9;letter-spacing:.1em}
+.adventure-question-meta span:last-child{color:#ffd37a;font-weight:800}
+.adventure-question-card{margin-top:15px;padding:clamp(16px,4vw,25px);border:1px solid #3c5f89;border-radius:19px;background:linear-gradient(145deg,#122b48,#171d3d 68%,#241b44);box-shadow:0 14px 34px #02061766}
+.adventure-question-kicker{display:block;color:#67e8f9;font-size:.67rem;font-weight:900;letter-spacing:.15em}
+.adventure-question-card>p{margin:11px 0;color:#f2f7ff;font-size:1rem;line-height:1.6;font-weight:650}
+.adventure-question-math{margin:14px 0 18px;padding:13px 10px;border:1px solid #43648f;border-radius:14px;background:#0a1a31;color:#fff;text-align:center;font-size:clamp(1.7rem,7vw,2.65rem);font-weight:950;letter-spacing:-.04em;text-shadow:0 0 18px #22d3ee33;overflow-wrap:anywhere}
+.adventure-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+.adventure-choice{padding:13px;border:1px solid #4a6991;border-radius:12px;background:#1a3151;color:#f1f7ff;font-size:1.05rem;font-weight:900}
+.adventure-choice:hover{border-color:#67e8f9;background:#214365}
+.adventure-choice:disabled{opacity:1;cursor:default}
+.adventure-choice.selected-correct{border-color:#4ade80;background:#14532d;color:#dcfce7}
+.adventure-choice.selected-wrong{border-color:#fb7185;background:#7f1d1d;color:#ffe4e6}
+.adventure-answer-form{display:grid;gap:8px;margin-top:12px}
+.adventure-answer-form label{color:#c7d9ef;font-size:.82rem;font-weight:750}
+.adventure-answer-form>div{display:flex;gap:9px}
+.adventure-answer-form input{flex:1;min-width:0;padding:12px 14px;border:1px solid #4d6e96;border-radius:12px;background:#091a30;color:#fff;font:inherit;font-size:1.15rem;font-weight:800}
+.adventure-answer-form input::placeholder{color:#7791b1}
+.adventure-answer-form button{width:auto;min-width:116px;margin:0}
+.adventure-feedback{margin-top:16px;padding:14px;border:1px solid #3b7e61;border-radius:13px;background:#123b31;color:#dcfce7}
+.adventure-feedback.wrong{border-color:#9a5267;background:#422136;color:#ffe3e8}
+.adventure-feedback strong{display:block;font-size:1rem}
+.adventure-feedback p{margin:6px 0 12px;font-size:.86rem;line-height:1.55}
+.adventure-feedback button{width:100%;margin:0}
+.adventure-play-note{color:#a9c1df;text-align:center;font-size:.78rem;line-height:1.5}
+.adventure-result-card{padding:22px 17px;border:1px solid #4b6691;border-radius:20px;background:radial-gradient(circle at 50% 0%,#6742a144,transparent 38%),linear-gradient(145deg,#122b49,#1d1c43);text-align:center}
+.adventure-result-icon{font-size:3rem;margin-bottom:8px}
+.adventure-result-card h2{margin:7px 0;font-size:1.5rem}
+.adventure-result-stars{margin:10px 0;color:#f6d365;font-size:2.2rem;letter-spacing:.12em;text-shadow:0 0 18px #f59e0b55}
+.adventure-result-card p{color:#d2e2f5;line-height:1.55;font-size:.9rem}
+.adventure-result-reward{display:block;margin:12px auto;color:#67e8f9;font-size:1.05rem}
+.adventure-result-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+.adventure-result-actions button{margin:0}
+@media(max-width:620px){
+ .mode-cards{grid-template-columns:1fr}
+ .mode-card{padding:13px}
+ .adventure-path{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .adventure-node{min-height:100px}
+ .adventure-world-head{align-items:flex-start}
+ .adventure-world-progress{margin-top:4px}
+ .adventure-result-actions{grid-template-columns:1fr}
+}
+@media(max-width:390px){
+ .adventure-map-stats{font-size:.7rem}
+ .adventure-question-meta{font-size:.68rem}
+ .adventure-answer-form>div{display:grid}
+ .adventure-answer-form button{width:100%}
+}
 </style>
 </head>
 <body>
@@ -399,11 +511,86 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  <p class="ranking-local-note">Ranking compartilhado entre os participantes cadastrados. Os dados são lidos do repositório privado de dados.</p>
 </div>
 
-<h2>Escolha as tabuadas</h2>
-<p class="hint">Marque uma ou mais tabuadas e escolha como as questões aparecerão.</p>
-<div id="tables" class="tables"></div>
-<button id="start" class="primary">▶ Iniciar jogo</button>
-<p class="small">No modo normal, a tabuada segue de 1 a 10. No aleatório, a ordem muda.</p>
+<div id="modeHub" class="mode-hub">
+ <div class="mode-hub-heading"><span class="music-kicker">ESCOLHA SUA JORNADA</span><h2>Como você quer aprender hoje?</h2><p class="hint">Você pode treinar livremente ou seguir uma aventura com fases e história.</p></div>
+ <div class="mode-cards">
+  <button id="openTrainingMode" class="mode-card training-card" type="button">
+   <span class="mode-card-icon">📘</span><span class="mode-card-copy"><strong>Treinamento</strong><small>Escolha as tabuadas, pratique no seu ritmo e acompanhe seus acertos.</small><b>Treino livre →</b></span>
+  </button>
+  <button id="openAdventureMode" class="mode-card adventure-card" type="button">
+   <span class="mode-card-icon">🗺️</span><span class="mode-card-copy"><strong>Modo Jogo</strong><small>Explore mundos, vença desafios, desbloqueie fases e avance até a tabuada do 20.</small><b>Entrar na aventura →</b></span>
+  </button>
+ </div>
+</div>
+
+<div id="trainingModePanel" class="mode-view hidden">
+ <div class="mode-view-heading"><div><span class="music-kicker">📘 TREINO LIVRE</span><h2>Escolha as tabuadas</h2></div><button id="backToModeHubTraining" class="secondary compact-back" type="button">← Modos</button></div>
+ <p class="hint">Marque uma ou mais tabuadas e escolha como as questões aparecerão.</p>
+ <div id="tables" class="tables"></div>
+ <button id="start" class="primary">▶ Iniciar treinamento</button>
+ <p class="small">No modo normal, a tabuada segue de 1 a 10. No aleatório, a ordem muda.</p>
+</div>
+
+<div id="adventureMapView" class="mode-view hidden">
+ <div class="mode-view-heading"><div><span class="music-kicker">🗺️ MODO JOGO</span><h2>Expedição Multiplicadora</h2></div><button id="backToModeHubMap" class="secondary compact-back" type="button">← Modos</button></div>
+ <div class="adventure-map-hero">
+  <div class="adventure-hero-emblem">🚀</div>
+  <div><strong>Uma aventura do 1 ao 20</strong><p>Ajude a equipe a recuperar os cristais da multiplicação. Cada vitória abre o próximo caminho.</p></div>
+ </div>
+ <div class="adventure-map-stats"><span id="adventureMapProgressText">0 de 26 fases concluídas</span><strong id="adventureMapXp">✨ 0 XP</strong><strong id="adventureMapStars">⭐ 0 estrelas</strong></div>
+ <div class="adventure-map-progress"><span id="adventureMapProgressBar"></span></div>
+ <div id="adventureMap" class="adventure-worlds"></div>
+ <p id="adventureSaveStatus" class="adventure-save-status" aria-live="polite">Seu avanço é salvo no perfil.</p>
+</div>
+
+<div id="adventureIntroView" class="mode-view hidden">
+ <div class="mode-view-heading"><div><span class="music-kicker">PREPARAR MISSÃO</span><h2 id="adventureIntroTitle">Fase</h2></div><button id="adventureIntroBack" class="secondary compact-back" type="button">← Mapa</button></div>
+ <div class="adventure-briefing">
+  <div class="adventure-briefing-icon" id="adventureIntroIcon">🌟</div>
+  <span class="adventure-briefing-label" id="adventureIntroWorld">MUNDO 1</span>
+  <p id="adventureIntroStory"></p>
+  <div class="adventure-mission"><strong>🎯 Sua missão</strong><span id="adventureIntroGoal"></span></div>
+  <div class="adventure-tip"><strong>💡 Dica para vencer</strong><span id="adventureIntroTip"></span></div>
+  <p class="adventure-rules" id="adventureIntroRules">Responda 6 de 8 questões para abrir a próxima fase. Você pode tentar novamente quantas vezes precisar.</p>
+ </div>
+ <button id="adventureStartStage" class="primary adventure-start-button">⚡ Começar desafio</button>
+</div>
+
+<div id="adventurePlayView" class="mode-view hidden">
+ <div class="adventure-play-top"><button id="adventureQuitStage" class="secondary compact-back" type="button">← Sair da fase</button><span id="adventurePlayWorld">MUNDO 1</span><strong id="adventurePlayXp">✨ 0 XP</strong></div>
+ <div class="adventure-question-meta"><strong id="adventureStageLabel">FASE 1</strong><span id="adventureQuestionCounter">Questão 1 de 8</span><span id="adventureCombo">🔥 Sequência 0</span></div>
+ <div class="adventure-question-progress"><span id="adventureQuestionProgress"></span></div>
+ <div class="adventure-question-card">
+  <span class="adventure-question-kicker">DESAFIO</span>
+  <p id="adventureQuestionPrompt"></p>
+  <div id="adventureQuestionMath" class="adventure-question-math"></div>
+  <div id="adventureChoices" class="adventure-choices hidden"></div>
+  <form id="adventureAnswerForm" class="adventure-answer-form">
+   <label for="adventureAnswerInput">Sua resposta</label>
+   <div><input id="adventureAnswerInput" type="number" inputmode="numeric" step="1" autocomplete="off" placeholder="Digite o resultado" required><button class="primary" type="submit">Conferir</button></div>
+  </form>
+  <div id="adventureFeedback" class="adventure-feedback hidden" aria-live="polite">
+   <strong id="adventureFeedbackTitle"></strong><p id="adventureFeedbackText"></p>
+   <button id="adventureNextButton" class="primary" type="button">Próxima questão</button>
+  </div>
+ </div>
+ <p class="adventure-play-note">Errar faz parte da expedição. Leia a explicação, aprenda e continue. 💙</p>
+</div>
+
+<div id="adventureResultView" class="mode-view hidden">
+ <div class="adventure-result-card">
+  <div id="adventureResultIcon" class="adventure-result-icon">🏆</div>
+  <span class="music-kicker">RELATÓRIO DA MISSÃO</span>
+  <h2 id="adventureResultTitle">Desafio concluído!</h2>
+  <div id="adventureResultStars" class="adventure-result-stars">☆☆☆</div>
+  <p id="adventureResultText"></p>
+  <strong id="adventureResultReward" class="adventure-result-reward"></strong>
+  <div class="adventure-result-actions">
+   <button id="adventureResultRetry" class="secondary" type="button">↻ Tentar novamente</button>
+   <button id="adventureResultNext" class="primary" type="button">Voltar ao mapa</button>
+  </div>
+ </div>
+</div>
 </section>
 
 <section id="game" class="panel hidden" aria-live="polite">
