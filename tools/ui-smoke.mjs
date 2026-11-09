@@ -164,9 +164,26 @@ async function testViewport(name, viewport, mobile = false) {
   });
   check((await page.locator("#volumeValue").textContent()).trim() === "65%", name + ": controle de volume não atualizou.");
 
+  const initialTrack = await page.locator("#trackSelect").inputValue();
+  await page.locator("#replayTune").click();
+  await page.waitForFunction(
+    previous => document.querySelector("#trackSelect").value !== previous,
+    initialTrack,
+    { timeout: 10000 }
+  );
+  await page.locator("#soundToggle").click();
+  check(await page.locator("#soundToggle").getAttribute("aria-pressed") === "false", name + ": botão de pausar música não funcionou.");
+  await page.locator("#soundToggle").click();
+  check(await page.locator("#soundToggle").getAttribute("aria-pressed") === "true", name + ": botão de retomar música não funcionou.");
+
   for (const category of ["principal", "treinamento", "desafio", "modo-jogo", "torneio"]) {
-    await page.evaluate(value => setMusicCategory(value, false, true), category);
+    await page.evaluate(value => setMusicCategory(value, true, true), category);
     check(await page.locator("#trackSelect option").count() === 20, name + ": a coleção " + category + " não apresenta 20 opções.");
+    await page.waitForFunction(
+      value => document.querySelector("#soundtrackAudio").src.includes("/assets/music/" + value + "/"),
+      category,
+      { timeout: 15000 }
+    );
   }
 
   await page.evaluate(() => {
