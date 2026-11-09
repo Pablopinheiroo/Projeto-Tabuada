@@ -14,7 +14,7 @@ const AVATAR_GIF_COUNT = 12;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
 const CHALLENGE_PLAYER_METADATA_MAX = 45;
-const WORKER_BUILD_ID = "2026-11-09-duel-20-music-provisional-rank-autoplay";
+const WORKER_BUILD_ID = "2026-11-09-challenge-draws-refunds-public-stats-audio-fallback";
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
 const CHALLENGE_DIRECTORY = "desafios/partidas";
@@ -489,39 +489,46 @@ function safeChallengeSummary(challenge, username) {
   const participants = Array.isArray(challenge.participants) && challenge.participants.length
     ? challenge.participants : [challenge.challenger, challenge.recipient].filter(Boolean);
   const compactResults = Object.fromEntries(Object.entries(challenge.results || {}).map(([name, result]) => [name, {
-    score: Number(result.score) || 0,
-    correct: Number(result.correct) || 0,
-    wrong: Number(result.wrong) || 0,
-    totalMs: Number(result.totalMs) || 0,
+    score: Number(result.score) || 0, correct: Number(result.correct) || 0,
+    wrong: Number(result.wrong) || 0, totalMs: Number(result.totalMs) || 0,
     submittedAt: result.submittedAt || null
   }]));
   const myResult = compactResults[username] || null;
   const other = participants.find(item => item !== username) || null;
+  const ranked = Array.isArray(challenge.standings) && challenge.standings.length
+    ? challenge.standings
+    : participants.map(name => ({
+      username: name, score: Number(challenge.results?.[name]?.score) || 0,
+      totalMs: Number(challenge.results?.[name]?.totalMs) || 0,
+      submittedAt: challenge.results?.[name]?.submittedAt || ""
+    })).sort((a,b) => b.score-a.score || a.totalMs-b.totalMs ||
+      String(a.submittedAt || "").localeCompare(String(b.submittedAt || "")) ||
+      a.username.localeCompare(b.username));
+  const first = ranked[0];
+  const tiedAtTop = first ? ranked.filter(item =>
+    Number(item.score) === Number(first.score) && Number(item.totalMs) === Number(first.totalMs)
+  ).map(item => item.username) : [];
+  const winners = Array.isArray(challenge.winners) && challenge.winners.length
+    ? challenge.winners.filter(name => participants.includes(name))
+    : challenge.winner === "empate" ? tiedAtTop
+    : challenge.winner && participants.includes(challenge.winner) ? [challenge.winner] : [];
+  const winner = challenge.winner === "empate" ? "empate"
+    : challenge.winner ?? (winners.length > 1 ? "empate" : winners[0] || null);
   return {
-    id: challenge.id,
-    challenger: challenge.challenger,
-    recipient: challenge.recipient || participants[1] || null,
-    participants,
-    mode: challenge.mode,
-    levelId: challenge.levelId,
-    levelName: challenge.levelName,
-    tables: challenge.tables,
-    optionCount: challenge.optionCount,
-    musicTrack: challenge.musicTrack,
-    seed: challenge.seed,
-    createdAt: challenge.createdAt,
-    results: compactResults,
-    standings: Array.isArray(challenge.standings) ? challenge.standings : [],
-    winners: (() => { const ranked = Array.isArray(challenge.standings) ? challenge.standings : participants.map(name => ({ username: name, score: Number(challenge.results?.[name]?.score) || 0, totalMs: Number(challenge.results?.[name]?.totalMs) || 0 })).sort((a,b) => b.score-a.score || a.totalMs-b.totalMs || a.username.localeCompare(b.username)); const winner = challenge.winner === "empate" ? ranked[0]?.username : challenge.winner; return winner ? [winner] : []; })(),
-    status: challenge.status || "open",
-    winner: challenge.winner === "empate" ? (Array.isArray(challenge.standings) ? challenge.standings[0]?.username : participants.map(name => ({ username: name, score: Number(challenge.results?.[name]?.score) || 0, totalMs: Number(challenge.results?.[name]?.totalMs) || 0 })).sort((a,b) => b.score-a.score || a.totalMs-b.totalMs || a.username.localeCompare(b.username))[0]?.username) : (challenge.winner ?? null),
+    id: challenge.id, challenger: challenge.challenger,
+    recipient: challenge.recipient || participants[1] || null, participants,
+    mode: challenge.mode, levelId: challenge.levelId, levelName: challenge.levelName,
+    tables: challenge.tables, optionCount: challenge.optionCount, musicTrack: challenge.musicTrack,
+    seed: challenge.seed, createdAt: challenge.createdAt, results: compactResults,
+    standings: ranked, winners, status: challenge.status || "open", winner,
     betMode: challenge.betMode === true, stake: challenge.betMode === true ? Number(challenge.stake) || 0 : 0,
-    betPaid: challenge.betPaid === true, acceptedAt: challenge.acceptedAt || null, rejectedAt: challenge.rejectedAt || null,
-    completedAt: challenge.completedAt || null,
-    myResult,
-    otherResult: other ? (challenge.results?.[other] || null) : null
+    betPaid: challenge.betPaid === true, acceptedAt: challenge.acceptedAt || null,
+    rejectedAt: challenge.rejectedAt || null, completedAt: challenge.completedAt || null,
+    myResult, otherResult: other ? (challenge.results?.[other] || null) : null
   };
 }
+
+
 async function createChallenge(body, username, env) {
   const rawRecipients = Array.isArray(body.recipients) ? body.recipients :
     (body.recipient ? [body.recipient] : []);
@@ -600,19 +607,30 @@ async function ensureCompletedChallengeBetPaid(challenge, env) {
       challenge.betPaid === true || !challenge.winner ||
       !Number.isSafeInteger(challenge.stake) || challenge.stake < 1) return challenge;
   try {
-    await applyChallengeBetTransaction(challenge.winner, challenge.id, "payout", challenge.stake * 2, env);
+    if (challenge.winner === "empate") {
+      const participants = Array.isArray(challenge.participants) && challenge.participants.length
+        ? challenge.participants : [challenge.challenger, challenge.recipient].filter(Boolean);
+      await Promise.all(participants.map(name =>
+        applyChallengeBetTransaction(name, challenge.id, "refund", challenge.stake, env)
+      ));
+    } else {
+      await applyChallengeBetTransaction(challenge.winner, challenge.id, "payout", challenge.stake * 2, env);
+    }
     const latest = await readJsonFile(challengeFilePath(challenge.id), env);
     if (latest?.data && latest.data.betPaid !== true) {
       latest.data.betPaid = true;
-      await writeJsonFile(challengeFilePath(challenge.id), latest.data, latest.sha, env, "Confirmar pagamento da aposta " + challenge.id);
+      await writeJsonFile(challengeFilePath(challenge.id), latest.data, latest.sha, env,
+        challenge.winner === "empate" ? "Devolver apostas do empate " + challenge.id : "Confirmar pagamento da aposta " + challenge.id);
       return latest.data;
     }
     return latest?.data || challenge;
   } catch (error) {
-    console.error("Pagamento de aposta pendente no desafio " + challenge.id + ":", error);
+    console.error("Liquidação da aposta pendente no desafio " + challenge.id + ":", error);
     return challenge;
   }
 }
+
+
 async function listChallengesFor(username, env) {
   const [index, userFile] = await Promise.all([readChallengeIndex(username, env), readUser(username, env)]);
   const ids = index.ids.slice(-CHALLENGE_MAX_HISTORY).reverse();
@@ -653,16 +671,24 @@ function finalizeChallengeRecord(challenge) {
     challenge.status = submitted.length ? "waiting_participants" : "open";
     return false;
   }
-  const ranked = participants.map(participant => ({ username: participant, score: Number(challenge.results[participant].score) || 0, totalMs: Number(challenge.results[participant].totalMs) || 0, submittedAt: challenge.results[participant].submittedAt || "" }))
-    .sort((a, b) => b.score - a.score || a.totalMs - b.totalMs || String(a.submittedAt).localeCompare(String(b.submittedAt)) || a.username.localeCompare(b.username));
+  const ranked = participants.map(participant => ({
+    username: participant, score: Number(challenge.results[participant].score) || 0,
+    totalMs: Number(challenge.results[participant].totalMs) || 0,
+    submittedAt: challenge.results[participant].submittedAt || ""
+  })).sort((a,b) => b.score-a.score || a.totalMs-b.totalMs ||
+    String(a.submittedAt).localeCompare(String(b.submittedAt)) || a.username.localeCompare(b.username));
   const best = ranked[0];
-  challenge.winners = best ? [best.username] : [];
-  challenge.winner = best?.username || null;
+  const winners = best ? ranked.filter(item =>
+    item.score === best.score && item.totalMs === best.totalMs
+  ).map(item => item.username) : [];
+  challenge.winners = winners;
+  challenge.winner = winners.length > 1 ? "empate" : winners[0] || null;
   challenge.standings = ranked;
   challenge.status = "completed";
   challenge.completedAt = challenge.completedAt || new Date().toISOString();
   return true;
 }
+
 
 async function applyChallengeStats(username, challenge, env) {
   for (let attempt = 0; attempt < 4; attempt++) {
@@ -686,8 +712,10 @@ async function applyChallengeStats(username, challenge, env) {
       ? challenge.participants : [challenge.challenger, challenge.recipient].filter(Boolean);
     const own = challenge.results?.[username];
     if (!own || !participants.includes(username)) return;
-    const outcome = challenge.winner === username ? "win" : "loss";
-    const bucket = outcome === "win" ? "wins" : "losses";
+    const isDraw = challenge.winner === "empate" ||
+      (Array.isArray(challenge.winners) && challenge.winners.length > 1 && challenge.winners.includes(username));
+    const outcome = isDraw ? "draw" : challenge.winner === username ? "win" : "loss";
+    const bucket = outcome === "win" ? "wins" : outcome === "draw" ? "draws" : "losses";
     stats.total[bucket] = (Number(stats.total[bucket]) || 0) + 1;
     if (challenge.mode === "custom") {
       stats.custom[bucket] = (Number(stats.custom[bucket]) || 0) + 1;
@@ -937,12 +965,7 @@ async function submitChallengeResult(id, body, username, env) {
       catch (error) { console.error("Não foi possível atualizar o histórico de desafios de " + participant + ":", error); }
     }));
     if (persistedChallenge.betMode === true && persistedChallenge.winner && Number.isSafeInteger(persistedChallenge.stake) && persistedChallenge.stake > 0) {
-      try {
-        await applyChallengeBetTransaction(persistedChallenge.winner, persistedChallenge.id, "payout", persistedChallenge.stake * 2, env);
-        const latest = await readJsonFile(challengeFilePath(id), env);
-        if (latest?.data && latest.data.betPaid !== true) { latest.data.betPaid = true; await writeJsonFile(challengeFilePath(id), latest.data, latest.sha, env, "Pagar aposta do desafio " + id); }
-        persistedChallenge.betPaid = true;
-      } catch (error) { console.error("Não foi possível pagar a aposta do desafio " + id + ":", error); }
+      persistedChallenge = await ensureCompletedChallengeBetPaid(persistedChallenge, env);
     }
   }
   return {
@@ -1008,7 +1031,8 @@ function communitySummary(record) {
     titles, medals, awards, featuredAwards,
     challengeWins: Number(total.wins) || 0,
     challengeLosses: Number(total.losses) || 0,
-    challengeTotal: (Number(total.wins) || 0) + (Number(total.losses) || 0),
+    challengeDraws: Number(total.draws) || 0,
+    challengeTotal: (Number(total.wins) || 0) + (Number(total.losses) || 0) + (Number(total.draws) || 0),
     tournamentFrame: profile.tournamentFrame || null
   };
 }
@@ -1219,7 +1243,7 @@ async function handleApi(request, env, origin) {
           ok: false,
           service: "Projeto Tabuada API",
           buildId: WORKER_BUILD_ID,
-          features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true },
+          features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true },
           githubSecretConfigured: false,
           githubConnected: false
         }, 503, origin);
@@ -1237,7 +1261,7 @@ async function handleApi(request, env, origin) {
         ok: true,
         service: "Projeto Tabuada API",
         buildId: WORKER_BUILD_ID,
-        features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true },
+        features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true },
         githubSecretConfigured: true,
         githubConnected: true,
         githubContentReadAccess: true
