@@ -73,6 +73,12 @@ check(sfxManifest.effects.verify?.[0]==="assets/sfx/kenney/open_001.ogg"&&!sfxMa
 check(sfxPaths.size===14&&sfxHashes.size===14,"Esperados 14 arquivos OGG originais CC0 distintos.");
 check(sfxManifest.effects.click.length===3&&sfxManifest.generated_effects?.click?.length===4,"O clique padrão deve ter três sons originais e quatro variações suaves novas.");
 
+const workerSource = fs.readFileSync(path.join(ROOT, "worker/src/index.js"), "utf8");
+check(workerSource.includes("const featuredTitles = Array.isArray(profile.featuredTitles)") &&
+  workerSource.includes("selectableTitleIds.has(id)") &&
+  workerSource.includes("featuredAwards, featuredTitles"),
+  "A API da comunidade não devolve os três títulos públicos escolhidos pelo perfil.");
+
 const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(match => match[1]);
 const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
@@ -408,7 +414,8 @@ async function testViewport(name, viewport, mobile = false) {
     document.querySelector("#setup").classList.remove("hidden");
     communityCache = [{
       username: "maria_27", displayName: "Maria Silva",
-      profile: { displayName: "Maria Silva", avatar: "imagem:0", featuredTitles: ["adventure_5","adventure_first"] },
+      profile: { displayName: "Maria Silva", avatar: "imagem:0" },
+      featuredTitles: ["adventure_5","adventure_first"],
       history: { questions: {}, sessions: [] },
       correct: 120, wrong: 5, timeMs: 123456,
       coins: 130, totalEarned: 250, challengeTotal: 2,

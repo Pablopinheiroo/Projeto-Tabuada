@@ -1005,6 +1005,16 @@ function communitySummary(record) {
     tournament_perfect50: "50 Acertos no Torneio"
   };
   const titles = Object.keys(economy.achievements).map(id => achievementTitles[id]).filter(Boolean).slice(0, 12);
+  const selectableTitleIds = new Set(Object.keys(achievementTitles).filter(id => id !== "challenge_four"));
+  const featuredTitles = Array.isArray(profile.featuredTitles)
+    ? [...new Set(profile.featuredTitles.filter(id =>
+        typeof id === "string" &&
+        id.length <= 80 &&
+        selectableTitleIds.has(id) &&
+        Object.prototype.hasOwnProperty.call(economy.achievements, id)
+      ))].slice(0, 3)
+    : [];
+
   const awards = Object.entries(profile.tournamentAwards && typeof profile.tournamentAwards === "object" ? profile.tournamentAwards : {})
     .map(([month, award]) => ({ month, difficulty: String(award?.difficulty || "Torneio"), rank: Math.max(0, Number(award?.rank) || 0), score: Math.max(0, Number(award?.score) || 0), frame: String(award?.frame || "") }))
     .filter(award => /^\d{4}-\d{2}$/.test(award.month) && award.rank > 0)
@@ -1029,7 +1039,7 @@ function communitySummary(record) {
     coins: economy.coins, totalEarned: economy.totalEarned,
     trainingCycles: economy.trainingCycles, completedStages: economy.completedStages.length,
     achievementCount: Object.keys(economy.achievements).length,
-    titles, medals, awards, featuredAwards,
+    titles, medals, awards, featuredAwards, featuredTitles,
     challengeWins: Number(total.wins) || 0,
     challengeLosses: Number(total.losses) || 0,
     challengeDraws: Number(total.draws) || 0,
