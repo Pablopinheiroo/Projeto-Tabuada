@@ -3138,6 +3138,7 @@ async function toggleChallengeMusic(){
   $('challengePlayStatus').textContent='Música pausada. Toque em “Ativar música” para ouvir novamente.';
   return;
  }
+ if(!soundOn)toggleSound();
  const playing=await startChallengeMusic(challengeCurrent.musicTrack);
  updateChallengeMusicToggle(playing);
  $('challengePlayStatus').textContent=playing?'Trilha do duelo ativada.':'O navegador ainda bloqueou o áudio. Toque novamente em “Ativar música”.';
