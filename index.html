@@ -979,7 +979,9 @@ async function claimGameReward(type,payload){
   return result;
  }catch(error){
   showGameRewardToast('Recompensa pendente. Vamos tentar sincronizar novamente.');
-  console.warn('Não foi possível entregar a recompensa agora:',error);return null;
+  console.warn('Não foi possível entregar a recompensa agora:',error);
+  setTimeout(retryPendingGameRewards,4000);
+  return null;
  }
 }
 async function purchaseAvatar(key){
