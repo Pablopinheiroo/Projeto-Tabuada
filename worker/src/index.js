@@ -594,7 +594,8 @@ async function listChallengesFor(username, env) {
   items.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   const pendingCount = items.filter(item => item.participants?.includes(username) && !item.myResult).length;
   const challengeStats = userFile?.data?.profile?.challengeStats || null;
-  return { items, pendingCount, challengeStats };
+  const economy = userFile ? normalizeGameEconomy(userFile.data) : null;
+  return { items, pendingCount, challengeStats, economy };
 }
 
 function finalizeChallengeRecord(challenge) {
