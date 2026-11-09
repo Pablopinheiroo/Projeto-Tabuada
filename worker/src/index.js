@@ -494,6 +494,7 @@ function safeChallengeSummary(challenge, username) {
     createdAt: challenge.createdAt,
     results: challenge.results || {},
     standings: Array.isArray(challenge.standings) ? challenge.standings : [],
+    winners: Array.isArray(challenge.winners) ? challenge.winners : (challenge.winner && challenge.winner !== "empate" ? [challenge.winner] : []),
     status: challenge.status || "open",
     winner: challenge.winner ?? null,
     completedAt: challenge.completedAt || null,
@@ -596,6 +597,7 @@ function finalizeChallengeRecord(challenge) {
   })).sort((a, b) => b.score - a.score || a.totalMs - b.totalMs || a.username.localeCompare(b.username));
   const best = ranked[0];
   const tied = ranked.filter(item => item.score === best.score && item.totalMs === best.totalMs);
+  challenge.winners = tied.map(item => item.username);
   challenge.winner = tied.length > 1 ? "empate" : best.username;
   challenge.standings = ranked;
   challenge.status = "completed";
@@ -623,8 +625,11 @@ async function applyChallengeStats(username, challenge, env) {
     ? challenge.participants : [challenge.challenger, challenge.recipient].filter(Boolean);
   const own = challenge.results?.[username];
   if (!own || !participants.includes(username)) return;
-  const outcome = challenge.winner === "empate" ? "draw" :
-    (challenge.winner === username ? "win" : "loss");
+  const winners = Array.isArray(challenge.winners) && challenge.winners.length
+    ? challenge.winners : (challenge.winner && challenge.winner !== "empate" ? [challenge.winner] : []);
+  const outcome = winners.length > 1
+    ? (winners.includes(username) ? "draw" : "loss")
+    : (challenge.winner === username ? "win" : "loss");
   const bucket = outcome === "win" ? "wins" : outcome === "loss" ? "losses" : "draws";
   stats.total[bucket] = (Number(stats.total[bucket]) || 0) + 1;
   if (challenge.mode === "custom") {
