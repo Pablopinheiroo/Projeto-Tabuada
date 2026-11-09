@@ -14,7 +14,7 @@ const AVATAR_GIF_COUNT = 12;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
 const CHALLENGE_PLAYER_METADATA_MAX = 45;
-const WORKER_BUILD_ID = "2026-11-09-tournament-60pct-adaptive-timers-public-challenge-stats";
+const WORKER_BUILD_ID = "2026-11-09-public-profiles-no-draws-bet-challenges";
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
 const CHALLENGE_DIRECTORY = "desafios/partidas";
@@ -512,9 +512,11 @@ function safeChallengeSummary(challenge, username) {
     createdAt: challenge.createdAt,
     results: compactResults,
     standings: Array.isArray(challenge.standings) ? challenge.standings : [],
-    winners: Array.isArray(challenge.winners) ? challenge.winners : (challenge.winner && challenge.winner !== "empate" ? [challenge.winner] : []),
+    winners: (() => { const ranked = Array.isArray(challenge.standings) ? challenge.standings : participants.map(name => ({ username: name, score: Number(challenge.results?.[name]?.score) || 0, totalMs: Number(challenge.results?.[name]?.totalMs) || 0 })).sort((a,b) => b.score-a.score || a.totalMs-b.totalMs || a.username.localeCompare(b.username)); const winner = challenge.winner === "empate" ? ranked[0]?.username : challenge.winner; return winner ? [winner] : []; })(),
     status: challenge.status || "open",
-    winner: challenge.winner ?? null,
+    winner: challenge.winner === "empate" ? (Array.isArray(challenge.standings) ? challenge.standings[0]?.username : participants.map(name => ({ username: name, score: Number(challenge.results?.[name]?.score) || 0, totalMs: Number(challenge.results?.[name]?.totalMs) || 0 })).sort((a,b) => b.score-a.score || a.totalMs-b.totalMs || a.username.localeCompare(b.username))[0]?.username) : (challenge.winner ?? null),
+    betMode: challenge.betMode === true, stake: challenge.betMode === true ? Number(challenge.stake) || 0 : 0,
+    betPaid: challenge.betPaid === true, acceptedAt: challenge.acceptedAt || null, rejectedAt: challenge.rejectedAt || null,
     completedAt: challenge.completedAt || null,
     myResult,
     otherResult: other ? (challenge.results?.[other] || null) : null
@@ -530,6 +532,8 @@ async function createChallenge(body, username, env) {
     error.status = 400;
     throw error;
   }
+  const betMode = body.betMode === true;
+  if (betMode && recipients.length !== 1) { const error = new Error("Desafios com aposta são individuais. Escolha apenas um adversário."); error.status = 400; throw error; }
   const participantRecords = await Promise.all(recipients.map(name => readUser(name, env)));
   if (participantRecords.some(record => !record)) {
     const error = new Error("Um ou mais participantes não foram encontrados. Atualize a lista e escolha contas cadastradas.");
@@ -556,6 +560,15 @@ async function createChallenge(body, username, env) {
     }
     levelName = preset.name; tables = preset.tables; optionCount = preset.options;
   }
+  let stake = 0;
+  if (betMode) {
+    stake = body.stake;
+    if (!Number.isSafeInteger(stake) || stake < 1) { const error = new Error("Informe uma aposta em moedas inteiras, sem vírgulas, de pelo menos 1 moeda."); error.status = 400; throw error; }
+    const challengerRecord = await readUser(username, env);
+    if (!challengerRecord) { const error = new Error("Sua conta não foi encontrada."); error.status = 404; throw error; }
+    const maxStake = Math.min(normalizeGameEconomy(challengerRecord.data).coins, normalizeGameEconomy(participantRecords[0].data).coins);
+    if (stake > maxStake) { const error = new Error("A aposta máxima permitida é de " + maxStake + " moedas, considerando o saldo dos dois participantes."); error.status = 400; throw error; }
+  }
   const musicTrack = Number(body.musicTrack);
   if (!Number.isInteger(musicTrack) || musicTrack < 0 || musicTrack > 9) {
     const error = new Error("Escolha uma das 10 trilhas sonoras.");
@@ -568,8 +581,8 @@ async function createChallenge(body, username, env) {
   const participants = [username, ...recipients];
   const challenge = {
     id, challenger: username, recipient: recipients[0], participants,
-    mode, levelId, levelName, tables, optionCount, musicTrack, seed,
-    createdAt: new Date().toISOString(), results: {}, status: "open",
+    mode, levelId, levelName, tables, optionCount, musicTrack, seed, betMode, stake,
+    createdAt: new Date().toISOString(), results: {}, status: betMode ? "pending_acceptance" : "open",
     winner: null, completedAt: null
   };
   const sha = await writeJsonFile(
@@ -609,15 +622,11 @@ function finalizeChallengeRecord(challenge) {
     challenge.status = submitted.length ? "waiting_participants" : "open";
     return false;
   }
-  const ranked = participants.map(participant => ({
-    username: participant,
-    score: Number(challenge.results[participant].score) || 0,
-    totalMs: Number(challenge.results[participant].totalMs) || 0
-  })).sort((a, b) => b.score - a.score || a.totalMs - b.totalMs || a.username.localeCompare(b.username));
+  const ranked = participants.map(participant => ({ username: participant, score: Number(challenge.results[participant].score) || 0, totalMs: Number(challenge.results[participant].totalMs) || 0, submittedAt: challenge.results[participant].submittedAt || "" }))
+    .sort((a, b) => b.score - a.score || a.totalMs - b.totalMs || String(a.submittedAt).localeCompare(String(b.submittedAt)) || a.username.localeCompare(b.username));
   const best = ranked[0];
-  const tied = ranked.filter(item => item.score === best.score && item.totalMs === best.totalMs);
-  challenge.winners = tied.map(item => item.username);
-  challenge.winner = tied.length > 1 ? "empate" : best.username;
+  challenge.winners = best ? [best.username] : [];
+  challenge.winner = best?.username || null;
   challenge.standings = ranked;
   challenge.status = "completed";
   challenge.completedAt = challenge.completedAt || new Date().toISOString();
@@ -646,12 +655,8 @@ async function applyChallengeStats(username, challenge, env) {
       ? challenge.participants : [challenge.challenger, challenge.recipient].filter(Boolean);
     const own = challenge.results?.[username];
     if (!own || !participants.includes(username)) return;
-    const winners = Array.isArray(challenge.winners) && challenge.winners.length
-      ? challenge.winners : (challenge.winner && challenge.winner !== "empate" ? [challenge.winner] : []);
-    const outcome = winners.length > 1
-      ? (winners.includes(username) ? "draw" : "loss")
-      : (challenge.winner === username ? "win" : "loss");
-    const bucket = outcome === "win" ? "wins" : outcome === "loss" ? "losses" : "draws";
+    const outcome = challenge.winner === username ? "win" : "loss";
+    const bucket = outcome === "win" ? "wins" : "losses";
     stats.total[bucket] = (Number(stats.total[bucket]) || 0) + 1;
     if (challenge.mode === "custom") {
       stats.custom[bucket] = (Number(stats.custom[bucket]) || 0) + 1;
@@ -676,9 +681,6 @@ async function applyChallengeStats(username, challenge, env) {
     if (participants.length === 5 && challenge.winner === username && !data.economy.achievements.challenge_four) {
       data.economy.achievements.challenge_four = new Date().toISOString();
     }
-    if ((Number(stats.total.draws) || 0) >= 25 && !data.economy.achievements.challenge_25_draws) {
-      data.economy.achievements.challenge_25_draws = new Date().toISOString();
-    }
     data.updatedAt = new Date().toISOString();
     try {
       await writeUser(username, data, file.sha, env);
@@ -687,6 +689,104 @@ async function applyChallengeStats(username, challenge, env) {
       if ((error.status !== 409 && error.status !== 422) || attempt === 3) throw error;
     }
   }
+}
+
+
+function challengeBetTransactions(profile) {
+  return Array.isArray(profile?.challengeBetTransactions) ? profile.challengeBetTransactions.filter(value => typeof value === "string").slice(-1000) : [];
+}
+async function applyChallengeBetTransaction(username, challengeId, kind, amount, env) {
+  if (!["stake", "refund", "payout"].includes(kind) || !Number.isSafeInteger(amount) || amount < 1) {
+    const error = new Error("Movimentação de moedas inválida."); error.status = 400; throw error;
+  }
+  const txId = kind + ":" + challengeId;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const file = await readUser(username, env);
+    if (!file) { const error = new Error("Conta do participante não encontrada."); error.status = 404; throw error; }
+    const data = file.data;
+    data.profile = data.profile && typeof data.profile === "object" ? data.profile : {};
+    const transactions = challengeBetTransactions(data.profile);
+    if (transactions.includes(txId)) return { applied: false, coins: normalizeGameEconomy(data).coins };
+    const economy = normalizeGameEconomy(data);
+    if (kind === "stake") {
+      if (economy.coins < amount) { const error = new Error("Um dos participantes não tem mais moedas suficientes para aceitar esta aposta."); error.status = 400; throw error; }
+      economy.coins -= amount;
+    } else {
+      economy.coins = Math.min(1_000_000_000, economy.coins + amount);
+      if (kind === "payout") economy.totalEarned = Math.min(1_000_000_000, economy.totalEarned + amount);
+    }
+    data.profile.challengeBetTransactions = [...transactions, txId].slice(-1000);
+    data.economy = economy; data.updatedAt = new Date().toISOString();
+    try { await writeUser(username, data, file.sha, env); return { applied: true, coins: economy.coins }; }
+    catch (error) { if ((error.status !== 409 && error.status !== 422) || attempt === 4) throw error; }
+  }
+  throw new Error("Não foi possível atualizar o saldo da aposta.");
+}
+async function respondToBetChallenge(id, decision, username, env) {
+  if (!/^[a-f0-9]{32}$/.test(id)) { const error = new Error("Identificador do desafio inválido."); error.status = 400; throw error; }
+  if (decision !== "accept" && decision !== "reject") { const error = new Error("Escolha aceitar ou rejeitar o desafio."); error.status = 400; throw error; }
+  let file = await readJsonFile(challengeFilePath(id), env);
+  if (!file?.data) { const error = new Error("Desafio não encontrado."); error.status = 404; throw error; }
+  let challenge = file.data;
+  if (challenge.betMode !== true || username !== challenge.recipient) { const error = new Error("Somente a pessoa convidada pode responder a esta aposta."); error.status = 403; throw error; }
+  if (decision === "reject") {
+    if (challenge.status !== "pending_acceptance") { const error = new Error("Este convite já foi respondido ou está em confirmação."); error.status = 409; throw error; }
+    challenge.status = "rejected"; challenge.rejectedAt = new Date().toISOString();
+    await writeJsonFile(challengeFilePath(id), challenge, file.sha, env, "Recusar aposta do desafio " + id);
+    return safeChallengeSummary(challenge, username);
+  }
+  if (!Number.isSafeInteger(challenge.stake) || challenge.stake < 1) { const error = new Error("O valor da aposta não é válido."); error.status = 400; throw error; }
+  if (["accepted", "waiting_participants", "completed"].includes(challenge.status)) return safeChallengeSummary(challenge, username);
+  if (challenge.status !== "pending_acceptance" && challenge.status !== "accepting") { const error = new Error("Este convite não está mais disponível."); error.status = 409; throw error; }
+  const names = [challenge.challenger, challenge.recipient];
+  const records = await Promise.all(names.map(name => readUser(name, env)));
+  if (records.some(record => !record)) { const error = new Error("Não foi possível localizar os dois perfis."); error.status = 404; throw error; }
+  const hasStake = records.map(record => challengeBetTransactions(record.data.profile).includes("stake:" + id));
+  const insufficient = records.some((record, index) => !hasStake[index] && normalizeGameEconomy(record.data).coins < challenge.stake);
+  if (insufficient) {
+    for (let i = 0; i < names.length; i++) if (hasStake[i]) {
+      try { await applyChallengeBetTransaction(names[i], id, "refund", challenge.stake, env); }
+      catch (error) { console.error("Falha ao devolver aposta durante validação:", error); }
+    }
+    if (challenge.status === "accepting") {
+      const latest = await readJsonFile(challengeFilePath(id), env);
+      if (latest?.data?.status === "accepting") { latest.data.status = "pending_acceptance"; await writeJsonFile(challengeFilePath(id), latest.data, latest.sha, env, "Liberar convite de aposta " + id); }
+    }
+    const error = new Error("A aposta não pode ser aceita porque um dos participantes não tem mais moedas suficientes. Nenhuma moeda foi mantida como cobrança."); error.status = 400; throw error;
+  }
+  if (challenge.status === "pending_acceptance") {
+    challenge.status = "accepting"; challenge.acceptingAt = new Date().toISOString();
+    try { await writeJsonFile(challengeFilePath(id), challenge, file.sha, env, "Confirmar aceite da aposta " + id); }
+    catch (error) {
+      if (error.status !== 409 && error.status !== 422) throw error;
+      file = await readJsonFile(challengeFilePath(id), env); challenge = file?.data;
+      if (challenge?.status === "accepted") return safeChallengeSummary(challenge, username);
+      if (challenge?.status !== "accepting") throw error;
+    }
+  }
+  try {
+    await applyChallengeBetTransaction(challenge.challenger, id, "stake", challenge.stake, env);
+    await applyChallengeBetTransaction(challenge.recipient, id, "stake", challenge.stake, env);
+  } catch (error) {
+    const latest = await readJsonFile(challengeFilePath(id), env);
+    if (latest?.data?.status === "accepting") {
+      const currentRecords = await Promise.all(names.map(name => readUser(name, env)));
+      for (let i = 0; i < names.length; i++) if (currentRecords[i] && challengeBetTransactions(currentRecords[i].data.profile).includes("stake:" + id)) {
+        try { await applyChallengeBetTransaction(names[i], id, "refund", challenge.stake, env); }
+        catch (refundError) { console.error("Falha ao estornar aposta:", refundError); }
+      }
+      const retry = await readJsonFile(challengeFilePath(id), env);
+      if (retry?.data?.status === "accepting") { retry.data.status = "pending_acceptance"; await writeJsonFile(challengeFilePath(id), retry.data, retry.sha, env, "Reabrir convite após falha de aposta " + id); }
+    }
+    throw error;
+  }
+  const latest = await readJsonFile(challengeFilePath(id), env);
+  if (!latest?.data) { const error = new Error("Não foi possível concluir a aceitação."); error.status = 409; throw error; }
+  if (latest.data.status === "accepted") return safeChallengeSummary(latest.data, username);
+  if (latest.data.status !== "accepting") { const error = new Error("O convite mudou de estado durante a aceitação."); error.status = 409; throw error; }
+  latest.data.status = "accepted"; latest.data.acceptedAt = new Date().toISOString();
+  await writeJsonFile(challengeFilePath(id), latest.data, latest.sha, env, "Aceitar aposta do desafio " + id);
+  return safeChallengeSummary(latest.data, username);
 }
 
 async function submitChallengeResult(id, body, username, env) {
@@ -714,6 +814,7 @@ async function submitChallengeResult(id, body, username, env) {
     error.status = 409;
     throw error;
   }
+  if (challenge.betMode === true && !["accepted", "waiting_participants", "completed"].includes(challenge.status)) { const error = new Error("Este desafio com aposta ainda aguarda a aceitação do adversário."); error.status = 409; throw error; }
   const answers = Array.isArray(body.answers) ? body.answers : [];
   if (answers.length !== 10) {
     const error = new Error("O desafio precisa ter exatamente 10 respostas registradas.");
@@ -791,12 +892,17 @@ async function submitChallengeResult(id, body, username, env) {
     const participants = Array.isArray(persistedChallenge.participants) && persistedChallenge.participants.length
       ? persistedChallenge.participants : [persistedChallenge.challenger, persistedChallenge.recipient].filter(Boolean);
     await Promise.all(participants.map(async participant => {
-      try {
-        await applyChallengeStats(participant, persistedChallenge, env);
-      } catch (error) {
-        console.error("Não foi possível atualizar o histórico de desafios de " + participant + ":", error);
-      }
+      try { await applyChallengeStats(participant, persistedChallenge, env); }
+      catch (error) { console.error("Não foi possível atualizar o histórico de desafios de " + participant + ":", error); }
     }));
+    if (persistedChallenge.betMode === true && persistedChallenge.winner && Number.isSafeInteger(persistedChallenge.stake) && persistedChallenge.stake > 0) {
+      try {
+        await applyChallengeBetTransaction(persistedChallenge.winner, persistedChallenge.id, "payout", persistedChallenge.stake * 2, env);
+        const latest = await readJsonFile(challengeFilePath(id), env);
+        if (latest?.data && latest.data.betPaid !== true) { latest.data.betPaid = true; await writeJsonFile(challengeFilePath(id), latest.data, latest.sha, env, "Pagar aposta do desafio " + id); }
+        persistedChallenge.betPaid = true;
+      } catch (error) { console.error("Não foi possível pagar a aposta do desafio " + id + ":", error); }
+    }
   }
   return {
     challenge: safeChallengeSummary(persistedChallenge, username),
@@ -834,18 +940,23 @@ function communitySummary(record) {
     tournament_hard_top3: "Pódio Mensal Difícil", tournament_hard_top10: "Top 10 Difícil",
     tournament_perfect50: "50 Acertos no Torneio"
   };
-  const titles = Object.keys(economy.achievements).map(id => achievementTitles[id]).filter(Boolean).slice(0, 8);
+  const titles = Object.keys(economy.achievements).map(id => achievementTitles[id]).filter(Boolean).slice(0, 12);
+  const awards = Object.entries(profile.tournamentAwards && typeof profile.tournamentAwards === "object" ? profile.tournamentAwards : {})
+    .map(([month, award]) => ({ month, difficulty: String(award?.difficulty || "Torneio"), rank: Math.max(0, Number(award?.rank) || 0), score: Math.max(0, Number(award?.score) || 0), frame: String(award?.frame || "") }))
+    .filter(award => /^\\d{4}-\\d{2}$/.test(award.month) && award.rank > 0)
+    .sort((a, b) => b.month.localeCompare(a.month)).slice(0, 12);
   return {
     username: record.username,
     displayName: profile.displayName || record.username,
     avatar: profile.avatar || "imagem:0",
     correct, wrong, attempts: correct + wrong, timeMs,
-    coins: economy.coins,
+    coins: economy.coins, totalEarned: economy.totalEarned,
+    trainingCycles: economy.trainingCycles, completedStages: economy.completedStages.length,
     achievementCount: Object.keys(economy.achievements).length,
-    titles, medals,
+    titles, medals, awards,
     challengeWins: Number(total.wins) || 0,
     challengeLosses: Number(total.losses) || 0,
-    challengeDraws: Number(total.draws) || 0,
+    challengeTotal: (Number(total.wins) || 0) + (Number(total.losses) || 0),
     tournamentFrame: profile.tournamentFrame || null
   };
 }
@@ -1056,7 +1167,7 @@ async function handleApi(request, env, origin) {
           ok: false,
           service: "Projeto Tabuada API",
           buildId: WORKER_BUILD_ID,
-          features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, challengeTies: true, atomicAdventureRewards: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true },
+          features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true },
           githubSecretConfigured: false,
           githubConnected: false
         }, 503, origin);
@@ -1074,7 +1185,7 @@ async function handleApi(request, env, origin) {
         ok: true,
         service: "Projeto Tabuada API",
         buildId: WORKER_BUILD_ID,
-        features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, challengeTies: true, atomicAdventureRewards: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true },
+        features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true },
         githubSecretConfigured: true,
         githubConnected: true,
         githubContentReadAccess: true
@@ -1198,16 +1309,17 @@ async function handleApi(request, env, origin) {
             return {
               username: item.name,
               displayName: String(profile.displayName || item.name).slice(0, 24),
-              avatar: typeof profile.avatar === "string" ? profile.avatar : "imagem:0"
+              avatar: typeof profile.avatar === "string" ? profile.avatar : "imagem:0",
+              coins: normalizeGameEconomy(file.data).coins
             };
           } catch {
-            return { username: item.name, displayName: item.name, avatar: "imagem:0" };
+            return { username: item.name, displayName: item.name, avatar: "imagem:0", coins: 0 };
           }
         }));
         loaded.forEach(profile => publicProfiles.set(profile.username, profile));
       }
       const players = folders.map(item => publicProfiles.get(item.name) || {
-        username: item.name, displayName: item.name, avatar: "imagem:0"
+        username: item.name, displayName: item.name, avatar: "imagem:0", coins: 0
       }).sort((a, b) => a.displayName.localeCompare(b.displayName));
       return json({ players, totalRegistered: folders.length }, 200, origin);
     }
@@ -1238,7 +1350,8 @@ async function handleApi(request, env, origin) {
           return {
             username: participant,
             displayName: String(profile.displayName || participant).slice(0, 24),
-            avatar: validAvatarKey(profile.avatar) ? profile.avatar : "imagem:0"
+            avatar: validAvatarKey(profile.avatar) ? profile.avatar : "imagem:0",
+            coins: normalizeGameEconomy(record.data).coins
           };
         } catch {
           return { username: participant, displayName: participant, avatar: "imagem:0" };
@@ -1251,6 +1364,13 @@ async function handleApi(request, env, origin) {
       const body = await readJson(request);
       const challenge = await createChallenge(body, username, env);
       return json({ challenge }, 201, origin);
+    }
+
+    const challengeRespondMatch = route.match(/^\/api\/challenges\/([a-f0-9]{32})\/respond$/);
+    if (challengeRespondMatch && request.method === "POST") {
+      const body = await readJson(request);
+      const result = await respondToBetChallenge(challengeRespondMatch[1], body.decision, username, env);
+      return json({ challenge: result }, 200, origin);
     }
 
     const challengeResultMatch = route.match(/^\/api\/challenges\/([a-f0-9]{32})\/result$/);
