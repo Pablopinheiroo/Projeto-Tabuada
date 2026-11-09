@@ -961,6 +961,18 @@ async function loadCommunityRecords(force=false){
  return communityCache;
 }
 function communityStatsFromRecord(record){
+ if(record&&Number.isFinite(Number(record.correct))&&Number.isFinite(Number(record.wrong))){
+  return {
+   username:record.username,
+   displayName:record.displayName||record.username,
+   avatar:normalizeAvatarKey(record.avatar),
+   correct:Number(record.correct)||0,
+   wrong:Number(record.wrong)||0,
+   attempts:Number(record.attempts)||(Number(record.correct)||0)+(Number(record.wrong)||0),
+   timeMs:Number(record.timeMs)||0,
+   hard:Array.isArray(record.hard)?record.hard.slice(0,3):[]
+  };
+ }
  const history=normalizeHistory(record.history);
  const questions=Object.values(history.questions||{});
  const correct=questions.reduce((sum,q)=>sum+(Number(q.correct)||0),0);

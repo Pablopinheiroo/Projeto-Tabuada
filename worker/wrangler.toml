@@ -3,6 +3,46 @@ main = "src/index.js"
 compatibility_date = "2026-11-08"
 workers_dev = true
 
+# Margem preventiva abaixo do limite Free de 50 subrequests por execução.
+[limits]
+subrequests = 45
+
+# Limites aproximados por localidade Cloudflare.
+[[ratelimits]]
+name = "AUTH_IP_LIMITER"
+namespace_id = "8731001"
+[ratelimits.simple]
+limit = 30
+period = 60
+
+[[ratelimits]]
+name = "LOGIN_USER_LIMITER"
+namespace_id = "8731002"
+[ratelimits.simple]
+limit = 8
+period = 60
+
+[[ratelimits]]
+name = "PROFILE_READ_LIMITER"
+namespace_id = "8731003"
+[ratelimits.simple]
+limit = 30
+period = 60
+
+[[ratelimits]]
+name = "PROFILE_WRITE_LIMITER"
+namespace_id = "8731004"
+[ratelimits.simple]
+limit = 6
+period = 60
+
+[[ratelimits]]
+name = "COMMUNITY_LIMITER"
+namespace_id = "8731005"
+[ratelimits.simple]
+limit = 3
+period = 60
+
 [observability]
 enabled = false
 

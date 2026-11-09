@@ -9,8 +9,11 @@ const GH_DIRECTORY = "usuarios";
 const GH_API = "https://api.github.com";
 const PASSWORD_ITERATIONS = 100000;
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
+const COMMUNITY_MAX_USERS = 35;
+const COMMUNITY_CACHE_TTL_MS = 45_000;
+let communitySummaryCache = { expiresAt: 0, records: null, pending: null };
 
-function json(data, status = 200, origin = "") {
+function json(data, status = 200, origin = "", extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
@@ -18,7 +21,8 @@ function json(data, status = 200, origin = "") {
       "Cache-Control": "no-store",
       "Access-Control-Allow-Origin": origin,
       "Access-Control-Allow-Credentials": "true",
-      "Vary": "Origin"
+      "Vary": "Origin",
+      ...extraHeaders
     }
   });
 }
@@ -77,6 +81,13 @@ function usernameIsValid(value) {
 
 function userPath(username) {
   return GH_DIRECTORY + "/" + encodeURIComponent(username) + "/dados.json";
+}
+
+async function rateLimitResponse(binding, key, message, origin) {
+  if (!binding) return null;
+  const result = await binding.limit({ key });
+  if (result?.success !== false) return null;
+  return json({ error: message }, 429, origin, { "Retry-After": "60" });
 }
 
 async function githubRequest(path, env, options = {}) {
@@ -151,6 +162,85 @@ function publicRecord(record) {
       ? record.history : { questions: {}, sessions: [] },
     updatedAt: record.updatedAt || null
   };
+}
+
+function communitySummary(record) {
+  const profile = record.profile && typeof record.profile === "object" ? record.profile : {};
+  const history = safeHistory(record.history);
+  const questions = Object.values(history.questions).filter(item => item && typeof item === "object");
+  const correct = questions.reduce((sum, item) => sum + (Number(item.correct) || 0), 0);
+  const wrong = questions.reduce((sum, item) => sum + (Number(item.wrong) || 0), 0);
+  const sessions = Array.isArray(history.sessions) ? history.sessions : [];
+  let timeMs = sessions.reduce((sum, item) => sum + (Number(item?.timeMs) || 0), 0);
+  const checkpoint = profile.checkpoint;
+  if (checkpoint && typeof checkpoint === "object") {
+    timeMs += (Number(checkpoint.sessionQuestionTimeMs) || 0) +
+      (Number(checkpoint.currentElapsedMs) || 0);
+  }
+  const hard = questions
+    .filter(item => (Number(item.wrong) || 0) > 0)
+    .sort((a, b) => (Number(b.wrong) || 0) - (Number(a.wrong) || 0) ||
+      ((Number(b.wrong) || 0) / Math.max(1, Number(b.attempts) || 1)) -
+      ((Number(a.wrong) || 0) / Math.max(1, Number(a.attempts) || 1)))
+    .slice(0, 3)
+    .map(item => ({ a: Number(item.a) || 0, b: Number(item.b) || 0, wrong: Number(item.wrong) || 0 }));
+
+  return {
+    username: record.username,
+    displayName: profile.displayName || record.username,
+    avatar: profile.avatar || "imagem:0",
+    correct,
+    wrong,
+    attempts: correct + wrong,
+    timeMs,
+    hard
+  };
+}
+
+async function loadCommunitySummaries(env) {
+  if (communitySummaryCache.records && Date.now() < communitySummaryCache.expiresAt) {
+    return communitySummaryCache.records;
+  }
+  if (communitySummaryCache.pending) return communitySummaryCache.pending;
+
+  const pending = (async () => {
+    const entries = await githubRequest(
+      "/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" +
+      GH_DIRECTORY + "?ref=" + encodeURIComponent(GH_BRANCH),
+      env
+    );
+    if (!Array.isArray(entries)) throw new Error("A pasta de participantes não retornou uma lista.");
+
+    // 1 chamada para listar + no máximo 35 leituras individuais = 36 subrequests.
+    const folders = entries.filter(item => item.type === "dir" && usernameIsValid(item.name))
+      .slice(0, COMMUNITY_MAX_USERS);
+    const summaries = [];
+
+    // Limita concorrência e mantém cada execução abaixo das 6 conexões externas simultâneas.
+    for (let index = 0; index < folders.length; index += 6) {
+      const batch = folders.slice(index, index + 6);
+      const results = await Promise.all(batch.map(async item => {
+        try {
+          const record = await readUser(item.name, env);
+          return record ? communitySummary(record.data) : null;
+        } catch {
+          return null;
+        }
+      }));
+      summaries.push(...results.filter(Boolean));
+    }
+    return summaries;
+  })();
+
+  communitySummaryCache.pending = pending;
+  try {
+    const records = await pending;
+    communitySummaryCache.records = records;
+    communitySummaryCache.expiresAt = Date.now() + COMMUNITY_CACHE_TTL_MS;
+    return records;
+  } finally {
+    if (communitySummaryCache.pending === pending) communitySummaryCache.pending = null;
+  }
 }
 
 function randomHex(size) {
@@ -233,9 +323,46 @@ async function verifySession(request, env) {
 }
 
 async function readJson(request) {
-  const length = Number(request.headers.get("Content-Length") || 0);
-  if (length > 1024 * 1024) throw new Error("Os dados enviados são grandes demais.");
-  return request.json();
+  const maxBytes = 1024 * 1024;
+  const declaredLength = Number(request.headers.get("Content-Length") || 0);
+  if (Number.isFinite(declaredLength) && declaredLength > maxBytes) {
+    const error = new Error("Os dados enviados ultrapassam o limite de 1 MB.");
+    error.status = 413;
+    throw error;
+  }
+  if (!request.body) {
+    const error = new Error("O corpo da solicitação está vazio.");
+    error.status = 400;
+    throw error;
+  }
+  const reader = request.body.getReader();
+  const chunks = [];
+  let totalBytes = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    totalBytes += value.byteLength;
+    if (totalBytes > maxBytes) {
+      try { await reader.cancel(); } catch {}
+      const error = new Error("Os dados enviados ultrapassam o limite de 1 MB.");
+      error.status = 413;
+      throw error;
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(totalBytes);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  try {
+    return JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    const error = new Error("O conteúdo enviado não contém um JSON válido.");
+    error.status = 400;
+    throw error;
+  }
 }
 
 function safeHistory(value) {
@@ -251,6 +378,19 @@ async function handleApi(request, env, origin) {
   const route = url.pathname.replace(/\/+$/, "") || "/";
 
   try {
+    const isAuthRequest = (route === "/api/auth/register" || route === "/api/auth/login") &&
+      request.method === "POST";
+    if (isAuthRequest) {
+      const ip = request.headers.get("CF-Connecting-IP") || "ip-desconhecido";
+      const limited = await rateLimitResponse(
+        env.AUTH_IP_LIMITER,
+        route + ":" + ip,
+        "Muitas tentativas deste acesso. Aguarde um minuto e tente novamente.",
+        origin
+      );
+      if (limited) return limited;
+    }
+
     if (route === "/health" && request.method === "GET") {
       if (!env.GITHUB_TOKEN) {
         return json({
@@ -317,6 +457,13 @@ async function handleApi(request, env, origin) {
       if (!usernameIsValid(username) || !password) {
         return json({ error: "Nome de usuário ou senha incorretos." }, 401, origin);
       }
+      const loginLimited = await rateLimitResponse(
+        env.LOGIN_USER_LIMITER,
+        username,
+        "Muitas tentativas de entrada nesta conta. Aguarde um minuto antes de tentar novamente.",
+        origin
+      );
+      if (loginLimited) return loginLimited;
 
       const record = await readUser(username, env);
       if (!record) return json({ error: "Nome de usuário ou senha incorretos." }, 401, origin);
@@ -336,6 +483,23 @@ async function handleApi(request, env, origin) {
 
     const username = await verifySession(request, env);
     if (!username) return json({ error: "Sua sessão expirou. Entre novamente na sua conta." }, 401, origin);
+
+    if (route === "/api/me" && request.method === "GET") {
+      const limited = await rateLimitResponse(env.PROFILE_READ_LIMITER, username + ":profile-read",
+        "Muitas consultas ao perfil. Aguarde um minuto e tente novamente.", origin);
+      if (limited) return limited;
+    }
+    if (route === "/api/community" && request.method === "GET") {
+      const limited = await rateLimitResponse(env.COMMUNITY_LIMITER, username,
+        "O ranking foi consultado muitas vezes. Aguarde um minuto e tente novamente.", origin);
+      if (limited) return limited;
+    }
+    if ((route === "/api/me/password" && request.method === "POST") ||
+        (route === "/api/me" && request.method === "PUT")) {
+      const limited = await rateLimitResponse(env.PROFILE_WRITE_LIMITER, username + ":profile-write",
+        "Muitos salvamentos em pouco tempo. Seus dados permanecem no dispositivo; aguarde um minuto para sincronizar novamente.", origin);
+      if (limited) return limited;
+    }
 
     if (route === "/api/me/password" && request.method === "POST") {
       const body = await readJson(request);
@@ -387,31 +551,17 @@ async function handleApi(request, env, origin) {
     }
 
     if (route === "/api/community" && request.method === "GET") {
-      const entries = await githubRequest(
-        "/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" +
-        GH_DIRECTORY + "?ref=" + encodeURIComponent(GH_BRANCH),
-        env
-      );
-      if (!Array.isArray(entries)) throw new Error("A pasta de participantes não retornou uma lista.");
-      const folders = entries.filter(item =>
-        item.type === "dir" && usernameIsValid(item.name)
-      ).slice(0, 100);
-
-      const records = await Promise.all(folders.map(async item => {
-        try {
-          const record = await readUser(item.name, env);
-          return record ? publicRecord(record.data) : null;
-        } catch {
-          return null;
-        }
-      }));
-      return json({ records: records.filter(Boolean) }, 200, origin);
+      const records = await loadCommunitySummaries(env);
+      return json({ records }, 200, origin);
     }
 
     return json({ error: "Rota não encontrada." }, 404, origin);
   } catch (error) {
     console.error("Projeto Tabuada API:", error);
 
+    if (error.status === 400 || error.status === 413) {
+      return json({ error: error.message }, error.status, origin);
+    }
     if (error.status === 401) {
       return json({ error: "O token do GitHub configurado no servidor foi recusado. Atualize o segredo GITHUB_TOKEN no Cloudflare." }, 502, origin);
     }
