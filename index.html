@@ -1435,8 +1435,9 @@ function enterApp(username){
  if(profilesData[username].avatar===undefined||profilesData[username].avatar===null)profilesData[username].avatar='imagem:0';
  refreshProfileIdentity();
  $('authScreen').classList.add('hidden');$('game').classList.add('hidden');$('report').classList.add('hidden');$('setup').classList.remove('hidden');
- selectProfile();renderCommunityRanking();refreshEconomyDisplay();
+ selectProfile();renderCommunityRanking();refreshEconomyDisplay();renderChallengeProfileStats();
  setTimeout(retryPendingGameRewards,800);
+ refreshChallengeData();startChallengePolling();
 }
 function showLoginScreen(){
  $('registerForm').classList.add('hidden');$('loginForm').classList.remove('hidden');
@@ -1476,6 +1477,7 @@ async function handleLogin(event){
  }catch(error){$('loginMessage').textContent=siteErrorMessage(error);}
 }
 async function logout(){
+ stopChallengePolling();stopChallengeTimers();stopChallengeMusic();challengeCurrent=null;challengeItems=[];
  if(!$('game').classList.contains('hidden')){alert('Encerre ou salve a partida antes de sair da conta.');return;}
  await flushCloudSave();
  
@@ -1700,7 +1702,7 @@ function openProfileScreen(){
  $('passwordMessage').textContent='';
  $('changePasswordForm').reset();
  renderAvatarGrid('profileAvatarGrid',selectedProfileAvatar,index=>{selectedProfileAvatar=index;});
- renderAchievementShelf();refreshEconomyDisplay();
+ renderAchievementShelf();refreshEconomyDisplay();renderChallengeProfileStats();
  refreshProfileIdentity();
  $('setup').classList.add('hidden');
  $('profileScreen').classList.remove('hidden');
@@ -2569,16 +2571,16 @@ async function saveAdventureProgress(){
  return saved;
 }
 function showModeHub(){
- ['trainingModePanel','adventureMapView','adventureIntroView','adventurePlayView','adventureResultView'].forEach(id=>$(id).classList.add('hidden'));
+ ['trainingModePanel','adventureMapView','adventureIntroView','adventurePlayView','adventureResultView','challengeModeView'].forEach(id=>$(id).classList.add('hidden'));
  $('modeHub').classList.remove('hidden');
 }
 function showTrainingMode(){
- $('modeHub').classList.add('hidden');
+ $('modeHub').classList.add('hidden');$('challengeModeView').classList.add('hidden');
  ['adventureMapView','adventureIntroView','adventurePlayView','adventureResultView'].forEach(id=>$(id).classList.add('hidden'));
  $('trainingModePanel').classList.remove('hidden');
 }
 function showAdventureMap(){
- $('modeHub').classList.add('hidden');
+ $('modeHub').classList.add('hidden');$('challengeModeView').classList.add('hidden');
  ['trainingModePanel','adventureIntroView','adventurePlayView','adventureResultView'].forEach(id=>$(id).classList.add('hidden'));
  $('adventureMapView').classList.remove('hidden');
  renderAdventureMap();
@@ -2860,6 +2862,7 @@ $('soundToggle').addEventListener('click',toggleSound);
 $('replayTune').addEventListener('click',replayTune);
 
 renderAvatarGrid('registerAvatarGrid',selectedRegisterAvatar,index=>{selectedRegisterAvatar=index;});
+renderChallengeTables();fillChallengePresetOptions();fillChallengeMusicOptions();
 $('loginForm').addEventListener('submit',handleLogin);
 $('registerForm').addEventListener('submit',handleRegister);
 $('showRegister').addEventListener('click',()=>{$('loginForm').classList.add('hidden');$('registerForm').classList.remove('hidden');$('registerMessage').textContent='';});
@@ -2874,6 +2877,34 @@ $('communitySort').addEventListener('change',renderCommunityRanking);
 $('openTrainingMode').addEventListener('click',showTrainingMode);
 $('backToModeHubTraining').addEventListener('click',showModeHub);
 $('openAdventureMode').addEventListener('click',showAdventureMap);
+
+$('openChallengeMode').addEventListener('click',openChallengeMode);
+$('backFromChallenge').addEventListener('click',backToModeHubFromChallenge);
+$('chooseCustomChallenge').addEventListener('click',()=>configureChallengeMode('custom'));
+$('choosePresetChallenge').addEventListener('click',()=>configureChallengeMode('preset'));
+$('challengeConfigBack').addEventListener('click',()=>showChallengeSubPanel('challengeHomePanel'));
+$('challengeChoosePlayer').addEventListener('click',loadChallengePlayers);
+$('challengePlayersBack').addEventListener('click',()=>showChallengeSubPanel('challengeConfigPanel'));
+$('challengePlayerSearch').addEventListener('input',renderChallengePlayers);
+$('challengePresetSelect').addEventListener('change',updateChallengePresetDescription);
+$('challengePlayersList').addEventListener('click',event=>{
+ const button=event.target.closest('[data-challenge-player]');
+ if(button&&!button.disabled)createChallengeForPlayer(button.dataset.challengePlayer);
+});
+$('challengeList').addEventListener('click',event=>{
+ const button=event.target.closest('[data-challenge-play]');
+ if(button&&!button.disabled)openChallengeFromList(button.dataset.challengePlay);
+});
+$('challengeOptions').addEventListener('click',event=>{
+ const button=event.target.closest('[data-challenge-answer]');
+ if(button&&!button.disabled)submitChallengeChoice(Number(button.dataset.challengeAnswer));
+});
+$('challengeVolume').addEventListener('input',event=>applyChallengeVolume(event.target.value));
+$('challengeResultBack').addEventListener('click',async()=>{
+ showChallengeSubPanel('challengeHomePanel');
+ await refreshChallengeData();
+});
+document.addEventListener('visibilitychange',handleChallengeVisibility);
 $('backToModeHubMap').addEventListener('click',showModeHub);
 $('adventureIntroBack').addEventListener('click',showAdventureMap);
 $('adventureStartStage').addEventListener('click',()=>startAdventureStage(adventureActiveStageIndex));
