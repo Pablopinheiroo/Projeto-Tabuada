@@ -116,8 +116,8 @@ check(html.includes("featuredTitlesEditor")&&html.includes("profilesData[activeP
  "O perfil não permite escolher e salvar até três títulos públicos.");
 check(html.includes("unlockedTitleItems.slice(0,3)")&&html.includes("selectedTitleItems.length")&&html.includes("const achievementBadges=communityTitles.map")&&html.includes("(achievementBadges||"),
  "A comunidade não limita os títulos aos três escolhidos ou aos três primeiros conquistados.");
-check(html.includes("grid-template-columns:repeat(2,minmax(0,1fr))")&&html.includes(".community-profile-details>.community-challenge-details"),
- "O perfil expandido da comunidade não usa estrutura horizontal em duas colunas.");
+check(html.includes(".community-profile-details{display:grid!important;grid-template-columns:minmax(0,1fr)!important")&&html.includes(".community-profile-details .community-profile-detail-chips{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important"),
+ "O perfil expandido não organiza as seções uma abaixo da outra com os itens em linhas horizontais.");
 check(html.includes(".community-rank-public-stats{color:#102b49"),
  "O texto de estatísticas da comunidade continua com contraste baixo.");
 check(html.includes('<button id="navCommunity" type="button">🌐 Comunidade</button>'),
@@ -447,7 +447,7 @@ async function testViewport(name, viewport, mobile = false) {
   check(automaticTitles.length===3&&automaticTitles.some(value=>value.includes("Primeiro Ciclo"))&&automaticTitles.some(value=>value.includes("Explorador"))&&automaticTitles.some(value=>value.includes("Disciplina"))&&!automaticTitles.some(value=>value.includes("A Jornada Começa")),
     name+": sem escolhas, a comunidade não mostrou exatamente os três primeiros títulos conquistados.");
   const communityGridColumns=await page.locator(".community-profile-details").first().evaluate(element=>getComputedStyle(element).gridTemplateColumns.split(" ").length);
-  check(communityGridColumns===2,name+": a estrutura interna do perfil público não está distribuída em duas colunas ("+communityGridColumns+").");
+  check(communityGridColumns===1,name+": as seções do perfil público não estão organizadas uma abaixo da outra ("+communityGridColumns+").");
   const communityStatsColor = await page.locator(".community-rank-public-stats").first().evaluate(element => getComputedStyle(element).color);
   check(communityStatsColor === "rgb(16, 43, 73)",
     name + ": estatísticas da comunidade continuam com pouco contraste (" + communityStatsColor + ").");
