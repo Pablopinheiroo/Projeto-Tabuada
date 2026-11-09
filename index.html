@@ -4874,12 +4874,19 @@ for(let n=1;n<=20;n++){const option=document.createElement('option');option.valu
 setInterval(saveCheckpoint,5000);
 loadUiSfx();
 restoreCloudSession();
-// O som do botão sai somente no click, depois que os handlers da ação foram executados.
+// Guarda a elegibilidade no início do click e toca após os handlers da ação.
+const pendingUiButtonClicks=new WeakMap();
 document.addEventListener('click',event=>{
  const button=event.target.closest('button');
  if(!button||button.disabled||['right','wrong','soundToggle','replayTune'].includes(button.id))return;
  if(button.hasAttribute('data-challenge-answer')||button.hasAttribute('data-tournament-answer')||button.hasAttribute('data-adventure-answer'))return;
- playUiSound(button.dataset.sfx||'click');
+ pendingUiButtonClicks.set(event,button.dataset.sfx||'click');
+},true);
+document.addEventListener('click',event=>{
+ const soundName=pendingUiButtonClicks.get(event);
+ if(!soundName)return;
+ pendingUiButtonClicks.delete(event);
+ playUiSound(soundName);
 },false);
 document.addEventListener('keydown',event=>{
  if(event.repeat||event.ctrlKey||event.metaKey||event.altKey)return;

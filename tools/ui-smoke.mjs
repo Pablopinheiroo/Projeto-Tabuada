@@ -157,7 +157,7 @@ async function testViewport(name, viewport, mobile = false) {
     document.removeEventListener('pointerdown',audioUnlock,true);
     const button=document.createElement('button');
     button.type='button';button.textContent='Teste de clique';
-    button.addEventListener('click',()=>events.push('action'));
+    button.addEventListener('click',()=>{events.push('action');button.disabled=true;});
     document.body.appendChild(button);
     let afterPress=[],afterClick=[];
     try{
