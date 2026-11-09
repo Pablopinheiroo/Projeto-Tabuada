@@ -1352,6 +1352,8 @@ async function deliverPendingGameReward(item){
  const result=await apiRequest(path,{method:'POST',body:item.body});
  if(result.economy)gameEconomy=normalizeClientEconomy(result.economy);
  if(result.sha)remoteUserSha=result.sha;
+ if(result.updatedAt&&remoteUserData)remoteUserData.updatedAt=result.updatedAt;
+ updateProfileLastSavedAt();
  if(result.newAchievements&&result.newAchievements.length){
   const names=result.newAchievements.map(id=>ACHIEVEMENT_DEFINITIONS.find(a=>a.id===id)?.title||id);
   showGameRewardToast('🏆 Nova conquista: '+names.join(', '));
@@ -1368,7 +1370,6 @@ async function retryPendingGameRewards(){
  rewardSyncBusy=true;
  try{
   const pending=readPendingGameRewards().filter(item=>item.username===activeProfile);
-  if(pending.some(item=>item.type==='adventure_stage'))await flushCloudSave(true);
   for(const item of pending){
    try{
     await deliverPendingGameReward(item);
@@ -1381,7 +1382,9 @@ async function claimGameReward(type,payload){
  if(!activeProfile||!cloudTokenReady()){
   showGameRewardToast('Entre na sua conta para receber e guardar suas moedas.');return null;
  }
- const body=type==='training_cycle'?{type,claimId:payload.claimId}:{type,stageId:payload.stageId};
+ const body=type==='training_cycle'
+  ?{type,claimId:payload.claimId}
+  :{type,stageId:payload.stageId,...(type==='adventure_stage'&&payload.adventureProgress?{adventureProgress:payload.adventureProgress}:{})};
  const key=type==='training_cycle'?'training:'+payload.claimId:'stage:'+payload.stageId;
  const pending=readPendingGameRewards();
  if(!pending.some(item=>item.username===activeProfile&&item.key===key)){
@@ -3380,9 +3383,18 @@ async function finishAdventureStage(){
  progress.stages[key]=entry;
  progress.lastStageId=stage.id;
  adventureLastResultPassed=passed;
- const saved=await saveAdventureProgress();
+ profilesData[activeProfile]=profilesData[activeProfile]||(profilesData[activeProfile]={});
+ profilesData[activeProfile].adventureProgress=progress;
+ profilesData[activeProfile].updatedAt=new Date().toISOString();
+ persistProfiles();
  let coinReward=null;
- if(passed)coinReward=await claimGameReward('adventure_stage',{stageId:stage.id});
+ let saved=false;
+ if(passed){
+  coinReward=await claimGameReward('adventure_stage',{stageId:stage.id,adventureProgress:progress});
+  saved=!!coinReward;
+ }else{
+  saved=await saveAdventureProgress();
+ }
  const bestStars=entry.stars||0;
  $('adventurePlayView').classList.add('hidden');
  $('adventureResultView').classList.remove('hidden');
@@ -3394,7 +3406,7 @@ async function finishAdventureStage(){
   :'Você acertou '+adventureFirstTryCorrect+' de '+total+'. Para abrir a próxima fase, precisa acertar '+required+'. Leia a dica e tente outra vez — seu avanço anterior continua guardado.';
  $('adventureResultReward').textContent=passed
   ?((wasCompleted?(stars>oldStars?'⭐ Melhorou seu recorde! +'+((stars-oldStars)*5)+' XP':'Fase já conquistada. Seu recorde foi mantido.'):'✨ Recompensa: '+(30+adventureFirstTryCorrect*10)+' XP')+
-    (coinReward?.coinsAdded?' · 🪙 +50 moedas':(coinReward?.alreadyClaimed?' · Moedas desta fase já recebidas':' · Moedas aguardando sincronização')))
+    (coinReward?.coinsAdded?' · 🪙 +50 moedas':(coinReward?.alreadyClaimed?' · 🪙 Recompensa já recebida':' · 🪙 Recompensa pendente de confirmação')))
   :'Seu progresso não foi perdido. Continue praticando!';
  $('adventureResultNext').textContent=passed&&adventureActiveStageIndex<ADVENTURE_STAGES.length-1?'Próxima fase →':'Voltar ao mapa';
  if(!saved&&$('adventureSaveStatus'))$('adventureSaveStatus').textContent='Atenção: o avanço ficou no aparelho, mas ainda não foi sincronizado.';
