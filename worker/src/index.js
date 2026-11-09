@@ -589,6 +589,32 @@ async function listChallengesFor(username, env) {
   const challengeStats = userFile?.data?.profile?.challengeStats || null;
   return { items, pendingCount, challengeStats };
 }
+
+function finalizeChallengeRecord(challenge) {
+  const bothSubmitted = !!challenge.results?.[challenge.challenger] &&
+    !!challenge.results?.[challenge.recipient];
+  if (bothSubmitted) {
+    const first = challenge.results[challenge.challenger];
+    const second = challenge.results[challenge.recipient];
+    if (first.score !== second.score) {
+      challenge.winner = first.score > second.score ? challenge.challenger : challenge.recipient;
+    } else if (first.totalMs !== second.totalMs) {
+      challenge.winner = first.totalMs < second.totalMs ? challenge.challenger : challenge.recipient;
+    } else {
+      challenge.winner = "empate";
+    }
+    challenge.status = "completed";
+    challenge.completedAt = challenge.completedAt || new Date().toISOString();
+  } else if (challenge.results?.[challenge.challenger]) {
+    challenge.status = "waiting_recipient";
+  } else if (challenge.results?.[challenge.recipient]) {
+    challenge.status = "waiting_challenger";
+  } else {
+    challenge.status = "open";
+  }
+  return bothSubmitted;
+}
+
 async function submitChallengeResult(id, body, username, env) {
   if (!/^[a-f0-9]{32}$/.test(id)) {
     const error = new Error("Identificador do desafio inválido.");
@@ -650,40 +676,46 @@ async function submitChallengeResult(id, body, username, env) {
     submittedAt: new Date().toISOString()
   };
 
-  const bothSubmitted = !!challenge.results[challenge.challenger] && !!challenge.results[challenge.recipient];
-  if (bothSubmitted) {
-    const first = challenge.results[challenge.challenger];
-    const second = challenge.results[challenge.recipient];
-    if (first.score !== second.score) {
-      challenge.winner = first.score > second.score ? challenge.challenger : challenge.recipient;
-    } else if (first.totalMs !== second.totalMs) {
-      challenge.winner = first.totalMs < second.totalMs ? challenge.challenger : challenge.recipient;
+  const bothSubmitted = finalizeChallengeRecord(challenge);
+  let persistedChallenge = challenge;
+  let sha;
+  try {
+    sha = await writeJsonFile(
+      challengeFilePath(id), persistedChallenge, file.sha, env,
+      "Registrar resultado do desafio " + id + " - " + username
+    );
+  } catch (error) {
+    // Se os dois participantes terminarem quase juntos, relê o arquivo para não perder um resultado.
+    if (error.status !== 409) throw error;
+    const latest = await readJsonFile(challengeFilePath(id), env);
+    if (!latest) throw error;
+    persistedChallenge = latest.data;
+    if (!persistedChallenge.results?.[username]) {
+      persistedChallenge.results = persistedChallenge.results || {};
+      persistedChallenge.results[username] = challenge.results[username];
+      finalizeChallengeRecord(persistedChallenge);
+      sha = await writeJsonFile(
+        challengeFilePath(id), persistedChallenge, latest.sha, env,
+        "Conciliar resultados simultâneos do desafio " + id
+      );
     } else {
-      challenge.winner = "empate";
+      sha = latest.sha;
     }
-    challenge.status = "completed";
-    challenge.completedAt = new Date().toISOString();
-  } else {
-    challenge.status = username === challenge.challenger ? "waiting_recipient" : "waiting_challenger";
   }
-
-  const sha = await writeJsonFile(
-    challengeFilePath(id), challenge, file.sha, env,
-    "Registrar resultado do desafio " + id + " - " + username
-  );
-  if (bothSubmitted) {
-    await Promise.all([challenge.challenger, challenge.recipient].map(async participant => {
+  const isCompleted = persistedChallenge.status === "completed";
+  if (isCompleted) {
+    await Promise.all([persistedChallenge.challenger, persistedChallenge.recipient].map(async participant => {
       try {
-        await applyChallengeStats(participant, challenge, env);
+        await applyChallengeStats(participant, persistedChallenge, env);
       } catch (error) {
         console.error("Não foi possível atualizar o histórico de desafios de " + participant + ":", error);
       }
     }));
   }
   return {
-    challenge: safeChallengeSummary(challenge, username),
-    result: challenge.results[username],
-    completed: bothSubmitted,
+    challenge: safeChallengeSummary(persistedChallenge, username),
+    result: persistedChallenge.results[username],
+    completed: isCompleted,
     sha
   };
 }
