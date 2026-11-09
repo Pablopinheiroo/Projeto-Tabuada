@@ -610,6 +610,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .challenge-music-preview{margin:8px 0 0;padding:9px 11px;border:1px solid #334e70;border-radius:9px;background:#152c49;color:#bff4fb;font-size:.78rem;font-weight:800}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
+
+.list-pagination{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 2px;color:#a9bdd8;font-size:.74rem}
+.list-pagination button{padding:7px 10px;font-size:.72rem}
+
 </style>
 </head>
 <body>
@@ -793,6 +797,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <input id="challengePlayerSearch" class="challenge-search" type="search" placeholder="Pesquisar participante pelo usuário..." autocomplete="off">
   <p id="challengePlayersStatus" class="small" style="text-align:left"></p>
   <div id="challengePlayersList" class="challenge-player-list"></div>
+  <div id="challengePlayerPagination" class="list-pagination" aria-label="Paginação dos participantes"></div>
   <div class="challenge-selection-footer"><strong id="challengeSelectedCount">0 de 4 selecionados</strong><button id="challengeStartSelected" class="primary" type="button" disabled>Iniciar desafio →</button></div>
  </div>
 
@@ -1058,6 +1063,8 @@ let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
 let gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
 let rewardSyncBusy=false;
 let selectedChallengePlayers=new Set();
+let challengePlayerPage=0;
+const CHALLENGE_PLAYER_PAGE_SIZE=8;
 const REMEMBER_SESSION_KEY="projetoTabuadaSessaoLembradaV1";
 const ACTIVE_TIME_CACHE_KEY="projetoTabuadaTempoPendenteV1";
 const ACTIVE_TIME_SYNC_MS=30*60*1000;
@@ -2175,6 +2182,7 @@ function getChallengeConfig(){
 }
 async function loadChallengePlayers(){
  showChallengeSubPanel('challengePlayersPanel');
+ challengePlayerPage=0;
  selectedChallengePlayers.clear();
  $('challengePlayersStatus').textContent='Carregando participantes cadastrados...';
  $('challengePlayersList').innerHTML='';
@@ -2203,19 +2211,32 @@ function renderChallengePlayers(){
   String(player.username||'').toLowerCase().includes(query)||
   String(player.displayName||'').toLowerCase().includes(query)
  );
- if(!items.length){box.innerHTML='<div class="community-empty">Nenhum participante encontrado.</div>';return;}
- box.innerHTML=items.map(player=>{
-  const username=String(player.username||'');
-  const checked=selectedChallengePlayers.has(username);
-  const disabled=!checked&&selectedChallengePlayers.size>=4;
-  const avatar=avatarImage(normalizeAvatarKey(player.avatar));
-  return '<label class="challenge-player-card challenge-player-check">'+
-   '<input type="checkbox" data-challenge-player="'+escapeHtml(username)+'" '+(checked?'checked ':'')+(disabled?'disabled':'')+'>'+
-   '<img class="challenge-player-avatar" src="'+avatar+'" alt="">'+
-   '<span class="challenge-player-name">'+escapeHtml(player.displayName||username)+'<small style="display:block;color:#9fb8d8;font-size:.7rem;font-weight:500">@'+escapeHtml(username)+'</small></span>'+
-   (checked?'<b style="color:#67e8f9">✓</b>':'')+
-  '</label>';
- }).join('');
+ const totalPages=Math.max(1,Math.ceil(items.length/CHALLENGE_PLAYER_PAGE_SIZE));
+ challengePlayerPage=Math.max(0,Math.min(totalPages-1,challengePlayerPage));
+ if(!items.length){box.innerHTML='<div class="community-empty">Nenhum participante encontrado.</div>';}
+ else{
+  const pageItems=items.slice(challengePlayerPage*CHALLENGE_PLAYER_PAGE_SIZE,(challengePlayerPage+1)*CHALLENGE_PLAYER_PAGE_SIZE);
+  box.innerHTML=pageItems.map(player=>{
+   const username=String(player.username||'');
+   const checked=selectedChallengePlayers.has(username);
+   const disabled=!checked&&selectedChallengePlayers.size>=4;
+   const avatar=avatarImage(normalizeAvatarKey(player.avatar));
+   return '<label class="challenge-player-card challenge-player-check">'+
+    '<input type="checkbox" data-challenge-player="'+escapeHtml(username)+'" '+(checked?'checked ':'')+(disabled?'disabled':'')+'>'+
+    '<img class="challenge-player-avatar" src="'+avatar+'" alt="">'+
+    '<span class="challenge-player-name">'+escapeHtml(player.displayName||username)+'<small style="display:block;color:#9fb8d8;font-size:.7rem;font-weight:500">@'+escapeHtml(username)+'</small></span>'+
+    (checked?'<b style="color:#67e8f9">✓</b>':'')+
+   '</label>';
+  }).join('');
+ }
+ const pager=$('challengePlayerPagination');
+ if(pager){
+  pager.innerHTML=totalPages>1
+   ?'<button type="button" class="secondary" data-player-page="prev" '+(challengePlayerPage===0?'disabled':'')+'>← Anterior</button>'+
+    '<span>Página '+(challengePlayerPage+1)+' de '+totalPages+' · '+items.length+' participantes</span>'+
+    '<button type="button" class="secondary" data-player-page="next" '+(challengePlayerPage>=totalPages-1?'disabled':'')+'>Próxima →</button>'
+   :items.length?'<span>'+items.length+' participante(s)</span>':'';
+ }
  updateChallengeSelectedCount();
 }
 async function createChallengeForPlayers(recipients){
@@ -3523,7 +3544,12 @@ $('choosePresetChallenge').addEventListener('click',()=>configureChallengeMode('
 $('challengeConfigBack').addEventListener('click',()=>showChallengeSubPanel('challengeHomePanel'));
 $('challengeChoosePlayer').addEventListener('click',loadChallengePlayers);
 $('challengePlayersBack').addEventListener('click',()=>showChallengeSubPanel('challengeConfigPanel'));
-$('challengePlayerSearch').addEventListener('input',renderChallengePlayers);
+$('challengePlayerSearch').addEventListener('input',()=>{challengePlayerPage=0;renderChallengePlayers();});
+$('challengePlayerPagination').addEventListener('click',event=>{
+ const button=event.target.closest('[data-player-page]');if(!button||button.disabled)return;
+ challengePlayerPage+=button.dataset.playerPage==='next'?1:-1;
+ renderChallengePlayers();
+});
 $('challengePresetSelect').addEventListener('change',updateChallengePresetDescription);
 $('challengeMusicSelect').addEventListener('change',previewSelectedChallengeMusic);
 $('challengePlayersList').addEventListener('change',event=>{
@@ -3571,6 +3597,7 @@ $('adventureMap').addEventListener('click',event=>{
 $('saveProfile').addEventListener('click',()=>saveProfile(true));
 $('resumeProfile').addEventListener('click',resumeProfile);
 $('addNumbers').addEventListener('click',addNumbersToSavedGame);
+$('trainingGlobalMode').addEventListener('change',updateTrainingGlobalModeControls);
 $('start').addEventListener('click',()=>{if($('profileName').value.trim())saveProfile(false);start()});
 $('verify').addEventListener('click',verify);
 $('right').addEventListener('click',()=>judge(true));
