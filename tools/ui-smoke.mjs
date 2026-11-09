@@ -104,15 +104,15 @@ async function testViewport(name, viewport, mobile = false) {
   check(response && response.status() === 200, name + ": a página inicial não respondeu com HTTP 200.");
   await page.locator("#authScreen").waitFor({ state: "visible", timeout: 20000 });
   await page.waitForFunction(
-    () => document.querySelectorAll("#trackSelect option").length === 20,
+    () => document.querySelectorAll("#trackSelect option").length === 4,
     null,
     { timeout: 30000 }
   );
   check((await page.locator("#trackSelect").inputValue()) !== "0",
     name + ": a tela inicial repetiu a última faixa salva em vez de escolher outra.");
   const musicNote = (await page.locator(".music-note").textContent()) || "";
-  check(musicNote.includes("100 trilhas") && musicNote.includes("20 para cada área"),
-    name + ": o site não explica que o catálogo possui 100 músicas.");
+  check(musicNote.includes("20 trilhas reais") && musicNote.includes("CC0") && musicNote.includes("4 músicas diferentes por área"),
+    name + ": o site não explica a biblioteca de 20 trilhas CC0 distribuídas por área.");
 
   const homeOverflow = await page.evaluate(() => ({
     viewport: window.innerWidth,

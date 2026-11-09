@@ -41,7 +41,7 @@ jobs:
           cat /tmp/projeto-tabuada-http.log
           exit 1
 
-      - name: Validar 100 músicas e a interface
+      - name: Validar 20 trilhas CC0 e a interface
         run: |
           mkdir -p artifacts
           node tools/ui-smoke.mjs
