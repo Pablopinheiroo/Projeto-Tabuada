@@ -2185,7 +2185,8 @@ function challengeResultLabel(challenge){
   if(challenge.myResult)return 'Sua partida concluída · '+done+'/'+total+' participantes';
   return 'Sua vez de jogar · '+done+'/'+total+' resultados enviados';
  }
- if(challenge.winner==='empate')return '🤝 Empate';
+ const winners=Array.isArray(challenge.winners)&&challenge.winners.length?challenge.winners:(challenge.winner&&challenge.winner!=='empate'?[challenge.winner]:[]);
+ if(winners.length>1)return winners.includes(activeProfile)?'🤝 Empate em primeiro lugar':'🏅 Empate na liderança';
  return challenge.winner===activeProfile?'🏆 Você venceu':'🛡️ Você perdeu';
 }
 function getSeenChallengeResults(){
@@ -2423,11 +2424,12 @@ function showChallengeResult(challenge){
  const participants=challengeParticipants(challenge);
  const results=challenge.results||{};
  if(challenge.status==='completed'){
-  const winner=challenge.winner===activeProfile;
-  const draw=challenge.winner==='empate';
+  const winners=Array.isArray(challenge.winners)&&challenge.winners.length?challenge.winners:(challenge.winner&&challenge.winner!=='empate'?[challenge.winner]:[]);
+  const winner=winners.includes(activeProfile);
+  const draw=winners.length>1;
   $('challengeResultIcon').textContent=draw?'🤝':(winner?'🏆':'🛡️');
-  $('challengeResultTitle').textContent=draw?'Duelo empatado!':(winner?'Você venceu o desafio coletivo!':'Desta vez, outro participante venceu.');
-  $('challengeResultText').textContent=draw?'Os participantes terminaram com a mesma pontuação e tempo.':(winner?'Parabéns! Você ficou em primeiro lugar.':'Veja a classificação final do grupo.');
+  $('challengeResultTitle').textContent=draw?(winner?'Você empatou em primeiro lugar!':'Houve empate na liderança.'): (winner?'Você venceu o desafio coletivo!':'Desta vez, outro participante venceu.');
+  $('challengeResultText').textContent=draw?(winner?'Você terminou empatado na liderança.':'Os primeiros colocados empataram; confira a classificação.'):(winner?'Parabéns! Você ficou em primeiro lugar.':'Veja a classificação final do grupo.');
   const standings=Array.isArray(challenge.standings)?challenge.standings:participants.map(username=>({
    username,score:Number(results[username]?.score)||0,totalMs:Number(results[username]?.totalMs)||0
   })).sort((a,b)=>b.score-a.score||a.totalMs-b.totalMs||a.username.localeCompare(b.username));
