@@ -493,6 +493,7 @@ function safeChallengeSummary(challenge, username) {
     seed: challenge.seed,
     createdAt: challenge.createdAt,
     results: challenge.results || {},
+    standings: Array.isArray(challenge.standings) ? challenge.standings : [],
     status: challenge.status || "open",
     winner: challenge.winner ?? null,
     completedAt: challenge.completedAt || null,
