@@ -2018,38 +2018,64 @@ function getChallengeConfig(){
 }
 async function loadChallengePlayers(){
  showChallengeSubPanel('challengePlayersPanel');
+ selectedChallengePlayers.clear();
  $('challengePlayersStatus').textContent='Carregando participantes cadastrados...';
  $('challengePlayersList').innerHTML='';
+ updateChallengeSelectedCount();
  try{
   const result=await apiRequest('/api/challenges/players');
   challengePlayers=Array.isArray(result.players)?result.players:[];
   renderChallengePlayers();
   $('challengePlayersStatus').textContent=challengePlayers.length
-    ?challengePlayers.length+' participante(s) disponível(is). Escolha quem você quer desafiar.'
-    :'Ainda não há outros participantes cadastrados.';
+   ?challengePlayers.length+' participante(s) encontrado(s). Você pode selecionar até 4 pessoas.'
+   :'Ainda não há outros participantes cadastrados.';
  }catch(error){
   $('challengePlayersStatus').textContent='Não foi possível carregar participantes: '+siteErrorMessage(error);
  }
 }
+function updateChallengeSelectedCount(){
+ const count=selectedChallengePlayers.size;
+ if($('challengeSelectedCount'))$('challengeSelectedCount').textContent=count+' de 4 selecionados';
+ if($('challengeStartSelected'))$('challengeStartSelected').disabled=count<1||count>4;
+}
 function renderChallengePlayers(){
  const box=$('challengePlayersList');if(!box)return;
  const query=($('challengePlayerSearch').value||'').trim().toLowerCase();
- const items=challengePlayers.filter(name=>name.toLowerCase().includes(query));
+ const items=challengePlayers.filter(player=>
+  String(player.username||'').toLowerCase().includes(query)||
+  String(player.displayName||'').toLowerCase().includes(query)
+ );
  if(!items.length){box.innerHTML='<div class="community-empty">Nenhum participante encontrado.</div>';return;}
- box.innerHTML=items.map(name=>'<div class="challenge-player-card"><span class="challenge-player-name">👤 @'+escapeHtml(name)+'</span><button type="button" data-challenge-player="'+escapeHtml(name)+'">Desafiar</button></div>').join('');
+ box.innerHTML=items.map(player=>{
+  const username=String(player.username||'');
+  const checked=selectedChallengePlayers.has(username);
+  const disabled=!checked&&selectedChallengePlayers.size>=4;
+  const avatar=avatarImage(normalizeAvatarKey(player.avatar));
+  return '<label class="challenge-player-card challenge-player-check">'+
+   '<input type="checkbox" data-challenge-player="'+escapeHtml(username)+'" '+(checked?'checked ':'')+(disabled?'disabled':'')+'>'+
+   '<img class="challenge-player-avatar" src="'+avatar+'" alt="">'+
+   '<span class="challenge-player-name">'+escapeHtml(player.displayName||username)+'<small style="display:block;color:#9fb8d8;font-size:.7rem;font-weight:500">@'+escapeHtml(username)+'</small></span>'+
+   (checked?'<b style="color:#67e8f9">✓</b>':'')+
+  '</label>';
+ }).join('');
+ updateChallengeSelectedCount();
 }
-async function createChallengeForPlayer(recipient){
+async function createChallengeForPlayers(recipients){
  const config=getChallengeConfig();
  if(!config)return;
- $('challengePlayersStatus').textContent='Criando o desafio e preparando as 10 questões...';
- $('challengePlayersList').querySelectorAll('button').forEach(button=>button.disabled=true);
+ const players=[...new Set(recipients)].filter(name=>name!==activeProfile);
+ if(players.length<1||players.length>4){$('challengePlayersStatus').textContent='Selecione de 1 a 4 adversários.';return;}
+ $('challengePlayersStatus').textContent='Criando o desafio para '+players.length+' participante(s)...';
+ $('challengeStartSelected').disabled=true;
  try{
-  const result=await apiRequest('/api/challenges',{method:'POST',body:{...config,recipient}});
+  ensureAudio();
+  const result=await apiRequest('/api/challenges',{method:'POST',body:{...config,recipients:players}});
   challengeCurrent=result.challenge;
+  challengeItems=[challengeCurrent,...challengeItems.filter(item=>item.id!==challengeCurrent.id)];
   await startChallengeGame(challengeCurrent,'challenger');
  }catch(error){
   $('challengePlayersStatus').textContent='Não foi possível criar o desafio: '+siteErrorMessage(error);
-  $('challengePlayersList').querySelectorAll('button').forEach(button=>button.disabled=false);
+  updateChallengeSelectedCount();
  }
 }
 function challengeRandom(seed){
@@ -2086,11 +2112,20 @@ function createChallengeQuestions(seed,tables,optionCount){
   return {...fact,answer,options};
  });
 }
+function challengeParticipants(challenge){
+ return Array.isArray(challenge.participants)&&challenge.participants.length
+  ?challenge.participants:[challenge.challenger,challenge.recipient].filter(Boolean);
+}
 function challengeOtherPlayer(challenge){
- return challenge.challenger===activeProfile?challenge.recipient:challenge.challenger;
+ return challengeParticipants(challenge).filter(name=>name!==activeProfile);
 }
 function challengeResultLabel(challenge){
- if(challenge.status!=='completed')return challenge.myResult?'Resultado enviado · aguardando o adversário':'Convite recebido · aguardando sua partida';
+ if(challenge.status!=='completed'){
+  const total=challengeParticipants(challenge).length;
+  const done=Object.keys(challenge.results||{}).length;
+  if(challenge.myResult)return 'Sua partida concluída · '+done+'/'+total+' participantes';
+  return 'Sua vez de jogar · '+done+'/'+total+' resultados enviados';
+ }
  if(challenge.winner==='empate')return '🤝 Empate';
  return challenge.winner===activeProfile?'🏆 Você venceu':'🛡️ Você perdeu';
 }
@@ -2123,17 +2158,18 @@ function renderChallengeList(){
   return;
  }
  box.innerHTML=challengeItems.map(item=>{
-  const other=challengeOtherPlayer(item);
+  const participants=challengeParticipants(item);
+  const others=participants.filter(name=>name!==activeProfile);
   const mine=item.myResult;
-  const incoming=item.recipient===activeProfile;
-  const pending=incoming&&!mine;
   const completed=item.status==='completed';
-  const action=completed?'Ver resultado':(mine?'Aguardando adversário':(pending?'Jogar desafio':'Começar desafio'));
+  const action=completed?'Ver resultado':(mine?'Aguardando participantes':'Jogar desafio');
   const disabled=!!mine&&!completed;
-  const scores=mine?(mine.score+'/10 pontos'):'Partida ainda não realizada';
-  const side=incoming?'Recebido de @'+other:'Enviado para @'+other;
+  const scores=mine?(mine.score+'/10 pontos'):'Sua partida ainda não foi realizada';
+  const side=item.challenger===activeProfile?'Você desafiou':'Desafio recebido';
+  const names=others.map(name=>'@'+name).join(', ');
   const level=item.mode==='custom'?'Personalizado · tabuadas '+item.tables.join(', '):'Pré-definido · '+item.levelName;
-  return '<article class="challenge-list-card"><div class="challenge-list-meta"><strong>⚔️ '+escapeHtml(side)+'</strong><small>'+escapeHtml(level)+' · '+scores+'</small><span class="challenge-status-pill">'+escapeHtml(challengeResultLabel(item))+'</span></div><button type="button" data-challenge-play="'+item.id+'" '+(disabled?'disabled':'')+'>'+action+'</button></article>';
+  const played=Object.keys(item.results||{}).length+'/'+participants.length+' participantes já jogaram';
+  return '<article class="challenge-list-card"><div class="challenge-list-meta"><strong>⚔️ '+escapeHtml(side)+' · '+escapeHtml(names)+'</strong><small>'+escapeHtml(level)+' · '+scores+'</small><small>'+escapeHtml(played)+'</small><span class="challenge-status-pill">'+escapeHtml(challengeResultLabel(item))+'</span></div><button type="button" data-challenge-play="'+item.id+'" '+(disabled?'disabled':'')+'>'+action+'</button></article>';
  }).join('');
 }
 async function refreshChallengeData(){
@@ -2163,7 +2199,7 @@ async function refreshChallengeData(){
 }
 function startChallengePolling(){
  if(challengePollTimer!==null)return;
- challengePollTimer=setInterval(()=>{if(activeProfile)refreshChallengeData();},60_000);
+ challengePollTimer=setInterval(()=>{if(activeProfile&&!document.hidden)refreshChallengeData();},90_000);
 }
 function stopChallengePolling(){
  if(challengePollTimer!==null){clearInterval(challengePollTimer);challengePollTimer=null;}
@@ -2253,12 +2289,15 @@ async function startChallengeGame(challenge,role){
  $('challengePlayersPanel').classList.add('hidden');
  $('challengeResultPanel').classList.add('hidden');
  $('challengePlayPanel').classList.remove('hidden');
- const opponent=challengeOtherPlayer(challenge);
- $('challengeOpponentTitle').textContent='Você × @'+opponent;
- $('challengePlayMeta').textContent=(challenge.mode==='custom'?'Personalizado':'Nível '+challenge.levelName)+' · Tabuadas '+challenge.tables.join(', ')+' · '+challenge.optionCount+' alternativas';
+ const opponents=challengeParticipants(challenge).filter(name=>name!==activeProfile);
+ $('challengeOpponentTitle').textContent='Você × '+opponents.map(name=>'@'+name).join(', ');
+ $('challengePlayMeta').textContent=(challenge.mode==='custom'?'Personalizado':'Nível '+challenge.levelName)+' · Tabuadas '+challenge.tables.join(', ')+' · '+challenge.optionCount+' alternativas · '+challengeParticipants(challenge).length+' participantes';
  const track=CHALLENGE_MUSIC[challenge.musicTrack]||CHALLENGE_MUSIC[0];
  $('challengeMusicTitle').textContent='🎵 '+track.name;
- $('challengeMusicRule').textContent=role==='recipient'?'Música escolhida pelo desafiante. Ela está bloqueada para você.':'Você escolheu esta música. O adversário ouvirá a mesma trilha.';
+ $('challengeMusicRule').textContent=role==='recipient'?'Música escolhida pelo desafiante. Ela está bloqueada para você.':'Você escolheu esta música. Todos os adversários ouvirão a mesma trilha.';
+ $('siteMusicBox').classList.add('hidden');
+ $('challengeScore').textContent='0/10';
+ $('challengeProgressBar').style.width='0%';
  $('challengeVolume').max=role==='recipient'?'30':'100';
  $('challengeVolume').min='0';
  applyChallengeVolume(role==='recipient'?30:100);
@@ -2300,14 +2339,12 @@ async function finishChallengeMatch(){
  $('challengePlayPanel').classList.add('hidden');
  $('challengeResultPanel').classList.remove('hidden');
  $('challengeResultTitle').textContent='Registrando seu resultado...';
- $('challengeResultText').textContent='Conferindo os 10 resultados e enviando sua pontuação para o perfil.';
+ $('challengeResultText').textContent='Enviando sua pontuação. A classificação será fechada quando todos terminarem.';
  $('challengeResultScores').innerHTML='';
- $('challengeResultTime').textContent='Tempo da partida: '+formatDuration(performance.now()-challengeMatchStarted);
+ $('challengeResultTime').textContent='Tempo da sua partida: '+formatDuration(performance.now()-challengeMatchStarted);
  $('challengeResultStatus').textContent='Não feche esta tela enquanto o resultado é enviado.';
  try{
-  const result=await apiRequest('/api/challenges/'+challengeCurrent.id+'/result',{
-   method:'POST',body:{answers:challengeAnswerLog}
-  });
+  const result=await apiRequest('/api/challenges/'+challengeCurrent.id+'/result',{method:'POST',body:{answers:challengeAnswerLog}});
   challengeCurrent=result.challenge;
   await refreshChallengeData();
   showChallengeResult(challengeCurrent);
@@ -2315,7 +2352,7 @@ async function finishChallengeMatch(){
   $('challengeResultIcon').textContent='⚠️';
   $('challengeResultTitle').textContent='Não foi possível confirmar o resultado';
   $('challengeResultText').textContent=siteErrorMessage(error);
-  $('challengeResultStatus').textContent='Sua partida ficou nesta tela. Volte aos desafios e atualize para verificar se o envio foi concluído.';
+  $('challengeResultStatus').textContent='Volte aos desafios e atualize para verificar se o envio foi concluído.';
   $('challengeResultBack').textContent='Voltar e atualizar';
  }
 }
@@ -2324,28 +2361,37 @@ function showChallengeResult(challenge){
  challengeCurrent=challenge;
  if(challenge.status==='completed'&&challenge.myResult)markChallengeResultSeen(challenge.id);
  const mine=challenge.myResult;
- const other=challenge.otherResult;
- const otherName=challengeOtherPlayer(challenge);
- if(challenge.status==='completed'&&mine&&other){
-  const won=challenge.winner===activeProfile;
+ const participants=challengeParticipants(challenge);
+ const results=challenge.results||{};
+ if(challenge.status==='completed'){
+  const winner=challenge.winner===activeProfile;
   const draw=challenge.winner==='empate';
-  $('challengeResultIcon').textContent=draw?'🤝':(won?'🏆':'🛡️');
-  $('challengeResultTitle').textContent=draw?'Duelo empatado!':(won?'Você venceu o duelo!':'Desta vez, o adversário venceu.');
-  $('challengeResultText').textContent='Resultado final contra @'+otherName+'. '+(draw?'Os dois tiveram o mesmo desempenho.':won?'Parabéns pela vitória!':'Continue praticando e tente novamente.');
-  $('challengeResultScores').innerHTML='<div class="challenge-score-box"><strong>'+mine.score+'/10</strong><small>Sua pontuação</small></div><div class="challenge-score-box"><strong>'+other.score+'/10</strong><small>@'+escapeHtml(otherName)+'</small></div>';
-  $('challengeResultTime').textContent='Seu tempo: '+formatDuration(mine.totalMs)+' · Adversário: '+formatDuration(other.totalMs);
-  $('challengeResultStatus').textContent='O resultado foi salvo no histórico do perfil.';
+  $('challengeResultIcon').textContent=draw?'🤝':(winner?'🏆':'🛡️');
+  $('challengeResultTitle').textContent=draw?'Duelo empatado!':(winner?'Você venceu o desafio coletivo!':'Desta vez, outro participante venceu.');
+  $('challengeResultText').textContent=draw?'Os participantes terminaram com a mesma pontuação e tempo.':(winner?'Parabéns! Você ficou em primeiro lugar.':'Veja a classificação final do grupo.');
+  const standings=Array.isArray(challenge.standings)?challenge.standings:participants.map(username=>({
+   username,score:Number(results[username]?.score)||0,totalMs:Number(results[username]?.totalMs)||0
+  })).sort((a,b)=>b.score-a.score||a.totalMs-b.totalMs||a.username.localeCompare(b.username));
+  $('challengeResultScores').innerHTML=standings.map((item,index)=>
+   '<div class="challenge-score-box '+(item.username===challenge.winner?'winner':'')+'"><strong>#'+(index+1)+' · '+item.score+'/10</strong><small>@'+escapeHtml(item.username)+' · '+formatDuration(item.totalMs)+'</small></div>'
+  ).join('');
+  $('challengeResultTime').textContent='Sua duração: '+formatDuration(mine?.totalMs||0);
+  $('challengeResultStatus').textContent='O resultado e o histórico foram salvos nos perfis dos participantes.';
  }else if(mine){
+  const pending=participants.filter(name=>!results[name]);
   $('challengeResultIcon').textContent='⏳';
   $('challengeResultTitle').textContent='Pontuação registrada!';
-  $('challengeResultText').textContent='Você fez '+mine.score+' ponto(s) contra @'+otherName+'. O resultado final será definido quando o outro participante terminar.';
-  $('challengeResultScores').innerHTML='<div class="challenge-score-box"><strong>'+mine.score+'/10</strong><small>Sua pontuação</small></div><div class="challenge-score-box"><strong>—</strong><small>Aguardando @'+escapeHtml(otherName)+'</small></div>';
+  $('challengeResultText').textContent='Você fez '+mine.score+' ponto(s). Ainda falta(m) '+pending.length+' participante(s): '+pending.map(name=>'@'+name).join(', ')+'.';
+  $('challengeResultScores').innerHTML=participants.map(name=>{
+   const result=results[name];
+   return '<div class="challenge-score-box"><strong>'+(result?result.score+'/10':'—')+'</strong><small>@'+escapeHtml(name)+(result?' · concluído':' · aguardando')+'</small></div>';
+  }).join('');
   $('challengeResultTime').textContent='Seu tempo: '+formatDuration(mine.totalMs);
-  $('challengeResultStatus').textContent='Esta partida ainda não conta como vitória ou derrota. Volte mais tarde para ver o resultado final.';
+  $('challengeResultStatus').textContent='A vitória e as medalhas só serão contabilizadas depois que todos jogarem.';
  }else{
   $('challengeResultIcon').textContent='⚔️';
   $('challengeResultTitle').textContent='Desafio disponível';
-  $('challengeResultText').textContent='Você ainda não jogou contra @'+otherName+'.';
+  $('challengeResultText').textContent='Sua vez de jogar contra '+participants.filter(name=>name!==activeProfile).map(name=>'@'+name).join(', ')+'.';
   $('challengeResultScores').innerHTML='';
   $('challengeResultTime').textContent='10 questões · 5 segundos por questão';
   $('challengeResultStatus').textContent='Volte à lista e escolha Jogar desafio.';
@@ -2363,11 +2409,8 @@ async function openChallengeFromList(id){
   showChallengeResult(item);
   return;
  }
- if(item.recipient===activeProfile){
-  await startChallengeGame(item,'recipient');
- }else{
-  await startChallengeGame(item,'challenger');
- }
+ const role=item.challenger===activeProfile?'challenger':'recipient';
+ await startChallengeGame(item,role);
 }
 function handleChallengeVisibility(){
  if(document.hidden)return;
