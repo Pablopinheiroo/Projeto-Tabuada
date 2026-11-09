@@ -363,6 +363,10 @@ async function testAutosave(browser) {
         }
       });
     });
+    await page.evaluate(() => {
+      sessionStorage.setItem(API_TOKEN_KEY, "fake-session-token");
+      sessionStorage.setItem(AUTH_SESSION_KEY, "autosave-smoke");
+    });
     const restored = await page.evaluate(() => ({
       pending: pendingActiveMs,
       checkpoint: profilesData["autosave-smoke"]?.checkpoint?.marker,
