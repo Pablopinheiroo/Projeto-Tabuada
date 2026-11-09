@@ -349,7 +349,14 @@ PLAYLIST_PROFILES = {
         "bpm": (126, 156), "roots": [45, 48, 50, 53, 57],
         "scales": ["minor", "phrygian", "dorian"],
         "leads": ["brass", "strings", "saw", "square"],
-        "grooves": ["battle", "electro", "cdef build_playlist_track(base_track: tuple, category: str, index: int) -> tuple:
+        "grooves": ["battle", "electro", "cinematic", "rock"],
+        "energy": (1.00, 1.22),
+        "progressions": [[0,5,3,6],[0,6,3,4],[0,1,5,4],[0,5,4,3],[0,3,5,4]],
+        "prefix": "Arena",
+    },
+}
+
+def build_playlist_track(base_track: tuple, category: str, index: int) -> tuple:
     profile = PLAYLIST_PROFILES[category]
     slug, base_title, base_style, base_bpm, base_root, base_scale, base_progression, base_lead, base_groove, motif, base_energy = base_track
 
@@ -385,7 +392,7 @@ PLAYLIST_PROFILES = {
         elif variation == 3:
             transformed.append(max(0, min(14, degree + (1 if step % 2 == 0 else 4))))
         else:
-            transformed.append(max(0, min(14, degree + (5 if step % 8 == 0 else 0))))
+            transformed.append(max(0, min(14, degree + (5 if step % 8 == 0 else 0)))
     low, high = profile["energy"]
     energy = low + (high - low) * ((index * 13 % 19) / 18)
     display_name = f"{profile['prefix']} {index + 1:02d} — {base_title}"
