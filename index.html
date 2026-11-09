@@ -976,6 +976,19 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  .community-rank-public-stats>span small{font-size:.59rem}
 }
 
+
+/* Comunidade: resumo limpo e detalhes em seções empilhadas */
+.community-rank-name-row{flex-wrap:nowrap!important;min-width:0}
+.community-rank-display-title{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.community-wallet-pill{flex:0 0 auto;white-space:nowrap}
+.community-rank-title-section{grid-column:1/-1;width:100%}
+.community-rank-titles{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:7px}
+.community-profile-details{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
+.community-profile-details>.community-challenge-details,.community-profile-details>.community-profile-detail-grid,.community-profile-details>.community-profile-detail-section{grid-column:1/-1!important;width:100%;min-width:0}
+.community-profile-details>.community-profile-detail-section:not(.community-challenge-details){display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.community-profile-details .community-profile-detail-chips{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center;justify-content:flex-start;gap:7px}
+.community-profile-details .community-rank-chip,.community-profile-details .community-featured-badge{flex:0 0 auto;max-width:100%}
+@media(max-width:560px){.community-profile-details{grid-template-columns:minmax(0,1fr)!important}.community-profile-details>.community-profile-detail-section:not(.community-challenge-details){padding:10px 9px!important}.community-profile-detail-title{font-size:.69rem!important}.community-profile-details .community-profile-detail-chips{gap:6px}}
 </style>
 </head>
 <body>
@@ -2479,7 +2492,6 @@ async function renderCommunityRanking(){
     const info=featuredAwardInfo(id,{awards:user.awards});
     return info?'<span class="community-featured-badge">'+info.icon+' '+escapeHtml(info.label)+'</span>':'';
    }).join('');
-   const publicHonors=featured||(medals+awards)||'<span class="community-rank-chip">🌱 Novo participante</span>';
    return '<details class="community-rank-card '+rankClass+'">'+
     '<summary class="community-rank-summary">'+
      '<div class="community-rank-main">'+
@@ -2491,7 +2503,6 @@ async function renderCommunityRanking(){
      '</div>'+
      '<div class="community-rank-public-stats"><span><strong>✓ '+user.correct.toLocaleString('pt-BR')+'</strong><small>Acertos</small></span><span><strong>✕ '+user.wrong.toLocaleString('pt-BR')+'</strong><small>Erros</small></span><span><strong>⏱️ '+formatStudyTimeCompact(user.timeMs)+'</strong><small>Tempo estudado</small></span></div>'+
      titleSection+
-     '<div class="community-rank-public-honors">'+publicHonors+'</div>'+
      '<span class="community-rank-expand">Clique para ver mais informações ▾</span>'+
     '</summary>'+
     '<div class="community-profile-details">'+
@@ -2508,8 +2519,8 @@ async function renderCommunityRanking(){
      '</div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">⭐ DESTAQUES ESCOLHIDOS</span><div class="community-profile-detail-chips">'+(featured||'<span class="community-profile-empty">Nenhum destaque selecionado.</span>')+'</div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏅 MEDALHAS DE NÍVEL</span><div class="community-profile-detail-chips">'+(medals||'<span class="community-profile-empty">Ainda não conquistou medalhas de nível.</span>')+'</div></div>'+
-     '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏆 PREMIAÇÕES MENSAIS</span><div class="community-profile-detail-chips">'+(awards||'<span class="community-profile-empty">Nenhuma premiação mensal registrada.</span>')+'</div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">✨ CONQUISTAS</span><div class="community-profile-detail-chips">'+(achievementBadges||'<span class="community-profile-empty">Ainda não desbloqueou conquistas.</span>')+'</div></div>'+
+     '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏆 PREMIAÇÕES MENSAIS</span><div class="community-profile-detail-chips">'+(awards||'<span class="community-profile-empty">Nenhuma premiação mensal registrada.</span>')+'</div></div>'+
     '</div>'+
    '</details>';
   }).join('');
