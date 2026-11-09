@@ -1633,7 +1633,7 @@ async function renderCommunityRanking(){
    '</article>';
   }).join('');
   const note=document.querySelector('.community-list-note');
-  if(note)note.textContent='Mostrando '+Math.min(users.length,35)+' participantes. Role a lista para conhecer os demais.';
+  if(note)note.textContent='Mostrando '+Math.min(users.length,40)+' participantes. Role a lista para conhecer os demais.';
  }catch(error){
   box.innerHTML='<div class="community-empty">'+escapeHtml(siteErrorMessage(error))+'</div>';
   console.error('Falha ao carregar a comunidade:',error);
