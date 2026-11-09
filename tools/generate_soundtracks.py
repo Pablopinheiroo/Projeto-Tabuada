@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Generate original, full-length instrumental game soundtracks for Projeto Tabuada.
+"""Generate 100 original instrumental game tracks in five distinct playlists.
 
-Each composition is a real stereo MP3 file (not a short WebAudio beep loop).
-The 36-bar arrangements are over 60 seconds and have intro, A, B, variation,
-bridge and outro sections. All sounds are synthesized from original note events.
+Every playlist contains 20 original stereo MP3 tracks. Arrangements have an
+intro, development, variation, bridge and outro, and each track lasts >30 sec.
+All audio is synthesized from original note events; no third-party recordings.
 """
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ from pathlib import Path
 import numpy as np
 
 SAMPLE_RATE = 22050
-BARS = 36
+BARS = 28
 BEATS_PER_BAR = 4
 
 # slug, title, style, bpm, tonic MIDI, scale, chord progression, lead patch,
@@ -164,7 +164,7 @@ def groove_events(mix, beat_time, beat_in_bar, groove, energy, rng):
         add_noise_hit(mix, hat_time, .045, (.022 if groove in ("ambient","stealth") else .034)*energy, "hat", rng)
         add_noise_hit(mix, hat_time + 30/60, .032, .014*energy, "hat", rng)
 
-def make_track(track, output_dir: Path) -> dict:
+def make_track(track, output_dir: Path, category: str) -> dict:
     slug, title, style, bpm, root, scale_name, progression, lead, groove, motif, energy = track
     scale = SCALES[scale_name]
     beat = 60.0 / bpm
@@ -269,34 +269,165 @@ def make_track(track, output_dir: Path) -> dict:
         mp3_path = output_dir / f"{slug}.mp3"
         subprocess.run([
             "ffmpeg","-hide_banner","-loglevel","error","-y",
-            "-i",str(wav_path),"-codec:a","libmp3lame","-b:a","112k",
+            "-i",str(wav_path),"-codec:a","libmp3lame","-b:a","80k",
             "-ar",str(SAMPLE_RATE),"-ac","2",str(mp3_path)
         ],check=True)
     finally:
         wav_path.unlink(missing_ok=True)
     return {
         "id": slug, "name": title, "genre": style,
-        "src": f"assets/music/{slug}.mp3",
+        "src": f"assets/music/{category}/{slug}.mp3",
         "duration_seconds": round(duration,2),
         "bpm": bpm, "file_bytes": mp3_path.stat().st_size,
         "license": "Original synthesized soundtrack generated for Projeto Tabuada."
     }
 
+
+# Each collection has its own tempo, instrumentation, harmony and rhythmic identity.
+PLAYLIST_PROFILES = {
+    "principal": {
+        "title": "Tela principal",
+        "folder": "principal",
+        "style": "Abertura calma e acolhedora",
+        "bpm": (82, 100), "roots": [57, 60, 62, 64, 67],
+        "scales": ["major", "lydian", "mixolydian"],
+        "leads": ["keys", "flute", "bell", "strings", "pluck"],
+        "grooves": ["ambient", "cinematic", "adventure"],
+        "energy": (0.54, 0.76),
+        "progressions": [[0,4,5,3],[0,5,3,4],[0,3,4,0],[0,4,3,5],[0,5,4,3]],
+        "prefix": "Boas-vindas",
+    },
+    "treinamento": {
+        "title": "Treinamento",
+        "folder": "treinamento",
+        "style": "Concentração leve e ritmo constante",
+        "bpm": (88, 110), "roots": [55, 57, 60, 62, 65],
+        "scales": ["major", "dorian", "mixolydian"],
+        "leads": ["keys", "bell", "pluck", "flute"],
+        "grooves": ["ambient", "funk", "adventure"],
+        "energy": (0.62, 0.84),
+        "progressions": [[0,3,4,0],[0,4,5,3],[0,5,3,4],[0,3,5,4],[0,4,3,5]],
+        "prefix": "Foco",
+    },
+    "desafio": {
+        "title": "Desafio",
+        "folder": "desafio",
+        "style": "Disputa acelerada e eletrônica",
+        "bpm": (144, 170), "roots": [45, 48, 50, 52, 55],
+        "scales": ["minor", "phrygian", "mixolydian", "dorian"],
+        "leads": ["square", "saw", "guitar", "brass"],
+        "grooves": ["dance", "electro", "battle", "rock", "synthwave"],
+        "energy": (1.08, 1.30),
+        "progressions": [[0,5,3,6],[0,6,3,4],[0,1,5,4],[0,3,5,4],[0,5,4,6]],
+        "prefix": "Duelo",
+    },
+    "modo-jogo": {
+        "title": "Modo Jogo",
+        "folder": "modo-jogo",
+        "style": "Aventura épica, fantasia e exploração",
+        "bpm": (108, 132), "roots": [48, 52, 55, 57, 60],
+        "scales": ["minor", "dorian", "major", "phrygian"],
+        "leads": ["strings", "flute", "brass", "bell", "guitar"],
+        "grooves": ["cinematic", "adventure", "battle"],
+        "energy": (0.78, 1.06),
+        "progressions": [[0,5,3,6],[0,3,4,0],[0,5,3,4],[0,4,5,3],[0,1,5,4]],
+        "prefix": "Expedição",
+    },
+    "torneio": {
+        "title": "Torneio",
+        "folder": "torneio",
+        "style": "Tensão cinematográfica e competição",
+        "bpm": (126, 156), "roots": [45, 48, 50, 53, 57],
+        "scales": ["minor", "phrygian", "dorian"],
+        "leads": ["brass", "strings", "saw", "square"],
+        "grooves": ["battle", "electro", "cinematic", "rock"],
+        "energy": (1.00, 1.22),
+        "progressions": [[0,5,3,6],[0,6,3,4],[0,1,5,4],[0,5,4,3],[0,3,5,4]],
+        "prefix": "Arena",
+    },
+}
+
+def build_playlist_track(base_track: tuple, category: str, index: int) -> tuple:
+    profile = PLAYLIST_PROFILES[category]
+    slug, base_title, _style, base_bpm, base_root, _scale, _progression, _lead, _groove, motif, _energy = base_track
+    rng = random.Random(f"{category}:{index}:{slug}")
+    bpm_min, bpm_max = profile["bpm"]
+    bpm = bpm_min + ((index * 7 + rng.randrange(0, 5)) % (bpm_max - bpm_min + 1))
+    root = profile["roots"][index % len(profile["roots"])] + (index % 3) - 1
+    scale = profile["scales"][index % len(profile["scales"])]
+    lead = profile["leads"][(index + (index // 3)) % len(profile["leads"])]
+    groove = profile["grooves"][(index * 3 + index // 4) % len(profile["grooves"])]
+    progression = profile["progressions"][index % len(profile["progressions"])]
+    variation = index % 5
+    transformed = []
+    for step, degree in enumerate(motif):
+        if degree is None:
+            transformed.append(None)
+        elif variation == 0:
+            transformed.append(max(0, min(14, degree + (2 if step % 4 == 0 else 0))))
+        elif variation == 1:
+            transformed.append(max(0, min(14, 14 - degree)))
+        elif variation == 2:
+            transformed.append(max(0, min(14, degree + (3 if step % 4 in (1, 2) else -1))))
+        elif variation == 3:
+            transformed.append(max(0, min(14, degree + (1 if step % 2 == 0 else 4))))
+        else:
+            transformed.append(max(0, min(14, degree + (5 if step % 8 == 0 else 0))))
+    low, high = profile["energy"]
+    energy = low + (high - low) * ((index * 13 % 19) / 18)
+    display_name = f"{profile['prefix']} {index + 1:02d} — {base_title}"
+    new_slug = f"{category}-{index + 1:02d}-{slug}"
+    return (new_slug, display_name, profile["style"], bpm, root, scale,
+            progression, lead, groove, transformed, energy)
+
 def main():
     if not shutil.which("ffmpeg"):
         raise SystemExit("ffmpeg is required to encode the soundtrack files.")
-    output_dir = Path("assets/music")
-    manifest = []
-    for index, track in enumerate(TRACKS,1):
-        print(f"[{index:02d}/{len(TRACKS)}] Rendering {track[1]}...")
-        manifest.append(make_track(track,output_dir))
-    (output_dir/"manifest.json").write_text(
-        json.dumps(manifest,ensure_ascii=False,indent=2)+"\n",encoding="utf-8"
+    root_dir = Path("assets/music")
+    root_dir.mkdir(parents=True, exist_ok=True)
+    # Remove the previous flat playlist so the five new folders are unambiguous.
+    for old_track in root_dir.glob("*.mp3"):
+        old_track.unlink()
+    all_playlists = {}
+    for category, profile in PLAYLIST_PROFILES.items():
+        output_dir = root_dir / profile["folder"]
+        playlist = []
+        print(f"\\n=== {profile['title']}: 20 faixas ===")
+        for index, base_track in enumerate(TRACKS):
+            track = build_playlist_track(base_track, category, index)
+            print(f"[{index + 1:02d}/20] {track[1]}...")
+            item = make_track(track, output_dir, profile["folder"])
+            if item["duration_seconds"] < 30:
+                raise RuntimeError(f"Faixa menor que 30 segundos: {item['name']}")
+            playlist.append(item)
+        all_playlists[category] = playlist
+        (output_dir / "manifest.json").write_text(
+            json.dumps(playlist, ensure_ascii=False, indent=2) + "\\n",
+            encoding="utf-8"
+        )
+    root_manifest = {
+        "version": 2,
+        "minimum_tracks_per_category": 20,
+        "minimum_duration_seconds": 30,
+        "categories": [
+            {"id": key, "title": PLAYLIST_PROFILES[key]["title"],
+             "folder": PLAYLIST_PROFILES[key]["folder"],
+             "style": PLAYLIST_PROFILES[key]["style"]}
+            for key in PLAYLIST_PROFILES
+        ],
+        "playlists": all_playlists,
+    }
+    (root_dir / "manifest.json").write_text(
+        json.dumps(root_manifest, ensure_ascii=False, indent=2) + "\\n",
+        encoding="utf-8"
     )
-    total_bytes = sum(item["file_bytes"] for item in manifest)
-    print(f"Generated {len(manifest)} original tracks; total MP3 size: {total_bytes/1024/1024:.1f} MiB")
-    for item in manifest:
-        print(f"{item['name']}: {item['duration_seconds']}s ({item['file_bytes']} bytes)")
+    track_count = sum(len(items) for items in all_playlists.values())
+    total_bytes = sum(item["file_bytes"] for items in all_playlists.values() for item in items)
+    print(f"\\nGenerated {track_count} original MP3 tracks in {len(all_playlists)} collections.")
+    print(f"Total MP3 size: {total_bytes / 1024 / 1024:.1f} MiB")
+    for key, items in all_playlists.items():
+        print(f"{PLAYLIST_PROFILES[key]['title']}: {len(items)} tracks, "
+              f"shortest {min(item['duration_seconds'] for item in items):.1f}s")
 
 if __name__ == "__main__":
     main()
