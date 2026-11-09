@@ -963,7 +963,6 @@ function communitySummary(record) {
     adventure_26: "Lenda da Tabuada", perfect_first: "Precisão de Ouro", perfect_5: "Mestre da Precisão",
     combo_5: "Sequência Brilhante", coins_100: "Primeiras Economias", coins_500: "Tesouro da Tabuada",
     collector_5: "Colecionador", challenge_four: "Lenda dos Quatro",
-    challenge_25_draws: "Empate de Elite",
     tournament_easy_top3: "Pódio Mensal Fácil", tournament_easy_top10: "Top 10 Fácil",
     tournament_medium_top3: "Pódio Mensal Médio", tournament_medium_top10: "Top 10 Médio",
     tournament_hard_top3: "Pódio Mensal Difícil", tournament_hard_top10: "Top 10 Difícil",
@@ -972,7 +971,7 @@ function communitySummary(record) {
   const titles = Object.keys(economy.achievements).map(id => achievementTitles[id]).filter(Boolean).slice(0, 12);
   const awards = Object.entries(profile.tournamentAwards && typeof profile.tournamentAwards === "object" ? profile.tournamentAwards : {})
     .map(([month, award]) => ({ month, difficulty: String(award?.difficulty || "Torneio"), rank: Math.max(0, Number(award?.rank) || 0), score: Math.max(0, Number(award?.score) || 0), frame: String(award?.frame || "") }))
-    .filter(award => /^\\d{4}-\\d{2}$/.test(award.month) && award.rank > 0)
+    .filter(award => /^\d{4}-\d{2}$/.test(award.month) && award.rank > 0)
     .sort((a, b) => b.month.localeCompare(a.month)).slice(0, 12);
   return {
     username: record.username,
