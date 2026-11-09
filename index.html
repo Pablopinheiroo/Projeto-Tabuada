@@ -481,6 +481,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .challenge-progress span{display:block;width:0;height:100%;background:linear-gradient(90deg,#22d3ee,#a78bfa);transition:width .12s linear}
 .challenge-question-time{height:7px;overflow:hidden;margin:-5px 0 12px;border-radius:999px;background:#263b58}
 .challenge-question-time span{display:block;width:100%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#4ade80,#facc15 68%,#fb7185);transition:width .05s linear}
+.tournament-question-time{height:4px;overflow:hidden;margin:-6px 0 13px;border-radius:999px;background:#263b58;opacity:.78}
+.tournament-question-time span{display:block;width:100%;height:100%;border-radius:inherit;background:#65b8d8;transition:width .05s linear}
 .challenge-participant-profiles{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px}
 .challenge-participant-chip{display:flex;align-items:center;gap:7px;min-width:0;padding:6px 9px;border:1px solid #385b80;border-radius:999px;background:#0c1a31;color:#e6f2ff;font-size:.74rem;font-weight:800}
 .challenge-participant-chip img{width:30px;height:30px;flex:0 0 30px;object-fit:cover;border-radius:50%;border:2px solid #67e8f9}
@@ -872,13 +874,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
    <div class="challenge-countdown"><span>ACERTOS</span><strong id="tournamentScore">0/50</strong></div>
   </div>
   <div class="challenge-progress"><span id="tournamentProgressBar"></span></div>
+  <div class="tournament-question-time" role="progressbar" aria-label="Tempo restante para responder" aria-valuemin="0" aria-valuemax="10" aria-valuenow="10"><span id="tournamentQuestionTimeBar"></span></div>
   <div class="challenge-question-card">
    <span id="tournamentQuestionCounter" class="music-kicker">QUESTÃO 1 DE 50</span>
    <div id="tournamentQuestionMath" class="challenge-equation">7 × 8 = ?</div>
    <p id="tournamentQuestionFeedback" class="challenge-feedback">Escolha uma alternativa em até 5 segundos.</p>
    <div id="tournamentOptions" class="challenge-options"></div>
   </div>
-  <p class="hint">Esta é sua única tentativa nesta dificuldade durante o mês. Não feche a página enquanto estiver respondendo.</p>
+  <p class="hint">São 50 questões. Para entrar no ranking, você precisa acertar pelo menos 30 (60%). Abaixo disso, poderá refazer a mesma dificuldade.</p>
  </div>
 
  <div id="tournamentResultPanel" class="hidden">
@@ -1695,6 +1698,7 @@ function communityStatsFromRecord(record){
   challengeWins:Number(record.challengeWins??total.wins)||0,
   challengeLosses:Number(record.challengeLosses??total.losses)||0,
   challengeDraws:Number(record.challengeDraws??total.draws)||0,
+  challengeTotal:(Number(record.challengeWins??total.wins)||0)+(Number(record.challengeLosses??total.losses)||0)+(Number(record.challengeDraws??total.draws)||0),
   tournamentFrame:record.tournamentFrame||profile.tournamentFrame||null,
   coins:Number(record.coins??economy.coins)||0
  };
@@ -1725,7 +1729,7 @@ async function renderCommunityRanking(){
      '<img class="community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt="">'+
      '<div class="community-rank-identity"><strong>'+escapeHtml(user.displayName)+'</strong><small>@'+escapeHtml(user.username)+'</small></div>'+
     '</div>'+
-    '<div class="community-rank-trophy">🏆 '+user.challengeWins+' vitórias · 🤝 '+user.challengeDraws+' empates · '+user.challengeLosses+' derrotas</div>'+
+    '<div class="community-rank-trophy">⚔️ '+user.challengeTotal+' desafios · 🏆 '+user.challengeWins+' vitórias · 🛡️ '+user.challengeLosses+' derrotas'+(user.challengeDraws?' · 🤝 '+user.challengeDraws+' empates':'')+'</div>'+
     '<div class="community-rank-chips">'+(titles||'<span class="community-rank-chip">🌱 Novo participante</span>')+medals+extras+'</div>'+
     '<div class="community-rank-metrics">'+
      '<div class="community-rank-metric"><strong>'+user.correct.toLocaleString('pt-BR')+'</strong><small>acertos</small></div>'+
@@ -2770,7 +2774,13 @@ async function startMonthlyTournament(difficulty){
   tournamentQuestionLocked=false;
   tournamentMatchStarted=performance.now();
   $('tournamentPlayTitle').textContent='Torneio '+result.difficultyName;
-  $('tournamentPlayMeta').textContent='50 questões · 5 segundos por questão';
+  const secondsPerQuestion=Math.max(1,Math.min(10,Number(result.secondsPerQuestion)||5));
+  $('tournamentPlayMeta').textContent='50 questões · '+secondsPerQuestion+' segundos por questão · mínimo 30 acertos';
+  $('tournamentRoundClock').textContent=secondsPerQuestion.toFixed(1).replace('.',',')+' s';
+  $('tournamentQuestionTimeBar').style.width='100%';
+  $('tournamentQuestionTimeBar').parentElement.setAttribute('aria-valuemax',String(secondsPerQuestion));
+  $('tournamentQuestionTimeBar').parentElement.setAttribute('aria-valuenow',String(secondsPerQuestion));
+  $('tournamentResultBack').textContent='Ver classificação';
   $('tournamentScore').textContent='0/50';
   $('tournamentProgressBar').style.width='0%';
   $('tournamentModeView').classList.remove('hidden');
@@ -2787,12 +2797,16 @@ function stopTournamentClock(){
 function updateTournamentClock(){
  if(!tournamentCurrent||$('tournamentPlayPanel').classList.contains('hidden'))return;
  const elapsed=performance.now()-tournamentQuestionStarted;
- const remaining=Math.max(0,5000-elapsed);
+ const secondsPerQuestion=Math.max(1,Math.min(10,Number(tournamentCurrent.secondsPerQuestion)||5));
+ const limitMs=secondsPerQuestion*1000;
+ const remaining=Math.max(0,limitMs-elapsed);
  $('tournamentRoundClock').textContent=(remaining/1000).toFixed(1).replace('.',',')+' s';
+ $('tournamentQuestionTimeBar').style.width=(remaining/limitMs*100)+'%';
+ $('tournamentQuestionTimeBar').parentElement.setAttribute('aria-valuenow',String(Math.ceil(remaining/1000)));
  $('tournamentTotalClock').textContent=formatDuration(performance.now()-tournamentMatchStarted);
  if(remaining<=0&&!tournamentQuestionLocked)submitTournamentAnswer(null);
 }
-function renderTournamentQuestion(previousText='Escolha uma alternativa em até 5 segundos.'){
+function renderTournamentQuestion(previousText='Escolha uma alternativa antes do tempo acabar.'){
  const question=tournamentQuestions[tournamentIndex];
  if(!question)return;
  tournamentQuestionLocked=false;
@@ -2801,6 +2815,10 @@ function renderTournamentQuestion(previousText='Escolha uma alternativa em até 
  $('tournamentQuestionFeedback').textContent=previousText;
  $('tournamentOptions').innerHTML=question.options.map(value=>'<button class="challenge-option" type="button" data-tournament-answer="'+value+'">'+value+'</button>').join('');
  $('tournamentProgressBar').style.width=(tournamentIndex/50*100)+'%';
+ const secondsPerQuestion=Math.max(1,Math.min(10,Number(tournamentCurrent.secondsPerQuestion)||5));
+ $('tournamentQuestionTimeBar').style.width='100%';
+ $('tournamentQuestionTimeBar').parentElement.setAttribute('aria-valuemax',String(secondsPerQuestion));
+ $('tournamentQuestionTimeBar').parentElement.setAttribute('aria-valuenow',String(secondsPerQuestion));
  tournamentQuestionStarted=performance.now();
  stopTournamentClock();
  tournamentQuestionTimer=setInterval(updateTournamentClock,50);
@@ -2812,8 +2830,12 @@ function submitTournamentAnswer(value){
  const elapsed=Math.max(0,performance.now()-tournamentQuestionStarted);
  const question=tournamentQuestions[tournamentIndex];
  const chosen=value===null?null:Number(value);
- const correct=chosen!==null&&chosen===question.answer&&elapsed<=5000;
+ const secondsPerQuestion=Math.max(1,Math.min(10,Number(tournamentCurrent.secondsPerQuestion)||5));
+ const limitMs=secondsPerQuestion*1000;
+ const correct=chosen!==null&&chosen===question.answer&&elapsed<=limitMs;
  tournamentAnswers.push({value:chosen,elapsedMs:Math.round(Math.min(60_000,elapsed))});
+ $('tournamentQuestionTimeBar').style.width='0%';
+ $('tournamentQuestionTimeBar').parentElement.setAttribute('aria-valuenow','0');
  if(correct)tournamentScore++;
  $('tournamentScore').textContent=tournamentScore+'/50';
  $('tournamentOptions').querySelectorAll('button').forEach(button=>{
@@ -2843,6 +2865,7 @@ async function finishMonthlyTournament(){
    method:'POST',
    body:{difficulty:tournamentCurrent.difficulty,attemptId:tournamentCurrent.attemptId,answers:tournamentAnswers}
   });
+  $('tournamentResultBack').textContent='Ver classificação';
   $('tournamentResultIcon').textContent=result.perfect?'💯':'🏆';
   $('tournamentResultTitle').textContent=result.perfect?'50 de 50! Resultado perfeito!':'Torneio concluído!';
   $('tournamentResultText').textContent='Você acertou '+result.result.score+' de 50 questões. Sua posição atual é '+(result.position||'—')+'º entre '+result.total+' participante(s).';
@@ -2852,11 +2875,21 @@ async function finishMonthlyTournament(){
   ).join('');
   await refreshTournamentDashboard();
  }catch(error){
-  $('tournamentResultIcon').textContent='⚠️';
-  $('tournamentResultTitle').textContent='Não foi possível enviar o resultado';
-  $('tournamentResultText').textContent=siteErrorMessage(error);
-  $('tournamentResultScores').innerHTML='';
-  $('tournamentResultTop10').innerHTML='<p class="hint">Sua tentativa permanece associada à dificuldade escolhida. Volte ao torneio e tente recuperar o envio.</p>';
+  if(error.status===422){
+   $('tournamentResultIcon').textContent='↻';
+   $('tournamentResultTitle').textContent='Meta mínima não atingida';
+   $('tournamentResultText').textContent=error.message;
+   $('tournamentResultScores').innerHTML='<div class="challenge-score-box"><strong>'+tournamentScore+'/50</strong><small>Seus acertos · mínimo 30</small></div>';
+   $('tournamentResultTop10').innerHTML='<p class="hint">Esta tentativa não foi registrada no ranking. Volte ao torneio para refazer a mesma dificuldade; as 50 questões serão mantidas.</p>';
+   $('tournamentResultBack').textContent='Voltar e tentar novamente';
+  }else{
+   $('tournamentResultIcon').textContent='⚠️';
+   $('tournamentResultTitle').textContent='Não foi possível enviar o resultado';
+   $('tournamentResultText').textContent=siteErrorMessage(error);
+   $('tournamentResultScores').innerHTML='';
+   $('tournamentResultTop10').innerHTML='<p class="hint">Sua tentativa permanece associada à dificuldade escolhida. Volte ao torneio e confira novamente o envio.</p>';
+   $('tournamentResultBack').textContent='Ver classificação';
+  }
  }finally{tournamentBusy=false;}
 }
 function handleTournamentQuestionClick(event){
