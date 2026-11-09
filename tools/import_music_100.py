@@ -65,6 +65,8 @@ SINGLES = {
         ("songs-too", "Too", "Menu / Eletrônica", "too.mp3", "awdawdawdwda", "https://opengameart.org/content/songs-0"),
         ("songs-fakie", "Fakie Dakie", "Menu / Eletrônica", "fakie_dakie.mp3", "awdawdawdwda", "https://opengameart.org/content/songs-0"),
         ("songs-hard", "Hard", "Menu / Eletrônica", "hard.mp3", "awdawdawdwda", "https://opengameart.org/content/songs-0"),
+        ("menu-chill", "Menu Tranquilo", "Menu / Calmo", "menu_chill.wav", "etrock", "https://opengameart.org/content/menu-chill-music"),
+        ("racing-game-menu", "Menu de Corrida", "Menu / Eletrônica", "racing_game_menu_bpm165.mp3", "MintoDog", "https://opengameart.org/content/racing-game-menu"),
     ],
     "treinamento": [
         ("calm-track", "Calma e Concentração", "Calma / Ambiente", "calm_track-loop.ogg", "pmiller", "https://opengameart.org/content/calm-track"),
@@ -110,9 +112,7 @@ SINGLES = {
 # Pacotes gratuitos CC0. O importador escolhe composições individuais do ZIP,
 # nunca versões "climax", "alt", "variation" ou remixes.
 PACKS = {
-    "principal": [
-        ("game-loops", "GameLoops.zip", "https://opengameart.org/content/royalty-free-game-music-loops", "Pudgyplatypus", "Pacote de trilhas variadas para jogos"),
-    ],
+    "principal": [],
     "treinamento": [
         ("relaxing-instrumentals", "relaxing_instrumentals.zip", "https://opengameart.org/content/relaxing-instrumentals-collection", "Holizna", "Instrumentais relaxantes"),
         ("chill-beats", "chill_beats.zip", "https://opengameart.org/content/chill-beats-collection", "Holizna", "Batidas tranquilas"),
