@@ -209,7 +209,9 @@ def import_music() -> None:
     credits = []
 
     def register_existing(category: str, track: dict) -> None:
-        if track.get("id") == "strange-factory-climax" or is_variant(Path(track.get("name", ""))):
+        if (track.get("id") == "strange-factory-climax"
+                or track.get("source") == "https://opengameart.org/content/royalty-free-game-music-loops"
+                or is_variant(Path(track.get("name", "")))):
             print("Ignorada variação anterior:", track.get("name"))
             return
         path = ROOT / track.get("src", "")
