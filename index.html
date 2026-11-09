@@ -892,7 +892,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
    <button id="replayTune" class="music-button" type="button">⏭ Próxima faixa</button>
    <label class="volume-control" for="globalVolume">🔊 Volume <input id="globalVolume" type="range" min="0" max="100" value="100"><strong id="volumeValue">100%</strong></label>
   </div>
-  <p class="music-note">🎧 Cada modo possui 20 trilhas originais. A faixa toca inteira e a próxima é escolhida sem repetir até percorrer a coleção.</p>
+  <p class="music-note">🎧 O catálogo tem 100 trilhas originais: 20 para cada área. A tela principal reúne estilos variados de videogame, aventura, eletrônica e fantasia. A próxima faixa não se repete até percorrer as 20 da área.</p>
  </div>
  <audio id="soundtrackAudio" preload="auto" autoplay playsinline></audio>
 </div>
@@ -1004,7 +1004,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   <button id="logout" class="music-button" type="button">Sair da conta</button>
  </div>
  <p id="profileStatus" class="small profile-status">Progresso salvo</p>
- <strong id="profileLastSavedAt" class="profile-last-saved">Aguardando sincronização.</strong>
+ <strong id="profileLastSavedAt" class="profile-last-saved">Último salvamento: aguardando o primeiro envio.</strong>
 </div>
 <nav class="main-quick-nav" aria-label="Atalhos principais">
  <button id="topReturnToGame" type="button">🎮 Voltar ao jogo</button>
@@ -2082,23 +2082,35 @@ function savePendingActiveTime(username=activeProfile){
  try{const all=JSON.parse(localStorage.getItem(ACTIVE_TIME_CACHE_KEY)||'{}');all[username]=Math.max(0,Math.floor(pendingActiveMs));localStorage.setItem(ACTIVE_TIME_CACHE_KEY,JSON.stringify(all))}catch(error){console.warn('Não foi possível guardar o tempo pendente neste aparelho.',error)}
 }
 function hydrateRemoteUser(username,record){
+ const remoteProfile=record.data.profile&&typeof record.data.profile==='object'?record.data.profile:{};
+ const remoteHistory=normalizeHistory(record.data.history);
  remoteUserSha=record.sha||null;
  remoteUserData={
   version:1,
   username,
-  profile:record.data.profile&&typeof record.data.profile==='object'?record.data.profile:{},
-  history:normalizeHistory(record.data.history),
-  updatedAt:record.data.updatedAt||new Date().toISOString()
+  profile:remoteProfile,
+  history:remoteHistory,
+  updatedAt:record.data.updatedAt||null
  };
- gameEconomy=normalizeClientEconomy(record.data.economy,remoteUserData.profile.avatar);
+ gameEconomy=normalizeClientEconomy(record.data.economy,remoteProfile.avatar);
  saveClientEconomyCache(username);
  authUsers={};
- profilesData={[username]:remoteUserData.profile};
- studyTimeBaseMs=Math.max(0,Number(remoteUserData.profile.studyTimeMs)||0);
- pendingActiveMs=loadPendingActiveTime(username);
- profilesData[username].studyTimeMs=studyTimeBaseMs+pendingActiveMs;
- historyData=normalizeHistory(remoteUserData.history);
+
+ // O tempo ainda não sincronizado fica guardado neste navegador. Se a pessoa
+ // sair após 10 minutos e entrar novamente, não substituímos o histórico local
+ // pelo retrato antigo que ainda está na nuvem.
  activeProfile=username;
+ pendingActiveMs=loadPendingActiveTime(username);
+ const cachedProfiles=loadProfiles();
+ const localProfile=cachedProfiles[username]&&typeof cachedProfiles[username]==='object'
+  ?cachedProfiles[username]:{};
+ profilesData={
+  [username]:pendingActiveMs>0?{...remoteProfile,...localProfile}:{...remoteProfile}
+ };
+ studyTimeBaseMs=Math.max(0,Number(remoteProfile.studyTimeMs)||0);
+ profilesData[username].studyTimeMs=studyTimeBaseMs+pendingActiveMs;
+ historyData=pendingActiveMs>0?loadHistory():remoteHistory;
+
  persistProfiles();
  saveHistory();
  communityCacheAt=0;
@@ -2107,9 +2119,11 @@ function hydrateRemoteUser(username,record){
 function updateProfileLastSavedAt(){
  const label=$('profileLastSavedAt');if(!label)return;
  const value=remoteUserData?.updatedAt||profilesData[activeProfile]?.updatedAt||null;
- if(!value){label.textContent='Aguardando sincronização.';return;}
+ if(!value){label.textContent='Último salvamento: aguardando o primeiro envio.';return;}
  const date=new Date(value);
- label.textContent=Number.isNaN(date.getTime())?'Data indisponível.':date.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+ label.textContent=Number.isNaN(date.getTime())
+  ?'Último salvamento: data indisponível.'
+  :'Último salvamento: '+date.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 function buildRemoteUserData(){
  const profile={...(profilesData[activeProfile]||{}),studyTimeMs:Math.max(0,studyTimeBaseMs+pendingActiveMs)};
@@ -2147,7 +2161,11 @@ function startActiveTimeTracking(){
  activeTimeTimer=setInterval(trackActiveStudyTime,15_000);
 }
 function stopActiveTimeTracking(){
- if(activeTimeTimer!==null){clearInterval(activeTimeTimer);activeTimeTimer=null;}
+ if(activeTimeTimer!==null){
+  // Registra o intervalo final antes de encerrar a sessão.
+  trackActiveStudyTime();
+  clearInterval(activeTimeTimer);activeTimeTimer=null;
+ }
  savePendingActiveTime();
 }
 function scheduleCloudSave(immediate=false){
@@ -2166,14 +2184,16 @@ async function flushCloudSave(force=false){
  cloudSyncBusy=true;
  try{
   const username=activeProfile;
+  const savedActiveMs=pendingActiveMs;
   const payload=buildRemoteUserData();
   const newSha=await writeRemoteUser(username,payload);
   if(activeProfile===username){
    remoteUserSha=newSha;
    remoteUserData=payload;
    studyTimeBaseMs=Math.max(0,Number(payload.profile.studyTimeMs)||studyTimeBaseMs);
-   pendingActiveMs=0;
-   if(profilesData[username])profilesData[username].studyTimeMs=studyTimeBaseMs;
+   // O tempo usado enquanto a requisição estava em andamento continua pendente.
+   pendingActiveMs=Math.max(0,pendingActiveMs-savedActiveMs);
+   if(profilesData[username])profilesData[username].studyTimeMs=studyTimeBaseMs+pendingActiveMs;
    savePendingActiveTime(username);
    persistProfiles();
    lastCloudSaveAt=Date.now();
@@ -2402,7 +2422,8 @@ async function logout(){
  stopActiveTimeTracking();
  stopChallengePolling();stopChallengeTimers();stopChallengeMusic();
  challengeCurrent=null;challengeItems=[];
- await flushCloudSave(true);
+ // Sair não força uma gravação. O tempo parcial permanece neste aparelho e
+ // será somado ao próximo período até completar 30 minutos.
  localStorage.removeItem(REMEMBER_SESSION_KEY);
  sessionStorage.removeItem(AUTH_SESSION_KEY);
  sessionStorage.removeItem(API_TOKEN_KEY);
@@ -4304,8 +4325,10 @@ function initMusicPlayer(){
   $('musicTitle').textContent='Biblioteca musical indisponível.';
   $('soundToggle').disabled=true;$('replayTune').disabled=true;return;
  }
- const saved=readLastTrackIndex();
- currentTrackIndex=saved>=0?saved:getRandomTrackIndex(-1);
+ // Ao abrir o site, começa em uma faixa diferente da última ouvida.
+ // A fila embaralhada continua sem repetir até percorrer as 20 da área.
+ const lastTrackIndex=readLastTrackIndex();
+ currentTrackIndex=getRandomTrackIndex(lastTrackIndex);
  previousTrackIndex=currentTrackIndex;trackQueue=[];trackQueuePosition=0;
  soundtrackAudio=$('soundtrackAudio');soundtrackAudio.preload='auto';soundtrackAudio.autoplay=true;soundtrackAudio.volume=1;
  watchGameScreenForMusic();soundtrackAudio.setAttribute('autoplay','');soundtrackAudio.setAttribute('playsinline','');
