@@ -81,6 +81,7 @@ SINGLES = {
         ("medieval-exploration", "Exploração Medieval", "Fantasia / RPG", "Exploration.mp3", "RandomMind", "https://opengameart.org/content/medieval-exploration"),
         ("exploring-town", "Passeio pela Vila", "Vila / Chiptune", "Exploring Town.ogg", "Spring Spring", "https://opengameart.org/content/exploring-town"),
         ("magic-puzzle", "Enigma Mágico", "Fantasia / Puzzle", "magic_puzzle_in-game_1_bpm110.mp3", "MintoDog", "https://opengameart.org/content/magic-puzzle-in-game-1"),
+        ("prepare-your-swords", "Prepare suas Espadas", "Fantasia / Aventura", "prepare_your_swords.ogg", "Bojidar Marinov", "https://opengameart.org/content/prepare-your-swords"),
     ],
     "torneio": [
         ("boss-rpg-theme", "Tema de Batalha RPG", "Torneio / Orquestral", "CleytonRX - Battle RPG Theme.mp3", "CleytonKauffman", "https://opengameart.org/content/boss-battle-theme"),
@@ -109,6 +110,7 @@ PACKS = {
         ("jrpg-calm", "JRPG Music Pack #4 [Calm] by Juhani Junkala.zip", "https://opengameart.org/content/jrpg-pack-4-calm", "SubspaceAudio", "RPG calmo e contemplativo"),
         ("gameboy-collection", "game_soundtrack.zip", "https://opengameart.org/content/a-music-collection", "Trinity Paradox", "Coleção de composições Game Boy"),
         ("exploration-theme", "exploration_theme.zip", "https://opengameart.org/content/exploration-theme", "CleytonKauffman", "Exploração atmosférica"),
+        ("prologue-theme", "Prologue Theme.zip", "https://opengameart.org/content/prologue-theme", "CleytonKauffman", "Tema de abertura para aventura"),
     ],
     "torneio": [
         ("five-action-chiptunes", "5 Action Chiptunes By Juhani Junkala.zip", "https://opengameart.org/content/5-chiptunes-action", "SubspaceAudio", "Cinco composições de ação em chiptune"),
