@@ -606,6 +606,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 @media(max-width:560px){.training-global-mode{align-items:stretch;flex-direction:column}.training-global-mode select{max-width:none}.training-global-mode p{max-width:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
+
+.challenge-music-preview{margin:8px 0 0;padding:9px 11px;border:1px solid #334e70;border-radius:9px;background:#152c49;color:#bff4fb;font-size:.78rem;font-weight:800}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
 </style>
 </head>
 <body>
@@ -778,7 +782,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
    <label class="challenge-field">🎵 Trilha sonora escolhida por você
     <select id="challengeMusicSelect" class="music-select" aria-label="Escolher trilha do duelo"></select>
    </label>
-   <p class="hint">A mesma trilha tocará para os dois participantes. O adversário não poderá trocar a música e terá volume limitado a 30%.</p>
+   <p id="challengeMusicPreview" class="challenge-music-preview" aria-live="polite">Selecione uma faixa para ouvir a prévia.</p>
+   <p class="hint">A música escolhida será usada durante a partida dos participantes.</p>
   </div>
   <button id="challengeChoosePlayer" class="primary" type="button">Escolher participante →</button>
  </div>
@@ -1443,7 +1448,10 @@ function siteErrorMessage(error){
  if(status===403||lower.includes('não tem permissão')){
   return 'O servidor não tem permissão para gravar no repositório privado. Confira a permissão Contents: Read and write do token no Cloudflare.';
  }
- if(status===404)return 'Os dados ou o caminho da conta não foram encontrados.';
+ if(status===404){
+  if(lower.includes('rota não encontrada'))return 'Esta função ainda não foi publicada no servidor. A implantação da API precisa terminar.';
+  return message||'O recurso solicitado não foi encontrado. Verifique a publicação do servidor.';
+ }
  if(status===409||status===422)return message||'Não foi possível gravar os dados. Atualize a página e tente novamente.';
  if(lower.includes('failed to fetch')||lower.includes('networkerror')||lower.includes('load failed')){
   return 'Não foi possível conectar ao servidor seguro. Confira sua internet e tente novamente.';
@@ -1451,6 +1459,28 @@ function siteErrorMessage(error){
  if(message&&/[ãõáéíóúç]/i.test(message))return message;
  return message||'Não foi possível concluir a solicitação ao servidor seguro.';
 }
+
+function expireActiveSession(){
+ const username=activeProfile||sessionStorage.getItem(AUTH_SESSION_KEY)||'';
+ if(username)savePendingActiveTime(username);
+ stopActiveTimeTracking();
+ stopChallengePolling();stopChallengeTimers();stopChallengeMusic();
+ localStorage.removeItem(REMEMBER_SESSION_KEY);
+ sessionStorage.removeItem(AUTH_SESSION_KEY);
+ sessionStorage.removeItem(API_TOKEN_KEY);
+ activeProfile='';
+ remoteUserData=null;remoteUserSha=null;
+ $('setup').classList.add('hidden');
+ $('profileScreen')?.classList.add('hidden');
+ $('game').classList.add('hidden');
+ $('report').classList.add('hidden');
+ $('tournamentModeView')?.classList.add('hidden');
+ $('challengeModeView')?.classList.add('hidden');
+ $('authScreen').classList.remove('hidden');
+ showLoginScreen();
+ $('loginMessage').textContent='Sua sessão terminou. Entre novamente para continuar.';
+}
+
 async function apiRequest(path,options={}){
  if(!API_BASE||API_BASE.includes('URL-DO-WORKER')){
   const error=new Error('O servidor seguro ainda não foi conectado.');
@@ -1473,6 +1503,10 @@ async function apiRequest(path,options={}){
  if(!response.ok){
   const error=new Error(data.error||data.message||('Servidor respondeu com HTTP '+response.status));
   error.status=response.status;
+  if(response.status===401&&!path.startsWith('/api/auth/')){
+   error.sessionExpired=true;
+   expireActiveSession();
+  }
   throw error;
  }
  return data;
@@ -1708,7 +1742,7 @@ async function restoreCloudSession(){
   sessionStorage.removeItem(API_TOKEN_KEY);
   localStorage.removeItem(REMEMBER_SESSION_KEY);
   showLoginScreen();
-  $('loginMessage').textContent='Não foi possível restaurar a sessão: '+siteErrorMessage(error);
+  $('loginMessage').textContent=error.sessionExpired?'Sua sessão não é mais válida. Entre novamente.':'Não foi possível restaurar a sessão: '+siteErrorMessage(error);
  }
 }
 
@@ -2083,6 +2117,14 @@ function fillChallengeMusicOptions(){
  const select=$('challengeMusicSelect');
  if(!select)return;
  select.innerHTML=CHALLENGE_MUSIC.map((item,index)=>'<option value="'+index+'">'+(index+1)+'. '+item.name+'</option>').join('');
+ select.value='0';
+ if($('challengeMusicPreview'))$('challengeMusicPreview').textContent='Selecione uma faixa para ouvir a prévia.';
+}
+function previewSelectedChallengeMusic(){
+ const index=Math.max(0,Math.min(CHALLENGE_MUSIC.length-1,Number($('challengeMusicSelect').value)||0));
+ const track=CHALLENGE_MUSIC[index]||CHALLENGE_MUSIC[0];
+ if($('challengeMusicPreview'))$('challengeMusicPreview').textContent='▶ Prévia tocando: '+track.name;
+ startChallengeMusic(index,true);
 }
 function showChallengeSubPanel(name){
  ['challengeHomePanel','challengeConfigPanel','challengePlayersPanel','challengePlayPanel','challengeResultPanel'].forEach(id=>$(id).classList.toggle('hidden',id!==name));
@@ -2091,6 +2133,9 @@ function openChallengeMode(){
  ['trainingModePanel','adventureMapView','adventureIntroView','adventurePlayView','adventureResultView'].forEach(id=>$(id).classList.add('hidden'));
  $('modeHub').classList.add('hidden');
  $('challengeModeView').classList.remove('hidden');
+ $('siteMusicBox').classList.add('hidden');
+ if(soundtrackAudio)soundtrackAudio.pause();
+ clearMainMusicTimer();
  showChallengeSubPanel('challengeHomePanel');
  refreshChallengeData();
 }
@@ -2098,6 +2143,7 @@ function backToModeHubFromChallenge(){
  stopChallengeTimers();
  stopChallengeMusic();
  $('challengeModeView').classList.add('hidden');
+ $('siteMusicBox').classList.remove('hidden');
  $('modeHub').classList.remove('hidden');
  if(soundOn&&soundtrackAudio&&soundtrackAudio.paused)playCurrentTrack();
 }
@@ -2108,8 +2154,9 @@ function configureChallengeMode(mode){
  $('challengePresetConfig').classList.toggle('hidden',mode!=='preset');
  $('challengeConfigTitle').textContent=mode==='custom'?'Desafio personalizado':'Desafio pré-definido';
  $('challengeCustomMessage').textContent='';
- $('challengeMusicSelect').value='0';
+ if(!$('challengeMusicSelect').value)$('challengeMusicSelect').value='0';
  if(mode==='custom')$('challengeTables').querySelectorAll('input').forEach(input=>input.checked=false);
+ previewSelectedChallengeMusic();
 }
 function getChallengeConfig(){
  const musicTrack=Number($('challengeMusicSelect').value);
@@ -2137,6 +2184,7 @@ async function loadChallengePlayers(){
    ?challengePlayers.length+' participante(s) encontrado(s). Você pode selecionar até 4 pessoas.'
    :'Ainda não há outros participantes cadastrados.';
  }catch(error){
+  if(error.sessionExpired)return;
   $('challengePlayersStatus').textContent='Não foi possível carregar participantes: '+siteErrorMessage(error);
  }
 }
@@ -2308,6 +2356,7 @@ async function refreshChallengeData(){
   }
   $('challengeListStatus').textContent='Atualizado em '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'. Os avisos são conferidos automaticamente.';
  }catch(error){
+  if(error.sessionExpired)return;
   $('challengeListStatus').textContent='Não foi possível atualizar seus desafios: '+siteErrorMessage(error);
  }
 }
@@ -2318,7 +2367,7 @@ function startChallengePolling(){
 function stopChallengePolling(){
  if(challengePollTimer!==null){clearInterval(challengePollTimer);challengePollTimer=null;}
 }
-function startChallengeMusic(trackIndex){
+function startChallengeMusic(trackIndex,isPreview=false){
  stopChallengeMusic();
  const track=CHALLENGE_MUSIC[trackIndex]||CHALLENGE_MUSIC[0];
  if(soundtrackAudio)soundtrackAudio.pause();
@@ -2342,7 +2391,7 @@ function startChallengeMusic(trackIndex){
    playNote(midiToHz(track.root+7),at,beat*1.6,'triangle',.0035);
   }
  }
- challengeMusicTimer=setTimeout(stopChallengeMusic,50_000);
+ challengeMusicTimer=setTimeout(stopChallengeMusic,isPreview?25_000:50_000);
 }
 function stopChallengeMusic(){
  if(challengeMusicTimer!==null){clearTimeout(challengeMusicTimer);challengeMusicTimer=null;}
@@ -2629,6 +2678,7 @@ async function refreshTournamentDashboard(){
   renderTournamentRanking();
   renderTournamentFinalNotice(tournamentDashboard.finalNotice);
  }catch(error){
+  if(error.sessionExpired)return;
   $('tournamentMonthStatus').textContent='Não foi possível consultar o torneio: '+siteErrorMessage(error);
  }
 }
@@ -3463,6 +3513,7 @@ $('challengeChoosePlayer').addEventListener('click',loadChallengePlayers);
 $('challengePlayersBack').addEventListener('click',()=>showChallengeSubPanel('challengeConfigPanel'));
 $('challengePlayerSearch').addEventListener('input',renderChallengePlayers);
 $('challengePresetSelect').addEventListener('change',updateChallengePresetDescription);
+$('challengeMusicSelect').addEventListener('change',previewSelectedChallengeMusic);
 $('challengePlayersList').addEventListener('change',event=>{
  const input=event.target.closest('input[data-challenge-player]');
  if(!input)return;
