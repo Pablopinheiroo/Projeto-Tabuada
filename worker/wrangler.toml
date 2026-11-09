@@ -4,7 +4,17 @@ compatibility_date = "2026-11-08"
 workers_dev = true
 
 [observability]
-enabled = true
+enabled = false
+
+[observability.logs]
+enabled = false
+invocation_logs = false
+head_sampling_rate = 0.0
+persist = false
+
+[observability.traces]
+enabled = false
+persist = false
 
 [secrets]
 required = ["GITHUB_TOKEN"]
