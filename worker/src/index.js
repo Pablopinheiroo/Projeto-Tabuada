@@ -13,6 +13,7 @@ const AVATAR_IMAGE_COUNT = 12;
 const AVATAR_GIF_COUNT = 12;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 35;
+const WORKER_BUILD_ID = "2026-11-09-group-challenges-tournament-autosave";
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
 const CHALLENGE_DIRECTORY = "desafios/partidas";
@@ -1042,6 +1043,8 @@ async function handleApi(request, env, origin) {
         return json({
           ok: false,
           service: "Projeto Tabuada API",
+          buildId: WORKER_BUILD_ID,
+          features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true },
           githubSecretConfigured: false,
           githubConnected: false
         }, 503, origin);
@@ -1058,6 +1061,8 @@ async function handleApi(request, env, origin) {
       return json({
         ok: true,
         service: "Projeto Tabuada API",
+        buildId: WORKER_BUILD_ID,
+        features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true },
         githubSecretConfigured: true,
         githubConnected: true,
         githubContentReadAccess: true
