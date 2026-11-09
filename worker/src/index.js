@@ -13,6 +13,7 @@ const AVATAR_IMAGE_COUNT = 12;
 const AVATAR_GIF_COUNT = 12;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
+const CHALLENGE_PLAYER_METADATA_MAX = 45;
 const WORKER_BUILD_ID = "2026-11-09-group-challenges-tournament-autosave";
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
@@ -1168,24 +1169,39 @@ async function handleApi(request, env, origin) {
     }
 
     if (route === "/api/challenges/players" && request.method === "GET") {
-      // Lista todos os perfis cadastrados com uma única subrequest ao GitHub.
+      // Primeiro lista as pastas; depois lê apenas o nome público e o avatar.
+      // Mesmo com 45 perfis, a consulta fica em no máximo 46 subrequests ao GitHub.
       const entries = await githubRequest(
         "/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + GH_DIRECTORY +
         "?ref=" + encodeURIComponent(GH_BRANCH), env
       );
-      if (!Array.isArray(entries)) throw new Error("A lista de participantes não retornou um diretório.");
-      const cached = new Map((communitySummaryCache.records || []).map(item => [item.username, item]));
-      const players = entries.filter(item => item.type === "dir" && usernameIsValid(item.name) && item.name !== username)
-        .map(item => {
-          const known = cached.get(item.name);
-          return {
-            username: item.name,
-            displayName: known?.displayName || item.name,
-            avatar: known?.avatar || "imagem:0"
-          };
-        })
-        .sort((a, b) => a.displayName.localeCompare(b.displayName));
-      return json({ players }, 200, origin);
+      if (!Array.isArray(entries)) throw new Error("A pasta de participantes não retornou uma lista.");
+      const folders = entries.filter(item =>
+        item.type === "dir" && usernameIsValid(item.name) && item.name !== username
+      );
+      const publicProfiles = new Map();
+      for (let offset = 0; offset < Math.min(folders.length, CHALLENGE_PLAYER_METADATA_MAX); offset += 9) {
+        const batch = folders.slice(offset, offset + 9);
+        const loaded = await Promise.all(batch.map(async item => {
+          try {
+            const file = await readUser(item.name, env);
+            const profile = file?.data?.profile && typeof file.data.profile === "object"
+              ? file.data.profile : {};
+            return {
+              username: item.name,
+              displayName: String(profile.displayName || item.name).slice(0, 24),
+              avatar: typeof profile.avatar === "string" ? profile.avatar : "imagem:0"
+            };
+          } catch {
+            return { username: item.name, displayName: item.name, avatar: "imagem:0" };
+          }
+        }));
+        loaded.forEach(profile => publicProfiles.set(profile.username, profile));
+      }
+      const players = folders.map(item => publicProfiles.get(item.name) || {
+        username: item.name, displayName: item.name, avatar: "imagem:0"
+      }).sort((a, b) => a.displayName.localeCompare(b.displayName));
+      return json({ players, totalRegistered: folders.length }, 200, origin);
     }
 
     if (route === "/api/challenges" && request.method === "GET") {
