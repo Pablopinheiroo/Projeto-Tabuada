@@ -1438,7 +1438,16 @@ async function handleApi(request, env, origin) {
               ...record.data.profile,
               ...body.profile,
               studyTimeMs: Math.max(Number(record.data.profile?.studyTimeMs) || 0, Number(body.profile.studyTimeMs) || 0),
-              challengeStats: record.data.profile?.challengeStats || body.profile.challengeStats
+              challengeStats: record.data.profile?.challengeStats || body.profile.challengeStats,
+              monthlyTournaments: {
+                ...(body.profile.monthlyTournaments || {}),
+                ...(record.data.profile?.monthlyTournaments || {})
+              },
+              tournamentAwards: {
+                ...(body.profile.tournamentAwards || {}),
+                ...(record.data.profile?.tournamentAwards || {})
+              },
+              tournamentFrame: record.data.profile?.tournamentFrame || body.profile.tournamentFrame
             }
           : record.data.profile,
         history: body.history && typeof body.history === "object"
