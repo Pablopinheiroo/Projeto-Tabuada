@@ -1,0 +1,61 @@
+name: Atualizar catálogo musical
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/generate_soundtracks.py"
+      - ".github/workflows/regenerate-music.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: regenerar-catalogo-musical
+  cancel-in-progress: false
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Baixar o projeto
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Preparar Python e FFmpeg
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar ferramentas de áudio
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          python -m pip install --upgrade pip numpy
+
+      - name: Gerar as 100 trilhas
+        run: python tools/generate_soundtracks.py
+
+      - name: Salvar os novos arquivos
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/music
+          if git diff --cached --quiet; then
+            echo "O catálogo já está atualizado."
+            exit 0
+          fi
+          git commit -m "Refresh balanced original game soundtracks"
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git rebase origin/main
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "A main mudou durante o envio. Nova tentativa $attempt."
+            sleep 2
+          done
+          echo "Não foi possível enviar o catálogo após cinco tentativas."
+          exit 1
