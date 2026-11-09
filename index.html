@@ -3096,6 +3096,8 @@ async function startChallengeMusic(trackIndex,isPreview=false){
    const index=Math.max(0,Math.min(CHALLENGE_MUSIC.length-1,Math.floor(Number(trackIndex)||0)));
    const track=CHALLENGE_MUSIC[index];
    if(!track||!ensureAudio()||!audioContext)return false;
+   try{if(audioContext.state!=="running")await audioContext.resume();}catch{return false;}
+   if(audioContext.state!=="running")return false;
    challengeMusicActive=true;
    challengeSynthStep=0;
    const beatMs=Math.max(140,Math.round(60000/Math.max(60,Number(track.bpm)||120)/2));
