@@ -19,7 +19,9 @@ from pathlib import Path
 import numpy as np
 
 SAMPLE_RATE = 22050
-BARS = 28
+# 36 compassos: abertura (4), desenvolvimento (8), variação (8), ponte (8),
+# encerramento (4) e reprise final (4). Assim todas as seis seções abaixo são usadas.
+BARS = 36
 BEATS_PER_BAR = 4
 
 # slug, title, style, bpm, tonic MIDI, scale, chord progression, lead patch,
@@ -278,7 +280,14 @@ def make_track(track, output_dir: Path, category: str) -> dict:
         "id": slug, "name": title, "genre": style,
         "src": f"assets/music/{category}/{slug}.mp3",
         "duration_seconds": round(duration,2),
-        "bpm": bpm, "file_bytes": mp3_path.stat().st_size,
+        "bpm": bpm,
+        "lead_instrument": lead,
+        "rhythm_style": groove,
+        "scale": scale_name,
+        "root_midi": root,
+        "energy": round(float(energy), 2),
+        "arrangement_bars": BARS,
+        "file_bytes": mp3_path.stat().st_size,
         "license": "Original synthesized soundtrack generated for Projeto Tabuada."
     }
 
