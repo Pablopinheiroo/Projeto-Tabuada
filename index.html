@@ -1530,6 +1530,7 @@ async function apiRequest(path,options={}){
  if(!response.ok){
   const error=new Error(data.error||data.message||('Servidor respondeu com HTTP '+response.status));
   error.status=response.status;
+  error.data=data;
   if(response.status===401&&!path.startsWith('/api/auth/')){
    error.sessionExpired=true;
    expireActiveSession();
@@ -2775,7 +2776,8 @@ async function startMonthlyTournament(difficulty){
   tournamentMatchStarted=performance.now();
   $('tournamentPlayTitle').textContent='Torneio '+result.difficultyName;
   const secondsPerQuestion=Math.max(1,Math.min(10,Number(result.secondsPerQuestion)||5));
-  $('tournamentPlayMeta').textContent='50 questões · '+secondsPerQuestion+' segundos por questão · mínimo 30 acertos';
+  const minimumScore=Math.max(1,Math.min(50,Number(result.minimumScore)||30));
+  $('tournamentPlayMeta').textContent='50 questões · '+secondsPerQuestion+' segundos por questão · mínimo '+minimumScore+' acertos';
   $('tournamentRoundClock').textContent=secondsPerQuestion.toFixed(1).replace('.',',')+' s';
   $('tournamentQuestionTimeBar').style.width='100%';
   $('tournamentQuestionTimeBar').parentElement.setAttribute('aria-valuemax',String(secondsPerQuestion));
@@ -2879,7 +2881,8 @@ async function finishMonthlyTournament(){
    $('tournamentResultIcon').textContent='↻';
    $('tournamentResultTitle').textContent='Meta mínima não atingida';
    $('tournamentResultText').textContent=error.message;
-   $('tournamentResultScores').innerHTML='<div class="challenge-score-box"><strong>'+tournamentScore+'/50</strong><small>Seus acertos · mínimo 30</small></div>';
+   const minimumScore=Math.max(1,Math.min(50,Number(error.data?.minimumScore)||Number(tournamentCurrent?.minimumScore)||30));
+   $('tournamentResultScores').innerHTML='<div class="challenge-score-box"><strong>'+tournamentScore+'/50</strong><small>Seus acertos · mínimo '+minimumScore+'</small></div>';
    $('tournamentResultTop10').innerHTML='<p class="hint">Esta tentativa não foi registrada no ranking. Volte ao torneio para refazer a mesma dificuldade; as 50 questões serão mantidas.</p>';
    $('tournamentResultBack').textContent='Voltar e tentar novamente';
   }else{
