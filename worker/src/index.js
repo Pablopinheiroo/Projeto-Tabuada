@@ -592,6 +592,24 @@ async function createChallenge(body, username, env) {
   await Promise.all(participants.map(participant => appendChallengeIndex(participant, id, env)));
   return { ...challenge, fileSha: sha };
 }
+async function ensureCompletedChallengeBetPaid(challenge, env) {
+  if (!challenge || challenge.betMode !== true || challenge.status !== "completed" ||
+      challenge.betPaid === true || !challenge.winner ||
+      !Number.isSafeInteger(challenge.stake) || challenge.stake < 1) return challenge;
+  try {
+    await applyChallengeBetTransaction(challenge.winner, challenge.id, "payout", challenge.stake * 2, env);
+    const latest = await readJsonFile(challengeFilePath(challenge.id), env);
+    if (latest?.data && latest.data.betPaid !== true) {
+      latest.data.betPaid = true;
+      await writeJsonFile(challengeFilePath(challenge.id), latest.data, latest.sha, env, "Confirmar pagamento da aposta " + challenge.id);
+      return latest.data;
+    }
+    return latest?.data || challenge;
+  } catch (error) {
+    console.error("Pagamento de aposta pendente no desafio " + challenge.id + ":", error);
+    return challenge;
+  }
+}
 async function listChallengesFor(username, env) {
   const [index, userFile] = await Promise.all([readChallengeIndex(username, env), readUser(username, env)]);
   const ids = index.ids.slice(-CHALLENGE_MAX_HISTORY).reverse();
@@ -603,7 +621,8 @@ async function listChallengesFor(username, env) {
       const participants = Array.isArray(file?.data?.participants) && file.data.participants.length
         ? file.data.participants : [file?.data?.challenger, file?.data?.recipient].filter(Boolean);
       if (!file || !file.data || !participants.includes(username)) return null;
-      return safeChallengeSummary(file.data, username);
+      const data = await ensureCompletedChallengeBetPaid(file.data, env);
+      return safeChallengeSummary(data, username);
     }));
     items.push(...loaded.filter(Boolean));
   }
@@ -705,15 +724,25 @@ async function applyChallengeBetTransaction(username, challengeId, kind, amount,
     if (!file) { const error = new Error("Conta do participante não encontrada."); error.status = 404; throw error; }
     const data = file.data;
     data.profile = data.profile && typeof data.profile === "object" ? data.profile : {};
-    const transactions = challengeBetTransactions(data.profile);
-    if (transactions.includes(txId)) return { applied: false, coins: normalizeGameEconomy(data).coins };
+    let transactions = challengeBetTransactions(data.profile);
+    const stakeTx = "stake:" + challengeId;
+    const refundTx = "refund:" + challengeId;
+    const payoutTx = "payout:" + challengeId;
+    if (kind === "payout" && transactions.includes(payoutTx)) return { applied: false, coins: normalizeGameEconomy(data).coins };
+    if (kind === "stake" && transactions.includes(stakeTx)) return { applied: false, coins: normalizeGameEconomy(data).coins };
+    if (kind === "refund" && transactions.includes(refundTx)) return { applied: false, coins: normalizeGameEconomy(data).coins };
     const economy = normalizeGameEconomy(data);
     if (kind === "stake") {
       if (economy.coins < amount) { const error = new Error("Um dos participantes não tem mais moedas suficientes para aceitar esta aposta."); error.status = 400; throw error; }
       economy.coins -= amount;
+      transactions = transactions.filter(value => value !== refundTx);
+    } else if (kind === "refund") {
+      if (!transactions.includes(stakeTx)) return { applied: false, coins: economy.coins };
+      economy.coins = Math.min(1_000_000_000, economy.coins + amount);
+      transactions = transactions.filter(value => value !== stakeTx);
     } else {
       economy.coins = Math.min(1_000_000_000, economy.coins + amount);
-      if (kind === "payout") economy.totalEarned = Math.min(1_000_000_000, economy.totalEarned + amount);
+      economy.totalEarned = Math.min(1_000_000_000, economy.totalEarned + amount);
     }
     data.profile.challengeBetTransactions = [...transactions, txId].slice(-1000);
     data.economy = economy; data.updatedAt = new Date().toISOString();
@@ -1288,7 +1317,7 @@ async function handleApi(request, env, origin) {
     }
 
     if (route === "/api/challenges/players" && request.method === "GET") {
-      // Primeiro lista as pastas; depois lê apenas o nome público e o avatar.
+      // Primeiro lista as pastas; depois lê nome, avatar e saldo público.
       // Mesmo com 45 perfis, a consulta fica em no máximo 46 subrequests ao GitHub.
       const entries = await githubRequest(
         "/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + GH_DIRECTORY +
