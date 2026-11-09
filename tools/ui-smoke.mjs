@@ -69,7 +69,7 @@ for(const [effect,files] of Object.entries(sfxManifest.effects)){
   else sfxHashes.add(hash);
  }
 }
-check(sfxManifest.effects.verify?.[0]==="assets/sfx/kenney/open_001.ogg","O botão Verificar precisa de um som diferente do clique.");
+check(sfxManifest.effects.verify?.[0]==="assets/sfx/kenney/open_001.ogg"&&!sfxManifest.effects.click.includes(sfxManifest.effects.verify[0]),"O botão Verificar precisa de um som diferente do clique.");
 check(sfxPaths.size===16&&sfxHashes.size===16,"Esperados 16 arquivos sonoros CC0 distintos.");
 
 const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
@@ -314,7 +314,7 @@ async function testViewport(name, viewport, mobile = false) {
   await page.waitForFunction(() => window.__previewCalls > 0, null, { timeout: 3000 });
   check(await page.evaluate(() => soundOn), name + ": ajustar efeitos desligou indevidamente o estado da música.");
   await page.locator("#closeProfileOptions").click();
-  check(!(await page.locator("#profileOptionsPanel").evaluate(el => el.classList.contains("hidden"))), name + ": fechar Opções falhou.");
+  check(await page.locator("#profileOptionsPanel").evaluate(el => el.classList.contains("hidden")), name + ": fechar Opções falhou.");
   if(musicWasPlayingBeforeOptions){
     await page.waitForFunction(() => !document.querySelector("#soundtrackAudio").paused, null, { timeout: 5000 });
   }

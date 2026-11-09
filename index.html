@@ -4326,7 +4326,7 @@ function previewSfxVolume(){
 }
 async function loadUiSfx(){
  try{
-  const response=await fetch('assets/sfx/manifest.json?rev=kenney-cc0-2',{cache:'force-cache'});
+  const response=await fetch('assets/sfx/manifest.json?rev=kenney-cc0-3',{cache:'force-cache'});
   if(!response.ok)throw new Error('Não foi possível carregar os efeitos sonoros.');
   const data=await response.json();
   if(data.license!=='CC0 1.0'||!data.effects||!Array.isArray(data.files))throw new Error('Manifesto de efeitos sonoros inválido.');
