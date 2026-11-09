@@ -1118,6 +1118,11 @@ async function handleApi(request, env, origin) {
         "Muitas ações de desafio em pouco tempo. Aguarde um minuto e tente novamente.", origin);
       if (limited) return limited;
     }
+    if (route.startsWith("/api/tournament")) {
+      const limited = await rateLimitResponse(env.GAME_ACTION_LIMITER, username + ":tournament",
+        "Muitas consultas ou tentativas no torneio. Aguarde um minuto e tente novamente.", origin);
+      if (limited) return limited;
+    }
 
     if (route === "/api/challenges/players" && request.method === "GET") {
       const records = await loadCommunitySummaries(env);
@@ -1375,7 +1380,12 @@ async function handleApi(request, env, origin) {
       const updated = {
         ...record.data,
         profile: body.profile && typeof body.profile === "object"
-          ? { ...record.data.profile, ...body.profile, challengeStats: record.data.profile?.challengeStats || body.profile.challengeStats }
+          ? {
+              ...record.data.profile,
+              ...body.profile,
+              studyTimeMs: Math.max(Number(record.data.profile?.studyTimeMs) || 0, Number(body.profile.studyTimeMs) || 0),
+              challengeStats: record.data.profile?.challengeStats || body.profile.challengeStats
+            }
           : record.data.profile,
         history: body.history && typeof body.history === "object"
           ? safeHistory(body.history) : record.data.history,
