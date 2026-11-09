@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: import-music-100
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   import-music:
