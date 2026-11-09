@@ -17,6 +17,11 @@ const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
 const CHALLENGE_DIRECTORY = "desafios/partidas";
 const CHALLENGE_MAX_HISTORY = 30;
+const TOURNAMENT_PRESETS = {
+  easy: { name: "Fácil", tables: Array.from({ length: 10 }, (_, i) => i + 1), options: 4 },
+  medium: { name: "Médio", tables: Array.from({ length: 15 }, (_, i) => i + 1), options: 4 },
+  hard: { name: "Difícil", tables: [3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19], options: 6 }
+};
 const CHALLENGE_PRESETS = {
   recruta: { name: "Recruta", tables: [1, 2], options: 4 },
   aprendiz: { name: "Aprendiz", tables: [1, 2, 3, 4], options: 4 },
@@ -470,13 +475,15 @@ function buildChallengeQuestions(seed, tables, optionCount) {
   });
 }
 function safeChallengeSummary(challenge, username) {
+  const participants = Array.isArray(challenge.participants) && challenge.participants.length
+    ? challenge.participants : [challenge.challenger, challenge.recipient].filter(Boolean);
   const myResult = challenge.results?.[username] || null;
-  const opponent = challenge.challenger === username ? challenge.recipient : challenge.challenger;
-  const otherResult = challenge.results?.[opponent] || null;
+  const other = participants.find(item => item !== username) || null;
   return {
     id: challenge.id,
     challenger: challenge.challenger,
-    recipient: challenge.recipient,
+    recipient: challenge.recipient || participants[1] || null,
+    participants,
     mode: challenge.mode,
     levelId: challenge.levelId,
     levelName: challenge.levelName,
@@ -490,29 +497,27 @@ function safeChallengeSummary(challenge, username) {
     winner: challenge.winner ?? null,
     completedAt: challenge.completedAt || null,
     myResult,
-    otherResult
+    otherResult: other ? (challenge.results?.[other] || null) : null
   };
 }
 async function createChallenge(body, username, env) {
-  const recipient = String(body.recipient || "").trim().toLowerCase();
-  if (!usernameIsValid(recipient) || recipient === username) {
-    const error = new Error("Escolha outro participante cadastrado.");
+  const rawRecipients = Array.isArray(body.recipients) ? body.recipients :
+    (body.recipient ? [body.recipient] : []);
+  const recipients = [...new Set(rawRecipients.map(value => String(value || "").trim().toLowerCase()))];
+  if (!recipients.length || recipients.length > 4 || recipients.includes(username) ||
+      recipients.some(name => !usernameIsValid(name))) {
+    const error = new Error("Escolha de 1 a 4 participantes cadastrados, sem incluir sua própria conta.");
     error.status = 400;
     throw error;
   }
-  const recipientRecord = await readUser(recipient, env);
-  if (!recipientRecord) {
-    const error = new Error("O participante escolhido não foi encontrado.");
+  const participantRecords = await Promise.all(recipients.map(name => readUser(name, env)));
+  if (participantRecords.some(record => !record)) {
+    const error = new Error("Um ou mais participantes não foram encontrados. Atualize a lista e escolha contas cadastradas.");
     error.status = 404;
     throw error;
   }
-
   const mode = body.mode === "custom" ? "custom" : "preset";
-  let levelId = "personalizado";
-  let levelName = "Personalizado";
-  let tables = [];
-  let optionCount = 4;
-
+  let levelId = "personalizado", levelName = "Personalizado", tables = [], optionCount = 4;
   if (mode === "custom") {
     const rawTables = Array.isArray(body.tables) ? body.tables : [];
     tables = [...new Set(rawTables.map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= 20))].sort((a, b) => a - b);
@@ -529,45 +534,29 @@ async function createChallenge(body, username, env) {
       error.status = 400;
       throw error;
     }
-    levelName = preset.name;
-    tables = preset.tables;
-    optionCount = preset.options;
+    levelName = preset.name; tables = preset.tables; optionCount = preset.options;
   }
-
   const musicTrack = Number(body.musicTrack);
   if (!Number.isInteger(musicTrack) || musicTrack < 0 || musicTrack > 9) {
     const error = new Error("Escolha uma das 10 trilhas sonoras.");
     error.status = 400;
     throw error;
   }
-
   const id = randomHex(16);
   const seedBytes = crypto.getRandomValues(new Uint32Array(1));
   const seed = seedBytes[0] || 1;
+  const participants = [username, ...recipients];
   const challenge = {
-    id,
-    challenger: username,
-    recipient,
-    mode,
-    levelId,
-    levelName,
-    tables,
-    optionCount,
-    musicTrack,
-    seed,
-    createdAt: new Date().toISOString(),
-    results: {},
-    status: "open",
-    winner: null,
-    completedAt: null
+    id, challenger: username, recipient: recipients[0], participants,
+    mode, levelId, levelName, tables, optionCount, musicTrack, seed,
+    createdAt: new Date().toISOString(), results: {}, status: "open",
+    winner: null, completedAt: null
   };
-
   const sha = await writeJsonFile(
     challengeFilePath(id), challenge, null, env,
-    "Criar desafio de " + username + " para " + recipient
+    "Criar desafio coletivo de " + username + " para " + recipients.join(", ")
   );
-  await appendChallengeIndex(username, id, env);
-  await appendChallengeIndex(recipient, id, env);
+  await Promise.all(participants.map(participant => appendChallengeIndex(participant, id, env)));
   return { ...challenge, fileSha: sha };
 }
 async function listChallengesFor(username, env) {
@@ -578,41 +567,92 @@ async function listChallengesFor(username, env) {
     const batch = ids.slice(offset, offset + 5);
     const loaded = await Promise.all(batch.map(async id => {
       const file = await readJsonFile(challengeFilePath(id), env);
-      if (!file || !file.data ||
-          (file.data.challenger !== username && file.data.recipient !== username)) return null;
+      const participants = Array.isArray(file?.data?.participants) && file.data.participants.length
+        ? file.data.participants : [file?.data?.challenger, file?.data?.recipient].filter(Boolean);
+      if (!file || !file.data || !participants.includes(username)) return null;
       return safeChallengeSummary(file.data, username);
     }));
     items.push(...loaded.filter(Boolean));
   }
   items.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
-  const pendingCount = items.filter(item => item.recipient === username && !item.myResult).length;
+  const pendingCount = items.filter(item => item.participants?.includes(username) && !item.myResult).length;
   const challengeStats = userFile?.data?.profile?.challengeStats || null;
   return { items, pendingCount, challengeStats };
 }
 
 function finalizeChallengeRecord(challenge) {
-  const bothSubmitted = !!challenge.results?.[challenge.challenger] &&
-    !!challenge.results?.[challenge.recipient];
-  if (bothSubmitted) {
-    const first = challenge.results[challenge.challenger];
-    const second = challenge.results[challenge.recipient];
-    if (first.score !== second.score) {
-      challenge.winner = first.score > second.score ? challenge.challenger : challenge.recipient;
-    } else if (first.totalMs !== second.totalMs) {
-      challenge.winner = first.totalMs < second.totalMs ? challenge.challenger : challenge.recipient;
-    } else {
-      challenge.winner = "empate";
-    }
-    challenge.status = "completed";
-    challenge.completedAt = challenge.completedAt || new Date().toISOString();
-  } else if (challenge.results?.[challenge.challenger]) {
-    challenge.status = "waiting_recipient";
-  } else if (challenge.results?.[challenge.recipient]) {
-    challenge.status = "waiting_challenger";
-  } else {
-    challenge.status = "open";
+  const participants = Array.isArray(challenge.participants) && challenge.participants.length
+    ? challenge.participants : [challenge.challenger, challenge.recipient].filter(Boolean);
+  const submitted = participants.filter(participant => !!challenge.results?.[participant]);
+  if (submitted.length < participants.length) {
+    challenge.status = submitted.length ? "waiting_participants" : "open";
+    return false;
   }
-  return bothSubmitted;
+  const ranked = participants.map(participant => ({
+    username: participant,
+    score: Number(challenge.results[participant].score) || 0,
+    totalMs: Number(challenge.results[participant].totalMs) || 0
+  })).sort((a, b) => b.score - a.score || a.totalMs - b.totalMs || a.username.localeCompare(b.username));
+  const best = ranked[0];
+  const tied = ranked.filter(item => item.score === best.score && item.totalMs === best.totalMs);
+  challenge.winner = tied.length > 1 ? "empate" : best.username;
+  challenge.standings = ranked;
+  challenge.status = "completed";
+  challenge.completedAt = challenge.completedAt || new Date().toISOString();
+  return true;
+}
+
+async function applyChallengeStats(username, challenge, env) {
+  const file = await readUser(username, env);
+  if (!file) return;
+  const data = file.data;
+  data.profile = data.profile && typeof data.profile === "object" ? data.profile : {};
+  const stats = data.profile.challengeStats && typeof data.profile.challengeStats === "object"
+    ? data.profile.challengeStats : {
+      total: { wins: 0, losses: 0, draws: 0 },
+      custom: { wins: 0, losses: 0, draws: 0 }, levels: {}, processedIds: [], recent: []
+    };
+  stats.total = stats.total || { wins: 0, losses: 0, draws: 0 };
+  stats.custom = stats.custom || { wins: 0, losses: 0, draws: 0 };
+  stats.levels = stats.levels && typeof stats.levels === "object" ? stats.levels : {};
+  stats.processedIds = Array.isArray(stats.processedIds) ? stats.processedIds : [];
+  stats.recent = Array.isArray(stats.recent) ? stats.recent : [];
+  if (stats.processedIds.includes(challenge.id)) return;
+  const participants = Array.isArray(challenge.participants) && challenge.participants.length
+    ? challenge.participants : [challenge.challenger, challenge.recipient].filter(Boolean);
+  const own = challenge.results?.[username];
+  if (!own || !participants.includes(username)) return;
+  const outcome = challenge.winner === "empate" ? "draw" :
+    (challenge.winner === username ? "win" : "loss");
+  const bucket = outcome === "win" ? "wins" : outcome === "loss" ? "losses" : "draws";
+  stats.total[bucket] = (Number(stats.total[bucket]) || 0) + 1;
+  if (challenge.mode === "custom") {
+    stats.custom[bucket] = (Number(stats.custom[bucket]) || 0) + 1;
+  } else {
+    const level = stats.levels[challenge.levelId] || { wins: 0, losses: 0, draws: 0 };
+    level[bucket] = (Number(level[bucket]) || 0) + 1;
+    level.name = challenge.levelName;
+    level.medalEarned = (Number(level.wins) || 0) >= 10;
+    stats.levels[challenge.levelId] = level;
+  }
+  stats.processedIds.push(challenge.id);
+  stats.processedIds = stats.processedIds.slice(-500);
+  stats.recent.unshift({
+    id: challenge.id,
+    opponents: participants.filter(name => name !== username),
+    mode: challenge.mode, levelId: challenge.levelId, levelName: challenge.levelName,
+    outcome, score: own.score, winner: challenge.winner, completedAt: challenge.completedAt
+  });
+  stats.recent = stats.recent.slice(0, 30);
+  data.profile.challengeStats = stats;
+  if (participants.length === 5 && challenge.winner === username) {
+    data.economy = normalizeGameEconomy(data);
+    if (!data.economy.achievements.challenge_four) {
+      data.economy.achievements.challenge_four = new Date().toISOString();
+    }
+  }
+  data.updatedAt = new Date().toISOString();
+  await writeUser(username, data, file.sha, env);
 }
 
 async function submitChallengeResult(id, body, username, env) {
@@ -628,7 +668,9 @@ async function submitChallengeResult(id, body, username, env) {
     throw error;
   }
   const challenge = file.data;
-  if (challenge.challenger !== username && challenge.recipient !== username) {
+  const participants = Array.isArray(challenge.participants) && challenge.participants.length
+    ? challenge.participants : [challenge.challenger, challenge.recipient].filter(Boolean);
+  if (!participants.includes(username)) {
     const error = new Error("Este desafio não pertence à sua conta.");
     error.status = 403;
     throw error;
@@ -704,7 +746,9 @@ async function submitChallengeResult(id, body, username, env) {
   }
   const isCompleted = persistedChallenge.status === "completed";
   if (isCompleted) {
-    await Promise.all([persistedChallenge.challenger, persistedChallenge.recipient].map(async participant => {
+    const participants = Array.isArray(persistedChallenge.participants) && persistedChallenge.participants.length
+      ? persistedChallenge.participants : [persistedChallenge.challenger, persistedChallenge.recipient].filter(Boolean);
+    await Promise.all(participants.map(async participant => {
       try {
         await applyChallengeStats(participant, persistedChallenge, env);
       } catch (error) {
@@ -718,6 +762,223 @@ async function submitChallengeResult(id, body, username, env) {
     completed: isCompleted,
     sha
   };
+}
+
+
+function communitySummary(record) {
+  const profile = record.profile && typeof record.profile === "object" ? record.profile : {};
+  const history = safeHistory(record.history);
+  const questions = Object.values(history.questions).filter(item => item && typeof item === "object");
+  const correct = questions.reduce((sum, item) => sum + (Number(item.correct) || 0), 0);
+  const wrong = questions.reduce((sum, item) => sum + (Number(item.wrong) || 0), 0);
+  const sessions = Array.isArray(history.sessions) ? history.sessions : [];
+  const timeMs = Math.max(0, Number(profile.studyTimeMs) || 0) +
+    sessions.reduce((sum, item) => sum + (Number(item?.timeMs) || 0), 0);
+  const economy = normalizeGameEconomy(record);
+  const stats = profile.challengeStats && typeof profile.challengeStats === "object" ? profile.challengeStats : {};
+  const total = stats.total || {};
+  const medals = Object.entries(stats.levels || {})
+    .filter(([, level]) => Number(level?.wins) >= 10)
+    .map(([id, level]) => ({ id, name: level.name || id }));
+  const achievementTitles = {
+    training_first: "Primeiro Ciclo", training_5: "Ritmo de Treino", training_25: "Disciplina",
+    adventure_first: "A Jornada Começa", adventure_5: "Explorador", adventure_13: "Desbravador",
+    adventure_26: "Lenda da Tabuada", perfect_first: "Precisão de Ouro", perfect_5: "Mestre da Precisão",
+    combo_5: "Sequência Brilhante", coins_100: "Primeiras Economias", coins_500: "Tesouro da Tabuada",
+    collector_5: "Colecionador", challenge_four: "Lenda dos Quatro",
+    tournament_easy_top3: "Pódio Mensal Fácil", tournament_easy_top10: "Top 10 Fácil",
+    tournament_medium_top3: "Pódio Mensal Médio", tournament_medium_top10: "Top 10 Médio",
+    tournament_hard_top3: "Pódio Mensal Difícil", tournament_hard_top10: "Top 10 Difícil",
+    tournament_perfect50: "50 Acertos no Torneio"
+  };
+  const titles = Object.keys(economy.achievements).map(id => achievementTitles[id]).filter(Boolean).slice(0, 8);
+  return {
+    username: record.username,
+    displayName: profile.displayName || record.username,
+    avatar: profile.avatar || "imagem:0",
+    correct, wrong, attempts: correct + wrong, timeMs,
+    coins: economy.coins,
+    achievementCount: Object.keys(economy.achievements).length,
+    titles, medals,
+    challengeWins: Number(total.wins) || 0,
+    challengeLosses: Number(total.losses) || 0,
+    challengeDraws: Number(total.draws) || 0,
+    tournamentFrame: profile.tournamentFrame || null
+  };
+}
+async function loadCommunitySummaries(env) {
+  if (communitySummaryCache.records && Date.now() < communitySummaryCache.expiresAt) {
+    return communitySummaryCache.records;
+  }
+  if (communitySummaryCache.pending) return communitySummaryCache.pending;
+  const pending = (async () => {
+    const entries = await githubRequest(
+      "/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + GH_DIRECTORY +
+      "?ref=" + encodeURIComponent(GH_BRANCH), env
+    );
+    if (!Array.isArray(entries)) throw new Error("A pasta de participantes não retornou uma lista.");
+    const folders = entries.filter(item => item.type === "dir" && usernameIsValid(item.name))
+      .slice(0, COMMUNITY_MAX_USERS);
+    const records = [];
+    for (let offset = 0; offset < folders.length; offset += 6) {
+      const batch = folders.slice(offset, offset + 6);
+      const summaries = await Promise.all(batch.map(async item => {
+        try {
+          const record = await readUser(item.name, env);
+          return record ? communitySummary(record.data) : null;
+        } catch { return null; }
+      }));
+      records.push(...summaries.filter(Boolean));
+    }
+    return records;
+  })();
+  communitySummaryCache.pending = pending;
+  try {
+    const records = await pending;
+    communitySummaryCache.records = records;
+    communitySummaryCache.expiresAt = Date.now() + COMMUNITY_CACHE_TTL_MS;
+    return records;
+  } finally {
+    if (communitySummaryCache.pending === pending) communitySummaryCache.pending = null;
+  }
+}
+
+
+function currentSaoPauloMonth(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en", {
+    timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit"
+  }).formatToParts(date);
+  return parts.find(part => part.type === "year")?.value + "-" +
+    parts.find(part => part.type === "month")?.value;
+}
+function previousMonthKey(month) {
+  const [year, number] = month.split("-").map(Number);
+  const date = new Date(Date.UTC(year, number - 2, 1));
+  return date.getUTCFullYear() + "-" + String(date.getUTCMonth() + 1).padStart(2, "0");
+}
+function tournamentFilePath(month) {
+  return "torneio-mensal-" + month + ".json";
+}
+function tournamentRandom(seed) {
+  let state = Number(seed) >>> 0;
+  return function random() {
+    state = (state + 0x6D2B79F5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function buildTournamentQuestions(seed, difficulty) {
+  const preset = TOURNAMENT_PRESETS[difficulty];
+  if (!preset) return [];
+  const random = tournamentRandom(seed);
+  const pool = [];
+  for (const table of preset.tables) for (let factor = 1; factor <= 10; factor++) pool.push({ a: table, b: factor });
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, 50).map(fact => {
+    const answer = fact.a * fact.b;
+    const choices = new Set([answer]);
+    while (choices.size < preset.options) {
+      const spread = Math.max(8, Math.ceil(answer * 0.25));
+      const offset = 1 + Math.floor(random() * spread);
+      choices.add(random() < 0.5 ? answer + offset : Math.max(0, answer - offset));
+    }
+    const options = [...choices];
+    for (let i = options.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [options[i], options[j]] = [options[j], options[i]];
+    }
+    return { ...fact, answer, options };
+  });
+}
+function rankTournament(board, difficulty, username) {
+  const entries = Object.entries(board.results?.[difficulty] || {}).map(([name, result]) => ({
+    username: name, score: Number(result.score) || 0, totalMs: Number(result.totalMs) || 0,
+    perfect: result.perfect === true
+  }));
+  entries.sort((a, b) => b.score - a.score || a.totalMs - b.totalMs || a.username.localeCompare(b.username));
+  const position = entries.findIndex(item => item.username === username) + 1;
+  return { difficulty, total: entries.length, top10: entries.slice(0, 10), position: position || null, own: position ? entries[position - 1] : null };
+}
+async function ensureTournamentBoard(month, env) {
+  const path = tournamentFilePath(month);
+  const existing = await readJsonFile(path, env);
+  if (existing) return existing;
+  const data = {
+    version: 1, month, createdAt: new Date().toISOString(),
+    seeds: {
+      easy: crypto.getRandomValues(new Uint32Array(1))[0] || 1,
+      medium: crypto.getRandomValues(new Uint32Array(1))[0] || 2,
+      hard: crypto.getRandomValues(new Uint32Array(1))[0] || 3
+    },
+    results: { easy: {}, medium: {}, hard: {} }
+  };
+  try {
+    const sha = await writeJsonFile(path, data, null, env, "Abrir torneio mensal " + month);
+    return { data, sha };
+  } catch (error) {
+    if (error.status !== 409 && error.status !== 422) throw error;
+    const latest = await readJsonFile(path, env);
+    if (!latest) throw error;
+    return latest;
+  }
+}
+async function updateTournamentBoard(month, difficulty, username, result, env) {
+  const path = tournamentFilePath(month);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const current = await ensureTournamentBoard(month, env);
+    const data = current.data;
+    data.results = data.results || { easy: {}, medium: {}, hard: {} };
+    data.results[difficulty] = data.results[difficulty] || {};
+    if (data.results[difficulty][username]) return { board: data, alreadySubmitted: true };
+    data.results[difficulty][username] = result;
+    try {
+      const sha = await writeJsonFile(path, data, current.sha, env, "Registrar resultado mensal de " + username);
+      return { board: data, sha, alreadySubmitted: false };
+    } catch (error) {
+      if (error.status !== 409 || attempt === 2) throw error;
+    }
+  }
+  throw new Error("Não foi possível registrar o resultado do torneio.");
+}
+async function awardFinishedTournament(userFile, month, board, env) {
+  const profile = userFile.data.profile && typeof userFile.data.profile === "object" ? userFile.data.profile : {};
+  const participation = profile.monthlyTournaments?.[month];
+  if (!participation?.difficulty || !participation?.result) return null;
+  const difficulty = participation.difficulty;
+  const ranking = rankTournament(board, difficulty, userFile.data.username);
+  if (!ranking.position) return null;
+  const rank = ranking.position;
+  const economy = normalizeGameEconomy(userFile.data);
+  const newAchievements = [];
+  let frame = null;
+  if (rank <= 3) {
+    const id = "tournament_" + difficulty + "_top3";
+    if (!economy.achievements[id]) { economy.achievements[id] = new Date().toISOString(); newAchievements.push(id); }
+    frame = rank === 1 ? "gold" : rank === 2 ? "silver" : "bronze";
+  } else if (rank <= 10) {
+    const id = "tournament_" + difficulty + "_top10";
+    if (!economy.achievements[id]) { economy.achievements[id] = new Date().toISOString(); newAchievements.push(id); }
+    frame = "top10";
+  }
+  if (participation.result.score === 50 && !economy.achievements.tournament_perfect50) {
+    economy.achievements.tournament_perfect50 = new Date().toISOString();
+    newAchievements.push("tournament_perfect50");
+  }
+  profile.tournamentAwards = profile.tournamentAwards || {};
+  if (!profile.tournamentAwards[month]) profile.tournamentAwards[month] = {
+    difficulty, rank, score: participation.result.score, frame, completedAt: new Date().toISOString()
+  };
+  const frameScore = { gold: 4, silver: 3, bronze: 2, top10: 1 };
+  if ((frameScore[frame] || 0) > (frameScore[profile.tournamentFrame] || 0)) profile.tournamentFrame = frame;
+  userFile.data.profile = profile;
+  userFile.data.economy = economy;
+  const sha = await writeUser(userFile.data.username, userFile.data, userFile.sha, env);
+  return { sha, rank, frame, newAchievements };
 }
 
 async function handleApi(request, env, origin) {
@@ -856,13 +1117,10 @@ async function handleApi(request, env, origin) {
     }
 
     if (route === "/api/challenges/players" && request.method === "GET") {
-      const entries = await githubRequest(
-        "/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" +
-        GH_DIRECTORY + "?ref=" + encodeURIComponent(GH_BRANCH), env
-      );
-      if (!Array.isArray(entries)) throw new Error("A lista de participantes não retornou um diretório.");
-      const players = entries.filter(item => item.type === "dir" && usernameIsValid(item.name))
-        .map(item => item.name).filter(name => name !== username).sort((a, b) => a.localeCompare(b)).slice(0, 200);
+      const records = await loadCommunitySummaries(env);
+      const players = records.filter(item => item.username !== username)
+        .map(item => ({ username: item.username, displayName: item.displayName, avatar: item.avatar }))
+        .sort((a, b) => a.displayName.localeCompare(b.displayName));
       return json({ players }, 200, origin);
     }
 
@@ -882,6 +1140,112 @@ async function handleApi(request, env, origin) {
       const body = await readJson(request);
       const result = await submitChallengeResult(challengeResultMatch[1], body, username, env);
       return json(result, 200, origin);
+    }
+
+
+    if (route === "/api/tournament" && request.method === "GET") {
+      const month = currentSaoPauloMonth();
+      const previous = previousMonthKey(month);
+      const [currentBoard, userFile] = await Promise.all([
+        ensureTournamentBoard(month, env), readUser(username, env)
+      ]);
+      const rankings = Object.keys(TOURNAMENT_PRESETS).map(difficulty =>
+        rankTournament(currentBoard.data, difficulty, username)
+      );
+      let finalNotice = null;
+      if (userFile) {
+        const previousBoard = await readJsonFile(tournamentFilePath(previous), env);
+        const participation = userFile.data.profile?.monthlyTournaments?.[previous];
+        if (previousBoard && participation?.difficulty && participation.result) {
+          const ranking = rankTournament(previousBoard.data, participation.difficulty, username);
+          const award = await awardFinishedTournament(userFile, previous, previousBoard.data, env);
+          finalNotice = {
+            month: previous, difficulty: participation.difficulty,
+            difficultyName: TOURNAMENT_PRESETS[participation.difficulty].name,
+            position: ranking.position, total: ranking.total,
+            score: participation.result.score, top10: ranking.top10, award
+          };
+        }
+      }
+      const latestUser = finalNotice ? await readUser(username, env) : userFile;
+      return json({
+        month,
+        selectedDifficulty: latestUser?.data?.profile?.monthlyTournaments?.[month]?.difficulty || null,
+        rankings, finalNotice
+      }, 200, origin);
+    }
+
+    if (route === "/api/tournament/start" && request.method === "POST") {
+      const body = await readJson(request);
+      const difficulty = String(body.difficulty || "");
+      const preset = TOURNAMENT_PRESETS[difficulty];
+      if (!preset) return json({ error: "Escolha uma dificuldade válida para o torneio." }, 400, origin);
+      const month = currentSaoPauloMonth();
+      const file = await readUser(username, env);
+      if (!file) return json({ error: "A conta não foi encontrada." }, 404, origin);
+      const profile = file.data.profile && typeof file.data.profile === "object" ? file.data.profile : {};
+      profile.monthlyTournaments = profile.monthlyTournaments || {};
+      let participation = profile.monthlyTournaments[month];
+      if (participation && participation.difficulty !== difficulty) {
+        return json({ error: "Você já escolheu " + (TOURNAMENT_PRESETS[participation.difficulty]?.name || "uma dificuldade") +
+          " neste mês. Só é permitido participar de uma dificuldade por mês." }, 409, origin);
+      }
+      if (participation?.result) return json({ error: "Você já concluiu seu torneio deste mês." }, 409, origin);
+      const board = await ensureTournamentBoard(month, env);
+      if (!participation) {
+        participation = { difficulty, attemptId: randomHex(16), startedAt: new Date().toISOString() };
+        profile.monthlyTournaments[month] = participation;
+        file.data.profile = profile;
+        await writeUser(username, file.data, file.sha, env);
+      }
+      const questions = buildTournamentQuestions(board.data.seeds[difficulty], difficulty)
+        .map(({ answer, ...question }) => question);
+      return json({
+        month, difficulty, difficultyName: preset.name,
+        attemptId: participation.attemptId,
+        seed: board.data.seeds[difficulty],
+        questions, questionCount: 50, secondsPerQuestion: 5, optionCount: preset.options
+      }, 200, origin);
+    }
+
+    if (route === "/api/tournament/submit" && request.method === "POST") {
+      const body = await readJson(request);
+      const difficulty = String(body.difficulty || "");
+      if (!TOURNAMENT_PRESETS[difficulty]) return json({ error: "Dificuldade inválida." }, 400, origin);
+      const month = currentSaoPauloMonth();
+      const file = await readUser(username, env);
+      const participation = file?.data?.profile?.monthlyTournaments?.[month];
+      if (!participation || participation.difficulty !== difficulty || participation.attemptId !== body.attemptId) {
+        return json({ error: "Esta participação não corresponde ao torneio mensal iniciado nesta conta." }, 403, origin);
+      }
+      if (participation.result) return json({ error: "Seu resultado deste mês já foi enviado." }, 409, origin);
+      const answers = Array.isArray(body.answers) ? body.answers : [];
+      if (answers.length !== 50) return json({ error: "O torneio precisa ter exatamente 50 respostas." }, 400, origin);
+      const board = await ensureTournamentBoard(month, env);
+      const questions = buildTournamentQuestions(board.data.seeds[difficulty], difficulty);
+      let score = 0, totalMs = 0;
+      for (let i = 0; i < 50; i++) {
+        const answer = answers[i] || {};
+        const elapsed = Number(answer.elapsedMs);
+        const value = answer.value === null || answer.value === undefined ? null : Number(answer.value);
+        if (!Number.isFinite(elapsed) || elapsed < 0 || elapsed > 60_000 ||
+            (value !== null && !Number.isSafeInteger(value))) {
+          return json({ error: "Uma das respostas do torneio está inválida." }, 400, origin);
+        }
+        if (elapsed <= 5_000 && value === questions[i].answer) score++;
+        totalMs += Math.min(5_000, elapsed);
+      }
+      const result = { score, totalMs: Math.round(totalMs), perfect: score === 50, completedAt: new Date().toISOString() };
+      const updatedBoard = await updateTournamentBoard(month, difficulty, username, result, env);
+      participation.result = result;
+      file.data.profile.monthlyTournaments[month] = participation;
+      file.data.updatedAt = new Date().toISOString();
+      await writeUser(username, file.data, file.sha, env);
+      const ranking = rankTournament(updatedBoard.board, difficulty, username);
+      return json({
+        result, position: ranking.position, total: ranking.total, top10: ranking.top10,
+        month, difficulty, perfect: result.perfect
+      }, 200, origin);
     }
 
     if ((route === "/api/game/reward" || route === "/api/game/shop") && request.method === "POST") {
