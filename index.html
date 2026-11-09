@@ -1873,6 +1873,7 @@ function answerAdventureQuestion(value,choiceButton){
  }
  $('adventureFeedbackText').textContent=(correct?'Você acertou! ':'A resposta correta é '+question.answer+'. ')+question.explanation;
  $('adventureFeedback').classList.remove('hidden');
+ $('adventureQuestionProgress').style.width=((adventureQuestionIndex+1)/adventureQuestions.length*100)+'%';
  $('adventureAnswerForm').classList.add('hidden');
  $('adventureChoices').classList.toggle('hidden',question.type!=='choice');
  updateAdventureQuestionHud();
