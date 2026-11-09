@@ -1,0 +1,193 @@
+{
+  "version": 1,
+  "title": "Efeitos sonoros do Projeto Tabuada",
+  "creator": "Kenney",
+  "license": "CC0 1.0",
+  "source": "https://kenney.nl/assets/interface-sounds",
+  "sourceOpenGameArt": "https://opengameart.org/content/interface-sounds",
+  "notice": "Pacote original com 100 efeitos OGG individuais. Foram incorporados 16 arquivos originais distintos.",
+  "effects": {
+    "click": [
+      "assets/sfx/kenney/click_001.ogg",
+      "assets/sfx/kenney/click_002.ogg",
+      "assets/sfx/kenney/click_003.ogg",
+      "assets/sfx/kenney/click_004.ogg",
+      "assets/sfx/kenney/click_005.ogg"
+    ],
+    "key": [
+      "assets/sfx/kenney/tick_001.ogg"
+    ],
+    "correct": [
+      "assets/sfx/kenney/confirmation_001.ogg",
+      "assets/sfx/kenney/confirmation_002.ogg"
+    ],
+    "wrong": [
+      "assets/sfx/kenney/error_001.ogg",
+      "assets/sfx/kenney/error_002.ogg"
+    ],
+    "select": [
+      "assets/sfx/kenney/select_001.ogg"
+    ],
+    "toggle": [
+      "assets/sfx/kenney/switch_001.ogg"
+    ],
+    "back": [
+      "assets/sfx/kenney/back_001.ogg"
+    ],
+    "open": [
+      "assets/sfx/kenney/open_001.ogg"
+    ],
+    "close": [
+      "assets/sfx/kenney/close_001.ogg"
+    ],
+    "timeout": [
+      "assets/sfx/kenney/question_001.ogg"
+    ]
+  },
+  "files": [
+    {
+      "id": "click_001",
+      "name": "click 001",
+      "src": "assets/sfx/kenney/click_001.ogg",
+      "format": "OGG",
+      "creator": "Kenney",
+      "license": "CC0 1.0",
+      "source": "https://kenney.nl/assets/interface-sounds"
+    },
+    {
+      "id": "click_002",
+      "name": "click 002",
+      "src": "assets/sfx/kenney/click_002.ogg",
+      "format": "OGG",
+      "creator": "Kenney",
+      "license": "CC0 1.0",
+      "source": "https://kenney.nl/assets/interface-sounds"
+    },
+    {
+      "id": "click_003",
+      "name": "click 003",
+      "src": "assets/sfx/kenney/click_003.ogg",
+      "format": "OGG",
+      "creator": "Kenney",
+      "license": "CC0 1.0",
+      "source": "https://kenney.nl/assets/interface-sounds"
+    },
+    {
+      "id": "click_004",
+      "name": "click 004",
+      "src": "assets/sfx/kenney/click_004.ogg",
+      "format": "OGG",
+      "creator": "Kenney",
+      "license": "CC0 1.0",
+      "source": "https://kenney.nl/assets/interface-sounds"
+    },
+    {
+      "id": "click_005",
+      "name": "click 005",
+      "src": "assets/sfx/kenney/click_005.ogg",
+      "format": "OGG",
+      "creator": "Kenney",
+      "license": "CC0 1.0",
+      "source": "https://kenney.nl/assets/interface-sounds"
+    },
+    {
+      "id": "tick_001",
+      "name": "tick 001",
+      "src": "assets/sfx/kenney/tick_001.ogg",
+      "format": "OGG",
+      "creator": "Kenney",
+      "license": "CC0 1.0",
+      "source": "https://kenney.nl/assets/interface-sounds"
+    },
+    {
+      "id": "confirmation_001",
+      "name": "confirmation 001",
+      "src": "assets/sfx/kenney/confirmation_001.ogg",
+      "format": "OGG",
+      "creator": "Kenney",
+      "license": "CC0 1.0",
+      "source": "https://kenney.nl/assets/interface-sounds"
+    },
+    {
+      "id": "confirmation_002",
+      "name": "confirmation 002",
+      "src": "assets/sfx/kenney/confirmation_002.ogg",
+      "format": "OGG",
+      "creator": "Kenney",
+      "license": "CC0 1.0",
+      "source": "https://kenney.nl/assets/interface-sounds"
+    },
+    {
+      "id": "error_001",
+      "name": "error 001",
+      "src": "assets/sfx/kenney/error_001.ogg",
+      "format": "OGG",
+      "creator": "Kenney",
+      "license": "CC0 1.0",
+      "source": "https://kenney.nl/assets/interface-sounds"
+    },
+    {
+      "id": "error_002",
+      "name": "error 002",
+      "src": "assets/sfx/kenney/error_002.ogg",
+      "format": "OGG",
+      "creator": "Kenney",
+      "license": "CC0 1.0",
+      "source": "https://kenney.nl/assets/interface-sounds"
+    },
+    {
+      "id": "select_001",
+      "name": "select 001",
+      "src": "assets/sfx/kenney/select_001.ogg",
+      "format": "OGG",
+      "creator": "Kenney",
+      "license": "CC0 1.0",
+      "source": "https://kenney.nl/assets/interface-sounds"
+    },
+    {
+      "id": "switch_001",
+      "name": "switch 001",
+      "src": "assets/sfx/kenney/switch_001.ogg",
+      "format": "OGG",
+      "creator": "Kenney",
+      "license": "CC0 1.0",
+      "source": "https://kenney.nl/assets/interface-sounds"
+    },
+    {
+      "id": "back_001",
+      "name": "back 001",
+      "src": "assets/sfx/kenney/back_001.ogg",
+      "format": "OGG",
+      "creator": "Kenney",
+      "license": "CC0 1.0",
+      "source": "https://kenney.nl/assets/interface-sounds"
+    },
+    {
+      "id": "open_001",
+      "name": "open 001",
+      "src": "assets/sfx/kenney/open_001.ogg",
+      "format": "OGG",
+      "creator": "Kenney",
+      "license": "CC0 1.0",
+      "source": "https://kenney.nl/assets/interface-sounds"
+    },
+    {
+      "id": "close_001",
+      "name": "close 001",
+      "src": "assets/sfx/kenney/close_001.ogg",
+      "format": "OGG",
+      "creator": "Kenney",
+      "license": "CC0 1.0",
+      "source": "https://kenney.nl/assets/interface-sounds"
+    },
+    {
+      "id": "question_001",
+      "name": "question 001",
+      "src": "assets/sfx/kenney/question_001.ogg",
+      "format": "OGG",
+      "creator": "Kenney",
+      "license": "CC0 1.0",
+      "source": "https://kenney.nl/assets/interface-sounds"
+    }
+  ]
+}

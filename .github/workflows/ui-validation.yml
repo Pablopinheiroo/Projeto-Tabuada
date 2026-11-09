@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - "assets/music/**"
+      - "assets/sfx/**"
       - "index.html"
       - "tools/ui-smoke.mjs"
       - ".github/workflows/ui-validation.yml"
@@ -41,7 +42,7 @@ jobs:
           cat /tmp/projeto-tabuada-http.log
           exit 1
 
-      - name: Validar 20 trilhas CC0 e a interface
+      - name: Validar trilhas e efeitos CC0 e a interface
         run: |
           mkdir -p artifacts
           node tools/ui-smoke.mjs

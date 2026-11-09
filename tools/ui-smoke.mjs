@@ -57,6 +57,22 @@ for (const [category, expectedIds] of Object.entries(specs)) {
 }
 check(hashes.size === 20 && srcs.size === 20 && allIds.size === 20, "O catálogo não contém 20 faixas distintas.");
 check(totalBytes > 10000000, "O tamanho total dos áudios parece inválido.");
+const sfxManifest=JSON.parse(fs.readFileSync(path.join(ROOT,"assets/sfx/manifest.json"),"utf8"));
+check(sfxManifest.license==="CC0 1.0","Efeitos não estão marcados como CC0.");
+const sfxPaths=new Set(),sfxHashes=new Set();
+for(const [effect,files] of Object.entries(sfxManifest.effects)){
+ check(Array.isArray(files)&&files.length>0,"Efeito sem arquivo: "+effect);
+ for(const file of files){
+  const record=sfxManifest.files.find(item=>item.src===file);
+  check(!!record&&record.license==="CC0 1.0"&&record.creator==="Kenney","Crédito/licença ausente: "+file);
+  check(!sfxPaths.has(file),"Arquivo de efeito repetido: "+file);sfxPaths.add(file);
+  const bytes=fs.readFileSync(path.join(ROOT,file));
+  check(bytes.length>1000&&bytes.subarray(0,4).toString("ascii")==="OggS","OGG inválido: "+file);
+  const hash=crypto.createHash("sha256").update(bytes).digest("hex");
+  check(!sfxHashes.has(hash),"Áudio de efeito duplicado: "+file);sfxHashes.add(hash);
+ }
+}
+check(sfxPaths.size===16&&sfxHashes.size===16,"Esperados 16 efeitos sonoros distintos.");
 
 const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(match => match[1]);
@@ -70,6 +86,7 @@ new Function(inlineScripts[0]);
 const logoutStart=html.indexOf("async function logout(){");
 const logoutEnd=html.indexOf("\nfunction escapeHtml",logoutStart);
 const logoutCode=logoutStart>=0&&logoutEnd>logoutStart?html.slice(logoutStart,logoutEnd):"";
+check(html.includes("loadUiSfx();")&&html.includes("playUiSound('key')"),"Efeitos de clique/tecla não ligados.");
 check(html.includes("const ACTIVE_TIME_SYNC_MS=30*60*1000;"), "O salvamento automático não está configurado para 30 minutos.");
 check(logoutCode.length>0&&!logoutCode.includes("flushCloudSave(true)"), "Sair da conta ainda força um salvamento antes dos 30 minutos.");
 check(html.includes("pendingActiveMs>0?loadHistory():remoteHistory"), "O login não preserva o histórico local que ainda não foi sincronizado.");

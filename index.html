@@ -2479,6 +2479,7 @@ function endQuestionClock(){
  return elapsed;
 }
 function addAnswerToHistory(entry){
+ playFeedback(!!entry.correct);
  const key=entry.a+'x'+entry.b;
  if(!historyData.questions[key])historyData.questions[key]={a:entry.a,b:entry.b,attempts:0,correct:0,wrong:0,totalTimeMs:0,bestTimeMs:null};
  const item=historyData.questions[key];
@@ -3728,8 +3729,8 @@ function judge(ok){
  const timeMs=currentQuestionTimeStopped?currentQuestionTimeMs:endQuestionClock();
  const entry={a:current.a,b:current.b,correct:!!ok,timeMs,mode:'training'};
  sessionAnswers.push(entry);sessionQuestionTimeMs+=timeMs;addAnswerToHistory(entry);
- if(ok){hits++;roundCorrect.add(current.a+'x'+current.b);$('answer').classList.add('correct');playFeedback(true);}
- else{misses++;deck.push({...current});$('answer').classList.add('wrong');playFeedback(false);}
+ if(ok){hits++;roundCorrect.add(current.a+'x'+current.b);$('answer').classList.add('correct');}
+ else{misses++;deck.push({...current});$('answer').classList.add('wrong');}
  position++;currentQuestionTimeMs=0;currentQuestionTimeStopped=false;currentDifficultyMarked=false;
  updateReviewTrainingButton();renderCommunityRanking();next();saveCheckpoint();
 }
@@ -4195,17 +4196,42 @@ function playNote(frequency,start,duration,wave,volume){
  oscillator.onended=()=>{activeSounds.delete(oscillator);oscillator.disconnect();envelope.disconnect()};
  oscillator.start(start);oscillator.stop(start+duration+.04);
 }
-function playUiClick(){
- if(!soundOn||document.hidden||!ensureAudio())return;
- playNote(660,audioContext.currentTime+.005,.055,'sine',.0045);
+let uiSfxLibrary={},uiSfxAudioCache=new Map();
+async function loadUiSfx(){
+ try{
+  const response=await fetch('assets/sfx/manifest.json?rev=kenney-cc0-1',{cache:'force-cache'});
+  if(!response.ok)throw new Error('Não foi possível carregar os efeitos sonoros.');
+  const data=await response.json();
+  if(data.license!=='CC0 1.0'||!data.effects||!Array.isArray(data.files))throw new Error('Manifesto de efeitos sonoros inválido.');
+  const available=new Set(data.files.map(file=>file.src));
+  for(const [name,files] of Object.entries(data.effects)){
+   if(!Array.isArray(files)||!files.length||!files.every(file=>available.has(file)))throw new Error('Efeito sonoro inválido: '+name);
+  }
+  uiSfxLibrary=Object.fromEntries(Object.entries(data.effects).map(([name,files])=>[
+   name,files.map(file=>new URL(file,document.baseURI).href)
+  ]));
+ }catch(error){console.warn('Efeitos sonoros indisponíveis:',error);}
 }
-function playFeedback(correct){
- if(!soundOn||document.hidden||!ensureAudio())return;
+function playUiSound(name){
+ if(!soundOn||document.hidden)return;
+ const files=uiSfxLibrary[name]||[];
+ if(files.length){
+  const src=files[Math.floor(Math.random()*files.length)];
+  let base=uiSfxAudioCache.get(src);
+  if(!base){base=new Audio(src);base.preload='auto';uiSfxAudioCache.set(src,base);}
+  const player=base.cloneNode(true);
+  player.volume=Math.max(0,Math.min(1,volumeLevel*.42));
+  player.play().catch(()=>{});
+  return;
+ }
+ if(!ensureAudio())return;
  const when=audioContext.currentTime+.01;
- (correct?[72,76]:[62,58]).forEach((note,i)=>
-  playNote(midiToHz(note),when+i*.105,.16,'sine',correct?.016:.011)
- );
+ if(name==='correct') [72,76].forEach((note,i)=>playNote(midiToHz(note),when+i*.105,.16,'sine',.016));
+ else if(name==='wrong') [62,58].forEach((note,i)=>playNote(midiToHz(note),when+i*.105,.16,'sine',.011));
+ else playNote(name==='key'?740:660,when,.055,'sine',.0045);
 }
+function playUiClick(){playUiSound('click')}
+function playFeedback(correct){playUiSound(correct?'correct':'wrong')}
 function setVolume(value){
  volumeLevel=Math.max(0,Math.min(1,Number(value)/100));
  if(masterGain&&audioContext)masterGain.gain.setTargetAtTime(volumeLevel,audioContext.currentTime,.04);
@@ -4551,11 +4577,21 @@ $('playAgain').addEventListener('click',playAgain);
 ['reportScope','reportSort','reportTable','reportType'].forEach(id=>$(id).addEventListener('change',renderRanking));
 for(let n=1;n<=20;n++){const option=document.createElement('option');option.value=String(n);option.textContent='Tabuada do '+n;$('reportTable').appendChild(option)}
 setInterval(saveCheckpoint,5000);
+loadUiSfx();
 restoreCloudSession();
 document.addEventListener('click',e=>{
  const button=e.target.closest('button');
  if(!button||button.disabled||['right','wrong','soundToggle','replayTune'].includes(button.id))return;
+ if(button.hasAttribute('data-challenge-answer')||button.hasAttribute('data-tournament-answer')||button.hasAttribute('data-adventure-answer'))return;
  playUiClick();
+},true);
+document.addEventListener('keydown',event=>{
+ if(event.repeat||event.ctrlKey||event.metaKey||event.altKey)return;
+ const field=event.target;
+ if(!(field instanceof HTMLElement)||!field.matches('input:not([type="password"]),textarea,[contenteditable="true"]'))return;
+ if(field.matches('input[type="range"],input[type="checkbox"],input[type="radio"]'))return;
+ if(['Enter','Tab','Shift','Escape','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key))return;
+ playUiSound('key');
 },true);
 </script>
 </body>
