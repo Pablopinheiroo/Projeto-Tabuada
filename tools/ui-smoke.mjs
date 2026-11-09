@@ -514,6 +514,9 @@ async function testViewport(name, viewport, mobile = false) {
     return !!stats&&!!titles&&(stats.compareDocumentPosition(titles)&Node.DOCUMENT_POSITION_FOLLOWING)!==0;
   });
   check(publicOrder,name+": acertos, erros e tempo não aparecem antes dos títulos.");
+  const communityStatsColor = await page.locator(".community-rank-public-stats").first().evaluate(element => getComputedStyle(element).color);
+  check(communityStatsColor === "rgb(16, 43, 73)",
+    name + ": estatísticas da comunidade continuam com pouco contraste (" + communityStatsColor + ").");
   await page.evaluate(async()=>{
     communityCache[0].profile.featuredTitles=[];
     await renderCommunityRanking();
@@ -523,9 +526,7 @@ async function testViewport(name, viewport, mobile = false) {
     name+": sem escolhas, a comunidade não mostrou exatamente os três primeiros títulos conquistados.");
   const communityGridColumns=await page.locator(".community-profile-details").first().evaluate(element=>getComputedStyle(element).gridTemplateColumns.split(" ").length);
   check(communityGridColumns===1,name+": as seções do perfil público não estão organizadas uma abaixo da outra ("+communityGridColumns+").");
-  const communityStatsColor = await page.locator(".community-rank-public-stats").first().evaluate(element => getComputedStyle(element).color);
-  check(communityStatsColor === "rgb(16, 43, 73)",
-    name + ": estatísticas da comunidade continuam com pouco contraste (" + communityStatsColor + ").");
+
   await page.locator(".community-rank-card").first().evaluate(element=>{element.open=true;});
   const challengePosition = await page.locator(".community-profile-details").first().evaluate(element => {
     const challenge = element.querySelector(".community-challenge-details");
