@@ -465,6 +465,8 @@ async function testViewport(name, viewport, mobile = false) {
     await page.locator("#profileScreen").evaluate(el=>el.classList.contains("hidden"))&&
     !(await page.locator("#setup").evaluate(el=>el.classList.contains("hidden"))),
     name+": o botão de Opções não retornou ao menu principal.");
+  check(!(await page.locator("#siteMusicBox").evaluate(el=>el.classList.contains("hidden"))),
+    name+": o player de música não voltou a aparecer no menu principal depois de fechar Opções.");
   if(musicWasPlayingBeforeOptions)await page.waitForFunction(()=>!document.querySelector("#soundtrackAudio").paused,null,{timeout:5000});
   await page.evaluate(()=>{
     setVolume(100);

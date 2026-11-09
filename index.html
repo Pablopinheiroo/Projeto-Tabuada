@@ -2868,6 +2868,7 @@ function showProfileOptions(){
  $('profileOptionsPanel').classList.remove('hidden');
  restoreProfileSfxVolume();
  restoreProfileGameSfxVolume();
+ restoreProfileMusicVolume();
  syncAudioPreferenceControls();
 }
 function closeProfileOptions(){
@@ -2957,7 +2958,12 @@ async function changePassword(event){
  }
 }
 function closeProfileScreen(){
- if(profileOptionsOpen)closeProfileOptions();
+ profileOptionsOpen=false;
+ profileOptionsResumeMusic=false;
+ $('profileOptionsPanel').classList.add('hidden');
+ $('profileStatsPanel').classList.add('hidden');
+ $('profileMainPanel').classList.remove('hidden');
+ $('siteMusicBox').classList.remove('hidden');
  setMusicCategory('principal',true);
  $('profileScreen').classList.add('hidden');
  $('setup').classList.remove('hidden');
@@ -4769,13 +4775,13 @@ function clearMainMusicTimer(){
 }
 function scheduleMainMusicRotation(){
  clearMainMusicTimer();
- if(!soundOn||profileOptionsOpen||!soundtrackAudio||soundtrackAudio.paused||document.hidden||isGameScreenActive()||challengeMusicActive)return;
+ if(!soundOn||!soundtrackAudio||soundtrackAudio.paused||document.hidden||isGameScreenActive()||challengeMusicActive)return;
  const duration=Number.isFinite(soundtrackAudio.duration)?soundtrackAudio.duration:(musicalTracks[currentTrackIndex]?.duration_seconds||0);
  const remaining=Math.max(0,duration-(soundtrackAudio.currentTime||0));
  if(!remaining)return;
  mainMusicTimer=setTimeout(()=>{
   mainMusicTimer=null;
-  if(soundOn&&!profileOptionsOpen&&!document.hidden&&!isGameScreenActive()&&!challengeMusicActive&&!soundtrackAudio.paused)playNextTrack();
+  if(soundOn&&!document.hidden&&!isGameScreenActive()&&!challengeMusicActive&&!soundtrackAudio.paused)playNextTrack();
  },Math.max(1000,remaining*1000+250));
 }
 function watchGameScreenForMusic(){
@@ -4843,7 +4849,7 @@ function pauseAudioForBackground(){
  if(musicWasPlayingBeforeHide)$('musicTitle').textContent='⏸ Faixa pausada enquanto você está fora da página';
 }
 function resumeAudioWhenVisible(){
- if(!musicWasPlayingBeforeHide||!soundOn||profileOptionsOpen||document.hidden)return;
+ if(!musicWasPlayingBeforeHide||!soundOn||document.hidden)return;
  musicWasPlayingBeforeHide=false;
  if(audioContext&&audioContext.state==='suspended')audioContext.resume().catch(()=>{});
  playCurrentTrack().then(ok=>{if(!ok)musicWasPlayingBeforeHide=true;});
