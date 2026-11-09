@@ -1270,6 +1270,8 @@ async function logout(){
  await flushCloudSave();
  
  sessionStorage.removeItem(AUTH_SESSION_KEY);sessionStorage.removeItem(API_TOKEN_KEY);activeProfile='';remoteUserData=null;remoteUserSha=null;historyData=loadHistory();
+ gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
+ selectedRegisterAvatar='imagem:0';renderAvatarGrid('registerAvatarGrid',selectedRegisterAvatar,key=>{selectedRegisterAvatar=key;});refreshEconomyDisplay();
  $('setup').classList.add('hidden');$('report').classList.add('hidden');$('authScreen').classList.remove('hidden');
  $('loginForm').reset();$('registerForm').reset();showLoginScreen();
 }

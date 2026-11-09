@@ -529,6 +529,14 @@ async function handleApi(request, env, origin) {
           if (!stageProgress || stageProgress.completed !== true) {
             return json({ error: "A conclusão desta fase ainda não foi sincronizada. Tente novamente após salvar seu progresso." }, 409, origin);
           }
+          if (Number(stageProgress.stars) === 3 && !economy.perfectStages.includes(stageId)) {
+            economy.perfectStages.push(stageId);
+            changed = true;
+          }
+          if (Number(stageProgress.bestCombo) >= 5 && !economy.comboStages.includes(stageId)) {
+            economy.comboStages.push(stageId);
+            changed = true;
+          }
           if (economy.completedStages.includes(stageId)) {
             alreadyClaimed = true;
           } else {
@@ -537,8 +545,6 @@ async function handleApi(request, env, origin) {
             economy.totalEarned += 50;
             coinsAdded = 50;
             changed = true;
-            if (Number(stageProgress.stars) === 3) economy.perfectStages.push(stageId);
-            if (Number(stageProgress.bestCombo) >= 5) economy.comboStages.push(stageId);
           }
         } else {
           return json({ error: "Tipo de recompensa inválido." }, 400, origin);
