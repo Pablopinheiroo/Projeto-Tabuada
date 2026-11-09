@@ -14,7 +14,7 @@ const AVATAR_GIF_COUNT = 12;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
 const CHALLENGE_PLAYER_METADATA_MAX = 45;
-const WORKER_BUILD_ID = "2026-11-09-adventure-history-sync-review-90";
+const WORKER_BUILD_ID = "2026-11-09-training-rewards-badges-community";
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
 const CHALLENGE_DIRECTORY = "desafios/partidas";
@@ -974,7 +974,7 @@ function communitySummary(record) {
     adventure_first: "A Jornada Começa", adventure_5: "Explorador", adventure_13: "Desbravador",
     adventure_26: "Lenda da Tabuada", perfect_first: "Precisão de Ouro", perfect_5: "Mestre da Precisão",
     combo_5: "Sequência Brilhante", coins_100: "Primeiras Economias", coins_500: "Tesouro da Tabuada",
-    collector_5: "Colecionador", challenge_four: "Lenda dos Quatro",
+    collector_5: "Colecionador", challenge_four: "Lenda dos Quatro", learning_from_errors: "Aprendendo com os erros",
     tournament_easy_top3: "Pódio Mensal Fácil", tournament_easy_top10: "Top 10 Fácil",
     tournament_medium_top3: "Pódio Mensal Médio", tournament_medium_top10: "Top 10 Médio",
     tournament_hard_top3: "Pódio Mensal Difícil", tournament_hard_top10: "Top 10 Difícil",
@@ -1219,7 +1219,7 @@ async function handleApi(request, env, origin) {
           ok: false,
           service: "Projeto Tabuada API",
           buildId: WORKER_BUILD_ID,
-          features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true },
+          features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, learningFromErrorsAchievement: true },
           githubSecretConfigured: false,
           githubConnected: false
         }, 503, origin);
@@ -1237,7 +1237,7 @@ async function handleApi(request, env, origin) {
         ok: true,
         service: "Projeto Tabuada API",
         buildId: WORKER_BUILD_ID,
-        features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true },
+        features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, learningFromErrorsAchievement: true },
         githubSecretConfigured: true,
         githubConnected: true,
         githubContentReadAccess: true
