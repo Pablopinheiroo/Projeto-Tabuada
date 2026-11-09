@@ -2753,7 +2753,7 @@ function showChallengeResult(challenge){
    '<div class="challenge-score-box '+(item.username===challenge.winner?'winner':'')+'"><strong>#'+(index+1)+' · '+item.score+'/10</strong><small>@'+escapeHtml(item.username)+' · '+formatDuration(item.totalMs)+'</small></div>'
   ).join('');
   $('challengeResultTime').textContent='Sua duração: '+formatDuration(mine?.totalMs||0);
-  $('challengeResultStatus').textContent=challenge.betMode?(winner?'Você recebeu '+(Number(challenge.stake||0)*2).toLocaleString('pt-BR')+' moedas, o total da aposta.':'Você perdeu a aposta de '+Number(challenge.stake||0).toLocaleString('pt-BR')+' moedas.'):'O resultado e o histórico foram salvos nos perfis dos participantes.';
+  $('challengeResultStatus').textContent=challenge.betMode?(challenge.betPaid?(winner?'Você recebeu '+(Number(challenge.stake||0)*2).toLocaleString('pt-BR')+' moedas, o total da aposta.':'Você perdeu a aposta de '+Number(challenge.stake||0).toLocaleString('pt-BR')+' moedas.'):'Resultado salvo. O sistema está confirmando o pagamento da aposta; volte à lista para atualizar.'):'O resultado e o histórico foram salvos nos perfis dos participantes.';
  }else if(mine){
   const pending=participants.filter(name=>!results[name]);
   $('challengeResultIcon').textContent='⏳';
