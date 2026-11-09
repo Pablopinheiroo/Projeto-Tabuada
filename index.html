@@ -1741,6 +1741,7 @@ function renderAvatarGrid(containerId,selectedKey,onSelect){
 function refreshProfileIdentity(){
  const profile=profilesData[activeProfile]||{};
  restoreProfileSfxVolume();
+ restoreProfileGameSfxVolume();
  restoreProfileMusicVolume();
  const displayName=profile.displayName||activeProfile;
  const avatarKey=normalizeAvatarKey(profile.avatar);
