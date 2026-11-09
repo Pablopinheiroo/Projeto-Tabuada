@@ -106,7 +106,7 @@ check(!html.includes("'<small>@'+escapeHtml(user.username)+'</small>'+")&&html.i
  "A comunidade continua exibindo o @usuário duplicado.");
 check(html.includes("community-rank-title-line")&&html.includes("community-challenge-details"),
  "A comunidade não apresenta títulos e desafios na nova posição.");
-check(html.includes("featuredTitlesEditor")&&html.includes("profile.featuredTitles=selectedTitles")&&html.includes("function renderProfileFeaturedTitlesEditor()"),
+check(html.includes("featuredTitlesEditor")&&html.includes("profilesData[activeProfile].featuredTitles=selectedTitles")&&html.includes("function renderProfileFeaturedTitlesEditor()"),
  "O perfil não permite escolher e salvar até três títulos públicos.");
 check(html.includes("unlockedTitleItems.slice(0,3)")&&html.includes("selectedTitleItems.length"),
  "A comunidade não limita os títulos aos três escolhidos ou aos três primeiros conquistados.");
