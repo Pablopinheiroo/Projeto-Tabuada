@@ -1756,6 +1756,426 @@ function closeProfileScreen(){
  renderCommunityRanking();
 }
 
+
+function renderChallengeTables(){
+ const box=$('challengeTables');if(!box)return;
+ box.innerHTML=Array.from({length:20},(_,index)=>{
+  const n=index+1;
+  return '<label class="challenge-table-option"><input type="checkbox" value="'+n+'"><span>'+n+'</span></label>';
+ }).join('');
+}
+function fillChallengePresetOptions(){
+ const select=$('challengePresetSelect');
+ if(!select)return;
+ select.innerHTML=CHALLENGE_PRESETS_UI.map(level=>'<option value="'+level.id+'">'+level.name+' · tabuadas 1–'+(level.id==='extremo'?'exclusivas':level.tables.length)+'</option>').join('');
+ updateChallengePresetDescription();
+}
+function updateChallengePresetDescription(){
+ const level=CHALLENGE_PRESETS_UI.find(item=>item.id===$('challengePresetSelect')?.value)||CHALLENGE_PRESETS_UI[0];
+ if($('challengePresetDescription'))$('challengePresetDescription').textContent=level.description;
+}
+function fillChallengeMusicOptions(){
+ const select=$('challengeMusicSelect');
+ if(!select)return;
+ select.innerHTML=CHALLENGE_MUSIC.map((item,index)=>'<option value="'+index+'">'+(index+1)+'. '+item.name+'</option>').join('');
+}
+function showChallengeSubPanel(name){
+ ['challengeHomePanel','challengeConfigPanel','challengePlayersPanel','challengePlayPanel','challengeResultPanel'].forEach(id=>$(id).classList.toggle('hidden',id!==name));
+}
+function openChallengeMode(){
+ ['trainingModePanel','adventureMapView','adventureIntroView','adventurePlayView','adventureResultView'].forEach(id=>$(id).classList.add('hidden'));
+ $('modeHub').classList.add('hidden');
+ $('challengeModeView').classList.remove('hidden');
+ showChallengeSubPanel('challengeHomePanel');
+ refreshChallengeData();
+}
+function backToModeHubFromChallenge(){
+ stopChallengeTimers();
+ stopChallengeMusic();
+ $('challengeModeView').classList.add('hidden');
+ $('modeHub').classList.remove('hidden');
+ if(soundOn&&soundtrackAudio&&soundtrackAudio.paused)playCurrentTrack();
+}
+function configureChallengeMode(mode){
+ challengeSetupMode=mode;
+ showChallengeSubPanel('challengeConfigPanel');
+ $('challengeCustomConfig').classList.toggle('hidden',mode!=='custom');
+ $('challengePresetConfig').classList.toggle('hidden',mode!=='preset');
+ $('challengeConfigTitle').textContent=mode==='custom'?'Desafio personalizado':'Desafio pré-definido';
+ $('challengeCustomMessage').textContent='';
+ $('challengeMusicSelect').value='0';
+ if(mode==='custom')$('challengeTables').querySelectorAll('input').forEach(input=>input.checked=false);
+}
+function getChallengeConfig(){
+ const musicTrack=Number($('challengeMusicSelect').value);
+ if(challengeSetupMode==='custom'){
+  const tables=[...$('challengeTables').querySelectorAll('input:checked')].map(input=>Number(input.value));
+  if(!tables.length){$('challengeCustomMessage').textContent='Marque pelo menos uma tabuada.';return null;}
+  return {mode:'custom',tables,musicTrack};
+ }
+ const levelId=$('challengePresetSelect').value;
+ const level=CHALLENGE_PRESETS_UI.find(item=>item.id===levelId);
+ if(!level)return null;
+ return {mode:'preset',levelId,musicTrack};
+}
+async function loadChallengePlayers(){
+ showChallengeSubPanel('challengePlayersPanel');
+ $('challengePlayersStatus').textContent='Carregando participantes cadastrados...';
+ $('challengePlayersList').innerHTML='';
+ try{
+  const result=await apiRequest('/api/challenges/players');
+  challengePlayers=Array.isArray(result.players)?result.players:[];
+  renderChallengePlayers();
+  $('challengePlayersStatus').textContent=challengePlayers.length
+    ?challengePlayers.length+' participante(s) disponível(is). Escolha quem você quer desafiar.'
+    :'Ainda não há outros participantes cadastrados.';
+ }catch(error){
+  $('challengePlayersStatus').textContent='Não foi possível carregar participantes: '+siteErrorMessage(error);
+ }
+}
+function renderChallengePlayers(){
+ const box=$('challengePlayersList');if(!box)return;
+ const query=($('challengePlayerSearch').value||'').trim().toLowerCase();
+ const items=challengePlayers.filter(name=>name.toLowerCase().includes(query));
+ if(!items.length){box.innerHTML='<div class="community-empty">Nenhum participante encontrado.</div>';return;}
+ box.innerHTML=items.map(name=>'<div class="challenge-player-card"><span class="challenge-player-name">👤 @'+escapeHtml(name)+'</span><button type="button" data-challenge-player="'+escapeHtml(name)+'">Desafiar</button></div>').join('');
+}
+async function createChallengeForPlayer(recipient){
+ const config=getChallengeConfig();
+ if(!config)return;
+ $('challengePlayersStatus').textContent='Criando o desafio e preparando as 10 questões...';
+ $('challengePlayersList').querySelectorAll('button').forEach(button=>button.disabled=true);
+ try{
+  const result=await apiRequest('/api/challenges',{method:'POST',body:{...config,recipient}});
+  challengeCurrent=result.challenge;
+  await startChallengeGame(challengeCurrent,'challenger');
+ }catch(error){
+  $('challengePlayersStatus').textContent='Não foi possível criar o desafio: '+siteErrorMessage(error);
+  $('challengePlayersList').querySelectorAll('button').forEach(button=>button.disabled=false);
+ }
+}
+function challengeRandom(seed){
+ let state=Number(seed)>>>0;
+ return function(){
+  state=(state+0x6D2B79F5)>>>0;
+  let t=state;
+  t=Math.imul(t^(t>>>15),t|1);
+  t^=t+Math.imul(t^(t>>>7),t|61);
+  return ((t^(t>>>14))>>>0)/4294967296;
+ };
+}
+function createChallengeQuestions(seed,tables,optionCount){
+ const random=challengeRandom(seed);
+ const pool=[];
+ for(const table of tables)for(let factor=1;factor<=10;factor++)pool.push({a:table,b:factor});
+ for(let i=pool.length-1;i>0;i--){
+  const j=Math.floor(random()*(i+1));
+  [pool[i],pool[j]]=[pool[j],pool[i]];
+ }
+ return pool.slice(0,10).map(fact=>{
+  const answer=fact.a*fact.b,values=new Set([answer]);
+  while(values.size<optionCount){
+   const spread=Math.max(7,Math.ceil(answer*.28));
+   const offset=1+Math.floor(random()*spread);
+   const candidate=random()<.5?answer+offset:Math.max(0,answer-offset);
+   values.add(candidate);
+  }
+  const options=[...values];
+  for(let i=options.length-1;i>0;i--){
+   const j=Math.floor(random()*(i+1));
+   [options[i],options[j]]=[options[j],options[i]];
+  }
+  return {...fact,answer,options};
+ });
+}
+function challengeOtherPlayer(challenge){
+ return challenge.challenger===activeProfile?challenge.recipient:challenge.challenger;
+}
+function challengeResultLabel(challenge){
+ if(challenge.status!=='completed')return challenge.myResult?'Resultado enviado · aguardando o adversário':'Convite recebido · aguardando sua partida';
+ if(challenge.winner==='empate')return '🤝 Empate';
+ return challenge.winner===activeProfile?'🏆 Você venceu':'🛡️ Você perdeu';
+}
+function getSeenChallengeResults(){
+ try{
+  const data=JSON.parse(localStorage.getItem(CHALLENGE_SEEN_KEY)||'{}');
+  return Array.isArray(data[activeProfile])?data[activeProfile]:[];
+ }catch{return [];}
+}
+function markChallengeResultSeen(id){
+ const all=(()=>{try{return JSON.parse(localStorage.getItem(CHALLENGE_SEEN_KEY)||'{}')}catch{return {}}})();
+ const seen=Array.isArray(all[activeProfile])?all[activeProfile]:[];
+ if(!seen.includes(id))seen.push(id);
+ all[activeProfile]=seen.slice(-200);
+ try{localStorage.setItem(CHALLENGE_SEEN_KEY,JSON.stringify(all));}catch{}
+}
+function updateChallengeBadge(pendingCount=0){
+ const seen=new Set(getSeenChallengeResults());
+ const unreadResults=challengeItems.filter(item=>item.status==='completed'&&item.myResult&&!seen.has(item.id)).length;
+ const count=Math.max(0,Number(pendingCount)||0)+unreadResults;
+ const badge=$('challengeBadge');
+ if(!badge)return;
+ badge.textContent=count>99?'99+':String(count);
+ badge.classList.toggle('hidden',count===0);
+}
+function renderChallengeList(){
+ const box=$('challengeList');if(!box)return;
+ if(!challengeItems.length){
+  box.innerHTML='<div class="community-empty">Você ainda não recebeu nem enviou desafios. Escolha um modo e convide alguém!</div>';
+  return;
+ }
+ box.innerHTML=challengeItems.map(item=>{
+  const other=challengeOtherPlayer(item);
+  const mine=item.myResult;
+  const incoming=item.recipient===activeProfile;
+  const pending=incoming&&!mine;
+  const completed=item.status==='completed';
+  const action=completed?'Ver resultado':(mine?'Aguardando adversário':(pending?'Jogar desafio':'Começar desafio'));
+  const disabled=!!mine&&!completed;
+  const scores=mine?(mine.score+'/10 pontos'):'Partida ainda não realizada';
+  const side=incoming?'Recebido de @'+other:'Enviado para @'+other;
+  const level=item.mode==='custom'?'Personalizado · tabuadas '+item.tables.join(', '):'Pré-definido · '+item.levelName;
+  return '<article class="challenge-list-card"><div class="challenge-list-meta"><strong>⚔️ '+escapeHtml(side)+'</strong><small>'+escapeHtml(level)+' · '+scores+'</small><span class="challenge-status-pill">'+escapeHtml(challengeResultLabel(item))+'</span></div><button type="button" data-challenge-play="'+item.id+'" '+(disabled?'disabled':'')+'>'+action+'</button></article>';
+ }).join('');
+}
+async function refreshChallengeData(){
+ if(!activeProfile||!cloudTokenReady())return;
+ try{
+  const result=await apiRequest('/api/challenges');
+  challengeItems=Array.isArray(result.items)?result.items:[];
+  if(result.challengeStats){
+   profilesData[activeProfile]=profilesData[activeProfile]||{};
+   profilesData[activeProfile].challengeStats=result.challengeStats;
+   persistProfiles();
+  }
+  renderChallengeList();
+  renderChallengeProfileStats();
+  updateChallengeBadge(result.pendingCount||0);
+  if(challengeCurrent){
+   const updated=challengeItems.find(item=>item.id===challengeCurrent.id);
+   if(updated){
+    challengeCurrent=updated;
+    if(!$('challengeResultPanel').classList.contains('hidden'))showChallengeResult(updated);
+   }
+  }
+  $('challengeListStatus').textContent='Atualizado em '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'. Os avisos são conferidos automaticamente.';
+ }catch(error){
+  $('challengeListStatus').textContent='Não foi possível atualizar seus desafios: '+siteErrorMessage(error);
+ }
+}
+function startChallengePolling(){
+ if(challengePollTimer!==null)return;
+ challengePollTimer=setInterval(()=>{if(activeProfile)refreshChallengeData();},60_000);
+}
+function stopChallengePolling(){
+ if(challengePollTimer!==null){clearInterval(challengePollTimer);challengePollTimer=null;}
+}
+function startChallengeMusic(trackIndex){
+ stopChallengeMusic();
+ const track=CHALLENGE_MUSIC[trackIndex]||CHALLENGE_MUSIC[0];
+ if(soundtrackAudio)soundtrackAudio.pause();
+ clearMainMusicTimer();
+ if(!ensureAudio())return;
+ challengeMusicActive=true;
+ const gain=challengeVolumeLimit/100;
+ masterGain.gain.setTargetAtTime(gain,audioContext.currentTime,.04);
+ const beat=60/track.bpm,halfBeat=beat/2,start=audioContext.currentTime+.04;
+ const steps=Math.floor(50/halfBeat);
+ const scale=track.pattern;
+ for(let step=0;step<steps;step++){
+  const at=start+step*halfBeat;
+  const note=scale[step%scale.length];
+  playNote(midiToHz(track.root+12+note),at,halfBeat*.78,track.wave,.009);
+  if(step%2===0){
+   playNote(midiToHz(track.root-12),at,beat*.82,'triangle',.013);
+   playNote(midiToHz(track.root-24),at,.11,'sine',.025);
+  }
+  if(step%4===0){
+   playNote(midiToHz(track.root+7),at,beat*1.6,'triangle',.0035);
+  }
+ }
+ challengeMusicTimer=setTimeout(stopChallengeMusic,50_000);
+}
+function stopChallengeMusic(){
+ if(challengeMusicTimer!==null){clearTimeout(challengeMusicTimer);challengeMusicTimer=null;}
+ if(challengeMusicActive){
+  activeSounds.forEach(node=>{try{node.stop()}catch{}});
+  activeSounds.clear();
+  challengeMusicActive=false;
+ }
+ if(masterGain&&audioContext)masterGain.gain.setTargetAtTime(volumeLevel,audioContext.currentTime,.05);
+}
+function applyChallengeVolume(value){
+ const max=challengeRole==='recipient'?30:100;
+ const actual=Math.max(0,Math.min(max,Number(value)||0));
+ challengeVolumeLimit=actual;
+ if($('challengeVolume'))$('challengeVolume').value=String(actual);
+ if($('challengeVolumeValue'))$('challengeVolumeValue').textContent=actual+'%';
+ if(masterGain&&audioContext)masterGain.gain.setTargetAtTime(actual/100,audioContext.currentTime,.04);
+}
+function stopChallengeTimers(){
+ if(challengeQuestionTimer!==null){clearInterval(challengeQuestionTimer);challengeQuestionTimer=null;}
+ if(challengeOverallTimer!==null){clearInterval(challengeOverallTimer);challengeOverallTimer=null;}
+}
+function updateChallengeClocks(){
+ if(!challengeCurrent||$('challengePlayPanel').classList.contains('hidden'))return;
+ const now=performance.now();
+ const remaining=Math.max(0,challengeQuestionStarted+5000-now);
+ const totalRemaining=Math.max(0,challengeMatchDeadline-now);
+ $('challengeRoundClock').textContent=(remaining/1000).toFixed(1).replace('.',',')+' s';
+ $('challengeTotalClock').textContent=(totalRemaining/1000).toFixed(1).replace('.',',')+' s';
+ $('challengeProgressBar').style.width=(challengeQuestionIndex/10*100)+'%';
+ if(remaining<=0&&!challengeQuestionLocked)submitChallengeChoice(null);
+}
+function renderChallengeQuestion(previousText='Escolha uma alternativa antes do tempo acabar.'){
+ const question=challengeQuestions[challengeQuestionIndex];
+ if(!question)return;
+ challengeQuestionLocked=false;
+ $('challengeQuestionCounter').textContent='QUESTÃO '+(challengeQuestionIndex+1)+' DE 10';
+ $('challengeQuestionMath').textContent=question.a+' × '+question.b+' = ?';
+ $('challengeQuestionFeedback').textContent=previousText;
+ $('challengeOptions').innerHTML=question.options.map(value=>'<button class="challenge-option" type="button" data-challenge-answer="'+value+'">'+value+'</button>').join('');
+ challengeQuestionStarted=performance.now();
+ if(challengeQuestionTimer!==null)clearInterval(challengeQuestionTimer);
+ challengeQuestionTimer=setInterval(updateChallengeClocks,50);
+ updateChallengeClocks();
+}
+async function startChallengeGame(challenge,role){
+ challengeCurrent=challenge;
+ challengeRole=role;
+ challengeQuestions=createChallengeQuestions(challenge.seed,challenge.tables,challenge.optionCount);
+ challengeAnswerLog=[];
+ challengeQuestionIndex=0;
+ challengeQuestionLocked=false;
+ challengeLocalScore=0;
+ challengeMatchStarted=performance.now();
+ challengeMatchDeadline=challengeMatchStarted+50_000;
+ $('challengeHomePanel').classList.add('hidden');
+ $('challengeConfigPanel').classList.add('hidden');
+ $('challengePlayersPanel').classList.add('hidden');
+ $('challengeResultPanel').classList.add('hidden');
+ $('challengePlayPanel').classList.remove('hidden');
+ const opponent=challengeOtherPlayer(challenge);
+ $('challengeOpponentTitle').textContent='Você × @'+opponent;
+ $('challengePlayMeta').textContent=(challenge.mode==='custom'?'Personalizado':'Nível '+challenge.levelName)+' · Tabuadas '+challenge.tables.join(', ')+' · '+challenge.optionCount+' alternativas';
+ const track=CHALLENGE_MUSIC[challenge.musicTrack]||CHALLENGE_MUSIC[0];
+ $('challengeMusicTitle').textContent='🎵 '+track.name;
+ $('challengeMusicRule').textContent=role==='recipient'?'Música escolhida pelo desafiante. Ela está bloqueada para você.':'Você escolheu esta música. O adversário ouvirá a mesma trilha.';
+ $('challengeVolume').max=role==='recipient'?'30':'100';
+ $('challengeVolume').min='0';
+ applyChallengeVolume(role==='recipient'?30:100);
+ $('challengePlayStatus').textContent=role==='recipient'?'Você recebeu este duelo. Boa sorte!':'Você enviou o desafio. Agora faça sua partida!';
+ startChallengeMusic(challenge.musicTrack);
+ challengeOverallTimer=setInterval(updateChallengeClocks,100);
+ renderChallengeQuestion();
+}
+function submitChallengeChoice(value){
+ if(challengeQuestionLocked||!challengeCurrent)return;
+ challengeQuestionLocked=true;
+ const elapsed=Math.max(0,performance.now()-challengeQuestionStarted);
+ const withinTime=elapsed<=5000;
+ const chosen=withinTime&&value!==null?Number(value):null;
+ const question=challengeQuestions[challengeQuestionIndex];
+ const correct=chosen!==null&&chosen===question.answer;
+ challengeAnswerLog.push({value:chosen,elapsedMs:Math.round(Math.min(60_000,elapsed))});
+ if(correct)challengeLocalScore++;
+ $('challengeScore').textContent=challengeLocalScore+'/10';
+ $('challengeOptions').querySelectorAll('button').forEach(button=>{
+  button.disabled=true;
+  const n=Number(button.dataset.challengeAnswer);
+  if(n===question.answer)button.classList.add('selected-correct');
+  else if(chosen===n)button.classList.add('selected-wrong');
+ });
+ const previousText=correct?'✓ Ponto! Resposta correta.':(chosen===null?'⌛ Tempo esgotado. Esta questão vale zero.':'✕ Sem ponto nesta questão.');
+ if(challengeQuestionTimer!==null){clearInterval(challengeQuestionTimer);challengeQuestionTimer=null;}
+ challengeQuestionIndex++;
+ $('challengeProgressBar').style.width=(challengeQuestionIndex/10*100)+'%';
+ if(challengeQuestionIndex>=10){
+  finishChallengeMatch();
+  return;
+ }
+ renderChallengeQuestion(previousText);
+}
+async function finishChallengeMatch(){
+ stopChallengeTimers();
+ stopChallengeMusic();
+ $('challengePlayPanel').classList.add('hidden');
+ $('challengeResultPanel').classList.remove('hidden');
+ $('challengeResultTitle').textContent='Registrando seu resultado...';
+ $('challengeResultText').textContent='Conferindo os 10 resultados e enviando sua pontuação para o perfil.';
+ $('challengeResultScores').innerHTML='';
+ $('challengeResultTime').textContent='Tempo da partida: '+formatDuration(performance.now()-challengeMatchStarted);
+ $('challengeResultStatus').textContent='Não feche esta tela enquanto o resultado é enviado.';
+ try{
+  const result=await apiRequest('/api/challenges/'+challengeCurrent.id+'/result',{
+   method:'POST',body:{answers:challengeAnswerLog}
+  });
+  challengeCurrent=result.challenge;
+  await refreshChallengeData();
+  showChallengeResult(challengeCurrent);
+ }catch(error){
+  $('challengeResultIcon').textContent='⚠️';
+  $('challengeResultTitle').textContent='Não foi possível confirmar o resultado';
+  $('challengeResultText').textContent=siteErrorMessage(error);
+  $('challengeResultStatus').textContent='Sua partida ficou nesta tela. Volte aos desafios e atualize para verificar se o envio foi concluído.';
+  $('challengeResultBack').textContent='Voltar e atualizar';
+ }
+}
+function showChallengeResult(challenge){
+ if(!challenge)return;
+ challengeCurrent=challenge;
+ if(challenge.status==='completed'&&challenge.myResult)markChallengeResultSeen(challenge.id);
+ const mine=challenge.myResult;
+ const other=challenge.otherResult;
+ const otherName=challengeOtherPlayer(challenge);
+ if(challenge.status==='completed'&&mine&&other){
+  const won=challenge.winner===activeProfile;
+  const draw=challenge.winner==='empate';
+  $('challengeResultIcon').textContent=draw?'🤝':(won?'🏆':'🛡️');
+  $('challengeResultTitle').textContent=draw?'Duelo empatado!':(won?'Você venceu o duelo!':'Desta vez, o adversário venceu.');
+  $('challengeResultText').textContent='Resultado final contra @'+otherName+'. '+(draw?'Os dois tiveram o mesmo desempenho.':won?'Parabéns pela vitória!':'Continue praticando e tente novamente.');
+  $('challengeResultScores').innerHTML='<div class="challenge-score-box"><strong>'+mine.score+'/10</strong><small>Sua pontuação</small></div><div class="challenge-score-box"><strong>'+other.score+'/10</strong><small>@'+escapeHtml(otherName)+'</small></div>';
+  $('challengeResultTime').textContent='Seu tempo: '+formatDuration(mine.totalMs)+' · Adversário: '+formatDuration(other.totalMs);
+  $('challengeResultStatus').textContent='O resultado foi salvo no histórico do perfil.';
+ }else if(mine){
+  $('challengeResultIcon').textContent='⏳';
+  $('challengeResultTitle').textContent='Pontuação registrada!';
+  $('challengeResultText').textContent='Você fez '+mine.score+' ponto(s) contra @'+otherName+'. O resultado final será definido quando o outro participante terminar.';
+  $('challengeResultScores').innerHTML='<div class="challenge-score-box"><strong>'+mine.score+'/10</strong><small>Sua pontuação</small></div><div class="challenge-score-box"><strong>—</strong><small>Aguardando @'+escapeHtml(otherName)+'</small></div>';
+  $('challengeResultTime').textContent='Seu tempo: '+formatDuration(mine.totalMs);
+  $('challengeResultStatus').textContent='Esta partida ainda não conta como vitória ou derrota. Volte mais tarde para ver o resultado final.';
+ }else{
+  $('challengeResultIcon').textContent='⚔️';
+  $('challengeResultTitle').textContent='Desafio disponível';
+  $('challengeResultText').textContent='Você ainda não jogou contra @'+otherName+'.';
+  $('challengeResultScores').innerHTML='';
+  $('challengeResultTime').textContent='10 questões · 5 segundos por questão';
+  $('challengeResultStatus').textContent='Volte à lista e escolha Jogar desafio.';
+ }
+ $('challengeResultPanel').classList.remove('hidden');
+ $('challengePlayPanel').classList.add('hidden');
+ renderChallengeList();
+ updateChallengeBadge();
+}
+async function openChallengeFromList(id){
+ const item=challengeItems.find(challenge=>challenge.id===id);
+ if(!item)return;
+ if(item.myResult||item.status==='completed'){
+  showChallengeSubPanel('challengeResultPanel');
+  showChallengeResult(item);
+  return;
+ }
+ if(item.recipient===activeProfile){
+  await startChallengeGame(item,'recipient');
+ }else{
+  await startChallengeGame(item,'challenger');
+ }
+}
+function handleChallengeVisibility(){
+ if(document.hidden)return;
+ if(challengeCurrent&&!$('challengePlayPanel').classList.contains('hidden'))updateChallengeClocks();
+}
+
 function makeRound(){
  const allRandom=selected.every(t=>t.mode==='random');
  const questions=[];
