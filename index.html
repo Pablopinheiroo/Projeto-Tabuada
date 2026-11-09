@@ -1187,11 +1187,23 @@ function refreshProfileIdentity(){
  const avatarKey=normalizeAvatarKey(profile.avatar);
  const avatar=avatarImage(avatarKey);
  const animated=isAnimatedAvatar(avatarKey);
+ const frame=profile.tournamentFrame||'';
+ const frameClasses=['tournament-frame-gold','tournament-frame-silver','tournament-frame-bronze','tournament-frame-top10'];
  if($('currentUsername'))$('currentUsername').textContent=activeProfile;
  if($('currentDisplayName'))$('currentDisplayName').textContent=displayName;
- if($('currentAvatar')){$('currentAvatar').src=avatar;$('currentAvatar').classList.toggle('gif-avatar',animated);}
+ if($('currentAvatar')){
+  $('currentAvatar').src=avatar;
+  $('currentAvatar').classList.toggle('gif-avatar',animated);
+  frameClasses.forEach(name=>$('currentAvatar').classList.remove(name));
+  if(frame)$('currentAvatar').classList.add('tournament-frame-'+frame);
+ }
  if($('profilePreviewName'))$('profilePreviewName').textContent=displayName;
- if($('profilePreviewAvatar')){$('profilePreviewAvatar').src=avatar;$('profilePreviewAvatar').classList.toggle('gif-avatar',animated);}
+ if($('profilePreviewAvatar')){
+  $('profilePreviewAvatar').src=avatar;
+  $('profilePreviewAvatar').classList.toggle('gif-avatar',animated);
+  frameClasses.forEach(name=>$('profilePreviewAvatar').classList.remove(name));
+  if(frame)$('profilePreviewAvatar').classList.add('tournament-frame-'+frame);
+ }
 }
 const ACHIEVEMENT_DEFINITIONS=[
  {id:'training_first',icon:'🌱',title:'Primeiro Ciclo',description:'Conclua seu primeiro ciclo completo no treinamento.'},
@@ -1206,7 +1218,15 @@ const ACHIEVEMENT_DEFINITIONS=[
  {id:'combo_5',icon:'⚡',title:'Sequência Brilhante',description:'Acerte 5 questões seguidas em uma fase.'},
  {id:'coins_100',icon:'🪙',title:'Primeiras Economias',description:'Ganhe 100 moedas ao longo do jogo.'},
  {id:'coins_500',icon:'💰',title:'Tesouro da Tabuada',description:'Ganhe 500 moedas ao longo do jogo.'},
- {id:'collector_5',icon:'🎨',title:'Colecionador',description:'Desbloqueie 5 avatares.'}
+ {id:'collector_5',icon:'🎨',title:'Colecionador',description:'Desbloqueie 5 avatares.'},
+ {id:'challenge_four',icon:'🦁',title:'Lenda dos Quatro',description:'Vença um desafio contra quatro adversários.',hidden:true},
+ {id:'tournament_easy_top3',icon:'🥇',title:'Pódio Mensal — Fácil',description:'Fique entre os três primeiros no torneio Fácil.'},
+ {id:'tournament_easy_top10',icon:'🏅',title:'Top 10 Mensal — Fácil',description:'Fique entre o quarto e o décimo lugar no torneio Fácil.'},
+ {id:'tournament_medium_top3',icon:'🥇',title:'Pódio Mensal — Médio',description:'Fique entre os três primeiros no torneio Médio.'},
+ {id:'tournament_medium_top10',icon:'🏅',title:'Top 10 Mensal — Médio',description:'Fique entre o quarto e o décimo lugar no torneio Médio.'},
+ {id:'tournament_hard_top3',icon:'🥇',title:'Pódio Mensal — Difícil',description:'Fique entre os três primeiros no torneio Difícil.'},
+ {id:'tournament_hard_top10',icon:'🏅',title:'Top 10 Mensal — Difícil',description:'Fique entre o quarto e o décimo lugar no torneio Difícil.'},
+ {id:'tournament_perfect50',icon:'💯',title:'50 de 50',description:'Acerte as cinquenta questões de um torneio mensal.'}
 ];
 const ECONOMY_CACHE_KEY='projetoTabuadaEconomiaCacheV1';
 const PENDING_REWARDS_KEY='projetoTabuadaRecompensasPendentesV1';
@@ -1232,7 +1252,7 @@ function saveClientEconomyCache(username=activeProfile){
  try{const all=JSON.parse(localStorage.getItem(ECONOMY_CACHE_KEY)||'{}');all[username]=gameEconomy;localStorage.setItem(ECONOMY_CACHE_KEY,JSON.stringify(all));}catch(error){console.warn('Não foi possível guardar o cache de moedas.',error);}
 }
 function refreshEconomyDisplay(){
- const earned=Object.keys(gameEconomy.achievements||{}).length,total=ACHIEVEMENT_DEFINITIONS.length;
+ const earned=Object.keys(gameEconomy.achievements||{}).length,total=ACHIEVEMENT_DEFINITIONS.filter(item=>!item.hidden).length+(gameEconomy.achievements?.challenge_four?1:0);
  ['currentCoins','profileCoins'].forEach(id=>{if($(id))$(id).textContent=gameEconomy.coins.toLocaleString('pt-BR');});
  if($('profileTotalEarned'))$('profileTotalEarned').textContent=gameEconomy.totalEarned.toLocaleString('pt-BR');
  if($('profileTrainingCycles'))$('profileTrainingCycles').textContent=gameEconomy.trainingCycles.toLocaleString('pt-BR');
@@ -1242,7 +1262,8 @@ function refreshEconomyDisplay(){
 function renderAchievementShelf(){
  const shelf=$('achievementShelf');if(!shelf)return;
  const earned=gameEconomy.achievements||{};
- shelf.innerHTML=ACHIEVEMENT_DEFINITIONS.map(item=>{
+ const visibleDefinitions=ACHIEVEMENT_DEFINITIONS.filter(item=>!item.hidden||earned[item.id]);
+ shelf.innerHTML=visibleDefinitions.map(item=>{
   const date=earned[item.id],unlocked=!!date;
   const dateText=unlocked&&date!==true?new Date(date).toLocaleDateString('pt-BR'):'Conquista desbloqueada';
   return '<article class="achievement-card '+(unlocked?'unlocked':'locked')+'"><span class="achievement-icon">'+(unlocked?item.icon:'🔒')+'</span><div><strong>'+item.title+'</strong><p>'+item.description+'</p><small>'+(unlocked?dateText:'Ainda não conquistada')+'</small></div></article>';
@@ -1266,6 +1287,15 @@ function renderChallengeProfileStats(){
  if($('challengeMedalShelf'))$('challengeMedalShelf').innerHTML=medals;
  const earned=CHALLENGE_PRESETS_UI.filter(level=>(Number(levels[level.id]?.wins)||0)>=10).length;
  if($('challengeMedalCount'))$('challengeMedalCount').textContent=earned+'/'+CHALLENGE_PRESETS_UI.length+' medalhas';
+ const awards=profile.tournamentAwards||{};
+ const awardItems=Object.entries(awards).sort((a,b)=>b[0].localeCompare(a[0]));
+ if($('tournamentAwardShelf')){
+  $('tournamentAwardShelf').innerHTML=awardItems.length?awardItems.map(([month,award])=>{
+   const place=Number(award.rank)||0;
+   const symbol=place===1?'🥇':place===2?'🥈':place===3?'🥉':place<=10?'🏅':'🏆';
+   return '<article class="achievement-card challenge-medal unlocked"><span class="achievement-icon">'+symbol+'</span><div><strong>'+escapeHtml(award.difficulty||'Torneio')+' · '+month+'</strong><p>'+place+'º lugar · '+award.score+'/50 pontos</p><small>'+escapeHtml(award.frame||'Participação')+'</small></div></article>';
+  }).join(''):'<div class="tournament-empty">Suas premiações mensais aparecerão aqui.</div>';
+ }
 }
 
 let rewardToastTimer=null;
@@ -1526,7 +1556,7 @@ async function flushCloudSave(force=false){
  }
 }
 async function loadCommunityRecords(force=false){
- if(!force&&communityCacheAt&&Date.now()-communityCacheAt<30000)return communityCache;
+ if(!force&&communityCacheAt&&Date.now()-communityCacheAt<300000)return communityCache;
  const result=await apiRequest('/api/community');
  if(!Array.isArray(result.records))throw new Error('O servidor não retornou a lista de participantes.');
  communityCache=result.records;
@@ -1534,55 +1564,78 @@ async function loadCommunityRecords(force=false){
  return communityCache;
 }
 function communityStatsFromRecord(record){
- if(record&&Number.isFinite(Number(record.correct))&&Number.isFinite(Number(record.wrong))){
-  return {
-   username:record.username,
-   displayName:record.displayName||record.username,
-   avatar:normalizeAvatarKey(record.avatar),
-   correct:Number(record.correct)||0,
-   wrong:Number(record.wrong)||0,
-   attempts:Number(record.attempts)||(Number(record.correct)||0)+(Number(record.wrong)||0),
-   timeMs:Number(record.timeMs)||0,
-   hard:Array.isArray(record.hard)?record.hard.slice(0,3):[]
-  };
- }
+ const profile=record.profile&&typeof record.profile==='object'?record.profile:{};
+ const economy=record.economy&&typeof record.economy==='object'?record.economy:{};
  const history=normalizeHistory(record.history);
  const questions=Object.values(history.questions||{});
- const correct=questions.reduce((sum,q)=>sum+(Number(q.correct)||0),0);
- const wrong=questions.reduce((sum,q)=>sum+(Number(q.wrong)||0),0);
+ const correct=record.correct!==undefined?Number(record.correct)||0:questions.reduce((sum,q)=>sum+(Number(q.correct)||0),0);
+ const wrong=record.wrong!==undefined?Number(record.wrong)||0:questions.reduce((sum,q)=>sum+(Number(q.wrong)||0),0);
  const sessions=Array.isArray(history.sessions)?history.sessions:[];
- const checkpoint=record.profile&&record.profile.checkpoint;
- let timeMs=sessions.reduce((sum,item)=>sum+(Number(item.timeMs)||0),0);
- if(checkpoint)timeMs+=(Number(checkpoint.sessionQuestionTimeMs)||0)+(Number(checkpoint.currentElapsedMs)||0);
- const hard=questions.filter(q=>(Number(q.wrong)||0)>0)
-  .sort((a,b)=>b.wrong-a.wrong||(b.wrong/Math.max(1,b.attempts))-(a.wrong/Math.max(1,a.attempts))).slice(0,3);
- return {username:record.username,displayName:record.profile?.displayName||record.username,avatar:normalizeAvatarKey(record.profile?.avatar),correct,wrong,attempts:correct+wrong,timeMs,hard};
+ const sessionMs=sessions.reduce((sum,item)=>sum+(Number(item.timeMs)||0),0);
+ const timeMs=Number(record.timeMs)||Math.max(Number(profile.studyTimeMs)||0,sessionMs);
+ const challengeStats=record.challengeStats||profile.challengeStats||{};
+ const total=challengeStats.total||{};
+ const levels=challengeStats.levels||{};
+ const medals=Array.isArray(record.medals)?record.medals:Object.entries(levels)
+  .filter(([,level])=>Number(level?.wins)>=10).map(([id,level])=>({id,name:level.name||id}));
+ const achievements=record.achievements||economy.achievements||{};
+ const titles=Array.isArray(record.titles)?record.titles:Object.keys(achievements);
+ return {
+  username:record.username,
+  displayName:record.displayName||profile.displayName||record.username,
+  avatar:normalizeAvatarKey(record.avatar||profile.avatar),
+  correct,wrong,attempts:Number(record.attempts)||correct+wrong,timeMs,
+  titles,medals,
+  challengeWins:Number(record.challengeWins??total.wins)||0,
+  challengeLosses:Number(record.challengeLosses??total.losses)||0,
+  challengeDraws:Number(record.challengeDraws??total.draws)||0,
+  tournamentFrame:record.tournamentFrame||profile.tournamentFrame||null,
+  coins:Number(record.coins??economy.coins)||0
+ };
 }
 async function renderCommunityRanking(){
  const box=$('communityRanking');if(!box)return;
- box.innerHTML='<div class="community-empty">Carregando ranking compartilhado...</div>';
+ box.innerHTML='<div class="community-empty">Carregando comunidade...</div>';
  try{
   const records=await loadCommunityRecords();
-  const visible=records.slice();
-  if(activeProfile){
-   const localRecord=buildRemoteUserData();
-   const index=visible.findIndex(item=>item.username===activeProfile);
-   if(index>=0)visible[index]=localRecord;else visible.push(localRecord);
-  }
-  const users=visible.map(communityStatsFromRecord);
+  const users=records.map(communityStatsFromRecord);
   const mode=$('communitySort')?.value||'time';
-  const sorters={time:(a,b)=>b.timeMs-a.timeMs||b.correct-a.correct,correct:(a,b)=>b.correct-a.correct||b.timeMs-a.timeMs,wrong:(a,b)=>b.wrong-a.wrong||b.timeMs-a.timeMs};
+  const sorters={
+   time:(a,b)=>b.timeMs-a.timeMs||b.correct-a.correct,
+   correct:(a,b)=>b.correct-a.correct||b.timeMs-a.timeMs,
+   wrong:(a,b)=>b.wrong-a.wrong||b.timeMs-a.timeMs
+  };
   users.sort(sorters[mode]||sorters.time);
   if(!users.length){box.innerHTML='<div class="community-empty">Ainda não há participantes. Seja o primeiro a criar um perfil!</div>';return;}
   box.innerHTML=users.map((user,index)=>{
-   const hard=user.hard.length?user.hard.map(q=>q.a+'×'+q.b+' ('+q.wrong+' erro'+(q.wrong===1?'':'s')+')').join(' · '):'Sem erros registrados';
-   return '<div class="community-card"><div class="community-user"><img src="'+avatarImage(user.avatar)+'" alt="" style="width:32px;height:32px;vertical-align:middle;margin-right:7px;border-radius:50%">#'+(index+1)+' · '+escapeHtml(user.displayName)+'<small>@'+escapeHtml(user.username)+' · '+user.attempts+' questões respondidas</small></div><div class="community-metric"><strong>'+formatDuration(user.timeMs)+'</strong><small>tempo estudado</small></div><div class="community-metric"><strong>'+user.correct+'</strong><small>acertos</small></div><div class="community-metric"><strong>'+user.wrong+'</strong><small>erros</small></div><div class="community-hard"><b>Maiores dificuldades:</b> '+escapeHtml(hard)+'</div></div>';
+   const rankClass=index===0?'rank-gold':index===1?'rank-silver':index===2?'rank-bronze':'';
+   const frame=user.tournamentFrame?' tournament-frame-'+user.tournamentFrame:'';
+   const titles=user.titles.slice(0,3).map(title=>'<span class="community-rank-chip title">🏅 '+escapeHtml(title)+'</span>').join('');
+   const medals=user.medals.slice(0,3).map(medal=>'<span class="community-rank-chip medal">🥇 '+escapeHtml(medal.name||medal.id)+'</span>').join('');
+   const extras=user.titles.length>3?'<span class="community-rank-chip">+'+(user.titles.length-3)+' títulos</span>':'';
+   return '<article class="community-rank-card '+rankClass+'">'+
+    '<div class="community-rank-main">'+
+     '<div class="community-rank-place">'+(index===0?'🥇':index===1?'🥈':index===2?'🥉':'#'+(index+1))+'</div>'+
+     '<img class="community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt="">'+
+     '<div class="community-rank-identity"><strong>'+escapeHtml(user.displayName)+'</strong><small>@'+escapeHtml(user.username)+'</small></div>'+
+    '</div>'+
+    '<div class="community-rank-trophy">🏆 '+user.challengeWins+' vitórias</div>'+
+    '<div class="community-rank-chips">'+(titles||'<span class="community-rank-chip">🌱 Novo participante</span>')+medals+extras+'</div>'+
+    '<div class="community-rank-metrics">'+
+     '<div class="community-rank-metric"><strong>'+user.correct.toLocaleString('pt-BR')+'</strong><small>acertos</small></div>'+
+     '<div class="community-rank-metric"><strong>'+user.wrong.toLocaleString('pt-BR')+'</strong><small>erros</small></div>'+
+     '<div class="community-rank-metric"><strong>'+formatDuration(user.timeMs)+'</strong><small>tempo estudado</small></div>'+
+    '</div>'+
+   '</article>';
   }).join('');
+  const note=document.querySelector('.community-list-note');
+  if(note)note.textContent='Mostrando '+Math.min(users.length,35)+' participantes. Role a lista para conhecer os demais.';
  }catch(error){
   box.innerHTML='<div class="community-empty">'+escapeHtml(siteErrorMessage(error))+'</div>';
-  console.error('Falha ao carregar o ranking:',error);
+  console.error('Falha ao carregar a comunidade:',error);
  }
 }
+
 async function restoreCloudSession(){
  let rememberedUser=sessionStorage.getItem(AUTH_SESSION_KEY);
  let sessionToken=sessionStorage.getItem(API_TOKEN_KEY);
