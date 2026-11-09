@@ -1,0 +1,202 @@
+[
+  {
+    "id": "desafio-01-pixel-adventure",
+    "name": "Duelo 01 — Pixel Adventure",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-01-pixel-adventure.mp3",
+    "duration_seconds": 47.11,
+    "bpm": 147,
+    "file_bytes": 472078,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-02-racing-neon",
+    "name": "Duelo 02 — Racing Neon",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-02-racing-neon.mp3",
+    "duration_seconds": 45.04,
+    "bpm": 154,
+    "file_bytes": 451441,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-03-rpg-kingdom",
+    "name": "Duelo 03 — Kingdom of Heroes",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-03-rpg-kingdom.mp3",
+    "duration_seconds": 43.93,
+    "bpm": 158,
+    "file_bytes": 440208,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-04-arcade-bounce",
+    "name": "Duelo 04 — Arcade Bounce",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-04-arcade-bounce.mp3",
+    "duration_seconds": 41.64,
+    "bpm": 167,
+    "file_bytes": 417482,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-05-dungeon-boss",
+    "name": "Duelo 05 — Dungeon Boss",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-05-dungeon-boss.mp3",
+    "duration_seconds": 47.74,
+    "bpm": 145,
+    "file_bytes": 478347,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-06-sky-islands",
+    "name": "Duelo 06 — Sky Islands",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-06-sky-islands.mp3",
+    "duration_seconds": 45.04,
+    "bpm": 154,
+    "file_bytes": 451441,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-07-speedrun",
+    "name": "Duelo 07 — Speedrun!",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-07-speedrun.mp3",
+    "duration_seconds": 42.88,
+    "bpm": 162,
+    "file_bytes": 429759,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-08-puzzle-funk",
+    "name": "Duelo 08 — Puzzle Funk",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-08-puzzle-funk.mp3",
+    "duration_seconds": 40.93,
+    "bpm": 170,
+    "file_bytes": 410167,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-09-retro-platform",
+    "name": "Duelo 09 — Retro Platform",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-09-retro-platform.mp3",
+    "duration_seconds": 46.5,
+    "bpm": 149,
+    "file_bytes": 466070,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-10-cyber-arena",
+    "name": "Duelo 10 — Cyber Arena",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-10-cyber-arena.mp3",
+    "duration_seconds": 44.75,
+    "bpm": 155,
+    "file_bytes": 448567,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-11-forest-quest",
+    "name": "Duelo 11 — Forest Quest",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-11-forest-quest.mp3",
+    "duration_seconds": 42.38,
+    "bpm": 164,
+    "file_bytes": 424796,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-12-pixel-rock",
+    "name": "Duelo 12 — Pixel Rock",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-12-pixel-rock.mp3",
+    "duration_seconds": 41.16,
+    "bpm": 169,
+    "file_bytes": 412519,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-13-star-runner",
+    "name": "Duelo 13 — Star Runner",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-13-star-runner.mp3",
+    "duration_seconds": 46.5,
+    "bpm": 149,
+    "file_bytes": 466070,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-14-victory-lap",
+    "name": "Duelo 14 — Victory Lap",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-14-victory-lap.mp3",
+    "duration_seconds": 44.48,
+    "bpm": 156,
+    "file_bytes": 445694,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-15-stealth-mission",
+    "name": "Duelo 15 — Stealth Mission",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-15-stealth-mission.mp3",
+    "duration_seconds": 42.63,
+    "bpm": 163,
+    "file_bytes": 427147,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-16-ocean-world",
+    "name": "Duelo 16 — Ocean World",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-16-ocean-world.mp3",
+    "duration_seconds": 47.74,
+    "bpm": 145,
+    "file_bytes": 478347,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-17-desert-rally",
+    "name": "Duelo 17 — Desert Rally",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-17-desert-rally.mp3",
+    "duration_seconds": 45.61,
+    "bpm": 152,
+    "file_bytes": 457188,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-18-magic-castle",
+    "name": "Duelo 18 — Magic Castle",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-18-magic-castle.mp3",
+    "duration_seconds": 43.66,
+    "bpm": 159,
+    "file_bytes": 437596,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-19-neon-drift",
+    "name": "Duelo 19 — Neon Drift",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-19-neon-drift.mp3",
+    "duration_seconds": 41.88,
+    "bpm": 166,
+    "file_bytes": 419833,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "desafio-20-final-boss",
+    "name": "Duelo 20 — Final Boss",
+    "genre": "Disputa acelerada e eletrônica",
+    "src": "assets/music/desafio/desafio-20-final-boss.mp3",
+    "duration_seconds": 41.16,
+    "bpm": 169,
+    "file_bytes": 412519,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  }
+]\n

@@ -1,0 +1,202 @@
+[
+  {
+    "id": "principal-01-pixel-adventure",
+    "name": "Boas-vindas 01 — Pixel Adventure",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-01-pixel-adventure.mp3",
+    "duration_seconds": 81.4,
+    "bpm": 84,
+    "file_bytes": 815065,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-02-racing-neon",
+    "name": "Boas-vindas 02 — Racing Neon",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-02-racing-neon.mp3",
+    "duration_seconds": 75.25,
+    "bpm": 91,
+    "file_bytes": 753416,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-03-rpg-kingdom",
+    "name": "Boas-vindas 03 — Kingdom of Heroes",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-03-rpg-kingdom.mp3",
+    "duration_seconds": 68.6,
+    "bpm": 100,
+    "file_bytes": 687065,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-04-arcade-bounce",
+    "name": "Boas-vindas 04 — Arcade Bounce",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-04-arcade-bounce.mp3",
+    "duration_seconds": 78.64,
+    "bpm": 87,
+    "file_bytes": 787376,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-05-dungeon-boss",
+    "name": "Boas-vindas 05 — Dungeon Boss",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-05-dungeon-boss.mp3",
+    "duration_seconds": 75.25,
+    "bpm": 91,
+    "file_bytes": 753416,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-06-sky-islands",
+    "name": "Boas-vindas 06 — Sky Islands",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-06-sky-islands.mp3",
+    "duration_seconds": 82.36,
+    "bpm": 83,
+    "file_bytes": 824470,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-07-speedrun",
+    "name": "Boas-vindas 07 — Speedrun!",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-07-speedrun.mp3",
+    "duration_seconds": 76.07,
+    "bpm": 90,
+    "file_bytes": 761514,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-08-puzzle-funk",
+    "name": "Boas-vindas 08 — Puzzle Funk",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-08-puzzle-funk.mp3",
+    "duration_seconds": 71.4,
+    "bpm": 96,
+    "file_bytes": 715016,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-09-retro-platform",
+    "name": "Boas-vindas 09 — Retro Platform",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-09-retro-platform.mp3",
+    "duration_seconds": 68.6,
+    "bpm": 100,
+    "file_bytes": 687065,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-10-cyber-arena",
+    "name": "Boas-vindas 10 — Cyber Arena",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-10-cyber-arena.mp3",
+    "duration_seconds": 74.44,
+    "bpm": 92,
+    "file_bytes": 745319,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-11-forest-quest",
+    "name": "Boas-vindas 11 — Forest Quest",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-11-forest-quest.mp3",
+    "duration_seconds": 70.68,
+    "bpm": 97,
+    "file_bytes": 707702,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-12-pixel-rock",
+    "name": "Boas-vindas 12 — Pixel Rock",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-12-pixel-rock.mp3",
+    "duration_seconds": 80.46,
+    "bpm": 85,
+    "file_bytes": 805661,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-13-star-runner",
+    "name": "Boas-vindas 13 — Star Runner",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-13-star-runner.mp3",
+    "duration_seconds": 76.07,
+    "bpm": 90,
+    "file_bytes": 761514,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-14-victory-lap",
+    "name": "Boas-vindas 14 — Victory Lap",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-14-victory-lap.mp3",
+    "duration_seconds": 69.97,
+    "bpm": 98,
+    "file_bytes": 700649,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-15-stealth-mission",
+    "name": "Boas-vindas 15 — Stealth Mission",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-15-stealth-mission.mp3",
+    "duration_seconds": 76.91,
+    "bpm": 89,
+    "file_bytes": 770135,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-16-ocean-world",
+    "name": "Boas-vindas 16 — Ocean World",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-16-ocean-world.mp3",
+    "duration_seconds": 72.14,
+    "bpm": 95,
+    "file_bytes": 722331,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-17-desert-rally",
+    "name": "Boas-vindas 17 — Desert Rally",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-17-desert-rally.mp3",
+    "duration_seconds": 82.36,
+    "bpm": 83,
+    "file_bytes": 824470,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-18-magic-castle",
+    "name": "Boas-vindas 18 — Magic Castle",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-18-magic-castle.mp3",
+    "duration_seconds": 76.91,
+    "bpm": 89,
+    "file_bytes": 770135,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-19-neon-drift",
+    "name": "Boas-vindas 19 — Neon Drift",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-19-neon-drift.mp3",
+    "duration_seconds": 71.4,
+    "bpm": 96,
+    "file_bytes": 715016,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "principal-20-final-boss",
+    "name": "Boas-vindas 20 — Final Boss",
+    "genre": "Abertura calma e acolhedora",
+    "src": "assets/music/principal/principal-20-final-boss.mp3",
+    "duration_seconds": 81.4,
+    "bpm": 84,
+    "file_bytes": 815065,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  }
+]\n

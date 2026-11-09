@@ -1,202 +1,1049 @@
-[
-  {
-    "id": "menu-neon",
-    "name": "Menu Neon",
-    "genre": "Menu / Eletrônica",
-    "src": "assets/music/menu-neon.mp3",
-    "duration_seconds": 109.71,
-    "author": "Pro Sensory",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/main-menu-music-loop"
-  },
-  {
-    "id": "menu-electro-loop",
-    "name": "Menu Eletrônico",
-    "genre": "Menu / Eletrônica",
-    "src": "assets/music/menu-electro-loop.mp3",
-    "duration_seconds": 172.04,
-    "author": "Umplix",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/menu-loop-0"
-  },
-  {
-    "id": "menu-sledding",
-    "name": "Menu Deslizante",
-    "genre": "Menu / Ritmo",
-    "src": "assets/music/menu-sledding.mp3",
-    "duration_seconds": 30.77,
-    "author": "wipics",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/menu-music-1"
-  },
-  {
-    "id": "battle-chiptune",
-    "name": "Batalha em 8 Bits",
-    "genre": "Batalha / Chiptune",
-    "src": "assets/music/battle-chiptune.mp3",
-    "duration_seconds": 152.03,
-    "author": "pmiller",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/chiptune-battle-music"
-  },
-  {
-    "id": "slay-the-evil",
-    "name": "Derrote o Mal",
-    "genre": "Ação / Chiptune",
-    "src": "assets/music/slay-the-evil.mp3",
-    "duration_seconds": 82.31,
-    "author": "HydroGene",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/8-bit-slay-the-evil"
-  },
-  {
-    "id": "hard-battle",
-    "name": "Batalha Intensa",
-    "genre": "Batalha / Synth",
-    "src": "assets/music/hard-battle.mp3",
-    "duration_seconds": 90.38,
-    "author": "MintoDog",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/hard-battle-1"
-  },
-  {
-    "id": "hard-dungeon",
-    "name": "Masmorra Tecnológica",
-    "genre": "Masmorra / Eletrônica",
-    "src": "assets/music/hard-dungeon.mp3",
-    "duration_seconds": 123.45,
-    "author": "MintoDog",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/hard-dungeon"
-  },
-  {
-    "id": "space-boss",
-    "name": "Chefe Espacial",
-    "genre": "Espaço / Batalha",
-    "src": "assets/music/space-boss.mp3",
-    "duration_seconds": 104.25,
-    "author": "MintoDog",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/space-boss-battle"
-  },
-  {
-    "id": "strange-factory",
-    "name": "Fábrica Misteriosa",
-    "genre": "Corrida / Eletrônica",
-    "src": "assets/music/strange-factory.mp3",
-    "duration_seconds": 91.25,
-    "author": "MintoDog",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/strange-factory"
-  },
-  {
-    "id": "strange-factory-climax",
-    "name": "Última Volta",
-    "genre": "Corrida / Alta energia",
-    "src": "assets/music/strange-factory-climax.mp3",
-    "duration_seconds": 93.65,
-    "author": "MintoDog",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/strange-factory"
-  },
-  {
-    "id": "soundtrack-song",
-    "name": "Aventura em Pixel",
-    "genre": "Aventura / RPG",
-    "src": "assets/music/soundtrack-song.mp3",
-    "duration_seconds": 138.71,
-    "author": "Spring Spring",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/a-soundtrack"
-  },
-  {
-    "id": "castle-theme",
-    "name": "Castelo Antigo",
-    "genre": "Fantasia / RPG",
-    "src": "assets/music/castle-theme.mp3",
-    "duration_seconds": 97.75,
-    "author": "Spring Spring",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/a-soundtrack"
-  },
-  {
-    "id": "boss-theme-regular",
-    "name": "Confronto do Chefão",
-    "genre": "Batalha / RPG",
-    "src": "assets/music/boss-theme-regular.mp3",
-    "duration_seconds": 194.72,
-    "author": "Spring Spring",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/a-soundtrack"
-  },
-  {
-    "id": "into-depths",
-    "name": "Nas Profundezas",
-    "genre": "Exploração / Masmorra",
-    "src": "assets/music/into-depths.mp3",
-    "duration_seconds": 230.56,
-    "author": "Spring Spring",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/a-soundtrack"
-  },
-  {
-    "id": "village-evening",
-    "name": "Vila ao Entardecer",
-    "genre": "Vila / Tranquila",
-    "src": "assets/music/village-evening.mp3",
-    "duration_seconds": 103.71,
-    "author": "Spring Spring",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/a-soundtrack"
-  },
-  {
-    "id": "stooges-story",
-    "name": "História do Bobo",
-    "genre": "Aventura / RPG",
-    "src": "assets/music/stooges-story.mp3",
-    "duration_seconds": 146.78,
-    "author": "Spring Spring",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/a-soundtrack"
-  },
-  {
-    "id": "puzzle-loop",
-    "name": "Puzzle Misterioso",
-    "genre": "Quebra-cabeça / Calma",
-    "src": "assets/music/puzzle-loop.mp3",
-    "duration_seconds": 119.82,
-    "author": "polosik",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/simple-menubackground-music-loop"
-  },
-  {
-    "id": "kind-of-boss",
-    "name": "Dança do Chefão",
-    "genre": "Batalha / Retrô",
-    "src": "assets/music/kind-of-boss.mp3",
-    "duration_seconds": 100.23,
-    "author": "G_P",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/kind-of-boss"
-  },
-  {
-    "id": "crystal-caves",
-    "name": "Cavernas de Cristal",
-    "genre": "Exploração / Fantasia",
-    "src": "assets/music/crystal-caves.mp3",
-    "duration_seconds": 205.11,
-    "author": "outer123",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/content/crystal-caves-0"
-  },
-  {
-    "id": "great-labyrinth",
-    "name": "Grande Labirinto",
-    "genre": "RPG / Orquestral",
-    "src": "assets/music/great-labyrinth.mp3",
-    "duration_seconds": 132.78,
-    "author": "MintoDog",
-    "license": "CC0 1.0",
-    "source": "https://opengameart.org/node/155823"
+{
+  "version": 2,
+  "minimum_tracks_per_category": 20,
+  "minimum_duration_seconds": 30,
+  "categories": [
+    {
+      "id": "principal",
+      "title": "Tela principal",
+      "folder": "principal",
+      "style": "Abertura calma e acolhedora"
+    },
+    {
+      "id": "treinamento",
+      "title": "Treinamento",
+      "folder": "treinamento",
+      "style": "Concentração leve e ritmo constante"
+    },
+    {
+      "id": "desafio",
+      "title": "Desafio",
+      "folder": "desafio",
+      "style": "Disputa acelerada e eletrônica"
+    },
+    {
+      "id": "modo-jogo",
+      "title": "Modo Jogo",
+      "folder": "modo-jogo",
+      "style": "Aventura épica, fantasia e exploração"
+    },
+    {
+      "id": "torneio",
+      "title": "Torneio",
+      "folder": "torneio",
+      "style": "Tensão cinematográfica e competição"
+    }
+  ],
+  "playlists": {
+    "principal": [
+      {
+        "id": "principal-01-pixel-adventure",
+        "name": "Boas-vindas 01 — Pixel Adventure",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-01-pixel-adventure.mp3",
+        "duration_seconds": 81.4,
+        "bpm": 84,
+        "file_bytes": 815065,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-02-racing-neon",
+        "name": "Boas-vindas 02 — Racing Neon",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-02-racing-neon.mp3",
+        "duration_seconds": 75.25,
+        "bpm": 91,
+        "file_bytes": 753416,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-03-rpg-kingdom",
+        "name": "Boas-vindas 03 — Kingdom of Heroes",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-03-rpg-kingdom.mp3",
+        "duration_seconds": 68.6,
+        "bpm": 100,
+        "file_bytes": 687065,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-04-arcade-bounce",
+        "name": "Boas-vindas 04 — Arcade Bounce",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-04-arcade-bounce.mp3",
+        "duration_seconds": 78.64,
+        "bpm": 87,
+        "file_bytes": 787376,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-05-dungeon-boss",
+        "name": "Boas-vindas 05 — Dungeon Boss",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-05-dungeon-boss.mp3",
+        "duration_seconds": 75.25,
+        "bpm": 91,
+        "file_bytes": 753416,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-06-sky-islands",
+        "name": "Boas-vindas 06 — Sky Islands",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-06-sky-islands.mp3",
+        "duration_seconds": 82.36,
+        "bpm": 83,
+        "file_bytes": 824470,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-07-speedrun",
+        "name": "Boas-vindas 07 — Speedrun!",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-07-speedrun.mp3",
+        "duration_seconds": 76.07,
+        "bpm": 90,
+        "file_bytes": 761514,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-08-puzzle-funk",
+        "name": "Boas-vindas 08 — Puzzle Funk",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-08-puzzle-funk.mp3",
+        "duration_seconds": 71.4,
+        "bpm": 96,
+        "file_bytes": 715016,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-09-retro-platform",
+        "name": "Boas-vindas 09 — Retro Platform",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-09-retro-platform.mp3",
+        "duration_seconds": 68.6,
+        "bpm": 100,
+        "file_bytes": 687065,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-10-cyber-arena",
+        "name": "Boas-vindas 10 — Cyber Arena",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-10-cyber-arena.mp3",
+        "duration_seconds": 74.44,
+        "bpm": 92,
+        "file_bytes": 745319,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-11-forest-quest",
+        "name": "Boas-vindas 11 — Forest Quest",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-11-forest-quest.mp3",
+        "duration_seconds": 70.68,
+        "bpm": 97,
+        "file_bytes": 707702,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-12-pixel-rock",
+        "name": "Boas-vindas 12 — Pixel Rock",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-12-pixel-rock.mp3",
+        "duration_seconds": 80.46,
+        "bpm": 85,
+        "file_bytes": 805661,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-13-star-runner",
+        "name": "Boas-vindas 13 — Star Runner",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-13-star-runner.mp3",
+        "duration_seconds": 76.07,
+        "bpm": 90,
+        "file_bytes": 761514,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-14-victory-lap",
+        "name": "Boas-vindas 14 — Victory Lap",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-14-victory-lap.mp3",
+        "duration_seconds": 69.97,
+        "bpm": 98,
+        "file_bytes": 700649,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-15-stealth-mission",
+        "name": "Boas-vindas 15 — Stealth Mission",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-15-stealth-mission.mp3",
+        "duration_seconds": 76.91,
+        "bpm": 89,
+        "file_bytes": 770135,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-16-ocean-world",
+        "name": "Boas-vindas 16 — Ocean World",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-16-ocean-world.mp3",
+        "duration_seconds": 72.14,
+        "bpm": 95,
+        "file_bytes": 722331,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-17-desert-rally",
+        "name": "Boas-vindas 17 — Desert Rally",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-17-desert-rally.mp3",
+        "duration_seconds": 82.36,
+        "bpm": 83,
+        "file_bytes": 824470,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-18-magic-castle",
+        "name": "Boas-vindas 18 — Magic Castle",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-18-magic-castle.mp3",
+        "duration_seconds": 76.91,
+        "bpm": 89,
+        "file_bytes": 770135,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-19-neon-drift",
+        "name": "Boas-vindas 19 — Neon Drift",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-19-neon-drift.mp3",
+        "duration_seconds": 71.4,
+        "bpm": 96,
+        "file_bytes": 715016,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "principal-20-final-boss",
+        "name": "Boas-vindas 20 — Final Boss",
+        "genre": "Abertura calma e acolhedora",
+        "src": "assets/music/principal/principal-20-final-boss.mp3",
+        "duration_seconds": 81.4,
+        "bpm": 84,
+        "file_bytes": 815065,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      }
+    ],
+    "treinamento": [
+      {
+        "id": "treinamento-01-pixel-adventure",
+        "name": "Foco 01 — Pixel Adventure",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-01-pixel-adventure.mp3",
+        "duration_seconds": 76.07,
+        "bpm": 90,
+        "file_bytes": 761514,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-02-racing-neon",
+        "name": "Foco 02 — Racing Neon",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-02-racing-neon.mp3",
+        "duration_seconds": 71.4,
+        "bpm": 96,
+        "file_bytes": 715016,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-03-rpg-kingdom",
+        "name": "Foco 03 — Kingdom of Heroes",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-03-rpg-kingdom.mp3",
+        "duration_seconds": 64.8,
+        "bpm": 106,
+        "file_bytes": 648927,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-04-arcade-bounce",
+        "name": "Foco 04 — Arcade Bounce",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-04-arcade-bounce.mp3",
+        "duration_seconds": 63.05,
+        "bpm": 109,
+        "file_bytes": 631425,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-05-dungeon-boss",
+        "name": "Foco 05 — Dungeon Boss",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-05-dungeon-boss.mp3",
+        "duration_seconds": 70.68,
+        "bpm": 97,
+        "file_bytes": 707702,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-06-sky-islands",
+        "name": "Foco 06 — Sky Islands",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-06-sky-islands.mp3",
+        "duration_seconds": 67.93,
+        "bpm": 101,
+        "file_bytes": 680274,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-07-speedrun",
+        "name": "Foco 07 — Speedrun!",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-07-speedrun.mp3",
+        "duration_seconds": 63.62,
+        "bpm": 108,
+        "file_bytes": 637172,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-08-puzzle-funk",
+        "name": "Foco 08 — Puzzle Funk",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-08-puzzle-funk.mp3",
+        "duration_seconds": 73.66,
+        "bpm": 93,
+        "file_bytes": 737482,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-09-retro-platform",
+        "name": "Foco 09 — Retro Platform",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-09-retro-platform.mp3",
+        "duration_seconds": 67.93,
+        "bpm": 101,
+        "file_bytes": 680274,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-10-cyber-arena",
+        "name": "Foco 10 — Cyber Arena",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-10-cyber-arena.mp3",
+        "duration_seconds": 63.62,
+        "bpm": 108,
+        "file_bytes": 637172,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-11-forest-quest",
+        "name": "Foco 11 — Forest Quest",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-11-forest-quest.mp3",
+        "duration_seconds": 73.66,
+        "bpm": 93,
+        "file_bytes": 737482,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-12-pixel-rock",
+        "name": "Foco 12 — Pixel Rock",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-12-pixel-rock.mp3",
+        "duration_seconds": 70.68,
+        "bpm": 97,
+        "file_bytes": 707702,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-13-star-runner",
+        "name": "Foco 13 — Star Runner",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-13-star-runner.mp3",
+        "duration_seconds": 64.8,
+        "bpm": 106,
+        "file_bytes": 648927,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-14-victory-lap",
+        "name": "Foco 14 — Victory Lap",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-14-victory-lap.mp3",
+        "duration_seconds": 77.76,
+        "bpm": 88,
+        "file_bytes": 778494,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-15-stealth-mission",
+        "name": "Foco 15 — Stealth Mission",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-15-stealth-mission.mp3",
+        "duration_seconds": 72.14,
+        "bpm": 95,
+        "file_bytes": 722331,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-16-ocean-world",
+        "name": "Foco 16 — Ocean World",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-16-ocean-world.mp3",
+        "duration_seconds": 65.4,
+        "bpm": 105,
+        "file_bytes": 654935,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-17-desert-rally",
+        "name": "Foco 17 — Desert Rally",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-17-desert-rally.mp3",
+        "duration_seconds": 63.62,
+        "bpm": 108,
+        "file_bytes": 637172,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-18-magic-castle",
+        "name": "Foco 18 — Magic Castle",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-18-magic-castle.mp3",
+        "duration_seconds": 71.4,
+        "bpm": 96,
+        "file_bytes": 715016,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-19-neon-drift",
+        "name": "Foco 19 — Neon Drift",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-19-neon-drift.mp3",
+        "duration_seconds": 68.6,
+        "bpm": 100,
+        "file_bytes": 687065,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "treinamento-20-final-boss",
+        "name": "Foco 20 — Final Boss",
+        "genre": "Concentração leve e ritmo constante",
+        "src": "assets/music/treinamento/treinamento-20-final-boss.mp3",
+        "duration_seconds": 63.05,
+        "bpm": 109,
+        "file_bytes": 631425,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      }
+    ],
+    "desafio": [
+      {
+        "id": "desafio-01-pixel-adventure",
+        "name": "Duelo 01 — Pixel Adventure",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-01-pixel-adventure.mp3",
+        "duration_seconds": 47.11,
+        "bpm": 147,
+        "file_bytes": 472078,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-02-racing-neon",
+        "name": "Duelo 02 — Racing Neon",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-02-racing-neon.mp3",
+        "duration_seconds": 45.04,
+        "bpm": 154,
+        "file_bytes": 451441,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-03-rpg-kingdom",
+        "name": "Duelo 03 — Kingdom of Heroes",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-03-rpg-kingdom.mp3",
+        "duration_seconds": 43.93,
+        "bpm": 158,
+        "file_bytes": 440208,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-04-arcade-bounce",
+        "name": "Duelo 04 — Arcade Bounce",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-04-arcade-bounce.mp3",
+        "duration_seconds": 41.64,
+        "bpm": 167,
+        "file_bytes": 417482,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-05-dungeon-boss",
+        "name": "Duelo 05 — Dungeon Boss",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-05-dungeon-boss.mp3",
+        "duration_seconds": 47.74,
+        "bpm": 145,
+        "file_bytes": 478347,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-06-sky-islands",
+        "name": "Duelo 06 — Sky Islands",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-06-sky-islands.mp3",
+        "duration_seconds": 45.04,
+        "bpm": 154,
+        "file_bytes": 451441,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-07-speedrun",
+        "name": "Duelo 07 — Speedrun!",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-07-speedrun.mp3",
+        "duration_seconds": 42.88,
+        "bpm": 162,
+        "file_bytes": 429759,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-08-puzzle-funk",
+        "name": "Duelo 08 — Puzzle Funk",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-08-puzzle-funk.mp3",
+        "duration_seconds": 40.93,
+        "bpm": 170,
+        "file_bytes": 410167,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-09-retro-platform",
+        "name": "Duelo 09 — Retro Platform",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-09-retro-platform.mp3",
+        "duration_seconds": 46.5,
+        "bpm": 149,
+        "file_bytes": 466070,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-10-cyber-arena",
+        "name": "Duelo 10 — Cyber Arena",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-10-cyber-arena.mp3",
+        "duration_seconds": 44.75,
+        "bpm": 155,
+        "file_bytes": 448567,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-11-forest-quest",
+        "name": "Duelo 11 — Forest Quest",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-11-forest-quest.mp3",
+        "duration_seconds": 42.38,
+        "bpm": 164,
+        "file_bytes": 424796,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-12-pixel-rock",
+        "name": "Duelo 12 — Pixel Rock",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-12-pixel-rock.mp3",
+        "duration_seconds": 41.16,
+        "bpm": 169,
+        "file_bytes": 412519,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-13-star-runner",
+        "name": "Duelo 13 — Star Runner",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-13-star-runner.mp3",
+        "duration_seconds": 46.5,
+        "bpm": 149,
+        "file_bytes": 466070,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-14-victory-lap",
+        "name": "Duelo 14 — Victory Lap",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-14-victory-lap.mp3",
+        "duration_seconds": 44.48,
+        "bpm": 156,
+        "file_bytes": 445694,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-15-stealth-mission",
+        "name": "Duelo 15 — Stealth Mission",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-15-stealth-mission.mp3",
+        "duration_seconds": 42.63,
+        "bpm": 163,
+        "file_bytes": 427147,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-16-ocean-world",
+        "name": "Duelo 16 — Ocean World",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-16-ocean-world.mp3",
+        "duration_seconds": 47.74,
+        "bpm": 145,
+        "file_bytes": 478347,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-17-desert-rally",
+        "name": "Duelo 17 — Desert Rally",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-17-desert-rally.mp3",
+        "duration_seconds": 45.61,
+        "bpm": 152,
+        "file_bytes": 457188,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-18-magic-castle",
+        "name": "Duelo 18 — Magic Castle",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-18-magic-castle.mp3",
+        "duration_seconds": 43.66,
+        "bpm": 159,
+        "file_bytes": 437596,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-19-neon-drift",
+        "name": "Duelo 19 — Neon Drift",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-19-neon-drift.mp3",
+        "duration_seconds": 41.88,
+        "bpm": 166,
+        "file_bytes": 419833,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "desafio-20-final-boss",
+        "name": "Duelo 20 — Final Boss",
+        "genre": "Disputa acelerada e eletrônica",
+        "src": "assets/music/desafio/desafio-20-final-boss.mp3",
+        "duration_seconds": 41.16,
+        "bpm": 169,
+        "file_bytes": 412519,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      }
+    ],
+    "modo-jogo": [
+      {
+        "id": "modo-jogo-01-pixel-adventure",
+        "name": "Expedição 01 — Pixel Adventure",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-01-pixel-adventure.mp3",
+        "duration_seconds": 63.62,
+        "bpm": 108,
+        "file_bytes": 637172,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-02-racing-neon",
+        "name": "Expedição 02 — Racing Neon",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-02-racing-neon.mp3",
+        "duration_seconds": 58.84,
+        "bpm": 117,
+        "file_bytes": 589367,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-03-rpg-kingdom",
+        "name": "Expedição 03 — Kingdom of Heroes",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-03-rpg-kingdom.mp3",
+        "duration_seconds": 55.59,
+        "bpm": 124,
+        "file_bytes": 556976,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-04-arcade-bounce",
+        "name": "Expedição 04 — Arcade Bounce",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-04-arcade-bounce.mp3",
+        "duration_seconds": 53.49,
+        "bpm": 129,
+        "file_bytes": 535816,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-05-dungeon-boss",
+        "name": "Expedição 05 — Dungeon Boss",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-05-dungeon-boss.mp3",
+        "duration_seconds": 61.4,
+        "bpm": 112,
+        "file_bytes": 614967,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-06-sky-islands",
+        "name": "Expedição 06 — Sky Islands",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-06-sky-islands.mp3",
+        "duration_seconds": 56.94,
+        "bpm": 121,
+        "file_bytes": 570298,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-07-speedrun",
+        "name": "Expedição 07 — Speedrun!",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-07-speedrun.mp3",
+        "duration_seconds": 54.31,
+        "bpm": 127,
+        "file_bytes": 544176,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-08-puzzle-funk",
+        "name": "Expedição 08 — Puzzle Funk",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-08-puzzle-funk.mp3",
+        "duration_seconds": 62.49,
+        "bpm": 110,
+        "file_bytes": 625939,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-09-retro-platform",
+        "name": "Expedição 09 — Retro Platform",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-09-retro-platform.mp3",
+        "duration_seconds": 58.35,
+        "bpm": 118,
+        "file_bytes": 584404,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-10-cyber-arena",
+        "name": "Expedição 10 — Cyber Arena",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-10-cyber-arena.mp3",
+        "duration_seconds": 55.59,
+        "bpm": 124,
+        "file_bytes": 556976,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-11-forest-quest",
+        "name": "Expedição 11 — Forest Quest",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-11-forest-quest.mp3",
+        "duration_seconds": 53.09,
+        "bpm": 130,
+        "file_bytes": 531898,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-12-pixel-rock",
+        "name": "Expedição 12 — Pixel Rock",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-12-pixel-rock.mp3",
+        "duration_seconds": 61.4,
+        "bpm": 112,
+        "file_bytes": 614967,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-13-star-runner",
+        "name": "Expedição 13 — Star Runner",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-13-star-runner.mp3",
+        "duration_seconds": 57.4,
+        "bpm": 120,
+        "file_bytes": 575000,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-14-victory-lap",
+        "name": "Expedição 14 — Victory Lap",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-14-victory-lap.mp3",
+        "duration_seconds": 55.59,
+        "bpm": 124,
+        "file_bytes": 556976,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-15-stealth-mission",
+        "name": "Expedição 15 — Stealth Mission",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-15-stealth-mission.mp3",
+        "duration_seconds": 52.7,
+        "bpm": 131,
+        "file_bytes": 527980,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-16-ocean-world",
+        "name": "Expedição 16 — Ocean World",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-16-ocean-world.mp3",
+        "duration_seconds": 60.35,
+        "bpm": 114,
+        "file_bytes": 604519,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-17-desert-rally",
+        "name": "Expedição 17 — Desert Rally",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-17-desert-rally.mp3",
+        "duration_seconds": 56.94,
+        "bpm": 121,
+        "file_bytes": 570298,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-18-magic-castle",
+        "name": "Expedição 18 — Magic Castle",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-18-magic-castle.mp3",
+        "duration_seconds": 53.09,
+        "bpm": 130,
+        "file_bytes": 531898,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-19-neon-drift",
+        "name": "Expedição 19 — Neon Drift",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-19-neon-drift.mp3",
+        "duration_seconds": 62.49,
+        "bpm": 110,
+        "file_bytes": 625939,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "modo-jogo-20-final-boss",
+        "name": "Expedição 20 — Final Boss",
+        "genre": "Aventura épica, fantasia e exploração",
+        "src": "assets/music/modo-jogo/modo-jogo-20-final-boss.mp3",
+        "duration_seconds": 57.4,
+        "bpm": 120,
+        "file_bytes": 575000,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      }
+    ],
+    "torneio": [
+      {
+        "id": "torneio-01-pixel-adventure",
+        "name": "Arena 01 — Pixel Adventure",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-01-pixel-adventure.mp3",
+        "duration_seconds": 54.31,
+        "bpm": 127,
+        "file_bytes": 544176,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-02-racing-neon",
+        "name": "Arena 02 — Racing Neon",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-02-racing-neon.mp3",
+        "duration_seconds": 51.93,
+        "bpm": 133,
+        "file_bytes": 520143,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-03-rpg-kingdom",
+        "name": "Arena 03 — Kingdom of Heroes",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-03-rpg-kingdom.mp3",
+        "duration_seconds": 48.72,
+        "bpm": 142,
+        "file_bytes": 488274,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-04-arcade-bounce",
+        "name": "Arena 04 — Arcade Bounce",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-04-arcade-bounce.mp3",
+        "duration_seconds": 45.9,
+        "bpm": 151,
+        "file_bytes": 460061,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-05-dungeon-boss",
+        "name": "Arena 05 — Dungeon Boss",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-05-dungeon-boss.mp3",
+        "duration_seconds": 45.04,
+        "bpm": 154,
+        "file_bytes": 451441,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-06-sky-islands",
+        "name": "Arena 06 — Sky Islands",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-06-sky-islands.mp3",
+        "duration_seconds": 52.7,
+        "bpm": 131,
+        "file_bytes": 527980,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-07-speedrun",
+        "name": "Arena 07 — Speedrun!",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-07-speedrun.mp3",
+        "duration_seconds": 50.45,
+        "bpm": 137,
+        "file_bytes": 505514,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-08-puzzle-funk",
+        "name": "Arena 08 — Puzzle Funk",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-08-puzzle-funk.mp3",
+        "duration_seconds": 48.07,
+        "bpm": 144,
+        "file_bytes": 481743,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-09-retro-platform",
+        "name": "Arena 09 — Retro Platform",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-09-retro-platform.mp3",
+        "duration_seconds": 45.04,
+        "bpm": 154,
+        "file_bytes": 451441,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-10-cyber-arena",
+        "name": "Arena 10 — Cyber Arena",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-10-cyber-arena.mp3",
+        "duration_seconds": 54.31,
+        "bpm": 127,
+        "file_bytes": 544176,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-11-forest-quest",
+        "name": "Arena 11 — Forest Quest",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-11-forest-quest.mp3",
+        "duration_seconds": 51.18,
+        "bpm": 135,
+        "file_bytes": 512829,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-12-pixel-rock",
+        "name": "Arena 12 — Pixel Rock",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-12-pixel-rock.mp3",
+        "duration_seconds": 47.74,
+        "bpm": 145,
+        "file_bytes": 478347,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-13-star-runner",
+        "name": "Arena 13 — Star Runner",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-13-star-runner.mp3",
+        "duration_seconds": 46.81,
+        "bpm": 148,
+        "file_bytes": 468943,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-14-victory-lap",
+        "name": "Arena 14 — Victory Lap",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-14-victory-lap.mp3",
+        "duration_seconds": 44.75,
+        "bpm": 155,
+        "file_bytes": 448567,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-15-stealth-mission",
+        "name": "Arena 15 — Stealth Mission",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-15-stealth-mission.mp3",
+        "duration_seconds": 51.55,
+        "bpm": 134,
+        "file_bytes": 516486,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-16-ocean-world",
+        "name": "Arena 16 — Ocean World",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-16-ocean-world.mp3",
+        "duration_seconds": 49.4,
+        "bpm": 140,
+        "file_bytes": 495065,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-17-desert-rally",
+        "name": "Arena 17 — Desert Rally",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-17-desert-rally.mp3",
+        "duration_seconds": 47.74,
+        "bpm": 145,
+        "file_bytes": 478347,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-18-magic-castle",
+        "name": "Arena 18 — Magic Castle",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-18-magic-castle.mp3",
+        "duration_seconds": 44.75,
+        "bpm": 155,
+        "file_bytes": 448567,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-19-neon-drift",
+        "name": "Arena 19 — Neon Drift",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-19-neon-drift.mp3",
+        "duration_seconds": 53.9,
+        "bpm": 128,
+        "file_bytes": 539996,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      },
+      {
+        "id": "torneio-20-final-boss",
+        "name": "Arena 20 — Final Boss",
+        "genre": "Tensão cinematográfica e competição",
+        "src": "assets/music/torneio/torneio-20-final-boss.mp3",
+        "duration_seconds": 50.1,
+        "bpm": 138,
+        "file_bytes": 501857,
+        "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+      }
+    ]
   }
-]
+}\n

@@ -1,0 +1,202 @@
+[
+  {
+    "id": "torneio-01-pixel-adventure",
+    "name": "Arena 01 — Pixel Adventure",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-01-pixel-adventure.mp3",
+    "duration_seconds": 54.31,
+    "bpm": 127,
+    "file_bytes": 544176,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-02-racing-neon",
+    "name": "Arena 02 — Racing Neon",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-02-racing-neon.mp3",
+    "duration_seconds": 51.93,
+    "bpm": 133,
+    "file_bytes": 520143,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-03-rpg-kingdom",
+    "name": "Arena 03 — Kingdom of Heroes",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-03-rpg-kingdom.mp3",
+    "duration_seconds": 48.72,
+    "bpm": 142,
+    "file_bytes": 488274,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-04-arcade-bounce",
+    "name": "Arena 04 — Arcade Bounce",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-04-arcade-bounce.mp3",
+    "duration_seconds": 45.9,
+    "bpm": 151,
+    "file_bytes": 460061,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-05-dungeon-boss",
+    "name": "Arena 05 — Dungeon Boss",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-05-dungeon-boss.mp3",
+    "duration_seconds": 45.04,
+    "bpm": 154,
+    "file_bytes": 451441,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-06-sky-islands",
+    "name": "Arena 06 — Sky Islands",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-06-sky-islands.mp3",
+    "duration_seconds": 52.7,
+    "bpm": 131,
+    "file_bytes": 527980,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-07-speedrun",
+    "name": "Arena 07 — Speedrun!",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-07-speedrun.mp3",
+    "duration_seconds": 50.45,
+    "bpm": 137,
+    "file_bytes": 505514,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-08-puzzle-funk",
+    "name": "Arena 08 — Puzzle Funk",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-08-puzzle-funk.mp3",
+    "duration_seconds": 48.07,
+    "bpm": 144,
+    "file_bytes": 481743,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-09-retro-platform",
+    "name": "Arena 09 — Retro Platform",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-09-retro-platform.mp3",
+    "duration_seconds": 45.04,
+    "bpm": 154,
+    "file_bytes": 451441,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-10-cyber-arena",
+    "name": "Arena 10 — Cyber Arena",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-10-cyber-arena.mp3",
+    "duration_seconds": 54.31,
+    "bpm": 127,
+    "file_bytes": 544176,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-11-forest-quest",
+    "name": "Arena 11 — Forest Quest",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-11-forest-quest.mp3",
+    "duration_seconds": 51.18,
+    "bpm": 135,
+    "file_bytes": 512829,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-12-pixel-rock",
+    "name": "Arena 12 — Pixel Rock",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-12-pixel-rock.mp3",
+    "duration_seconds": 47.74,
+    "bpm": 145,
+    "file_bytes": 478347,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-13-star-runner",
+    "name": "Arena 13 — Star Runner",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-13-star-runner.mp3",
+    "duration_seconds": 46.81,
+    "bpm": 148,
+    "file_bytes": 468943,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-14-victory-lap",
+    "name": "Arena 14 — Victory Lap",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-14-victory-lap.mp3",
+    "duration_seconds": 44.75,
+    "bpm": 155,
+    "file_bytes": 448567,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-15-stealth-mission",
+    "name": "Arena 15 — Stealth Mission",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-15-stealth-mission.mp3",
+    "duration_seconds": 51.55,
+    "bpm": 134,
+    "file_bytes": 516486,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-16-ocean-world",
+    "name": "Arena 16 — Ocean World",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-16-ocean-world.mp3",
+    "duration_seconds": 49.4,
+    "bpm": 140,
+    "file_bytes": 495065,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-17-desert-rally",
+    "name": "Arena 17 — Desert Rally",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-17-desert-rally.mp3",
+    "duration_seconds": 47.74,
+    "bpm": 145,
+    "file_bytes": 478347,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-18-magic-castle",
+    "name": "Arena 18 — Magic Castle",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-18-magic-castle.mp3",
+    "duration_seconds": 44.75,
+    "bpm": 155,
+    "file_bytes": 448567,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-19-neon-drift",
+    "name": "Arena 19 — Neon Drift",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-19-neon-drift.mp3",
+    "duration_seconds": 53.9,
+    "bpm": 128,
+    "file_bytes": 539996,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "torneio-20-final-boss",
+    "name": "Arena 20 — Final Boss",
+    "genre": "Tensão cinematográfica e competição",
+    "src": "assets/music/torneio/torneio-20-final-boss.mp3",
+    "duration_seconds": 50.1,
+    "bpm": 138,
+    "file_bytes": 501857,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  }
+]\n

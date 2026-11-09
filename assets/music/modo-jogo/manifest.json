@@ -1,0 +1,202 @@
+[
+  {
+    "id": "modo-jogo-01-pixel-adventure",
+    "name": "Expedição 01 — Pixel Adventure",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-01-pixel-adventure.mp3",
+    "duration_seconds": 63.62,
+    "bpm": 108,
+    "file_bytes": 637172,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-02-racing-neon",
+    "name": "Expedição 02 — Racing Neon",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-02-racing-neon.mp3",
+    "duration_seconds": 58.84,
+    "bpm": 117,
+    "file_bytes": 589367,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-03-rpg-kingdom",
+    "name": "Expedição 03 — Kingdom of Heroes",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-03-rpg-kingdom.mp3",
+    "duration_seconds": 55.59,
+    "bpm": 124,
+    "file_bytes": 556976,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-04-arcade-bounce",
+    "name": "Expedição 04 — Arcade Bounce",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-04-arcade-bounce.mp3",
+    "duration_seconds": 53.49,
+    "bpm": 129,
+    "file_bytes": 535816,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-05-dungeon-boss",
+    "name": "Expedição 05 — Dungeon Boss",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-05-dungeon-boss.mp3",
+    "duration_seconds": 61.4,
+    "bpm": 112,
+    "file_bytes": 614967,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-06-sky-islands",
+    "name": "Expedição 06 — Sky Islands",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-06-sky-islands.mp3",
+    "duration_seconds": 56.94,
+    "bpm": 121,
+    "file_bytes": 570298,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-07-speedrun",
+    "name": "Expedição 07 — Speedrun!",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-07-speedrun.mp3",
+    "duration_seconds": 54.31,
+    "bpm": 127,
+    "file_bytes": 544176,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-08-puzzle-funk",
+    "name": "Expedição 08 — Puzzle Funk",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-08-puzzle-funk.mp3",
+    "duration_seconds": 62.49,
+    "bpm": 110,
+    "file_bytes": 625939,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-09-retro-platform",
+    "name": "Expedição 09 — Retro Platform",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-09-retro-platform.mp3",
+    "duration_seconds": 58.35,
+    "bpm": 118,
+    "file_bytes": 584404,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-10-cyber-arena",
+    "name": "Expedição 10 — Cyber Arena",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-10-cyber-arena.mp3",
+    "duration_seconds": 55.59,
+    "bpm": 124,
+    "file_bytes": 556976,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-11-forest-quest",
+    "name": "Expedição 11 — Forest Quest",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-11-forest-quest.mp3",
+    "duration_seconds": 53.09,
+    "bpm": 130,
+    "file_bytes": 531898,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-12-pixel-rock",
+    "name": "Expedição 12 — Pixel Rock",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-12-pixel-rock.mp3",
+    "duration_seconds": 61.4,
+    "bpm": 112,
+    "file_bytes": 614967,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-13-star-runner",
+    "name": "Expedição 13 — Star Runner",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-13-star-runner.mp3",
+    "duration_seconds": 57.4,
+    "bpm": 120,
+    "file_bytes": 575000,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-14-victory-lap",
+    "name": "Expedição 14 — Victory Lap",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-14-victory-lap.mp3",
+    "duration_seconds": 55.59,
+    "bpm": 124,
+    "file_bytes": 556976,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-15-stealth-mission",
+    "name": "Expedição 15 — Stealth Mission",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-15-stealth-mission.mp3",
+    "duration_seconds": 52.7,
+    "bpm": 131,
+    "file_bytes": 527980,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-16-ocean-world",
+    "name": "Expedição 16 — Ocean World",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-16-ocean-world.mp3",
+    "duration_seconds": 60.35,
+    "bpm": 114,
+    "file_bytes": 604519,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-17-desert-rally",
+    "name": "Expedição 17 — Desert Rally",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-17-desert-rally.mp3",
+    "duration_seconds": 56.94,
+    "bpm": 121,
+    "file_bytes": 570298,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-18-magic-castle",
+    "name": "Expedição 18 — Magic Castle",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-18-magic-castle.mp3",
+    "duration_seconds": 53.09,
+    "bpm": 130,
+    "file_bytes": 531898,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-19-neon-drift",
+    "name": "Expedição 19 — Neon Drift",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-19-neon-drift.mp3",
+    "duration_seconds": 62.49,
+    "bpm": 110,
+    "file_bytes": 625939,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  },
+  {
+    "id": "modo-jogo-20-final-boss",
+    "name": "Expedição 20 — Final Boss",
+    "genre": "Aventura épica, fantasia e exploração",
+    "src": "assets/music/modo-jogo/modo-jogo-20-final-boss.mp3",
+    "duration_seconds": 57.4,
+    "bpm": 120,
+    "file_bytes": 575000,
+    "license": "Original synthesized soundtrack generated for Projeto Tabuada."
+  }
+]\n
