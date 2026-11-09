@@ -669,11 +669,12 @@ async function applyChallengeStats(username, challenge, env) {
     });
     stats.recent = stats.recent.slice(0, 30);
     data.profile.challengeStats = stats;
-    if (participants.length === 5 && challenge.winner === username) {
-      data.economy = normalizeGameEconomy(data);
-      if (!data.economy.achievements.challenge_four) {
-        data.economy.achievements.challenge_four = new Date().toISOString();
-      }
+    data.economy = normalizeGameEconomy(data);
+    if (participants.length === 5 && challenge.winner === username && !data.economy.achievements.challenge_four) {
+      data.economy.achievements.challenge_four = new Date().toISOString();
+    }
+    if ((Number(stats.total.draws) || 0) >= 25 && !data.economy.achievements.challenge_25_draws) {
+      data.economy.achievements.challenge_25_draws = new Date().toISOString();
     }
     data.updatedAt = new Date().toISOString();
     try {
@@ -824,6 +825,7 @@ function communitySummary(record) {
     adventure_26: "Lenda da Tabuada", perfect_first: "Precisão de Ouro", perfect_5: "Mestre da Precisão",
     combo_5: "Sequência Brilhante", coins_100: "Primeiras Economias", coins_500: "Tesouro da Tabuada",
     collector_5: "Colecionador", challenge_four: "Lenda dos Quatro",
+    challenge_25_draws: "Empate de Elite",
     tournament_easy_top3: "Pódio Mensal Fácil", tournament_easy_top10: "Top 10 Fácil",
     tournament_medium_top3: "Pódio Mensal Médio", tournament_medium_top10: "Top 10 Médio",
     tournament_hard_top3: "Pódio Mensal Difícil", tournament_hard_top10: "Top 10 Difícil",
@@ -1343,9 +1345,45 @@ async function handleApi(request, env, origin) {
           if (!Number.isInteger(stageId) || stageId < 1 || stageId > ADVENTURE_STAGE_COUNT) {
             return json({ error: "Fase inválida." }, 400, origin);
           }
+          const incoming = body.adventureProgress;
+          const incomingStage = incoming?.stages?.[String(stageId)];
+          if (incoming && typeof incoming === "object" && incomingStage?.completed === true) {
+            const profile = record.data.profile && typeof record.data.profile === "object"
+              ? record.data.profile : {};
+            const current = profile.adventureProgress && typeof profile.adventureProgress === "object"
+              ? profile.adventureProgress : { version: 1, unlockedStage: 0, xp: 0, stages: {} };
+            const stages = current.stages && typeof current.stages === "object" ? { ...current.stages } : {};
+            const safeInteger = (value, max) => Math.max(0, Math.min(max, Math.floor(Number(value) || 0)));
+            const prior = stages[String(stageId)] && typeof stages[String(stageId)] === "object"
+              ? stages[String(stageId)] : {};
+            stages[String(stageId)] = {
+              ...prior,
+              completed: true,
+              attempts: Math.max(safeInteger(prior.attempts, 100000), safeInteger(incomingStage.attempts, 100000)),
+              stars: Math.max(safeInteger(prior.stars, 3), safeInteger(incomingStage.stars, 3)),
+              bestCorrect: Math.max(safeInteger(prior.bestCorrect, 10), safeInteger(incomingStage.bestCorrect, 10)),
+              bestTotal: safeInteger(incomingStage.bestTotal, 10) || safeInteger(prior.bestTotal, 10),
+              lastCorrect: safeInteger(incomingStage.lastCorrect, 10),
+              bestCombo: Math.max(safeInteger(prior.bestCombo, 10), safeInteger(incomingStage.bestCombo, 10)),
+              completedAt: prior.completedAt || incomingStage.completedAt || new Date().toISOString(),
+              lastPlayedAt: incomingStage.lastPlayedAt || new Date().toISOString()
+            };
+            profile.adventureProgress = {
+              version: 1,
+              unlockedStage: Math.max(
+                safeInteger(current.unlockedStage, ADVENTURE_STAGE_COUNT - 1),
+                safeInteger(incoming.unlockedStage, ADVENTURE_STAGE_COUNT - 1)
+              ),
+              xp: Math.max(safeInteger(current.xp, 100000000), safeInteger(incoming.xp, 100000000)),
+              stages,
+              lastStageId: stageId
+            };
+            record.data.profile = profile;
+            changed = true;
+          }
           const stageProgress = record.data.profile?.adventureProgress?.stages?.[String(stageId)];
           if (!stageProgress || stageProgress.completed !== true) {
-            return json({ error: "A conclusão desta fase ainda não foi sincronizada. Tente novamente após salvar seu progresso." }, 409, origin);
+            return json({ error: "A conclusão da fase não foi enviada corretamente. Tente concluir a fase novamente." }, 409, origin);
           }
           if (Number(stageProgress.stars) === 3 && !economy.perfectStages.includes(stageId)) {
             economy.perfectStages.push(stageId);
@@ -1389,9 +1427,9 @@ async function handleApi(request, env, origin) {
         record.data.economy = economy;
         record.data.updatedAt = new Date().toISOString();
         const sha = await writeUser(username, record.data, record.sha, env);
-        return json({ economy, coinsAdded, alreadyClaimed, newAchievements, sha }, 200, origin);
+        return json({ economy, coinsAdded, alreadyClaimed, newAchievements, sha, updatedAt: record.data.updatedAt }, 200, origin);
       }
-      return json({ economy, coinsAdded, alreadyClaimed, newAchievements, sha: record.sha }, 200, origin);
+      return json({ economy, coinsAdded, alreadyClaimed, newAchievements, sha: record.sha, updatedAt: record.data.updatedAt }, 200, origin);
     }
 
     if (route === "/api/me/password" && request.method === "POST") {
