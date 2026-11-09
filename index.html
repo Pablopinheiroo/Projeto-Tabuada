@@ -926,8 +926,8 @@ function scheduleCloudSave(immediate=false){
  cloudSyncTimer=setTimeout(()=>{cloudSyncTimer=null;flushCloudSave();},wait);
 }
 async function flushCloudSave(){
- if(!activeProfile||!remoteUserData||!cloudTokenReady())return;
- if(cloudSyncBusy){cloudSyncQueued=true;return;}
+ if(!activeProfile||!remoteUserData||!cloudTokenReady())return false;
+ if(cloudSyncBusy){cloudSyncQueued=true;return false;}
  cloudSyncBusy=true;
  try{
   const username=activeProfile;
@@ -941,10 +941,12 @@ async function flushCloudSave(){
    const status=$('profileStatus');
    if(status)status.textContent='Dados de “'+username+'” sincronizados com o servidor seguro.';
   }
+  return true;
  }catch(error){
   const status=$('profileStatus');
   if(status)status.textContent='Falha ao sincronizar: '+siteErrorMessage(error);
   console.error('Falha na sincronização do Projeto Tabuada:',error);
+  return false;
  }finally{
   cloudSyncBusy=false;
   if(cloudSyncQueued){cloudSyncQueued=false;scheduleCloudSave();}
@@ -2011,6 +2013,26 @@ $('profileEditForm').addEventListener('submit',saveProfileEdits);
 $('changePasswordForm').addEventListener('submit',changePassword);
 $('backFromProfile').addEventListener('click',closeProfileScreen);
 $('communitySort').addEventListener('change',renderCommunityRanking);
+
+$('openTrainingMode').addEventListener('click',showTrainingMode);
+$('backToModeHubTraining').addEventListener('click',showModeHub);
+$('openAdventureMode').addEventListener('click',showAdventureMap);
+$('backToModeHubMap').addEventListener('click',showModeHub);
+$('adventureIntroBack').addEventListener('click',showAdventureMap);
+$('adventureStartStage').addEventListener('click',()=>startAdventureStage(adventureActiveStageIndex));
+$('adventureQuitStage').addEventListener('click',showAdventureMap);
+$('adventureAnswerForm').addEventListener('submit',submitAdventureAnswer);
+$('adventureChoices').addEventListener('click',event=>{
+ const button=event.target.closest('[data-adventure-answer]');
+ if(button&&!button.disabled)answerAdventureQuestion(Number(button.dataset.adventureAnswer),button);
+});
+$('adventureNextButton').addEventListener('click',advanceAdventureQuestion);
+$('adventureResultRetry').addEventListener('click',()=>startAdventureStage(adventureActiveStageIndex));
+$('adventureResultNext').addEventListener('click',nextFromAdventureResult);
+$('adventureMap').addEventListener('click',event=>{
+ const button=event.target.closest('[data-adventure-stage]');
+ if(button&&!button.disabled)showAdventureIntro(Number(button.dataset.adventureStage));
+});
 $('saveProfile').addEventListener('click',()=>saveProfile(true));
 $('resumeProfile').addEventListener('click',resumeProfile);
 $('addNumbers').addEventListener('click',addNumbersToSavedGame);
