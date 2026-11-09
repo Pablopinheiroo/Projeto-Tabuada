@@ -364,7 +364,8 @@ def build_playlist_track(base_track: tuple, category: str, index: int) -> tuple:
     bpm = bpm_min + ((index * 7 + rng.randrange(0, 5)) % (bpm_max - bpm_min + 1))
     root = profile["roots"][index % len(profile["roots"])] + (index % 3) - 1
     scale = profile["scales"][index % len(profile["scales"])]
-    lead = profile["leads"][(index + (index // 3)) % len(profile["leads"])]
+    # Distribui todos os instrumentos de cada coleção de forma equilibrada.
+    lead = profile["leads"][index % len(profile["leads"])]
     groove = profile["grooves"][(index * 3 + index // 4) % len(profile["grooves"])]
     progression = profile["progressions"][index % len(profile["progressions"])]
     variation = index % 5
