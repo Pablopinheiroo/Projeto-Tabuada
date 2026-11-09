@@ -149,16 +149,28 @@ async function testViewport(name, viewport, mobile = false) {
   const clickActionTiming = await page.evaluate(() => {
     const events=[];
     const original=window.playUiSound;
+    const musicUnlock=unlockMusic,audioUnlock=unlockUiAudio;
     window.playUiSound=name=>events.push('sound:'+name);
+    // Isola este teste dos desbloqueios de música/áudio, sem afetar a
+    // verificação do som genérico em fase de propagação.
+    document.removeEventListener('click',musicUnlock,true);
+    document.removeEventListener('pointerdown',audioUnlock,true);
     const button=document.createElement('button');
     button.type='button';button.textContent='Teste de clique';
     button.addEventListener('click',()=>events.push('action'));
     document.body.appendChild(button);
-    button.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerType:'touch'}));
-    const afterPress=events.slice();
-    button.click();
-    const afterClick=events.slice();
-    button.remove();window.playUiSound=original;
+    let afterPress=[],afterClick=[];
+    try{
+      button.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerType:'touch'}));
+      afterPress=events.slice();
+      button.click();
+      afterClick=events.slice();
+    }finally{
+      button.remove();
+      window.playUiSound=original;
+      document.addEventListener('click',musicUnlock,true);
+      document.addEventListener('pointerdown',audioUnlock,true);
+    }
     return {afterPress,afterClick};
   });
   check(clickActionTiming.afterPress.length===0,
