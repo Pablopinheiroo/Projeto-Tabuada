@@ -45,5 +45,9 @@ jobs:
             echo "Nenhuma faixa nova para salvar."
           else
             git commit -m "Add 20 original full-length game soundtracks"
-            git push
+            # O trabalho pode terminar depois de outros commits na main.
+            # Reaplica o commit das músicas sobre a versão mais recente antes de enviar.
+            git fetch origin main
+            git rebase origin/main
+            git push origin HEAD:main
           fi
