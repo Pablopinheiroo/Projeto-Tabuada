@@ -94,7 +94,8 @@ const logoutCode=logoutStart>=0&&logoutEnd>logoutStart?html.slice(logoutStart,lo
 check(html.includes("loadUiSfx();")&&html.includes("playUiSound('key')")&&html.includes("document.addEventListener('click',event=>")&&!html.includes("document.addEventListener('pointerdown',event=>"),"O clique padrão deve tocar somente quando o botão executa a ação.");
 check(html.includes("SOFT_UI_CLICK_VARIANTS")&&html.includes("prepareSoftUiClickBuffers()")&&html.includes("const SFX_OUTPUT_BOOST=1.0;"),"As quatro variações suaves ou a redução de ganho dos efeitos estão ausentes.");
 check(html.includes('data-sfx="verify"')&&html.includes("button.dataset.sfx||'click'"),"O botão Verificar não usa seu efeito próprio.");
-check(html.includes("profileOptionsOpen||")&&html.includes("function showProfileOptions()")&&html.includes("function closeProfileOptions()"),"A música não é pausada e restaurada na tela Opções.");
+check(html.includes("function showProfileOptions()")&&html.includes("function closeProfileOptions()")&&html.includes("restoreProfileMusicVolume();\n syncAudioPreferenceControls();")&&!html.includes("if(soundtrackAudio)soundtrackAudio.pause();\n $('siteMusicBox').classList.add('hidden')"),
+ "A música deve continuar tocando e o volume deve ser restaurado para permitir comparação ao vivo na tela Opções.");
 check(html.includes('id="openProfileStats"')&&html.includes('id="openProfileOptions"')&&html.includes('id="profileOptionsPanel"'),"Os atalhos de Estatísticas e Opções não estão no cartão de perfil.");
 check(!html.includes('id="resumeProfile"')&&!html.includes('id="addNumbers"')&&!html.includes('id="toggleProfileStats"'),"Os botões antigos continuam no perfil.");
 check(html.includes("SFX_OUTPUT_BOOST")&&html.includes("function previewSfxVolume()"),"O controle e a prévia do volume dos efeitos estão ausentes.");
