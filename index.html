@@ -1500,7 +1500,7 @@ function renderChallengeProfileStats(){
  const medals=CHALLENGE_PRESETS_UI.map(level=>{
   const wins=Math.max(0,Number(levels[level.id]?.wins)||0);
   const unlocked=wins>=10;
-  return '<article class="achievement-card challenge-medal '+(unlocked?'unlocked':'locked')+'"><span class="achievement-icon">'+(unlocked?'🏅':'🔒')+'</span><div><strong>'+escapeHtml(level.name)+'</strong><p>'+(unlocked?'Medalha conquistada · 10 vitórias ou mais':'Vitórias: '+Math.min(wins,10)+'/10')+'</p><small>'+(unlocked?'Medalha desbloqueada':'Continue vencendo neste nível')+'</small></div></article>';
+  return '<article class="achievement-card challenge-medal '+(unlocked?'unlocked':'locked')+'"><span class="achievement-icon">'+(unlocked?challengeMedalIcon(level.id):'🔒')+'</span><div><strong>'+escapeHtml(level.name)+'</strong><p>'+(unlocked?'Medalha conquistada · 10 vitórias ou mais':'Vitórias: '+Math.min(wins,10)+'/10')+'</p><small>'+(unlocked?'Medalha desbloqueada':'Continue vencendo neste nível')+'</small></div></article>';
  }).join('');
  if($('profileChallengeWins'))$('profileChallengeWins').textContent=String(Number(total.wins)||0);
  if($('profileChallengeLosses'))$('profileChallengeLosses').textContent=String(Number(total.losses)||0);
@@ -1516,6 +1516,161 @@ function renderChallengeProfileStats(){
    return '<article class="achievement-card challenge-medal unlocked"><span class="achievement-icon">'+symbol+'</span><div><strong>'+escapeHtml(award.difficulty||'Torneio')+' · '+month+'</strong><p>'+place+'º lugar · '+award.score+'/50 pontos</p><small>'+escapeHtml(award.frame||'Participação')+'</small></div></article>';
   }).join(''):'<div class="tournament-empty">Suas premiações mensais aparecerão aqui.</div>';
  }
+}
+
+
+const CHALLENGE_MEDAL_EMBLEMS={recruta:'🛡️',aprendiz:'📗',praticante:'⚒️',competidor:'⚔️',veterano:'🏹',especialista:'🔮',elite:'💠',mestre:'👑',grao_mestre:'🦅',lenda:'🌟',extremo:'🔥'};
+function challengeMedalIcon(id){return CHALLENGE_MEDAL_EMBLEMS[id]||'🏆';}
+function featuredAwardInfo(id,source={}){
+ if(typeof id!=='string')return null;
+ const [kind,key]=id.split(':');
+ if(kind==='achievement'){
+  const item=ACHIEVEMENT_DEFINITIONS.find(entry=>entry.id===key);
+  return item?{id,icon:item.icon,label:item.title,kind:'Conquista'}:null;
+ }
+ if(kind==='medal'){
+  const item=CHALLENGE_PRESETS_UI.find(entry=>entry.id===key);
+  return item?{id,icon:challengeMedalIcon(key),label:'Medalha '+item.name,kind:'Medalha'}:null;
+ }
+ if(kind==='award'&&/^\d{4}-\d{2}$/.test(key)){
+  const award=(source.awards||[]).find(item=>item.month===key)||(source.profile?.tournamentAwards?.[key]?{month:key,...source.profile.tournamentAwards[key]}:null);
+  if(!award)return null;
+  const rank=Number(award.rank)||0;
+  return {id,icon:rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'🏆',label:'Torneio '+key+' · '+rank+'º lugar',kind:'Premiação'};
+ }
+ return null;
+}
+function profileFeaturedOptions(){
+ const profile=profilesData[activeProfile]||{},options=[];
+ for(const item of ACHIEVEMENT_DEFINITIONS){
+  if(gameEconomy.achievements?.[item.id]&&!item.hidden)options.push({id:'achievement:'+item.id,icon:item.icon,label:item.title,kind:'Conquista'});
+ }
+ const levels=profile.challengeStats?.levels||{};
+ for(const item of CHALLENGE_PRESETS_UI){
+  if((Number(levels[item.id]?.wins)||0)>=10)options.push({id:'medal:'+item.id,icon:challengeMedalIcon(item.id),label:'Medalha '+item.name,kind:'Medalha'});
+ }
+ for(const [month,award] of Object.entries(profile.tournamentAwards||{})){
+  const rank=Number(award?.rank)||0,icon=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'🏆';
+  if(rank>0)options.push({id:'award:'+month,icon,label:'Torneio '+month+' · '+rank+'º lugar',kind:'Premiação'});
+ }
+ return options;
+}
+function renderProfileFeaturedDisplay(){
+ const box=$('profileFeaturedDisplay');if(!box)return;
+ const profile=profilesData[activeProfile]||{};
+ const selected=Array.isArray(profile.featuredAwards)?profile.featuredAwards.slice(0,3):[];
+ const options=profileFeaturedOptions();
+ const badges=selected.map(id=>{
+  const option=options.find(item=>item.id===id)||featuredAwardInfo(id,{profile});
+  return option?'<span class="profile-featured-badge">'+option.icon+' '+escapeHtml(option.label)+'</span>':'';
+ }).join('');
+ box.innerHTML=badges||'<small class="hint">Nenhum destaque escolhido ainda.</small>';
+}
+function renderFeaturedAwardsEditor(){
+ const box=$('featuredAwardsEditor');if(!box)return;
+ const saved=new Set(Array.isArray(profilesData[activeProfile]?.featuredAwards)?profilesData[activeProfile].featuredAwards:[]);
+ const options=profileFeaturedOptions();
+ if(!options.length){
+  box.innerHTML='<p class="hint">Suas conquistas, medalhas e premiações desbloqueadas aparecerão aqui para você escolher.</p>';
+  renderProfileFeaturedDisplay();return;
+ }
+ box.innerHTML=options.map(item=>'<label class="featured-award-option"><input type="checkbox" name="featuredAward" value="'+escapeHtml(item.id)+'" '+(saved.has(item.id)?'checked':'')+'><span class="featured-award-icon">'+item.icon+'</span><span><b>'+escapeHtml(item.label)+'</b><small>'+item.kind+'</small></span></label>').join('');
+ renderProfileFeaturedDisplay();
+}
+function profileLearningStats(){
+ const rows=Object.values(historyData.questions||{}).filter(item=>item&&typeof item==='object').map(item=>{
+  const attempts=Math.max(0,Number(item.attempts)||0),correct=Math.max(0,Number(item.correct)||0),wrong=Math.max(0,Number(item.wrong)||0);
+  return {a:Number(item.a),b:Number(item.b),attempts,correct,wrong,totalTimeMs:Math.max(0,Number(item.totalTimeMs)||0),avgTime:attempts?Math.max(0,Number(item.totalTimeMs)||0)/attempts:0,accuracy:attempts?correct/attempts:0,modes:item.modes&&typeof item.modes==='object'?item.modes:null};
+ }).filter(row=>Number.isInteger(row.a)&&row.a>=1&&row.a<=20&&Number.isInteger(row.b)&&row.b>=1&&row.b<=10&&row.attempts>0);
+ const totals=rows.reduce((sum,row)=>({attempts:sum.attempts+row.attempts,correct:sum.correct+row.correct,wrong:sum.wrong+row.wrong,timeMs:sum.timeMs+row.totalTimeMs}),{attempts:0,correct:0,wrong:0,timeMs:0});
+ const average=totals.attempts?totals.timeMs/totals.attempts:0;
+ const modes={training:{label:'Treino',attempts:0,correct:0,wrong:0,timeMs:0},adventure:{label:'Aventura',attempts:0,correct:0,wrong:0,timeMs:0},challenge:{label:'Desafio',attempts:0,correct:0,wrong:0,timeMs:0},tournament:{label:'Torneio',attempts:0,correct:0,wrong:0,timeMs:0}};
+ rows.forEach(row=>{
+  if(row.modes){
+   for(const key of Object.keys(modes)){
+    const part=row.modes[key];if(!part)continue;
+    modes[key].attempts+=Math.max(0,Number(part.attempts)||0);
+    modes[key].correct+=Math.max(0,Number(part.correct)||0);
+    modes[key].wrong+=Math.max(0,Number(part.wrong)||0);
+    modes[key].timeMs+=Math.max(0,Number(part.totalTimeMs)||0);
+   }
+  }else{
+   modes.training.attempts+=row.attempts;modes.training.correct+=row.correct;modes.training.wrong+=row.wrong;modes.training.timeMs+=row.totalTimeMs;
+  }
+ });
+ const modeAttempts=Object.values(modes).reduce((sum,item)=>sum+item.attempts,0);
+ if(modeAttempts<totals.attempts){
+  const gap=totals.attempts-modeAttempts;
+  modes.training.attempts+=gap;
+  modes.training.correct+=Math.max(0,totals.correct-Object.values(modes).reduce((sum,item)=>sum+item.correct,0));
+  modes.training.wrong+=Math.max(0,totals.wrong-Object.values(modes).reduce((sum,item)=>sum+item.wrong,0));
+ }
+ const tableStats=Array.from({length:20},(_,index)=>{
+  const table=index+1,items=rows.filter(row=>row.a===table);
+  const attempts=items.reduce((sum,row)=>sum+row.attempts,0),correct=items.reduce((sum,row)=>sum+row.correct,0),wrong=items.reduce((sum,row)=>sum+row.wrong,0),timeMs=items.reduce((sum,row)=>sum+row.totalTimeMs,0);
+  return {table,attempts,correct,wrong,timeMs,avgTime:attempts?timeMs/attempts:0,accuracy:attempts?correct/attempts:0,errorRate:attempts?wrong/attempts:0};
+ });
+ const weaknessScore=item=>item.errorRate*.72+Math.min(1,item.avgTime/Math.max(5000,average*1.5))*.28;
+ const weakFacts=rows.map(row=>({...row,priority:weaknessScore({errorRate:row.attempts?row.wrong/row.attempts:0,avgTime:row.avgTime})})).sort((a,b)=>b.priority-a.priority||b.wrong-a.wrong||b.avgTime-a.avgTime);
+ const weakTables=tableStats.filter(item=>item.attempts).map(item=>({...item,priority:weaknessScore(item)})).sort((a,b)=>b.priority-a.priority||b.wrong-a.wrong);
+ const missingTables=tableStats.filter(item=>!item.attempts).map(item=>item.table);
+ const sessions=(Array.isArray(historyData.sessions)?historyData.sessions:[]).filter(item=>item&&Number(item.answered)>0).slice(0,12).reverse();
+ return {rows,totals,average,modes,tableStats,weakFacts,weakTables,missingTables,sessions,accuracy:totals.attempts?totals.correct/totals.attempts:0};
+}
+function renderProfileRadar(stats){
+ const center=150,radius=106;
+ const point=(index,value)=>{const angle=-Math.PI/2+index*(Math.PI*2/20),r=radius*Math.max(0,Math.min(1,value));return [center+Math.cos(angle)*r,center+Math.sin(angle)*r];};
+ const rings=[25,50,75,100].map(percent=>'<circle cx="'+center+'" cy="'+center+'" r="'+(radius*percent/100)+'" fill="none" stroke="#365475" stroke-width="1" stroke-dasharray="'+(percent===100?'0':'3 4')+'"/>').join('');
+ const axes=Array.from({length:20},(_,i)=>{const [x,y]=point(i,1);return '<line x1="'+center+'" y1="'+center+'" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="#35506e" stroke-width="1"/>';}).join('');
+ const points=stats.tableStats.map((item,i)=>point(i,item.attempts?item.accuracy:0));
+ const polygon=points.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' ');
+ const labels=Array.from({length:20},(_,i)=>{const [x,y]=point(i,1.13);return '<text x="'+x.toFixed(1)+'" y="'+(y+3).toFixed(1)+'" text-anchor="middle" fill="#c8d9ec" font-size="9">'+(i+1)+'</text>';}).join('');
+ return '<svg viewBox="0 0 300 300" role="img" aria-label="Gráfico radar com domínio das tabuadas de 1 a 20">'+rings+axes+'<polygon points="'+polygon+'" fill="#38bdf8" fill-opacity=".22" stroke="#67e8f9" stroke-width="2.5"/>'+points.map(p=>'<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="2.8" fill="#fbbf24"/>').join('')+labels+'<text x="150" y="148" text-anchor="middle" fill="#eff6ff" font-size="10" font-weight="800">'+Math.round(stats.accuracy*100)+'%</text><text x="150" y="161" text-anchor="middle" fill="#93b1d0" font-size="7">GERAL</text></svg>';
+}
+function renderProfileLine(stats){
+ const items=stats.sessions;
+ if(!items.length)return '<p class="hint">Ainda não há sessões concluídas para mostrar a evolução.</p>';
+ const width=520,height=180,pad=28;
+ const points=items.map((item,index)=>{
+  const total=Math.max(0,Number(item.hits)||0)+Math.max(0,Number(item.misses)||0);
+  const accuracy=total?Math.max(0,Number(item.hits)||0)/total*100:0;
+  const x=items.length===1?width/2:pad+index*(width-2*pad)/(items.length-1),y=height-pad-(accuracy/100)*(height-2*pad);
+  return {x,y,accuracy,item};
+ });
+ const grid=[0,50,100].map(value=>{const y=height-pad-(value/100)*(height-2*pad);return '<line x1="'+pad+'" y1="'+y+'" x2="'+(width-pad)+'" y2="'+y+'" stroke="#36506d" stroke-dasharray="4 5"/><text x="4" y="'+(y+4)+'" fill="#91a9c5" font-size="10">'+value+'%</text>';}).join('');
+ const path=points.map((item,index)=>(index?'L':'M')+item.x.toFixed(1)+' '+item.y.toFixed(1)).join(' ');
+ const circles=points.map(item=>'<circle cx="'+item.x.toFixed(1)+'" cy="'+item.y.toFixed(1)+'" r="4" fill="#fbbf24"><title>'+Math.round(item.accuracy)+'% de acerto</title></circle>').join('');
+ return '<svg viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Evolução da precisão nas últimas sessões">'+grid+'<path d="'+path+'" fill="none" stroke="#67e8f9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'+circles+'<text x="'+pad+'" y="'+(height-5)+'" fill="#91a9c5" font-size="10">Mais antiga</text><text x="'+(width-pad)+'" y="'+(height-5)+'" text-anchor="end" fill="#91a9c5" font-size="10">Mais recente</text></svg>';
+}
+function renderProfileLearningStats(){
+ const stats=profileLearningStats(),overview=$('profileStatsOverview');if(!overview)return;
+ const {totals}=stats;
+ overview.innerHTML=[
+  ['🧮',totals.attempts.toLocaleString('pt-BR'),'questões respondidas'],
+  ['🎯',Math.round(stats.accuracy*100)+'%','precisão geral'],
+  ['⏱️',formatDuration(stats.average),'tempo médio por resposta'],
+  ['📚',String(stats.tableStats.filter(item=>item.attempts).length)+'/20','tabuadas praticadas']
+ ].map(item=>'<div class="profile-stat-tile"><strong>'+item[0]+' '+item[1]+'</strong><small>'+item[2]+'</small></div>').join('');
+ $('profileStatsRadar').innerHTML=renderProfileRadar(stats);
+ const correct=totals.correct,wrong=totals.wrong,attempts=correct+wrong,rate=attempts?correct/attempts*100:0;
+ $('profileStatsPie').innerHTML=attempts
+  ?'<div class="stats-pie" style="background:conic-gradient(#34d399 0 '+rate+'%,#fb7185 '+rate+'% 100%)"><strong>'+Math.round(rate)+'%</strong></div><div class="stats-pie-legend"><span><i class="stats-legend-dot" style="background:#34d399"></i>'+correct.toLocaleString('pt-BR')+' acertos</span><span><i class="stats-legend-dot" style="background:#fb7185"></i>'+wrong.toLocaleString('pt-BR')+' erros</span></div>'
+  :'<p class="hint">Responda algumas questões para formar seu gráfico.</p>';
+ $('profileStatsLine').innerHTML=renderProfileLine(stats);
+ $('profileStatsModes').innerHTML=Object.entries(stats.modes).map(([key,item])=>{
+  const accuracy=item.attempts?item.correct/item.attempts*100:0;
+  return '<div class="stats-mode-row"><span>'+item.label+'</span><div class="stats-mode-track"><span style="width:'+accuracy.toFixed(1)+'%"></span></div><b>'+Math.round(accuracy)+'%</b></div><small class="hint" style="margin:-6px 0 0 93px">'+item.attempts+' resposta(s)</small>';
+ }).join('');
+ const weak=stats.weakFacts.slice(0,6);
+ $('profileStatsSummaryText').textContent=totals.attempts
+  ?'Você respondeu '+totals.attempts+' questões, acertou '+correct+' e errou '+wrong+'. A precisão geral é '+Math.round(stats.accuracy*100)+'%, com média de '+formatDuration(stats.average)+' por resposta.'
+  :'Ainda não há respostas no histórico. Comece pelo treinamento ou pela aventura para formar sua análise.';
+ $('profileStatsWeakPoints').innerHTML=weak.length?weak.map((item,index)=>{
+  const rate=item.attempts?Math.round(item.wrong/item.attempts*100):0;
+  return '<div class="stats-weak-item"><span><strong>#'+(index+1)+' · Tabuada do '+item.a+' — '+item.a+' × '+item.b+'</strong><small>'+item.wrong+' erro(s) em '+item.attempts+' tentativa(s) · média '+formatDuration(item.avgTime)+'</small></span><span class="stats-weak-score">'+rate+'%<small>erros</small></span></div>';
+ }).join(''):'<p class="hint">Ainda não há contas suficientes para apontar dificuldades.</p>';
+ $('profileStatsMissingTables').textContent=stats.missingTables.length?'Você ainda não registrou respostas nas tabuadas: '+stats.missingTables.join(', ')+'.':'Você já respondeu questões em todas as 20 tabuadas.';
+ $('profileStatsWeakTables').innerHTML=stats.weakTables.slice(0,5).map((item,index)=>'<div class="stats-weak-item"><span><strong>#'+(index+1)+' · Tabuada do '+item.table+'</strong><small>'+item.wrong+' erro(s) em '+item.attempts+' tentativa(s) · média '+formatDuration(item.avgTime)+'</small></span><span class="stats-weak-score">'+Math.round(item.accuracy*100)+'%<small>acerto</small></span></div>').join('')||'<p class="hint">Ainda não há dados por tabuada.</p>';
 }
 
 let rewardToastTimer=null;
@@ -2272,6 +2427,9 @@ function openProfileScreen(){
  $('changePasswordForm').reset();
  renderAvatarGrid('profileAvatarGrid',selectedProfileAvatar,index=>{selectedProfileAvatar=index;});
  renderAchievementShelf();refreshEconomyDisplay();renderChallengeProfileStats();
+ renderFeaturedAwardsEditor();renderProfileLearningStats();
+ if($('profileStatsPanel'))$('profileStatsPanel').classList.add('hidden');
+ if($('toggleProfileStats')){$('toggleProfileStats').textContent='Ver estatísticas';$('toggleProfileStats').setAttribute('aria-expanded','false');}
  refreshProfileIdentity();
  $('setup').classList.add('hidden');
  $('profileScreen').classList.remove('hidden');
@@ -2289,6 +2447,8 @@ async function saveProfileEdits(event){
   $('profileMessage').textContent='Este avatar ainda não foi desbloqueado. Use a loja para comprá-lo.';return;
  }
  profilesData[activeProfile].avatar=selectedProfileAvatar;
+ const selectedFeatures=[...$('featuredAwardsEditor').querySelectorAll('input[name="featuredAward"]:checked')].map(input=>input.value).slice(0,3);
+ profilesData[activeProfile].featuredAwards=selectedFeatures;
  profilesData[activeProfile].updatedAt=new Date().toISOString();
  persistProfiles();
  try{
@@ -2299,7 +2459,7 @@ async function saveProfileEdits(event){
   updateProfileLastSavedAt();
   pendingActiveMs=0;savePendingActiveTime(activeProfile);persistProfiles();
   $('profileMessage').textContent='Perfil atualizado com sucesso!';
-  refreshProfileIdentity();
+  renderFeaturedAwardsEditor();refreshProfileIdentity();
   communityCacheAt=0;
   renderCommunityRanking();
  }catch(error){
