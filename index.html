@@ -520,10 +520,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 
 
 /* Preferências de sessão e comunidade organizada */
-.remember-session{display:flex!important;align-items:flex-start;gap:9px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;background:#f8fafc;color:#334155;font-size:.86rem}
-.remember-session input{width:18px;height:18px;margin-top:2px;accent-color:#2563eb}
-.remember-session span{display:grid;gap:3px}
-.remember-session small{color:#64748b;font-weight:500}
+.remember-session{display:flex!important;align-items:flex-start;gap:7px;padding:7px 9px;border:1px solid #dbe4f5;border-radius:9px;background:#eef2ff;color:#334155;font-size:.76rem}
+.remember-session input{width:15px;height:15px;margin-top:1px;accent-color:#2563eb}
+.remember-session span{display:grid;gap:1px}
+.remember-session b{font-size:.77rem}
+.remember-session small{color:#64748b;font-size:.69rem;font-weight:500}
 .community-list{display:grid;gap:10px;max-height:540px;overflow-y:auto;overscroll-behavior:contain;padding:2px 7px 8px 2px;scrollbar-width:thin;scrollbar-color:#6684aa #e5edf6}
 .community-list::-webkit-scrollbar{width:9px}
 .community-list::-webkit-scrollbar-track{background:#e5edf6;border-radius:99px}
@@ -548,6 +549,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .community-rank-metric strong{display:block;color:#123d61;font-size:.92rem}
 .community-rank-metric small{display:block;color:#71839a;font-size:.64rem}
 .community-list-note{margin:8px 2px 0;color:#71839a;font-size:.7rem}
+.profile-last-saved{display:block;margin:-9px 0 8px 2px;color:#91a0b4;font-size:.64rem;font-weight:600;font-variant-numeric:tabular-nums}
 .tournament-card{grid-column:1/-1;background:linear-gradient(120deg,#3a2c17,#302246 52%,#142b4b);border-color:#ad8845}
 .tournament-card .mode-card-icon{background:#5b411b;border-color:#e8c268}
 .tournament-card .mode-card-copy b{color:#fcd34d}
@@ -593,6 +595,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  .community-rank-metric{padding:6px 3px}
  .challenge-selection-footer{align-items:stretch;flex-direction:column}
 }
+
+
+.profile-last-saved{display:block;margin:-9px 0 8px 2px;color:#91a0b4;font-size:.64rem;font-weight:600;font-variant-numeric:tabular-nums}
+.training-global-mode{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;padding:12px;border:1px solid #dbe4ef;border-radius:12px;background:#f7f9fc}
+.training-global-mode label{display:grid;gap:5px;color:#334155;font-size:.82rem;font-weight:800;min-width:0;flex:1}
+.training-global-mode select{width:100%;max-width:280px;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#26364d;font:inherit;font-size:.82rem}
+.training-global-mode p{margin:0;color:#718096;font-size:.7rem;line-height:1.4;max-width:230px}
+.table-row .mode:disabled{opacity:.45;background:#e8edf4;color:#8995a5;cursor:not-allowed}
+@media(max-width:560px){.training-global-mode{align-items:stretch;flex-direction:column}.training-global-mode select{max-width:none}.training-global-mode p{max-width:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
 </style>
 </head>
@@ -708,6 +720,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <button id="logout" class="music-button" type="button">Sair da conta</button>
  </div>
  <p id="profileStatus" class="small profile-status">Seu progresso fica salvo no perfil.</p>
+ <small id="profileLastSavedAt" class="profile-last-saved">Último progresso salvo: aguardando sincronização.</small>
 </div>
 <div class="community-ranking">
  <div class="community-heading"><div><span class="music-kicker">🏆 Comunidade</span><h2>Ranking dos participantes</h2><p class="hint" style="margin:5px 0 0">Veja o tempo de estudo e as contas que mais exigem prática.</p></div>
@@ -819,9 +832,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <div class="challenge-rules"><b>Como funciona:</b> escolha Fácil, Médio ou Difícil. A escolha fica bloqueada até o próximo mês. Todos que participarem de uma dificuldade recebem a mesma sequência mensal de contas. O ranking considera acertos e, em caso de empate, o menor tempo.</div>
   <div id="tournamentMonthStatus" class="tournament-month-status">Carregando torneio...</div>
   <div id="tournamentDifficultyCards" class="tournament-difficulty-grid">
-   <button type="button" class="tournament-difficulty easy" data-tournament-start="easy"><strong>🌱 Fácil</strong><small>Tabuadas do 1 ao 10 · 4 alternativas</small><b>Participar</b></button>
-   <button type="button" class="tournament-difficulty medium" data-tournament-start="medium"><strong>⚔️ Médio</strong><small>Tabuadas do 1 ao 15 · 4 alternativas</small><b>Participar</b></button>
-   <button type="button" class="tournament-difficulty hard" data-tournament-start="hard"><strong>🔥 Difícil</strong><small>Tabuadas avançadas, sem 1, 2, 5, 10 ou 20 · 6 alternativas</small><b>Participar</b></button>
+   <button type="button" class="tournament-difficulty easy" data-tournament-start="easy"><strong>🌱 Fácil</strong><small>Tabuadas: 1–10</small><b>Participar</b></button>
+   <button type="button" class="tournament-difficulty medium" data-tournament-start="medium"><strong>⚔️ Médio</strong><small>Tabuadas: 1–15</small><b>Participar</b></button>
+   <button type="button" class="tournament-difficulty hard" data-tournament-start="hard"><strong>🔥 Difícil</strong><small>Tabuadas: 3, 4, 6–9 e 11–19</small><b>Participar</b></button>
   </div>
   <p id="tournamentLockMessage" class="hint"></p>
   <div id="tournamentFinalNotice" class="tournament-final-notice hidden"></div>
@@ -863,7 +876,17 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 
 <div id="trainingModePanel" class="mode-view hidden">
  <div class="mode-view-heading"><div><span class="music-kicker">📘 TREINO LIVRE</span><h2>Escolha as tabuadas</h2></div><button id="backToModeHubTraining" class="secondary compact-back" type="button">← Modos</button></div>
- <p class="hint">Marque uma ou mais tabuadas e escolha como as questões aparecerão.</p>
+ <p class="hint">Marque as tabuadas e defina a ordem das questões.</p>
+ <div class="training-global-mode">
+  <label for="trainingGlobalMode">Ordem das questões
+   <select id="trainingGlobalMode">
+    <option value="individual">Escolher por tabuada</option>
+    <option value="normal">Padrão para todas</option>
+    <option value="random">Aleatório para todas</option>
+   </select>
+  </label>
+  <p id="trainingGlobalModeHint">No modo individual, cada tabuada pode ter sua própria ordem.</p>
+ </div>
  <div id="tables" class="tables"></div>
  <button id="start" class="primary">▶ Iniciar treinamento</button>
  <p class="small">No modo normal, a tabuada segue de 1 a 10. No aleatório, a ordem muda.</p>
@@ -1012,6 +1035,15 @@ for(let n=1;n<=20;n++){
 }
 
 const $=id=>document.getElementById(id);
+function updateTrainingGlobalModeControls(){
+ const mode=$('trainingGlobalMode')?.value||'individual';
+ const individual=mode==='individual';
+ tablesEl.querySelectorAll('.table-row .mode').forEach(select=>{select.disabled=!individual;});
+ const hint=$('trainingGlobalModeHint');
+ if(hint)hint.textContent=individual
+  ?'Modo individual: cada tabuada pode ter sua própria ordem.'
+  :mode==='normal'?'Todas as tabuadas seguem a ordem padrão, de 1 a 10.':'Todas as tabuadas terão questões em ordem aleatória.';
+}
 let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
 let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=1;
 let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueuePosition=0,musicStartPending=false,mainMusicTimer=null;
@@ -1220,6 +1252,7 @@ const ACHIEVEMENT_DEFINITIONS=[
  {id:'coins_500',icon:'💰',title:'Tesouro da Tabuada',description:'Ganhe 500 moedas ao longo do jogo.'},
  {id:'collector_5',icon:'🎨',title:'Colecionador',description:'Desbloqueie 5 avatares.'},
  {id:'challenge_four',icon:'🦁',title:'Lenda dos Quatro',description:'Vença um desafio contra quatro adversários.',hidden:true},
+ {id:'challenge_25_draws',icon:'🤝',title:'Empate de Elite',description:'Termine 25 desafios empatado.',hidden:true},
  {id:'tournament_easy_top3',icon:'🥇',title:'Pódio Mensal — Fácil',description:'Fique entre os três primeiros no torneio Fácil.'},
  {id:'tournament_easy_top10',icon:'🏅',title:'Top 10 Mensal — Fácil',description:'Fique entre o quarto e o décimo lugar no torneio Fácil.'},
  {id:'tournament_medium_top3',icon:'🥇',title:'Pódio Mensal — Médio',description:'Fique entre os três primeiros no torneio Médio.'},
@@ -1252,7 +1285,7 @@ function saveClientEconomyCache(username=activeProfile){
  try{const all=JSON.parse(localStorage.getItem(ECONOMY_CACHE_KEY)||'{}');all[username]=gameEconomy;localStorage.setItem(ECONOMY_CACHE_KEY,JSON.stringify(all));}catch(error){console.warn('Não foi possível guardar o cache de moedas.',error);}
 }
 function refreshEconomyDisplay(){
- const earned=Object.keys(gameEconomy.achievements||{}).length,total=ACHIEVEMENT_DEFINITIONS.filter(item=>!item.hidden).length+(gameEconomy.achievements?.challenge_four?1:0);
+ const earned=Object.keys(gameEconomy.achievements||{}).length,total=ACHIEVEMENT_DEFINITIONS.filter(item=>!item.hidden).length+ACHIEVEMENT_DEFINITIONS.filter(item=>item.hidden&&gameEconomy.achievements?.[item.id]).length;
  ['currentCoins','profileCoins'].forEach(id=>{if($(id))$(id).textContent=gameEconomy.coins.toLocaleString('pt-BR');});
  if($('profileTotalEarned'))$('profileTotalEarned').textContent=gameEconomy.totalEarned.toLocaleString('pt-BR');
  if($('profileTrainingCycles'))$('profileTrainingCycles').textContent=gameEconomy.trainingCycles.toLocaleString('pt-BR');
@@ -1476,6 +1509,16 @@ function hydrateRemoteUser(username,record){
  persistProfiles();
  saveHistory();
  communityCacheAt=0;
+ updateProfileLastSavedAt();
+}
+function updateProfileLastSavedAt(){
+ const label=$('profileLastSavedAt');if(!label)return;
+ const value=remoteUserData?.updatedAt||profilesData[activeProfile]?.updatedAt||null;
+ if(!value){label.textContent='Último progresso salvo: aguardando sincronização.';return;}
+ const date=new Date(value);
+ label.textContent=Number.isNaN(date.getTime())
+  ?'Último progresso salvo: data indisponível.'
+  :'Último progresso salvo: '+date.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
 }
 function buildRemoteUserData(){
  const profile={...(profilesData[activeProfile]||{}),studyTimeMs:Math.max(0,studyTimeBaseMs+pendingActiveMs)};
@@ -1545,6 +1588,7 @@ async function flushCloudSave(force=false){
    lastCloudSaveAt=Date.now();
    lastCloudSaveAttemptAt=0;
    communityCacheAt=0;
+   updateProfileLastSavedAt();
    const status=$('profileStatus');
    if(status)status.textContent='Dados sincronizados. Próximo salvamento automático após mais 30 minutos de uso.';
   }
@@ -1890,7 +1934,7 @@ function finishSession(){
 }
 
 function profileSnapshot(){
- return {selected,deck,position,round,hits,misses,sessionAnswers,sessionSkipped,sessionQuestionTimeMs,roundCorrect:[...roundCorrect],savedAt:new Date().toISOString()};
+ return {selected,trainingGlobalMode:$('trainingGlobalMode')?.value||'individual',deck,position,round,hits,misses,sessionAnswers,sessionSkipped,sessionQuestionTimeMs,roundCorrect:[...roundCorrect],savedAt:new Date().toISOString()};
 }
 function updateProfileButtons(){
  const name=$('profileName').value.trim(),profile=profilesData[name];
@@ -1901,13 +1945,16 @@ function selectProfile(){
  const name=$('profileName').value.trim();activeProfile=name;
  const c=profilesData[name]?.checkpoint;
  if(c){
+  if($('trainingGlobalMode'))$('trainingGlobalMode').value=c.trainingGlobalMode||'individual';
   selected=c.selected||[];
   tablesEl.querySelectorAll('.table-row').forEach(row=>{const n=Number(row.querySelector('input').value),item=selected.find(t=>t.n===n);row.querySelector('input').checked=!!item;if(item)row.querySelector('select').value=item.mode;});
   $('profileStatus').textContent='Progresso encontrado para “'+name+'”. Você pode continuar ou adicionar outras tabuadas.';
  }else {
+  if($('trainingGlobalMode'))$('trainingGlobalMode').value='individual';
   tablesEl.querySelectorAll('.table-row').forEach(row=>{row.querySelector('input').checked=false;row.querySelector('select').value='normal';});
   $('profileStatus').textContent='Perfil pronto. Escolha as tabuadas e inicie um novo treino.';
  }
+ updateTrainingGlobalModeControls();
  updateProfileButtons();
 }
 function saveProfile(showMessage=true){
@@ -1980,6 +2027,7 @@ async function saveProfileEdits(event){
   const newSha=await writeRemoteUser(activeProfile,payload,remoteUserSha);
   remoteUserSha=newSha;remoteUserData=payload;
   studyTimeBaseMs=Math.max(studyTimeBaseMs,Number(payload.profile.studyTimeMs)||0);
+  updateProfileLastSavedAt();
   pendingActiveMs=0;savePendingActiveTime(activeProfile);persistProfiles();
   $('profileMessage').textContent='Perfil atualizado com sucesso!';
   refreshProfileIdentity();
@@ -2599,7 +2647,7 @@ async function startMonthlyTournament(difficulty){
   tournamentQuestionLocked=false;
   tournamentMatchStarted=performance.now();
   $('tournamentPlayTitle').textContent='Torneio '+result.difficultyName;
-  $('tournamentPlayMeta').textContent='50 questões · 5 segundos por questão · '+result.optionCount+' alternativas';
+  $('tournamentPlayMeta').textContent='50 questões · 5 segundos por questão';
   $('tournamentScore').textContent='0/50';
   $('tournamentProgressBar').style.width='0%';
   $('tournamentModeView').classList.remove('hidden');
@@ -2969,9 +3017,10 @@ function next(){
  beginQuestionClock();
 }
 function start(){
+ const globalMode=$('trainingGlobalMode')?.value||'individual';
  selected=[...tablesEl.querySelectorAll('.table-row')]
   .filter(r=>r.querySelector('input').checked)
-  .map(r=>({n:Number(r.querySelector('input').value),mode:r.querySelector('select').value}));
+  .map(r=>({n:Number(r.querySelector('input').value),mode:globalMode==='individual'?r.querySelector('select').value:globalMode}));
  if(!selected.length){alert('Selecione pelo menos uma tabuada para começar.');return}
  hits=0;misses=0;round=0;position=0;deck=[];roundCorrect=new Set();
  sessionAnswers=[];sessionSkipped=0;sessionQuestionTimeMs=0;sessionStartedAt=performance.now();
