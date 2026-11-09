@@ -10,36 +10,34 @@ const check = (condition, message) => { if (!condition) fail(message); };
 
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, "assets/music/manifest.json"), "utf8"));
 const specs = {
-  principal: { bpm: [110, 132], energy: [0.82, 1.12], leads: ["square", "saw", "strings", "flute", "keys", "guitar", "pluck", "bell", "brass"], grooves: ["arcade", "dance", "cinematic", "funk", "battle", "adventure", "electro", "rock", "stealth", "ambient", "synthwave"], scales: ["major", "mixolydian", "minor", "dorian", "phrygian", "lydian"] },
-  treinamento: { bpm: [88, 110], energy: [0.62, 0.84], leads: ["keys", "bell", "pluck", "flute"], grooves: ["ambient", "funk", "adventure"], scales: ["major", "dorian", "mixolydian"] },
-  desafio: { bpm: [144, 170], energy: [1.08, 1.30], leads: ["square", "saw", "guitar", "brass"], grooves: ["dance", "electro", "battle", "rock", "synthwave"], scales: ["minor", "phrygian", "mixolydian", "dorian"] },
-  "modo-jogo": { bpm: [108, 132], energy: [0.78, 1.06], leads: ["strings", "flute", "brass", "bell", "guitar"], grooves: ["cinematic", "adventure", "battle"], scales: ["minor", "dorian", "major", "phrygian"] },
-  torneio: { bpm: [126, 156], energy: [1.00, 1.22], leads: ["brass", "strings", "saw", "square"], grooves: ["battle", "electro", "cinematic", "rock"], scales: ["minor", "phrygian", "dorian"] }
+  principal: ["menu-neon", "menu-electro-loop", "menu-sledding", "village-evening"],
+  treinamento: ["puzzle-loop", "into-depths", "crystal-caves", "stooges-story"],
+  desafio: ["battle-chiptune", "slay-the-evil", "hard-battle", "strange-factory-climax"],
+  "modo-jogo": ["soundtrack-song", "castle-theme", "great-labyrinth", "hard-dungeon"],
+  torneio: ["boss-theme-regular", "space-boss", "kind-of-boss", "strange-factory"]
 };
-
-check(manifest.version === 2, "Versão inesperada do manifesto musical.");
-check(manifest.minimum_tracks_per_category === 20, "O catálogo não garante 20 faixas por modalidade.");
+check(manifest.version === 3, "Versão inesperada do catálogo musical.");
+check(manifest.minimum_tracks_per_category === 4, "Cada área deve ter quatro faixas.");
+check(manifest.minimum_total_tracks === 20, "O catálogo deve conter 20 faixas distintas.");
 check(manifest.minimum_duration_seconds >= 30, "A duração mínima declarada está abaixo de 30 segundos.");
-
 const hashes = new Set();
 const srcs = new Set();
+const allIds = new Set();
 const musicSummary = {};
 let totalBytes = 0;
-for (const [category, spec] of Object.entries(specs)) {
+for (const [category, expectedIds] of Object.entries(specs)) {
   const tracks = manifest.playlists && manifest.playlists[category];
-  check(Array.isArray(tracks) && tracks.length === 20, category + ": deveria ter exatamente 20 faixas.");
-  const trackIds = new Set();
+  check(Array.isArray(tracks) && tracks.length === 4, category + ": deveria ter exatamente quatro faixas.");
+  check(JSON.stringify(tracks.map(track=>track.id)) === JSON.stringify(expectedIds),
+    category + ": seleção musical inesperada para o perfil desta área.");
   for (const track of tracks) {
-    check(track.id && !trackIds.has(track.id), category + ": ID vazio ou repetido.");
-    trackIds.add(track.id);
+    check(track.id && !allIds.has(track.id), track.name + ": faixa repetida entre áreas.");
+    allIds.add(track.id);
     check(track.duration_seconds >= 30, track.name + ": duração inferior a 30 segundos.");
-    check(track.arrangement_bars === 36, track.name + ": arranjo não contém as 36 barras previstas.");
-    check(track.bpm >= spec.bpm[0] && track.bpm <= spec.bpm[1], track.name + ": BPM fora do perfil de " + category + ".");
-    check(track.energy >= spec.energy[0] && track.energy <= spec.energy[1], track.name + ": energia fora do perfil de " + category + ".");
-    check(spec.leads.includes(track.lead_instrument), track.name + ": instrumento incompatível com " + category + ".");
-    check(spec.grooves.includes(track.rhythm_style), track.name + ": ritmo incompatível com " + category + ".");
-    check(spec.scales.includes(track.scale), track.name + ": escala incompatível com " + category + ".");
-    check(track.src.startsWith("assets/music/" + category + "/"), track.name + ": caminho fora da coleção.");
+    check(track.src.startsWith("assets/music/") && track.src.endsWith(".mp3"), track.name + ": caminho de áudio inválido.");
+    check(track.license === "CC0 1.0", track.name + ": a licença não é CC0 1.0.");
+    check(track.author && track.source && track.source.startsWith("https://opengameart.org/"),
+      track.name + ": crédito ou fonte original ausente.");
     check(!srcs.has(track.src), track.name + ": caminho de áudio repetido.");
     srcs.add(track.src);
     const filePath = path.join(ROOT, track.src);
@@ -51,29 +49,13 @@ for (const [category, spec] of Object.entries(specs)) {
         value === 0xff && (array[index + 1] & 0xe0) === 0xe0);
     check(isMp3, track.name + ": cabeçalho MP3 não reconhecido.");
     const hash = crypto.createHash("sha256").update(bytes).digest("hex");
-    check(!hashes.has(hash), track.name + ": áudio duplicado em outra faixa.");
+    check(!hashes.has(hash), track.name + ": áudio duplicado.");
     hashes.add(hash);
     totalBytes += bytes.length;
   }
-  const unique = (key) => new Set(tracks.map(track => track[key])).size;
-  check(unique("lead_instrument") === spec.leads.length, category + ": nem todos os instrumentos previstos estão sendo usados.");
-  check(unique("rhythm_style") === spec.grooves.length, category + ": nem todos os ritmos previstos estão sendo usados.");
-  check(unique("scale") === spec.scales.length, category + ": nem todas as escalas previstas estão sendo usadas.");
-  check(unique("bpm") >= 10, category + ": pouca variedade de andamento.");
-  musicSummary[category] = {
-    tracks: tracks.length,
-    instruments: unique("lead_instrument"),
-    rhythms: unique("rhythm_style"),
-    scales: unique("scale"),
-    distinctBpm: unique("bpm"),
-    bpmRange: [Math.min(...tracks.map(t => t.bpm)), Math.max(...tracks.map(t => t.bpm))],
-    durationRange: [
-      Math.min(...tracks.map(t => t.duration_seconds)),
-      Math.max(...tracks.map(t => t.duration_seconds))
-    ]
-  };
+  musicSummary[category] = { tracks: tracks.length, titles: tracks.map(track=>track.name), license: "CC0 1.0" };
 }
-check(hashes.size === 100 && srcs.size === 100, "O catálogo não contém 100 arquivos de áudio únicos.");
+check(hashes.size === 20 && srcs.size === 20 && allIds.size === 20, "O catálogo não contém 20 faixas distintas.");
 check(totalBytes > 10000000, "O tamanho total dos áudios parece inválido.");
 
 const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
@@ -210,11 +192,18 @@ async function testViewport(name, viewport, mobile = false) {
   check(await page.locator("#soundToggle").getAttribute("aria-pressed") === "true", name + ": botão de retomar música não funcionou.");
 
   for (const category of ["principal", "treinamento", "desafio", "modo-jogo", "torneio"]) {
-    await page.evaluate(value => setMusicCategory(value, true, true), category);
-    check(await page.locator("#trackSelect option").count() === 20, name + ": a coleção " + category + " não apresenta 20 opções.");
+    const categorySources = await page.evaluate(value => {
+      setMusicCategory(value, true, true);
+      return musicTrackCollections[value].map(track => track.src);
+    }, category);
+    check(categorySources.length === 4, name + ": a coleção " + category + " não apresenta quatro opções.");
+    check(await page.locator("#trackSelect option").count() === 4, name + ": o seletor " + category + " não apresenta quatro faixas.");
     await page.waitForFunction(
-      value => document.querySelector("#soundtrackAudio").src.includes("/assets/music/" + value + "/"),
-      category,
+      sources => {
+        const src = document.querySelector("#soundtrackAudio").src;
+        return sources.some(source => src.includes("/" + source));
+      },
+      categorySources,
       { timeout: 15000 }
     );
   }

@@ -880,7 +880,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  <button class="music-menu-toggle" id="musicMenuToggle" type="button" aria-expanded="true" aria-controls="musicControls">
   <span class="music-menu-icon" aria-hidden="true">♫</span>
   <span class="music-menu-copy">
-   <span id="musicCategoryKicker" class="music-kicker">PÁGINAS PRINCIPAIS · 20 FAIXAS</span>
+   <span id="musicCategoryKicker" class="music-kicker">MENU · LEVE E DIVERTIDO · 4 FAIXAS</span>
    <strong id="musicTitle" class="music-title">Escolhendo uma trilha...</strong>
   </span>
   <span class="music-menu-action"><span id="musicMenuLabel">Fechar controles</span><span class="music-menu-chevron" id="musicMenuChevron" aria-hidden="true">⌃</span></span>
@@ -892,7 +892,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
    <button id="replayTune" class="music-button" type="button">⏭ Próxima faixa</button>
    <label class="volume-control" for="globalVolume">🔊 Volume <input id="globalVolume" type="range" min="0" max="100" value="100"><strong id="volumeValue">100%</strong></label>
   </div>
-  <p class="music-note">🎧 O catálogo tem 100 trilhas originais: 20 para cada área. A tela principal reúne estilos variados de videogame, aventura, eletrônica e fantasia. A próxima faixa não se repete até percorrer as 20 da área.</p>
+  <p class="music-note">🎧 Biblioteca com 20 trilhas reais e gratuitas (CC0), recuperadas da coleção anterior. São 4 músicas diferentes por área, sem repetir a mesma faixa entre áreas. O estilo muda conforme o modo: menu divertido, treino tranquilo, desafio acelerado, aventura e torneio intenso.</p>
  </div>
  <audio id="soundtrackAudio" preload="auto" autoplay playsinline></audio>
 </div>
@@ -1463,11 +1463,11 @@ let musicalTracks=[];
 let musicTrackCollections={};
 let currentMusicCategory='principal';
 const MUSIC_CATEGORY_INFO={
- principal:{label:'PÁGINAS PRINCIPAIS',title:'Abertura calma e acolhedora'},
- treinamento:{label:'TREINAMENTO · FOCO',title:'Ritmo leve para concentração'},
- desafio:{label:'DESAFIO · ALTA ENERGIA',title:'Disputa acelerada'},
+ principal:{label:'MENU · LEVE E DIVERTIDO',title:'Clima descontraído de videogame'},
+ treinamento:{label:'TREINAMENTO · CONCENTRAÇÃO',title:'Trilhas calmas para manter o foco'},
+ desafio:{label:'DESAFIO · AÇÃO E VELOCIDADE',title:'Trilhas rápidas e emocionantes'},
  'modo-jogo':{label:'MODO JOGO · AVENTURA',title:'Fantasia, exploração e ação'},
- torneio:{label:'TORNEIO · COMPETIÇÃO',title:'Tensão e clima de campeonato'}
+ torneio:{label:'TORNEIO · COMPETIÇÃO',title:'Tensão e clima de batalha'}
 };
 async function loadMusicManifest(){
  try{
@@ -1475,18 +1475,20 @@ async function loadMusicManifest(){
   if(!response.ok)throw new Error('Não foi possível carregar as coleções musicais.');
   const data=await response.json();
   const ids=['principal','treinamento','desafio','modo-jogo','torneio'];
-  if(!data||!data.playlists||Number(data.minimum_tracks_per_category)<20||Number(data.minimum_duration_seconds)<30){
+  if(!data||!data.playlists||Number(data.minimum_tracks_per_category)<4||Number(data.minimum_total_tracks)<20||Number(data.minimum_duration_seconds)<30){
    throw new Error('O catálogo musical não possui os requisitos mínimos.');
   }
   const collections={};
   for(const id of ids){
    const tracks=data.playlists[id];
-   if(!Array.isArray(tracks)||tracks.length<20||!tracks.every(track=>
-    track.name&&track.src&&track.src.startsWith('assets/music/'+id+'/')&&Number(track.duration_seconds)>=30
-   ))throw new Error('A coleção '+id+' precisa ter 20 faixas com pelo menos 30 segundos.');
+   if(!Array.isArray(tracks)||tracks.length!==4||!tracks.every(track=>
+    track.name&&track.src&&track.src.startsWith('assets/music/')&&Number(track.duration_seconds)>=30&&
+    track.license==='CC0 1.0'&&track.author&&track.source
+   ))throw new Error('A coleção '+id+' precisa ter 4 faixas CC0 com pelo menos 30 segundos.');
    collections[id]=tracks.map(track=>({
     id:track.id,name:track.name,genre:track.genre||'Trilha original',
-    src:track.src,duration_seconds:Number(track.duration_seconds)
+    src:track.src,duration_seconds:Number(track.duration_seconds),
+    author:track.author,license:track.license,source:track.source
    }));
   }
   musicTrackCollections=collections;
@@ -1506,12 +1508,12 @@ function populateMusicTrackSelect(){
 }
 function setMusicCategory(category,playRandom=true,force=false){
  const tracks=musicTrackCollections[category];
- if(!Array.isArray(tracks)||tracks.length<20)return false;
+ if(!Array.isArray(tracks)||tracks.length<4)return false;
  if(currentMusicCategory===category&&!force)return false;
  currentMusicCategory=category;musicalTracks=tracks;
  currentTrackIndex=-1;previousTrackIndex=-1;trackQueue=[];trackQueuePosition=0;
  const info=MUSIC_CATEGORY_INFO[category]||MUSIC_CATEGORY_INFO.principal;
- if($('musicCategoryKicker'))$('musicCategoryKicker').textContent=info.label+' · 20 FAIXAS';
+ if($('musicCategoryKicker'))$('musicCategoryKicker').textContent=info.label+' · '+tracks.length+' FAIXAS';
  populateMusicTrackSelect();
  if(playRandom&&soundOn&&soundtrackAudio&&!document.hidden)playTrack(getRandomTrackIndex(-1),true);
  else{
@@ -2765,7 +2767,7 @@ function fillChallengeMusicOptions(){
   '<option value="'+index+'">'+(index+1)+'. '+item.name+(item.duration_seconds?' · '+Math.round(item.duration_seconds)+'s':'')+'</option>'
  ).join('');
  select.value='0';
- if($('challengeMusicPreview'))$('challengeMusicPreview').textContent='Selecione uma das 20 faixas para ouvir a prévia.';
+ if($('challengeMusicPreview'))$('challengeMusicPreview').textContent='Selecione uma das 4 trilhas de desafio para ouvir a prévia.';
 }
 async function previewSelectedChallengeMusic(){
  const tracks=musicTrackCollections.desafio||[],max=Math.max(0,(tracks.length||CHALLENGE_MUSIC.length)-1);
@@ -4215,7 +4217,7 @@ function showTrack(){
  const track=musicalTracks[currentTrackIndex];if(!track)return;
  const category=MUSIC_CATEGORY_INFO[currentMusicCategory]||MUSIC_CATEGORY_INFO.principal;
  $('musicTitle').textContent='🎵 '+track.name+' · '+track.genre+' · faixa '+(currentTrackIndex+1)+' de '+musicalTracks.length;
- if($('musicCategoryKicker'))$('musicCategoryKicker').textContent=category.label+' · 20 FAIXAS';
+ if($('musicCategoryKicker'))$('musicCategoryKicker').textContent=category.label+' · '+musicalTracks.length+' FAIXAS';
  if($('trackSelect'))$('trackSelect').value=String(currentTrackIndex);
 }
 function prepareTrackQueue(excludeIndex){
