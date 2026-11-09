@@ -367,9 +367,17 @@ async function testViewport(name, viewport, mobile = false) {
     await page.locator("#profileScreen").evaluate(el => el.classList.contains("hidden")),
     name + ": voltar das estatísticas não retornou ao menu principal.");
   await page.locator("#openProfile").click();
-  await page.waitForFunction(()=>!document.querySelector("#profileScreen").classList.contains("hidden")&&
-    !document.querySelector("#profileMainPanel").classList.contains("hidden"),null,{timeout:5000});
-  check(await page.locator("#profileMainPanel").isVisible(),name+": o perfil não abriu novamente após retornar ao menu.");
+  await page.waitForTimeout(250);
+  const profileReturnState=await page.evaluate(()=>({
+    gameHidden:document.querySelector("#game").classList.contains("hidden"),
+    setupHidden:document.querySelector("#setup").classList.contains("hidden"),
+    profileScreenHidden:document.querySelector("#profileScreen").classList.contains("hidden"),
+    profileMainHidden:document.querySelector("#profileMainPanel").classList.contains("hidden"),
+    activeProfile,
+    profileStatus:document.querySelector("#profileStatus")?.textContent
+  }));
+  check(!profileReturnState.profileScreenHidden&&!profileReturnState.profileMainHidden,
+    name+": o perfil não abriu novamente após retornar ao menu: "+JSON.stringify(profileReturnState));
   await page.evaluate(()=>{
     gameEconomy.achievements={training_first:true,training_5:true,training_25:true,adventure_first:true};
     profilesData[activeProfile].featuredTitles=[];
