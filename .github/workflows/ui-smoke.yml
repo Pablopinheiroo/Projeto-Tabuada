@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "assets/music/**"
+      - "tools/ui-smoke.mjs"
+      - ".github/workflows/ui-smoke.yml"
   workflow_dispatch:
 
 permissions:
