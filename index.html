@@ -912,6 +912,42 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .profile-audio-save p{margin:0;color:#c6d9ed;font-size:.78rem;line-height:1.5}
 .profile-audio-save button:disabled{opacity:.65;cursor:wait}
 
+
+/* Títulos destacados do perfil público */
+.featured-titles-editor{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
+.featured-title-option{display:flex;align-items:center;gap:9px;min-width:0;padding:10px;border:1px solid #3d5c7e;border-radius:11px;background:#10233d;color:#dcecff;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s}
+.featured-title-option.selected{border-color:#f5c451;background:linear-gradient(120deg,#3b2d19,#262044);box-shadow:0 0 0 2px #f5c45120,inset 0 1px #fff2}
+.featured-title-option input{width:18px;height:18px;flex:0 0 18px;accent-color:#fbbf24}
+.featured-title-icon{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px}
+.featured-title-icon .badge-art{width:32px;height:32px}
+.featured-title-copy{display:grid;gap:3px;min-width:0}
+.featured-title-copy b{color:#f1f7ff;font-size:.76rem;line-height:1.25}
+.featured-title-copy small{color:#a8bdd8;font-size:.63rem;line-height:1.3}
+.profile-featured-titles-display{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin:10px 0 3px}
+.featured-titles-preview-label{flex-basis:100%;color:#67e8f9;font-size:.62rem;font-weight:950;letter-spacing:.1em}
+.profile-featured-title-chip{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid #d6b45a;border-radius:10px;background:linear-gradient(120deg,#433217,#302247);color:#ffe8a8;font-size:.72rem;font-weight:900;box-shadow:0 3px 12px #02061755}
+.profile-featured-title-chip .badge-art{width:22px;height:22px}
+.community-rank-title-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 9px!important;border:1px solid #c5a45a!important;border-radius:9px!important;background:linear-gradient(120deg,#fff2c7,#eee6ff)!important;color:#49336f!important;font-size:.7rem!important;font-weight:950!important;box-shadow:0 2px 8px #7252a51e,inset 0 1px #ffffff!important}
+.community-rank-title-chip.is-selected{border-color:#e8bb42!important;background:linear-gradient(115deg,#ffefb0,#f0dfff)!important;color:#49300a!important;box-shadow:0 0 0 2px #e8bb4238,0 3px 10px #73501624!important}
+.community-rank-title-chip.is-automatic{border-color:#a993d4!important;background:linear-gradient(115deg,#f1eaff,#e3f4ff)!important;color:#453366!important}
+.community-rank-title-chip .badge-art{width:21px;height:21px;margin:0!important}
+.community-profile-details{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.community-profile-details>.community-challenge-details,.community-profile-details>.community-profile-detail-grid{grid-column:1/-1}
+.community-profile-details>.community-profile-detail-section:not(.community-challenge-details){min-width:0;align-content:start;padding:10px;border:1px solid #304969;border-radius:12px;background:linear-gradient(145deg,#11223b,#17203a)}
+.community-profile-detail-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.community-profile-detail-grid .community-rank-metric{min-width:0;padding:7px 4px}
+.community-profile-detail-grid .community-rank-metric small{line-height:1.25}
+@media(max-width:560px){
+ .featured-titles-editor{grid-template-columns:1fr}
+ .community-profile-details{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .community-profile-detail-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+ .community-profile-detail-grid .community-rank-metric{padding:5px 2px}
+ .community-profile-detail-grid .community-rank-metric strong{font-size:.77rem}
+ .community-profile-detail-grid .community-rank-metric small{font-size:.56rem}
+ .community-profile-details>.community-profile-detail-section:not(.community-challenge-details){padding:8px 7px}
+ .community-profile-detail-title{font-size:.65rem}
+}
+
 </style>
 </head>
 <body>
@@ -992,6 +1028,10 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   <div id="challengeMedalShelf" class="achievement-shelf"></div>
   <h3 class="achievement-title">🏆 Vitrine de conquistas <span id="achievementCount">0/21</span></h3>
   <div id="achievementShelf" class="achievement-shelf"></div>
+  <h3 class="achievement-title">🏅 Títulos exibidos na comunidade</h3>
+  <p class="economy-rules">Escolha até 3 títulos que aparecerão em destaque no seu perfil da comunidade. Se não escolher nenhum, os 3 primeiros títulos conquistados serão mostrados automaticamente.</p>
+  <div id="featuredTitlesEditor" class="featured-titles-editor"></div>
+  <div id="profileFeaturedTitlesDisplay" class="profile-featured-titles-display"></div>
   <h3 class="achievement-title">🏆 Premiações do torneio mensal</h3>
   <div id="tournamentAwardShelf" class="achievement-shelf"></div>
   <h3 class="achievement-title">⭐ Destaques do perfil público</h3>
@@ -1870,6 +1910,41 @@ function renderFeaturedAwardsEditor(){
  box.innerHTML=options.map(item=>'<label class="featured-award-option"><input type="checkbox" name="featuredAward" value="'+escapeHtml(item.id)+'" '+(saved.has(item.id)?'checked':'')+'><span class="featured-award-icon">'+item.icon+'</span><span><b>'+escapeHtml(item.label)+'</b><small>'+item.kind+'</small></span></label>').join('');
  renderProfileFeaturedDisplay();
 }
+function profileTitleOptions(){
+ const earned=gameEconomy.achievements||{};
+ return ACHIEVEMENT_DEFINITIONS.filter(item=>!item.hidden&&!!earned[item.id]);
+}
+function renderProfileFeaturedTitlesDisplay(){
+ const box=$('profileFeaturedTitlesDisplay');if(!box)return;
+ const options=profileTitleOptions();
+ const editor=$('featuredTitlesEditor');
+ const selectedIds=editor
+  ?[...editor.querySelectorAll('input[name="featuredTitle"]:checked')].map(input=>input.value).slice(0,3)
+  :(Array.isArray(profilesData[activeProfile]?.featuredTitles)?profilesData[activeProfile].featuredTitles.slice(0,3):[]);
+ const selected=selectedIds.length
+  ?selectedIds.map(id=>options.find(item=>item.id===id)).filter(Boolean)
+  :options.slice(0,3);
+ if(!selected.length){
+  box.innerHTML='<small class="hint">Os títulos conquistados aparecerão aqui quando você desbloquear algum.</small>';
+  return;
+ }
+ box.innerHTML='<span class="featured-titles-preview-label">ASSIM APARECERÁ NA COMUNIDADE</span>'+
+  selected.map(item=>'<span class="profile-featured-title-chip">'+renderBadgeIcon('achievement:'+item.id)+' '+escapeHtml(item.title)+'</span>').join('');
+}
+function renderProfileFeaturedTitlesEditor(){
+ const box=$('featuredTitlesEditor');if(!box)return;
+ const options=profileTitleOptions();
+ const saved=new Set(Array.isArray(profilesData[activeProfile]?.featuredTitles)?profilesData[activeProfile].featuredTitles.slice(0,3):[]);
+ if(!options.length){
+  box.innerHTML='<p class="hint">Conquiste títulos durante o jogo para poder escolher quais serão exibidos no seu perfil público.</p>';
+  renderProfileFeaturedTitlesDisplay();return;
+ }
+ box.innerHTML=options.map(item=>{
+  const selected=saved.has(item.id);
+  return '<label class="featured-title-option'+(selected?' selected':'')+'"><input type="checkbox" name="featuredTitle" value="'+escapeHtml(item.id)+'" '+(selected?'checked':'')+'><span class="featured-title-icon">'+renderBadgeIcon('achievement:'+item.id)+'</span><span class="featured-title-copy"><b>'+escapeHtml(item.title)+'</b><small>'+escapeHtml(item.description)+'</small></span></label>';
+ }).join('');
+ renderProfileFeaturedTitlesDisplay();
+}
 function profileLearningStats(){
  const rows=Object.values(historyData.questions||{}).filter(item=>item&&typeof item==='object').map(item=>{
   const attempts=Math.max(0,Number(item.attempts)||0),correct=Math.max(0,Number(item.correct)||0),wrong=Math.max(0,Number(item.wrong)||0);
@@ -2313,8 +2388,9 @@ function communityStatsFromRecord(record){
  const levels=challengeStats.levels||{};
  const medals=Array.isArray(record.medals)?record.medals:Object.entries(levels)
   .filter(([,level])=>Number(level?.wins)>=10).map(([id,level])=>({id,name:level.name||id}));
- const achievements=record.achievements||economy.achievements||{};
- const titles=Array.isArray(record.titles)?record.titles:Object.keys(achievements);
+ const achievements=record.achievements||economy.achievements||profile.achievements||{};
+ const titles=Array.isArray(record.titles)?record.titles:Object.keys(achievements).map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||id);
+ const featuredTitles=Array.isArray(profile.featuredTitles)?profile.featuredTitles:(Array.isArray(record.featuredTitles)?record.featuredTitles:[]);
  return {
   username:record.username,
   displayName:record.displayName||profile.displayName||record.username,
@@ -2332,7 +2408,8 @@ function communityStatsFromRecord(record){
   completedStages:Number(record.completedStages??economy.completedStages?.length)||0,
   achievementCount:Number(record.achievementCount??Object.keys(economy.achievements||{}).length)||0,
   awards:Array.isArray(record.awards)?record.awards:[],
-  featuredAwards:Array.isArray(record.featuredAwards)?record.featuredAwards.filter(id=>typeof id==='string').slice(0,3):[]
+  featuredAwards:Array.isArray(record.featuredAwards)?record.featuredAwards.filter(id=>typeof id==='string').slice(0,3):[],
+  featuredTitles:featuredTitles.filter(id=>typeof id==='string').slice(0,3)
  };
 }
 async function renderCommunityRanking(){
@@ -2353,12 +2430,19 @@ async function renderCommunityRanking(){
    const frame=user.tournamentFrame?' tournament-frame-'+user.tournamentFrame:'';
    const medals=user.medals.map(medal=>'<span class="community-rank-chip medal">'+challengeMedalIcon(medal.id)+' '+escapeHtml(medal.name||medal.id)+'</span>').join('');
     const awards=user.awards.map(award=>'<span class="community-rank-chip medal">'+renderTournamentAwardIcon(award.rank)+' Torneio mensal · '+escapeHtml(award.month)+' · '+Number(award.rank)+'º lugar</span>').join('');
-   const achievements=user.titles.map(title=>{
-    const item=ACHIEVEMENT_DEFINITIONS.find(entry=>entry.title===title);
-    return '<span class="community-rank-chip title community-title-chip">'+(item?renderBadgeIcon('achievement:'+item.id):'✨')+' '+escapeHtml(title)+'</span>';
-   }).join('');
-   const titleLine=achievements
-    ?'<div class="community-rank-title-line"><span class="community-title-label">TÍTULOS</span>'+achievements+'</div>':'';
+   const unlockedTitleItems=user.titles.map(title=>{
+    const item=ACHIEVEMENT_DEFINITIONS.find(entry=>entry.title===title||entry.id===title);
+    return item&&!item.hidden?item:null;
+   }).filter(Boolean);
+   const selectedTitleItems=(user.featuredTitles||[])
+    .map(id=>unlockedTitleItems.find(item=>item.id===id))
+    .filter(Boolean).slice(0,3);
+   const displayedTitleItems=(selectedTitleItems.length?selectedTitleItems:unlockedTitleItems.slice(0,3)).slice(0,3);
+   const titleBadges=displayedTitleItems.map(item=>
+    '<span class="community-rank-chip title community-title-chip community-rank-title-chip '+(selectedTitleItems.length?'is-selected':'is-automatic')+'">'+renderBadgeIcon('achievement:'+item.id)+' '+escapeHtml(item.title)+'</span>'
+   ).join('');
+   const titleLine=titleBadges
+    ?'<div class="community-rank-title-line"><span class="community-title-label">TÍTULOS</span>'+titleBadges+'</div>':'';
    const featured=(user.featuredAwards||[]).map(id=>{
     const info=featuredAwardInfo(id,{awards:user.awards});
     return info?'<span class="community-featured-badge">'+info.icon+' '+escapeHtml(info.label)+'</span>':'';
@@ -2371,8 +2455,8 @@ async function renderCommunityRanking(){
       '<img class="community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt="">'+
       '<div class="community-rank-identity">'+
        '<div class="community-rank-name-row"><strong class="community-rank-display-title">'+escapeHtml(user.displayName)+'</strong><span class="community-wallet-pill"><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</span></div>'+
-       titleLine+
        '<div class="community-rank-public-stats"><span>✓ '+user.correct.toLocaleString('pt-BR')+' acertos</span><span>✕ '+user.wrong.toLocaleString('pt-BR')+' erros</span><span>⏱️ '+formatDuration(user.timeMs)+' estudado</span></div>'+
+       titleLine+
       '</div>'+
      '</div>'+
      '<div class="community-rank-public-honors">'+publicHonors+'</div>'+
@@ -2746,7 +2830,7 @@ function openProfileScreen(showStats=false){
  $('changePasswordForm').reset();
  renderAvatarGrid('profileAvatarGrid',selectedProfileAvatar,index=>{selectedProfileAvatar=index;});
  renderAchievementShelf();refreshEconomyDisplay();renderChallengeProfileStats();
- renderFeaturedAwardsEditor();renderProfileLearningStats();
+ renderFeaturedAwardsEditor();renderProfileFeaturedTitlesEditor();renderProfileLearningStats();
  profileOptionsOpen=false;profileOptionsResumeMusic=false;
  $('siteMusicBox').classList.remove('hidden');
  $('profileOptionsPanel').classList.add('hidden');
@@ -2771,7 +2855,9 @@ async function saveProfileEdits(event){
  }
  profilesData[activeProfile].avatar=selectedProfileAvatar;
  const selectedFeatures=[...$('featuredAwardsEditor').querySelectorAll('input[name="featuredAward"]:checked')].map(input=>input.value).slice(0,3);
+ const selectedTitles=[...$('featuredTitlesEditor').querySelectorAll('input[name="featuredTitle"]:checked')].map(input=>input.value).slice(0,3);
  profilesData[activeProfile].featuredAwards=selectedFeatures;
+ profilesData[activeProfile].featuredTitles=selectedTitles;
  profilesData[activeProfile].updatedAt=new Date().toISOString();
  persistProfiles();
  try{
@@ -2782,7 +2868,7 @@ async function saveProfileEdits(event){
   updateProfileLastSavedAt();
   pendingActiveMs=0;savePendingActiveTime(activeProfile);persistProfiles();
   $('profileMessage').textContent='Perfil atualizado com sucesso!';
-  renderFeaturedAwardsEditor();refreshProfileIdentity();
+  renderFeaturedAwardsEditor();renderProfileFeaturedTitlesEditor();refreshProfileIdentity();
   communityCacheAt=0;
   renderCommunityRanking();
  }catch(error){
@@ -4755,6 +4841,18 @@ $('featuredAwardsEditor').addEventListener('change',event=>{
  const checked=$('featuredAwardsEditor').querySelectorAll('input[name="featuredAward"]:checked');
  if(checked.length>3){target.checked=false;$('profileMessage').textContent='Escolha no máximo 3 destaques para o seu perfil.';}
  else $('profileMessage').textContent='Lembre-se de salvar o perfil para publicar seus destaques.';
+});
+$('featuredTitlesEditor').addEventListener('change',event=>{
+ const target=event.target;if(!target.matches('input[name="featuredTitle"]'))return;
+ const checked=$('featuredTitlesEditor').querySelectorAll('input[name="featuredTitle"]:checked');
+ if(checked.length>3&&target.checked){
+  target.checked=false;
+  $('profileMessage').textContent='Escolha no máximo 3 títulos para mostrar na comunidade.';
+ }else{
+  target.closest('.featured-title-option')?.classList.toggle('selected',target.checked);
+  $('profileMessage').textContent='Lembre-se de salvar o perfil para atualizar os títulos da comunidade.';
+ }
+ renderProfileFeaturedTitlesDisplay();
 });
 $('navProfile').addEventListener('click',openProfileScreen);
 $('navTraining').addEventListener('click',showTrainingMode);

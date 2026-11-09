@@ -106,6 +106,12 @@ check(!html.includes("'<small>@'+escapeHtml(user.username)+'</small>'+")&&html.i
  "A comunidade continua exibindo o @usuário duplicado.");
 check(html.includes("community-rank-title-line")&&html.includes("community-challenge-details"),
  "A comunidade não apresenta títulos e desafios na nova posição.");
+check(html.includes("featuredTitlesEditor")&&html.includes("profile.featuredTitles=selectedTitles")&&html.includes("function renderProfileFeaturedTitlesEditor()"),
+ "O perfil não permite escolher e salvar até três títulos públicos.");
+check(html.includes("unlockedTitleItems.slice(0,3)")&&html.includes("selectedTitleItems.length"),
+ "A comunidade não limita os títulos aos três escolhidos ou aos três primeiros conquistados.");
+check(html.includes("grid-template-columns:repeat(2,minmax(0,1fr))")&&html.includes(".community-profile-details>.community-challenge-details"),
+ "O perfil expandido da comunidade não usa estrutura horizontal em duas colunas.");
 check(html.includes(".community-rank-public-stats{color:#102b49"),
  "O texto de estatísticas da comunidade continua com contraste baixo.");
 check(html.includes('<button id="navCommunity" type="button">🌐 Comunidade</button>'),
@@ -300,7 +306,7 @@ async function testViewport(name, viewport, mobile = false) {
       { answered: 6, hits: 5, misses: 1 }
     ];
     activeProfile = "perfil-smoke";
-    profilesData[activeProfile] = { displayName: "Perfil de teste", sfxVolume: 0.82 };
+    profilesData[activeProfile] = { displayName: "Perfil de teste", sfxVolume: 0.82, featuredTitles: [] };
     document.querySelector("#authScreen").classList.add("hidden");
     document.querySelector("#setup").classList.remove("hidden");
     refreshProfileIdentity();
@@ -324,6 +330,26 @@ async function testViewport(name, viewport, mobile = false) {
   await page.screenshot({ path: "artifacts/" + name + "-graficos.png", fullPage: true });
   await page.locator("#closeProfileStats").click();
   check(!(await page.locator("#profileMainPanel").evaluate(el => el.classList.contains("hidden"))), name + ": voltar das estatísticas não restaurou o perfil.");
+  await page.evaluate(()=>{
+    gameEconomy.achievements={training_first:true,training_5:true,training_25:true,adventure_first:true};
+    profilesData[activeProfile].featuredTitles=[];
+    renderProfileFeaturedTitlesEditor();
+  });
+  check(await page.locator("#featuredTitlesEditor input[name='featuredTitle']").count()===4,
+    name+": o perfil não listou os quatro títulos desbloqueados para escolha.");
+  check(await page.locator("#profileFeaturedTitlesDisplay .profile-featured-title-chip").count()===3,
+    name+": a prévia automática não mostrou três títulos quando nenhum foi escolhido.");
+  await page.locator("#featuredTitlesEditor input[name='featuredTitle']").nth(0).check();
+  await page.locator("#featuredTitlesEditor input[name='featuredTitle']").nth(1).check();
+  await page.locator("#featuredTitlesEditor input[name='featuredTitle']").nth(2).check();
+  await page.locator("#featuredTitlesEditor input[name='featuredTitle']").nth(3).check();
+  check(await page.locator("#featuredTitlesEditor input[name='featuredTitle']:checked").count()===3,
+    name+": o editor permitiu selecionar mais de três títulos.");
+  check(await page.locator("#profileFeaturedTitlesDisplay .profile-featured-title-chip").count()===3,
+    name+": a prévia não destacou os três títulos selecionados.");
+  await page.locator("#featuredTitlesEditor input[name='featuredTitle']:checked").evaluateAll(items=>items.forEach(item=>{item.checked=false;item.dispatchEvent(new Event("change",{bubbles:true}));}));
+  check(await page.locator("#profileFeaturedTitlesDisplay .profile-featured-title-chip").count()===3,
+    name+": ao limpar as escolhas, a prévia não voltou aos três títulos automáticos.");
   await page.locator("#backFromProfile").click();
 
   const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && soundtrackAudio && !soundtrackAudio.paused));
@@ -382,12 +408,12 @@ async function testViewport(name, viewport, mobile = false) {
     document.querySelector("#setup").classList.remove("hidden");
     communityCache = [{
       username: "maria_27", displayName: "Maria Silva",
-      profile: { displayName: "Maria Silva", avatar: "imagem:0" },
+      profile: { displayName: "Maria Silva", avatar: "imagem:0", featuredTitles: ["adventure_5","adventure_first"] },
       history: { questions: {}, sessions: [] },
       correct: 120, wrong: 5, timeMs: 123456,
       coins: 130, totalEarned: 250, challengeTotal: 2,
       challengeWins: 1, challengeLosses: 1, challengeDraws: 0,
-      titles: ["Primeiro Ciclo"], medals: [], awards: [], featuredAwards: [],
+      titles: ["Primeiro Ciclo","Explorador","Disciplina","A Jornada Começa"], medals: [], awards: [], featuredAwards: [],
       achievements: { training_first: true }, economy: { coins: 130, achievements: { training_first: true } }
     }];
     communityCacheAt = Date.now();
@@ -397,8 +423,24 @@ async function testViewport(name, viewport, mobile = false) {
   const communityIdentity = page.locator(".community-rank-identity").first();
   check(!(await communityIdentity.textContent()).includes("@maria_27"),
     name + ": a comunidade ainda exibe o @usuário duplicado.");
-  check((await communityIdentity.locator(".community-rank-title-line").textContent()).includes("Primeiro Ciclo"),
-    name + ": o nome do perfil não foi tratado como título.");
+  const selectedCommunityTitles = await communityIdentity.locator(".community-rank-title-chip").allTextContents();
+  check(selectedCommunityTitles.length===2&&selectedCommunityTitles.some(value=>value.includes("Explorador"))&&selectedCommunityTitles.some(value=>value.includes("A Jornada Começa")),
+    name + ": a comunidade não exibiu somente os títulos selecionados pelo dono do perfil.");
+  const publicOrder = await communityIdentity.evaluate(element=>{
+    const stats=element.querySelector(".community-rank-public-stats");
+    const titles=element.querySelector(".community-rank-title-line");
+    return !!stats&&!!titles&&(stats.compareDocumentPosition(titles)&Node.DOCUMENT_POSITION_FOLLOWING)!==0;
+  });
+  check(publicOrder,name+": acertos, erros e tempo não aparecem antes dos títulos.");
+  await page.evaluate(async()=>{
+    communityCache[0].profile.featuredTitles=[];
+    await renderCommunityRanking();
+  });
+  const automaticTitles=await page.locator(".community-rank-title-chip").allTextContents();
+  check(automaticTitles.length===3&&automaticTitles.some(value=>value.includes("Primeiro Ciclo"))&&automaticTitles.some(value=>value.includes("Explorador"))&&automaticTitles.some(value=>value.includes("Disciplina"))&&!automaticTitles.some(value=>value.includes("A Jornada Começa")),
+    name+": sem escolhas, a comunidade não mostrou exatamente os três primeiros títulos conquistados.");
+  const communityGridColumns=await page.locator(".community-profile-details").first().evaluate(element=>getComputedStyle(element).gridTemplateColumns.split(" ").length);
+  check(communityGridColumns===2,name+": a estrutura interna do perfil público não está distribuída em duas colunas ("+communityGridColumns+").");
   const communityStatsColor = await page.locator(".community-rank-public-stats").first().evaluate(element => getComputedStyle(element).color);
   check(communityStatsColor === "rgb(16, 43, 73)",
     name + ": estatísticas da comunidade continuam com pouco contraste (" + communityStatsColor + ").");
