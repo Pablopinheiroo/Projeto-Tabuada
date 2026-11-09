@@ -3371,6 +3371,416 @@ function handleTournamentQuestionClick(event){
  if(button&&!button.disabled)submitTournamentAnswer(Number(button.dataset.tournamentAnswer));
 }
 
+function startRound(){
+ round++;
+ roundCorrect=new Set();
+ deck=makeRound();
+ position=0;
+
+}
+function updateStats(){
+ $('hits').textContent=hits;
+ $('misses').textContent=misses;
+ $('round').textContent=Math.max(0,round-1);
+ $('bar').style.width=(roundCorrect.size/(selected.length*10)*100)+'%';
+}
+function next(){
+ if(position>=deck.length){
+  if(round>0&&selected.length&&roundCorrect.size===selected.length*10){
+   const claimId=crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);
+   claimGameReward('training_cycle',{claimId});
+  }
+  startRound();
+ }
+ current=deck[position];
+ revealed=false;
+ $('equation').textContent=current.a+' × '+current.b;
+ $('counter').textContent='Rodada '+round+' · Questão '+(position+1)+' de '+deck.length;
+ $('answer').textContent='';
+ $('answer').className='answer';
+ $('verify').classList.remove('hidden');
+ $('judge').classList.add('hidden');
+ updateStats();
+ beginQuestionClock();
+}
+function start(){
+ const globalMode=$('trainingGlobalMode')?.value||'individual';
+ selected=[...tablesEl.querySelectorAll('.table-row')]
+  .filter(r=>r.querySelector('input').checked)
+  .map(r=>({n:Number(r.querySelector('input').value),mode:globalMode==='individual'?r.querySelector('select').value:globalMode}));
+ if(!selected.length){alert('Selecione pelo menos uma tabuada para começar.');return}
+ hits=0;misses=0;round=0;position=0;deck=[];roundCorrect=new Set();
+ sessionAnswers=[];sessionSkipped=0;sessionQuestionTimeMs=0;sessionStartedAt=performance.now();
+ $('report').classList.add('hidden');
+ $('setup').classList.add('hidden');
+ $('game').classList.remove('hidden');
+ if(soundOn)ensureAudio();
+ if(!$('profileName').value.trim())activeProfile='';
+ else {activeProfile=$('profileName').value.trim();profilesData[activeProfile]=profilesData[activeProfile]||{};}
+ next();saveCheckpoint();
+}
+function verify(){
+ if(revealed)return;
+ revealed=true;
+ $('answer').textContent=current.a+' × '+current.b+' = '+(current.a*current.b);
+ $('verify').classList.add('hidden');
+ $('judge').classList.remove('hidden');
+}
+function judge(ok){
+ if(!revealed)return;
+ const timeMs=endQuestionClock();
+ const entry={a:current.a,b:current.b,correct:!!ok,timeMs};
+ sessionAnswers.push(entry);
+ sessionQuestionTimeMs+=timeMs;
+ addAnswerToHistory(entry);
+ renderCommunityRanking();
+ if(ok){hits++;roundCorrect.add(current.a+'x'+current.b);$('answer').classList.add('correct');playFeedback(true)}
+ else{misses++;deck.push({...current});$('answer').classList.add('wrong');playFeedback(false)}
+ position++;
+ next();saveCheckpoint();
+}
+
+const ADVENTURE_WORLDS=[
+ {name:'Vale das Sementes',subtitle:'Aprenda a formar os primeiros grupos.',icon:'🌱',place:'Vila das Sementes',groups:'cestos',items:'sementes'},
+ {name:'Bosque das Engrenagens',subtitle:'Descubra padrões e multiplique com estratégia.',icon:'⚙️',place:'Bosque das Engrenagens',groups:'caixotes',items:'engrenagens'},
+ {name:'Deserto das Caravanas',subtitle:'Atravesse as dunas com cálculo e atenção.',icon:'🏜️',place:'Deserto das Caravanas',groups:'caravanas',items:'suprimentos'},
+ {name:'Montanhas dos Relógios',subtitle:'Reative as torres e seus mecanismos.',icon:'⛰️',place:'Montanhas dos Relógios',groups:'torres',items:'luzes'},
+ {name:'Arquipélago das Invenções',subtitle:'Construa máquinas com números maiores.',icon:'🏝️',place:'Arquipélago das Invenções',groups:'oficinas',items:'peças'},
+ {name:'Galáxia dos Portais',subtitle:'Domine as tabuadas avançadas e salve a galáxia.',icon:'🌌',place:'Galáxia dos Portais',groups:'naves',items:'cristais'}
+];
+const ADVENTURE_STAGES=[
+ {id:1,world:0,title:'O primeiro farol',subtitle:'Acenda as luzes da vila',icon:'🔆',tables:[1],minFactor:1,maxFactor:8,boss:false,intro:'A Vila das Sementes está no escuro! O primeiro farol só acende quando você descobre quantos objetos existem em grupos iguais. Vamos começar pelo caminho mais simples.',goal:'Resolver desafios da tabuada do 1 e perceber o que acontece quando multiplicamos por 1.',tip:'Multiplicar por 1 mantém o outro número: 1 × 7 = 7.'},
+ {id:2,world:0,title:'A ponte dos duplicadores',subtitle:'Construa a ponte em dobro',icon:'🌉',tables:[2],minFactor:1,maxFactor:10,boss:false,intro:'A ponte que leva ao bosque está incompleta. Os construtores trabalham em pares: cada grupo precisa ter o dobro de peças para sustentar a passagem.',goal:'Usar a tabuada do 2 para contar de dois em dois e reconhecer o dobro.',tip:'Multiplicar por 2 é encontrar o dobro: 2 × 6 é o mesmo que 6 + 6.'},
+ {id:3,world:0,title:'O correio dos trios',subtitle:'Entregue as encomendas',icon:'📦',tables:[3],minFactor:1,maxFactor:10,boss:false,intro:'Os carteiros se perderam entre as trilhas. Cada carrinho leva três encomendas iguais. Calcule os carregamentos para liberar as rotas.',goal:'Praticar a tabuada do 3 em grupos e pequenas situações de entrega.',tip:'Na tabuada do 3, some três unidades a cada novo grupo.'},
+ {id:4,world:0,title:'O guardião do vale',subtitle:'Desafio final do primeiro mundo',icon:'🛡️',tables:[1,2,3],minFactor:1,maxFactor:10,boss:true,intro:'O Guardião do Vale bloqueou o caminho. Ele mistura os desafios que você já encontrou: faróis, pares e trios. Mostre que consegue trocar de estratégia sem perder o ritmo.',goal:'Misturar as tabuadas do 1, 2 e 3. Leia cada enunciado antes de responder.',tip:'Não tente decorar a ordem: identifique a tabuada de cada conta e pense em grupos iguais.'},
+ {id:5,world:1,title:'A oficina das quatro rodas',subtitle:'Conserte os carrinhos',icon:'🛞',tables:[4],minFactor:1,maxFactor:10,boss:false,intro:'No bosque, os carrinhos da oficina perderam as rodas. Cada veículo usa quatro rodas. Descubra quantas rodas são necessárias para colocar todos na estrada.',goal:'Explorar a tabuada do 4 em contas e situações de montagem.',tip:'A tabuada do 4 pode ser vista como o dobro do dobro.'},
+ {id:6,world:1,title:'A caravana dos cinco',subtitle:'Prepare os kits de viagem',icon:'🎒',tables:[5],minFactor:1,maxFactor:10,boss:false,intro:'Uma caravana vai atravessar o bosque. Cada viajante recebe um kit com cinco itens. Calcule os kits para ninguém ficar sem equipamento.',goal:'Praticar a tabuada do 5 e reconhecer seus padrões.',tip:'Os resultados da tabuada do 5 terminam em 0 ou 5.'},
+ {id:7,world:1,title:'O rio das seis comportas',subtitle:'Abra as passagens de água',icon:'🌊',tables:[6],minFactor:1,maxFactor:10,boss:false,intro:'O rio alimenta as árvores do bosque, mas seis comportas estão travadas. Cada sequência de comportas precisa da quantidade certa de engrenagens.',goal:'Usar a tabuada do 6 em multiplicações e problemas curtos.',tip:'Você pode pensar em 6 como 5 + 1: calcule a tabuada do 5 e acrescente mais um grupo.'},
+ {id:8,world:1,title:'O robô guardião',subtitle:'Desarme o código do bosque',icon:'🤖',tables:[4,5,6,2],minFactor:1,maxFactor:10,boss:true,intro:'O robô só libera a saída quando o código de segurança estiver completo. Ele mistura rodas, kits e comportas, e ainda traz uma conta conhecida para aquecer.',goal:'Resolver um desafio misto com as tabuadas do 2, 4, 5 e 6.',tip:'Observe o número que aparece na conta; ele indica qual padrão você pode usar.'},
+ {id:9,world:2,title:'As sete tendas',subtitle:'Abasteça o acampamento',icon:'⛺',tables:[7],minFactor:1,maxFactor:10,boss:false,intro:'O vento levou os estoques do deserto. Cada tenda precisa de sete cantis. Ajude a equipe a descobrir quantos cantis separar para cada acampamento.',goal:'Conhecer a tabuada do 7 com fatos variados.',tip:'Separe a conta em partes conhecidas: 7 × 8 pode ser 5 × 8 + 2 × 8.'},
+ {id:10,world:2,title:'Oito rodas na tempestade',subtitle:'Repare os veículos',icon:'🚙',tables:[8],minFactor:1,maxFactor:10,boss:false,intro:'Uma tempestade de areia parou os veículos exploradores. Cada veículo especial usa oito rodas. Calcule as peças para a equipe voltar a viajar.',goal:'Praticar a tabuada do 8 e trabalhar com resultados maiores.',tip:'A tabuada do 8 é o dobro da tabuada do 4.'},
+ {id:11,world:2,title:'O enigma das nove dunas',subtitle:'Encontre a rota secreta',icon:'🧭',tables:[9],minFactor:1,maxFactor:10,boss:false,intro:'Há nove marcas em cada duna, mas o mapa mostra vários conjuntos. Descubra o total para revelar a direção do próximo portal.',goal:'Praticar a tabuada do 9 e usar padrões para conferir respostas.',tip:'Na tabuada do 9, a soma dos algarismos do resultado costuma ser 9 ou múltiplo de 9.'},
+ {id:12,world:2,title:'O escorpião de pedra',subtitle:'Vença o guardião do deserto',icon:'🦂',tables:[7,8,9,4,5],minFactor:1,maxFactor:10,boss:true,intro:'O guardião do deserto protege a passagem para as montanhas. Ele mistura contas novas com padrões que você já conhece. Atenção: a ordem muda a cada tentativa!',goal:'Combinar as tabuadas do 7, 8 e 9 com uma revisão das tabuadas anteriores.',tip:'Antes de calcular, identifique a tabuada. Depois escolha um caminho: dobro, grupos ou decomposição.'},
+ {id:13,world:3,title:'As dez luzes da montanha',subtitle:'Religue a rede elétrica',icon:'💡',tables:[10],minFactor:1,maxFactor:10,boss:false,intro:'As torres da montanha apagaram. Cada torre precisa de dez luzes novas. Reative a rede e ilumine o caminho até o relógio central.',goal:'Dominar a tabuada do 10 e perceber o padrão dos resultados.',tip:'Multiplicar por 10 acrescenta um zero ao número inteiro.'},
+ {id:14,world:3,title:'O relógio de onze ponteiros',subtitle:'Acerte o mecanismo',icon:'🕰️',tables:[11],minFactor:1,maxFactor:10,boss:false,intro:'Um relógio raro tem onze ponteiros. Para fazê-lo funcionar, você precisa distribuir as peças igualmente pelos mecanismos.',goal:'Praticar a tabuada do 11 e identificar repetições nos resultados.',tip:'De 11 × 1 a 11 × 9, os resultados têm dois algarismos iguais.'},
+ {id:15,world:3,title:'O trem das doze rodas',subtitle:'Libere a linha férrea',icon:'🚂',tables:[12],minFactor:1,maxFactor:10,boss:false,intro:'O trem que leva às ilhas está parado. Cada vagão precisa de doze peças para completar o motor. Calcule o total e coloque o trem em movimento.',goal:'Explorar a tabuada do 12 e decompor contas em partes menores.',tip:'Pense em 12 como 10 + 2. Exemplo: 12 × 4 = 40 + 8.'},
+ {id:16,world:3,title:'O gigante dos ponteiros',subtitle:'Desafio das montanhas',icon:'⏳',tables:[10,11,12,7,8],minFactor:1,maxFactor:10,boss:true,intro:'O gigante do relógio embaralhou todas as engrenagens. Para avançar, você vai misturar as tabuadas das montanhas com duas antigas conhecidas.',goal:'Resolver contas misturadas das tabuadas do 10, 11 e 12, com revisão.',tip:'Use a decomposição para contas grandes: separe dezenas e unidades.'},
+ {id:17,world:4,title:'O laboratório treze',subtitle:'Monte o primeiro invento',icon:'🧪',tables:[13],minFactor:1,maxFactor:10,boss:false,intro:'Nas ilhas, inventores construíram um laboratório que funciona com treze peças por máquina. Ajude a equipe a preparar cada conjunto.',goal:'Começar a tabuada do 13 em situações e contas diretas.',tip:'Decomponha 13 em 10 + 3: 13 × 4 = 40 + 12.'},
+ {id:18,world:4,title:'O submarino quatorze',subtitle:'Encontre os cristais do mar',icon:'🤿',tables:[14],minFactor:1,maxFactor:10,boss:false,intro:'Um submarino precisa de quatorze cristais em cada compartimento. Conte os cristais para que ele possa mergulhar com segurança.',goal:'Praticar a tabuada do 14 e usar a tabuada do 7 como apoio.',tip:'14 é o dobro de 7. Se você souber 7 × 6, poderá dobrar o resultado.'},
+ {id:19,world:4,title:'A fábrica quinze',subtitle:'Construa os planadores',icon:'🛠️',tables:[15],minFactor:1,maxFactor:10,boss:false,intro:'A fábrica vai produzir planadores com quinze peças cada. Organize as peças sem faltar nem sobrar.',goal:'Praticar a tabuada do 15 e observar a relação com a tabuada do 5.',tip:'15 × 4 pode ser calculado como 10 × 4 mais 5 × 4.'},
+ {id:20,world:4,title:'O portal dezesseis',subtitle:'Carregue os motores',icon:'🌀',tables:[16],minFactor:1,maxFactor:10,boss:false,intro:'O portal das ilhas só abre com motores de dezesseis cristais. Cada motor precisa da quantidade exata para não perder energia.',goal:'Praticar a tabuada do 16 e aproveitar a relação com a tabuada do 8.',tip:'16 é o dobro de 8. Dobre o resultado da tabuada do 8.'},
+ {id:21,world:4,title:'O capitão das invenções',subtitle:'Prova final do arquipélago',icon:'🧑‍🚀',tables:[13,14,15,16,9,10],minFactor:1,maxFactor:10,boss:true,intro:'O capitão lançou o maior teste das ilhas. Misturou máquinas, planadores e portais — e incluiu contas antigas para ver se você continua lembrando delas.',goal:'Combinar as tabuadas do 13 ao 16 com uma revisão das tabuadas do 9 e 10.',tip:'Quebre números grandes em parcelas fáceis. Toda multiplicação pode ser pensada em grupos.'},
+ {id:22,world:5,title:'A rota dezessete',subtitle:'Atravesse o cinturão de asteroides',icon:'☄️',tables:[17],minFactor:1,maxFactor:10,boss:false,intro:'A nave exploradora encontrou um cinturão de asteroides. Cada rota exige dezessete baterias. Calcule os estoques para manter a viagem segura.',goal:'Praticar a tabuada do 17 com diferentes fatores.',tip:'17 × 6 pode ser 10 × 6 + 7 × 6. Divida para facilitar.'},
+ {id:23,world:5,title:'A estação dezoito',subtitle:'Reative a estação espacial',icon:'🛰️',tables:[18],minFactor:1,maxFactor:10,boss:false,intro:'A estação espacial está sem energia. Cada módulo usa dezoito células. Recarregue todos os módulos para reabrir o caminho.',goal:'Praticar a tabuada do 18 e usar o dobro da tabuada do 9.',tip:'18 é o dobro de 9. Calcule 9 vezes o número e depois dobre.'},
+ {id:24,world:5,title:'O cometa dezenove',subtitle:'Calcule a trajetória',icon:'🌠',tables:[19],minFactor:1,maxFactor:10,boss:false,intro:'Um cometa está se aproximando do portal. Para ajustar a trajetória, a equipe precisa calcular conjuntos de dezenove fragmentos de energia.',goal:'Praticar a tabuada do 19 e decompor o número em 20 menos 1.',tip:'19 × 5 é quase 20 × 5: faça 100 menos 5.'},
+ {id:25,world:5,title:'O último portal: vinte',subtitle:'Abra a entrada da galáxia',icon:'🚪',tables:[20],minFactor:1,maxFactor:10,boss:false,intro:'Você chegou ao último portal. Cada núcleo precisa de vinte cristais. Prepare a energia e prove que consegue usar a tabuada do 20.',goal:'Completar a tabuada do 20 e se preparar para o desafio final.',tip:'Multiplicar por 20 é multiplicar por 2 e depois por 10.'},
+ {id:26,world:5,title:'O mestre da galáxia',subtitle:'O grande desafio da multiplicação',icon:'🏆',tables:[17,18,19,20,12,15],minFactor:1,maxFactor:10,boss:true,intro:'O Mestre da Galáxia reuniu todos os portais em um último desafio. As contas aparecem em ordem surpresa, misturando as tabuadas finais e algumas que você já dominou. Esta é a sua grande conquista!',goal:'Vencer o desafio final com as tabuadas do 17 ao 20 e revisar as tabuadas do 12 e 15.',tip:'Respire, leia com atenção e decomponha as contas mais difíceis. Você chegou até aqui porque aprendeu passo a passo.'}
+];
+let adventureActiveStageIndex=0;
+let adventureQuestions=[];
+let adventureQuestionIndex=0;
+let adventureFirstTryCorrect=0;
+let adventureComboCount=0;
+let adventureBestCombo=0;
+let adventureHasAnswered=false;
+let adventureLastResultPassed=false;
+
+function shuffleAdventure(items){
+ const result=items.slice();
+ for(let i=result.length-1;i>0;i--){
+  const j=Math.floor(Math.random()*(i+1));
+  [result[i],result[j]]=[result[j],result[i]];
+ }
+ return result;
+}
+function getAdventureProgress(){
+ if(!activeProfile)return {version:1,unlockedStage:0,xp:0,stages:{}};
+ profilesData[activeProfile]=profilesData[activeProfile]||{};
+ let progress=profilesData[activeProfile].adventureProgress;
+ if(!progress||typeof progress!=='object')progress={version:1,unlockedStage:0,xp:0,stages:{}};
+ if(!progress.stages||typeof progress.stages!=='object')progress.stages={};
+ progress.version=1;
+ progress.unlockedStage=Math.max(0,Math.min(ADVENTURE_STAGES.length-1,Number(progress.unlockedStage)||0));
+ progress.xp=Math.max(0,Number(progress.xp)||0);
+ profilesData[activeProfile].adventureProgress=progress;
+ return progress;
+}
+async function saveAdventureProgress(){
+ if(!activeProfile)return false;
+ const profile=profilesData[activeProfile]||(profilesData[activeProfile]={});
+ profile.adventureProgress=getAdventureProgress();
+ profile.updatedAt=new Date().toISOString();
+ persistProfiles();
+ const status=$('adventureSaveStatus');
+ if(!cloudTokenReady()){
+  if(status)status.textContent='Progresso guardado neste aparelho. Entre novamente para sincronizar.';
+  return false;
+ }
+ if(status)status.textContent='Salvando seu avanço no perfil...';
+ const saved=await flushCloudSave(true);
+ if(status)status.textContent=saved?'✓ Progresso sincronizado no seu perfil.':'Progresso guardado neste aparelho; a sincronização será tentada novamente.';
+ return saved;
+}
+function showModeHub(){
+ ['trainingModePanel','adventureMapView','adventureIntroView','adventurePlayView','adventureResultView','challengeModeView'].forEach(id=>$(id).classList.add('hidden'));
+ $('modeHub').classList.remove('hidden');
+}
+function showTrainingMode(){
+ $('modeHub').classList.add('hidden');$('challengeModeView').classList.add('hidden');
+ ['adventureMapView','adventureIntroView','adventurePlayView','adventureResultView'].forEach(id=>$(id).classList.add('hidden'));
+ $('trainingModePanel').classList.remove('hidden');
+}
+function showAdventureMap(){
+ $('modeHub').classList.add('hidden');$('challengeModeView').classList.add('hidden');
+ ['trainingModePanel','adventureIntroView','adventurePlayView','adventureResultView'].forEach(id=>$(id).classList.add('hidden'));
+ $('adventureMapView').classList.remove('hidden');
+ renderAdventureMap();
+}
+function showAdventureIntro(index){
+ const progress=getAdventureProgress();
+ if(index<0||index>=ADVENTURE_STAGES.length||index>progress.unlockedStage)return;
+ adventureActiveStageIndex=index;
+ const stage=ADVENTURE_STAGES[index],world=ADVENTURE_WORLDS[stage.world];
+ $('adventureMapView').classList.add('hidden');
+ $('adventurePlayView').classList.add('hidden');
+ $('adventureResultView').classList.add('hidden');
+ $('adventureIntroView').classList.remove('hidden');
+ $('adventureIntroTitle').textContent='Fase '+stage.id+' · '+stage.title;
+ $('adventureIntroIcon').textContent=stage.icon;
+ $('adventureIntroWorld').textContent='MUNDO '+(stage.world+1)+' · '+world.name.toUpperCase();
+ $('adventureIntroStory').textContent=stage.intro;
+ $('adventureIntroGoal').textContent=stage.goal;
+ $('adventureIntroTip').textContent=stage.tip;
+ $('adventureIntroRules').textContent=stage.boss?'Desafio especial: responda pelo menos 8 de 10 questões para vencer. Sem vidas perdidas: você pode tentar novamente.':'Responda pelo menos 6 de 8 questões para abrir a próxima fase. Você pode tentar novamente quantas vezes precisar.';
+}
+function makeAdventureQuestion(stage,fact,index){
+ const table=fact.table,factor=fact.factor,product=table*factor;
+ const normalFormats=['input','choice','story','missing','input','story','choice','input'];
+ const bossFormats=['story','choice','missing','input','story','choice','input','missing','story','choice'];
+ const formats=stage.boss?bossFormats:normalFormats;
+ const type=formats[(index+stage.id-1)%formats.length];
+ const world=ADVENTURE_WORLDS[stage.world];
+ let prompt='',math='',answer=product;
+ if(type==='story'){
+  prompt='Na '+world.place+', a equipe preparou '+factor+' '+world.groups+'. Cada grupo recebeu '+table+' '+world.items+'. Quantos '+world.items+' foram usados ao todo?';
+  math=factor+' grupos × '+table+' = ?';
+ }else if(type==='missing'){
+  prompt='Uma parte do código do portal desapareceu. Qual número deve ocupar o espaço vazio?';
+  math=table+' × ? = '+product;
+  answer=factor;
+ }else if(type==='choice'){
+  prompt='Escolha o resultado correto para liberar a próxima parte do caminho.';
+  math=table+' × '+factor+' = ?';
+ }else{
+  prompt='Resolva a multiplicação para carregar o próximo cristal.';
+  math=table+' × '+factor+' = ?';
+ }
+ const explanation=type==='missing'
+  ?'A conta completa é '+table+' × '+factor+' = '+product+'. O número que faltava era '+factor+'.'
+  :'São '+factor+' grupos com '+table+' em cada um: '+factor+' × '+table+' = '+product+'.';
+ let options=[];
+ if(type==='choice'){
+  const candidates=new Set([product]);
+  const offsets=[table,-table,factor,-factor,1,-1,table*2,2,3,5,7];
+  offsets.forEach(offset=>{if(candidates.size<4&&product+offset>0)candidates.add(product+offset)});
+  while(candidates.size<4){
+   const candidate=Math.max(1,product+Math.floor(Math.random()*13)-6);
+   candidates.add(candidate);
+  }
+  options=shuffleAdventure([...candidates]);
+ }
+ return {type,table,factor,product,answer,prompt,math,explanation,options};
+}
+function createAdventureQuestionSet(stage){
+ const facts=[];
+ stage.tables.forEach(table=>{
+  for(let factor=stage.minFactor;factor<=stage.maxFactor;factor++)facts.push({table,factor});
+ });
+ const count=stage.boss?10:8;
+ const mixed=shuffleAdventure(facts);
+ const selected=mixed.slice(0,count);
+ while(selected.length<count)selected.push(facts[Math.floor(Math.random()*facts.length)]);
+ return selected.map((fact,index)=>makeAdventureQuestion(stage,fact,index));
+}
+function updateAdventureQuestionHud(){
+ const stage=ADVENTURE_STAGES[adventureActiveStageIndex];
+ const total=adventureQuestions.length;
+ $('adventureStageLabel').textContent='FASE '+stage.id+(stage.boss?' · GUARDIÃO':'');
+ $('adventureQuestionCounter').textContent='Questão '+(adventureQuestionIndex+1)+' de '+total;
+ $('adventureCombo').textContent='🔥 Sequência '+adventureComboCount;
+ $('adventurePlayXp').textContent='✨ '+(adventureFirstTryCorrect*10)+' XP';
+ $('adventureQuestionProgress').style.width=(adventureQuestionIndex/total*100)+'%';
+}
+function renderAdventureQuestion(){
+ const question=adventureQuestions[adventureQuestionIndex];
+ if(!question)return;
+ adventureHasAnswered=false;
+ $('adventureFeedback').classList.add('hidden');
+ $('adventureFeedback').classList.remove('wrong');
+ $('adventureAnswerForm').classList.toggle('hidden',question.type==='choice');
+ $('adventureChoices').classList.toggle('hidden',question.type!=='choice');
+ $('adventureQuestionPrompt').textContent=question.prompt;
+ $('adventureQuestionMath').textContent=question.math;
+ $('adventureAnswerInput').value='';
+ $('adventureAnswerInput').setAttribute('aria-label',question.type==='missing'?'Digite o fator que falta':'Digite o resultado da multiplicação');
+ if(question.type==='choice'){
+  $('adventureChoices').innerHTML=question.options.map(value=>'<button class="adventure-choice" type="button" data-adventure-answer="'+value+'">'+value+'</button>').join('');
+ }
+ $('adventureNextButton').textContent=adventureQuestionIndex===adventureQuestions.length-1?'Ver resultado da fase':'Próxima questão';
+ updateAdventureQuestionHud();
+}
+function startAdventureStage(index){
+ const progress=getAdventureProgress();
+ if(index<0||index>progress.unlockedStage)return;
+ adventureActiveStageIndex=index;
+ adventureQuestions=createAdventureQuestionSet(ADVENTURE_STAGES[index]);
+ adventureQuestionIndex=0;
+ adventureFirstTryCorrect=0;
+ adventureComboCount=0;
+ adventureBestCombo=0;
+ adventureHasAnswered=false;
+ $('adventureIntroView').classList.add('hidden');
+ $('adventureResultView').classList.add('hidden');
+ $('adventurePlayView').classList.remove('hidden');
+ $('adventurePlayWorld').textContent=ADVENTURE_WORLDS[ADVENTURE_STAGES[index].world].name.toUpperCase();
+ renderAdventureQuestion();
+}
+function answerAdventureQuestion(value,choiceButton){
+ if(adventureHasAnswered)return;
+ const question=adventureQuestions[adventureQuestionIndex];
+ if(!question)return;
+ if(!Number.isInteger(value)){
+  $('adventureAnswerInput').focus();
+  return;
+ }
+ adventureHasAnswered=true;
+ const correct=value===question.answer;
+ if(correct){
+  adventureFirstTryCorrect++;
+  adventureComboCount++;
+  adventureBestCombo=Math.max(adventureBestCombo,adventureComboCount);
+  $('adventureFeedback').classList.remove('wrong');
+  $('adventureFeedbackTitle').textContent=adventureComboCount>=3?'🔥 Incrível! '+adventureComboCount+' acertos seguidos!':'✓ Muito bem! Resposta correta.';
+ }else{
+  adventureComboCount=0;
+  $('adventureFeedback').classList.add('wrong');
+  $('adventureFeedbackTitle').textContent='Quase lá! Vamos aprender com essa conta.';
+ }
+ if(choiceButton){
+  document.querySelectorAll('#adventureChoices .adventure-choice').forEach(button=>{
+   button.disabled=true;
+   const selected=Number(button.dataset.adventureAnswer);
+   if(selected===question.answer)button.classList.add('selected-correct');
+   else if(button===choiceButton)button.classList.add('selected-wrong');
+  });
+ }
+ $('adventureFeedbackText').textContent=(correct?'Você acertou! ':'A resposta correta é '+question.answer+'. ')+question.explanation;
+ $('adventureFeedback').classList.remove('hidden');
+ $('adventureQuestionProgress').style.width=((adventureQuestionIndex+1)/adventureQuestions.length*100)+'%';
+ $('adventureAnswerForm').classList.add('hidden');
+ $('adventureChoices').classList.toggle('hidden',question.type!=='choice');
+ updateAdventureQuestionHud();
+}
+function submitAdventureAnswer(event){
+ event.preventDefault();
+ const raw=$('adventureAnswerInput').value.trim();
+ if(raw==='')return;
+ const value=Number(raw);
+ if(!Number.isSafeInteger(value))return;
+ answerAdventureQuestion(value,null);
+}
+async function finishAdventureStage(){
+ const stage=ADVENTURE_STAGES[adventureActiveStageIndex];
+ const total=adventureQuestions.length;
+ const required=stage.boss?8:6;
+ const passed=adventureFirstTryCorrect>=required;
+ const stars=passed?(adventureFirstTryCorrect===total?3:adventureFirstTryCorrect>=total-1?2:1):0;
+ const progress=getAdventureProgress();
+ const key=String(stage.id);
+ const entry=progress.stages[key]||{attempts:0,completed:false,stars:0,bestCorrect:0};
+ const wasCompleted=!!entry.completed;
+ const oldStars=Number(entry.stars)||0;
+ entry.attempts=(Number(entry.attempts)||0)+1;
+ entry.bestCorrect=Math.max(Number(entry.bestCorrect)||0,adventureFirstTryCorrect);
+ entry.bestTotal=total;
+ entry.lastCorrect=adventureFirstTryCorrect;
+ entry.bestCombo=Math.max(Number(entry.bestCombo)||0,adventureBestCombo);
+ entry.lastPlayedAt=new Date().toISOString();
+ if(passed){
+  entry.completed=true;
+  entry.stars=Math.max(oldStars,stars);
+  entry.completedAt=entry.completedAt||new Date().toISOString();
+  if(!wasCompleted)progress.xp+=30+(adventureFirstTryCorrect*10);
+  else if(stars>oldStars)progress.xp+=(stars-oldStars)*5;
+  progress.unlockedStage=Math.max(progress.unlockedStage,Math.min(ADVENTURE_STAGES.length-1,adventureActiveStageIndex+1));
+ }
+ progress.stages[key]=entry;
+ progress.lastStageId=stage.id;
+ adventureLastResultPassed=passed;
+ profilesData[activeProfile]=profilesData[activeProfile]||(profilesData[activeProfile]={});
+ profilesData[activeProfile].adventureProgress=progress;
+ profilesData[activeProfile].updatedAt=new Date().toISOString();
+ persistProfiles();
+ let coinReward=null;
+ let saved=false;
+ if(passed){
+  coinReward=await claimGameReward('adventure_stage',{stageId:stage.id,adventureProgress:progress});
+  saved=!!coinReward;
+ }else{
+  saved=await saveAdventureProgress();
+ }
+ const bestStars=entry.stars||0;
+ $('adventurePlayView').classList.add('hidden');
+ $('adventureResultView').classList.remove('hidden');
+ $('adventureResultIcon').textContent=passed?(stage.boss?'🏆':'🎉'):'🧩';
+ $('adventureResultTitle').textContent=passed?(stage.boss?'Guardião vencido!':'Fase concluída!'):'Mais uma tentativa e você consegue!';
+ $('adventureResultStars').textContent='★'.repeat(stars)+'☆'.repeat(3-stars);
+ $('adventureResultText').textContent=passed
+  ?'Você acertou '+adventureFirstTryCorrect+' de '+total+' questões e abriu o próximo caminho. '+(wasCompleted?'Seu melhor resultado continua registrado.':'Uma nova parte da expedição está liberada!')
+  :'Você acertou '+adventureFirstTryCorrect+' de '+total+'. Para abrir a próxima fase, precisa acertar '+required+'. Leia a dica e tente outra vez — seu avanço anterior continua guardado.';
+ $('adventureResultReward').textContent=passed
+  ?((wasCompleted?(stars>oldStars?'⭐ Melhorou seu recorde! +'+((stars-oldStars)*5)+' XP':'Fase já conquistada. Seu recorde foi mantido.'):'✨ Recompensa: '+(30+adventureFirstTryCorrect*10)+' XP')+
+    (coinReward?.coinsAdded?' · 🪙 +50 moedas':(coinReward?.alreadyClaimed?' · 🪙 Recompensa já recebida':' · 🪙 Recompensa pendente de confirmação')))
+  :'Seu progresso não foi perdido. Continue praticando!';
+ $('adventureResultNext').textContent=passed&&adventureActiveStageIndex<ADVENTURE_STAGES.length-1?'Próxima fase →':'Voltar ao mapa';
+ if(!saved&&$('adventureSaveStatus'))$('adventureSaveStatus').textContent='Atenção: o avanço ficou no aparelho, mas ainda não foi sincronizado.';
+}
+function renderAdventureMap(){
+ const progress=getAdventureProgress();
+ const records=Object.values(progress.stages);
+ const completed=records.filter(record=>record&&record.completed).length;
+ const stars=records.reduce((sum,record)=>sum+(Number(record&&record.stars)||0),0);
+ $('adventureMapProgressText').textContent=completed+' de '+ADVENTURE_STAGES.length+' fases concluídas';
+ $('adventureMapXp').textContent='✨ '+progress.xp+' XP';
+ $('adventureMapStars').textContent='⭐ '+stars+' estrelas';
+ $('adventureMapProgressBar').style.width=(completed/ADVENTURE_STAGES.length*100)+'%';
+ $('adventureMap').innerHTML=ADVENTURE_WORLDS.map((world,worldIndex)=>{
+  const stages=ADVENTURE_STAGES.map((stage,index)=>({stage,index})).filter(item=>item.stage.world===worldIndex);
+  const worldComplete=stages.filter(item=>progress.stages[String(item.stage.id)]&&progress.stages[String(item.stage.id)].completed).length;
+  const nodes=stages.map(item=>{
+   const stage=item.stage,index=item.index,record=progress.stages[String(stage.id)]||{};
+   const locked=index>progress.unlockedStage,done=!!record.completed,current=index===progress.unlockedStage&&!done;
+   const starsText=done?'★'.repeat(Number(record.stars)||0)+'☆'.repeat(3-(Number(record.stars)||0)):locked?'🔒':current?'▶ DISPONÍVEL':'↻ REVISAR';
+   return '<button class="adventure-node '+(locked?'locked':done?'completed':current?'current':'')+'" type="button" data-adventure-stage="'+index+'" '+(locked?'disabled':'')+' aria-label="'+(locked?'Fase bloqueada: ': 'Abrir fase: ')+stage.title+'"><span class="adventure-node-icon">'+(locked?'🔒':stage.icon)+'</span><small>FASE '+String(stage.id).padStart(2,'0')+'</small><strong>'+stage.title+'</strong><span class="adventure-node-status">'+starsText+'</span></button>';
+  }).join('');
+  return '<section class="adventure-world"><header class="adventure-world-head"><span class="adventure-world-icon">'+world.icon+'</span><div><span>MUNDO '+(worldIndex+1)+'</span><h3>'+world.name+'</h3><small>'+world.subtitle+'</small></div><strong class="adventure-world-progress">'+worldComplete+'/'+stages.length+'</strong></header><div class="adventure-path">'+nodes+'</div></section>';
+ }).join('');
+}
+function nextFromAdventureResult(){
+ if(adventureLastResultPassed&&adventureActiveStageIndex<ADVENTURE_STAGES.length-1)showAdventureIntro(adventureActiveStageIndex+1);
+ else showAdventureMap();
+}
+function advanceAdventureQuestion(){
+ if(!adventureHasAnswered)return;
+ if(adventureQuestionIndex>=adventureQuestions.length-1){
+  finishAdventureStage();
+  return;
+ }
+ adventureQuestionIndex++;
+ renderAdventureQuestion();
+}
+
+
 function makeRound(){
  const allRandom=selected.every(t=>t.mode==='random');
  const questions=[];
@@ -3581,6 +3991,17 @@ function initMusicPlayer(){
   }
  });
  playTrack(currentTrackIndex,true);
+}
+function toggleMusicMenu(){
+ const button=$('musicMenuToggle');
+ const panel=$('musicControls');
+ const expanded=button.getAttribute('aria-expanded')==='true';
+ const nextExpanded=!expanded;
+ button.setAttribute('aria-expanded',String(nextExpanded));
+ panel.classList.toggle('hidden',!nextExpanded);
+ $('siteMusicBox').classList.toggle('expanded',nextExpanded);
+ $('musicMenuLabel').textContent=nextExpanded?'Fechar':'Alterar música';
+ $('musicMenuChevron').textContent=nextExpanded?'⌃':'⌄';
 }
 function toggleSound(){
  soundOn=!soundOn;
