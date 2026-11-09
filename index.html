@@ -1781,7 +1781,7 @@ async function claimGameReward(type,payload){
   showGameRewardToast('Entre na sua conta para receber e guardar suas moedas.');return null;
  }
  const body=type==='training_cycle'
-  ?{type,claimId:payload.claimId}
+  ?{type,claimId:payload.claimId,learningFromErrors:payload.learningFromErrors===true}
   :{type,stageId:payload.stageId,...(type==='adventure_stage'&&payload.adventureProgress?{adventureProgress:payload.adventureProgress}:{})};
  const key=type==='training_cycle'?'training:'+payload.claimId:'stage:'+payload.stageId;
  const pending=readPendingGameRewards();
@@ -1837,9 +1837,9 @@ function siteErrorMessage(error){
  if(lower.includes('servidor seguro ainda não foi conectado')){
   return 'O cadastro seguro ainda está sendo configurado. O servidor do Cloudflare precisa ser publicado e conectado ao jogo.';
  }
- if(lower.includes('nome de usuário ou senha incorretos')){
-  return 'Nome de usuário ou senha incorretos.';
- }
+ if(lower.includes('usuário não existe')||lower.includes('usuario nao existe'))return 'Usuário não existe. Confira o nome ou faça seu cadastro.';
+ if(lower.includes('senha incorreta'))return 'Senha incorreta. Confira a senha e tente novamente.';
+ if(lower.includes('nome de usuário ou senha incorretos'))return 'Usuário não existe ou a senha está incorreta. Confira os dados e tente novamente.';
  if(status===401||lower.includes('sessão expirou')){
   return 'Sua sessão expirou. Entre novamente na sua conta.';
  }
@@ -2637,7 +2637,7 @@ function configureChallengeMode(mode){
  showChallengeSubPanel('challengeConfigPanel');
  $('challengeCustomConfig').classList.toggle('hidden',mode!=='custom');
  $('challengePresetConfig').classList.toggle('hidden',mode!=='preset');
- $('challengeConfigTitle').textContent=(challengeBetMode?'Desafio com aposta · ':'')+(mode==='custom'?'Personalizado':'Pré-definido');
+ $('challengeConfigTitle').textContent=(challengeBetMode?'Desafio com aposta · ':'')+(mode==='custom'?'Personalizado':'Patentes de duelo');
  $('challengeCustomMessage').textContent='';
  if(!$('challengeMusicSelect').value)$('challengeMusicSelect').value='0';
  if(mode==='custom')$('challengeTables').querySelectorAll('input').forEach(input=>input.checked=false);
@@ -4281,7 +4281,7 @@ $('saveProfile').addEventListener('click',()=>saveProfile(true));
 $('resumeProfile').addEventListener('click',resumeProfile);
 $('addNumbers').addEventListener('click',addNumbersToSavedGame);
 $('trainingGlobalMode').addEventListener('change',updateTrainingGlobalModeControls);
-$('start').addEventListener('click',()=>{if($('profileName').value.trim())saveProfile(false);start()});
+$('start').addEventListener('click',()=>{trainingReviewMode=false;trainingReviewFacts=[];if($('profileName').value.trim())saveProfile(false);start()});
 $('verify').addEventListener('click',verify);
 $('markDifficulty').addEventListener('click',markCurrentQuestionDifficulty);
 $('startReviewTraining').addEventListener('click',startMistakeTraining);
