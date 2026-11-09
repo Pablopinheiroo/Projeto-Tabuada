@@ -2443,6 +2443,10 @@ async function renderCommunityRanking(){
    ).join('');
    const titleLine=titleBadges
     ?'<div class="community-rank-title-line"><span class="community-title-label">TÍTULOS</span>'+titleBadges+'</div>':'';
+   const achievements=user.titles.map(title=>{
+    const item=ACHIEVEMENT_DEFINITIONS.find(entry=>entry.title===title||entry.id===title);
+    return '<span class="community-rank-chip title community-title-chip">'+(item?renderBadgeIcon('achievement:'+item.id):'✨')+' '+escapeHtml(item?.title||title)+'</span>';
+   }).join('');
    const featured=(user.featuredAwards||[]).map(id=>{
     const info=featuredAwardInfo(id,{awards:user.awards});
     return info?'<span class="community-featured-badge">'+info.icon+' '+escapeHtml(info.label)+'</span>':'';

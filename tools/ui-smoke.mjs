@@ -420,12 +420,6 @@ async function testViewport(name, viewport, mobile = false) {
     communityPage = 0;
     await renderCommunityRanking();
   });
-  const communityRenderDebug=await page.evaluate(()=>({
-    markup:document.querySelector("#communityRanking")?.innerHTML.slice(0,1800),
-    cacheLength:communityCache.length,
-    normalized:communityCache[0]?communityStatsFromRecord(communityCache[0]):null
-  }));
-  console.log("COMMUNITY_RENDER_DEBUG "+JSON.stringify(communityRenderDebug));
   const communityIdentity = page.locator(".community-rank-identity").first();
   check(!(await communityIdentity.textContent()).includes("@maria_27"),
     name + ": a comunidade ainda exibe o @usuário duplicado.");
