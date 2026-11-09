@@ -4238,7 +4238,7 @@ let uiSfxLibrary={},uiSfxAudioPool=new Map(),uiSfxPoolCursor=new Map(),uiSfxBuff
 function updateUiSfxGain(){
  if(!audioContext)return;
  if(!uiSfxGain){uiSfxGain=audioContext.createGain();uiSfxGain.gain.value=sfxVolumeLevel;uiSfxGain.connect(audioContext.destination);}
- uiSfxGain.gain.setTargetAtTime(sfxVolumeLevel,audioContext.currentTime,.012);
+ uiSfxGain.gain.setValueAtTime(sfxVolumeLevel,audioContext.currentTime);
 }
 function playUiSfxBuffer(buffer){
  if(!buffer||!ensureAudio())return false;
@@ -4253,7 +4253,7 @@ const SFX_VOLUME_CACHE_KEY='projetoTabuadaVolumeEfeitosV1';
 function applySfxVolumeToPlayers(){
  const value=Math.max(0,Math.min(1,sfxVolumeLevel));
  for(const pool of uiSfxAudioPool.values())for(const player of pool)player.volume=value;
- if(uiSfxGain&&audioContext)uiSfxGain.gain.setTargetAtTime(value,audioContext.currentTime,.012);
+ if(uiSfxGain&&audioContext)uiSfxGain.gain.setValueAtTime(value,audioContext.currentTime);
  if($('profileSfxVolume'))$('profileSfxVolume').value=String(Math.round(value*100));
  if($('profileSfxVolumeValue'))$('profileSfxVolumeValue').textContent=Math.round(value*100)+'%';
 }
