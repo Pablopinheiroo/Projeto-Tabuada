@@ -617,6 +617,10 @@ async function listChallengesFor(username, env) {
   const [index, userFile] = await Promise.all([readChallengeIndex(username, env), readUser(username, env)]);
   const ids = index.ids.slice(-CHALLENGE_MAX_HISTORY).reverse();
   const items = [];
+  // Cada tentativa de recuperação de pagamento pode usar até quatro subrequests.
+  // Limite três por consulta para manter margem no teto de 50 do plano Free.
+  let payoutRetries = 0;
+  const MAX_PAYOUT_RETRIES_PER_REQUEST = 3;
   for (let offset = 0; offset < ids.length; offset += 5) {
     const batch = ids.slice(offset, offset + 5);
     const loaded = await Promise.all(batch.map(async id => {
@@ -624,7 +628,12 @@ async function listChallengesFor(username, env) {
       const participants = Array.isArray(file?.data?.participants) && file.data.participants.length
         ? file.data.participants : [file?.data?.challenger, file?.data?.recipient].filter(Boolean);
       if (!file || !file.data || !participants.includes(username)) return null;
-      const data = await ensureCompletedChallengeBetPaid(file.data, env);
+      let data = file.data;
+      if (payoutRetries < MAX_PAYOUT_RETRIES_PER_REQUEST &&
+          data.betMode === true && data.status === "completed" && data.betPaid !== true) {
+        payoutRetries++;
+        data = await ensureCompletedChallengeBetPaid(data, env);
+      }
       return safeChallengeSummary(data, username);
     }));
     items.push(...loaded.filter(Boolean));
