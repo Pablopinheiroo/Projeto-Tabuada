@@ -4302,6 +4302,12 @@ async function loadUiSfx(){
   // aguardar criação de Audio nem decodificação no momento do clique.
   const canDecode=ensureAudio(false)&&typeof audioContext.decodeAudioData==='function';
   await Promise.all(sources.map(async src=>{
+   const pool=[0,1].map(()=>{
+    const player=new Audio();
+    player.preload='auto';player.src=src;player.volume=sfxVolumeLevel;player.load();
+    return player;
+   });
+   uiSfxAudioPool.set(src,pool);uiSfxPoolCursor.set(src,0);
    try{
     const response=await fetch(src,{cache:'force-cache'});
     if(!response.ok)throw new Error('Efeito sonoro indisponível.');
@@ -4309,14 +4315,9 @@ async function loadUiSfx(){
     if(canDecode){
      const buffer=await audioContext.decodeAudioData(bytes.slice(0));
      uiSfxBuffers.set(src,buffer);
-    }else throw new Error('Web Audio indisponível; usando player pré-carregado.');
+    }
    }catch(error){
-    const pool=[0,1].map(()=>{
-     const player=new Audio();
-     player.preload='auto';player.src=src;player.volume=sfxVolumeLevel;player.load();
-     return player;
-    });
-    uiSfxAudioPool.set(src,pool);uiSfxPoolCursor.set(src,0);
+    // Mantém os players HTMLAudio já pré-carregados como alternativa.
    }
   }));
   updateUiSfxGain();
