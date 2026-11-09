@@ -27,8 +27,11 @@ jobs:
 
       - name: Preparar FFmpeg
         run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          if ! command -v ffmpeg >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg
+          fi
+          ffmpeg -version | head -n 1
 
       - name: Baixar, converter e validar 100 trilhas
         run: python tools/import_music_100.py
