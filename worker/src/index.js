@@ -939,10 +939,12 @@ function buildTournamentQuestions(seed, difficulty) {
   });
 }
 function rankTournament(board, difficulty, username) {
-  const entries = Object.entries(board.results?.[difficulty] || {}).map(([name, result]) => ({
-    username: name, score: Number(result.score) || 0, totalMs: Number(result.totalMs) || 0,
-    perfect: result.perfect === true
-  }));
+  const entries = Object.entries(board.results?.[difficulty] || {})
+    .filter(([, result]) => (Number(result.score) || 0) >= TOURNAMENT_MIN_VALID_SCORE)
+    .map(([name, result]) => ({
+      username: name, score: Number(result.score) || 0, totalMs: Number(result.totalMs) || 0,
+      perfect: result.perfect === true
+    }));
   entries.sort((a, b) => b.score - a.score || a.totalMs - b.totalMs || a.username.localeCompare(b.username));
   const position = entries.findIndex(item => item.username === username) + 1;
   return { difficulty, total: entries.length, top10: entries.slice(0, 10), position: position || null, own: position ? entries[position - 1] : null };
@@ -977,7 +979,11 @@ async function updateTournamentBoard(month, difficulty, username, result, env) {
     const data = current.data;
     data.results = data.results || { easy: {}, medium: {}, hard: {} };
     data.results[difficulty] = data.results[difficulty] || {};
-    if (data.results[difficulty][username]) return { board: data, alreadySubmitted: true };
+    const previous = data.results[difficulty][username];
+    if (previous && (Number(previous.score) || 0) >= TOURNAMENT_MIN_VALID_SCORE) {
+      return { board: data, alreadySubmitted: true };
+    }
+    // Results saved by the older version below 60% can be replaced after retry.
     data.results[difficulty][username] = result;
     try {
       const sha = await writeJsonFile(path, data, current.sha, env, "Registrar resultado mensal de " + username);
@@ -1302,7 +1308,17 @@ async function handleApi(request, env, origin) {
         return json({ error: "Você já escolheu " + (TOURNAMENT_PRESETS[participation.difficulty]?.name || "uma dificuldade") +
           " neste mês. Só é permitido participar de uma dificuldade por mês." }, 409, origin);
       }
-      if (participation?.result) return json({ error: "Você já concluiu seu torneio deste mês." }, 409, origin);
+      if (participation?.result) {
+        if ((Number(participation.result.score) || 0) >= TOURNAMENT_MIN_VALID_SCORE) {
+          return json({ error: "Você já concluiu seu torneio deste mês." }, 409, origin);
+        }
+        // A tentativa antiga abaixo de 60% não vale; libere a mesma prova para nova tentativa.
+        delete participation.result;
+        profile.monthlyTournaments[month] = participation;
+        file.data.profile = profile;
+        file.data.updatedAt = new Date().toISOString();
+        await writeUser(username, file.data, file.sha, env);
+      }
       const board = await ensureTournamentBoard(month, env);
       if (!participation) {
         participation = { difficulty, attemptId: randomHex(16), startedAt: new Date().toISOString() };
@@ -1316,7 +1332,8 @@ async function handleApi(request, env, origin) {
         month, difficulty, difficultyName: preset.name,
         attemptId: participation.attemptId,
         seed: board.data.seeds[difficulty],
-        questions, questionCount: 50, secondsPerQuestion: TOURNAMENT_SECONDS_PER_QUESTION[difficulty], optionCount: preset.options
+        questions, questionCount: 50, secondsPerQuestion: TOURNAMENT_SECONDS_PER_QUESTION[difficulty],
+        minimumScore: TOURNAMENT_MIN_VALID_SCORE, optionCount: preset.options
       }, 200, origin);
     }
 
