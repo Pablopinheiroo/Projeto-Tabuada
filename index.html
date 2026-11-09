@@ -2259,7 +2259,7 @@ async function refreshChallengeData(){
 }
 function startChallengePolling(){
  if(challengePollTimer!==null)return;
- challengePollTimer=setInterval(()=>{if(activeProfile&&!document.hidden)refreshChallengeData();},90_000);
+ challengePollTimer=setInterval(()=>{if(activeProfile&&!document.hidden)refreshChallengeData();},180_000);
 }
 function stopChallengePolling(){
  if(challengePollTimer!==null){clearInterval(challengePollTimer);challengePollTimer=null;}
