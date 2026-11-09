@@ -533,10 +533,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .remember-session span{display:grid;gap:1px}
 .remember-session b{font-size:.72rem;font-weight:750}
 .remember-session small{color:#718096;font-size:.64rem;font-weight:500;line-height:1.25}
-.community-list{display:grid;gap:10px;max-height:540px;overflow-y:auto;overscroll-behavior:contain;padding:2px 7px 8px 2px;scrollbar-width:thin;scrollbar-color:#6684aa #e5edf6}
-.community-list::-webkit-scrollbar{width:9px}
-.community-list::-webkit-scrollbar-track{background:#e5edf6;border-radius:99px}
-.community-list::-webkit-scrollbar-thumb{background:#6684aa;border-radius:99px}
+.community-list{display:grid;gap:10px;padding:2px 0 4px}
+.community-pagination{margin:12px 0 4px}
+.community-pagination button{min-width:94px}
 .community-rank-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px 12px;padding:13px;border:1px solid #cfdded;border-radius:15px;background:linear-gradient(115deg,#fff,#f2f7ff 65%,#f6f1ff);box-shadow:0 4px 12px #1534570d}
 .community-rank-main{display:flex;align-items:center;gap:10px;min-width:0}
 .community-rank-place{display:grid;place-items:center;flex:0 0 35px;width:35px;height:35px;border-radius:11px;background:#e2e8f0;color:#334155;font-weight:950}
@@ -774,6 +773,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <label class="ranking-sort">Ordenar por<select id="communitySort"><option value="time">Mais tempo estudado</option><option value="correct">Mais acertos</option><option value="wrong">Mais erros</option></select></label>
  </div>
  <div id="communityRanking" class="community-list"></div>
+ <div id="communityPagination" class="list-pagination community-pagination" aria-label="Paginação da comunidade"></div>
  <p class="ranking-local-note community-list-note">Ranking compartilhado entre os participantes cadastrados. Os dados são lidos do repositório privado de dados.</p>
 </div>
 
@@ -1170,7 +1170,8 @@ let historyData=loadHistory();
 const API_BASE='https://projeto-tabuada-api.nuvemx.workers.dev';
 const API_TOKEN_KEY='projetoTabuadaSessaoSeguraV1';
 let remoteUserSha=null,remoteUserData=null,cloudSyncTimer=null,cloudSyncBusy=false,cloudSyncQueued=false,lastCloudSaveAt=0;
-let communityCache=[],communityCacheAt=0;
+let communityCache=[],communityCacheAt=0,communityPage=0;
+const COMMUNITY_PAGE_SIZE=4;
 let selectedRegisterAvatar='imagem:0',selectedProfileAvatar='imagem:0';
 const AVATARS=[
  {name:'Jogador',emoji:'🎧',bg:['#2563eb','#7c3aed']},
@@ -1763,9 +1764,18 @@ async function renderCommunityRanking(){
    wrong:(a,b)=>b.wrong-a.wrong||b.timeMs-a.timeMs
   };
   users.sort(sorters[mode]||sorters.time);
-  if(!users.length){box.innerHTML='<div class="community-empty">Ainda não há participantes. Seja o primeiro a criar um perfil!</div>';return;}
-  box.innerHTML=users.map((user,index)=>{
-   const rankClass=index===0?'rank-gold':index===1?'rank-silver':index===2?'rank-bronze':'';
+  const pages=Math.max(1,Math.ceil(users.length/COMMUNITY_PAGE_SIZE));
+  communityPage=Math.max(0,Math.min(pages-1,communityPage));
+  const first=communityPage*COMMUNITY_PAGE_SIZE;
+  const pageUsers=users.slice(first,first+COMMUNITY_PAGE_SIZE);
+  if(!users.length){
+   box.innerHTML='<div class="community-empty">Ainda não há participantes. Seja o primeiro a criar um perfil!</div>';
+   $('communityPagination').innerHTML='';
+   return;
+  }
+  box.innerHTML=pageUsers.map((user,index)=>{
+   const place=first+index+1;
+   const rankClass=place===1?'rank-gold':place===2?'rank-silver':place===3?'rank-bronze':'';
    const frame=user.tournamentFrame?' tournament-frame-'+user.tournamentFrame:'';
    const titles=user.titles.slice(0,3).map(title=>'<span class="community-rank-chip title">🏅 '+escapeHtml(title)+'</span>').join('');
    const medals=user.medals.map(medal=>'<span class="community-rank-chip medal">🏅 '+escapeHtml(medal.name||medal.id)+'</span>').join('');
@@ -1775,7 +1785,7 @@ async function renderCommunityRanking(){
    return '<details class="community-rank-card '+rankClass+'">'+
     '<summary class="community-rank-summary">'+
      '<div class="community-rank-main">'+
-      '<div class="community-rank-place">'+(index===0?'🥇':index===1?'🥈':index===2?'🥉':'#'+(index+1))+'</div>'+
+      '<div class="community-rank-place">'+(place===1?'🥇':place===2?'🥈':place===3?'🥉':'#'+place)+'</div>'+
       '<img class="community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt="">'+
       '<div class="community-rank-identity"><strong>'+escapeHtml(user.displayName)+'</strong><small>@'+escapeHtml(user.username)+'</small></div>'+
      '</div>'+
@@ -1805,10 +1815,17 @@ async function renderCommunityRanking(){
    const indicator=card.querySelector('.community-rank-expand');
    if(indicator)indicator.textContent=card.open?'Fechar detalhes ▴':'Clique para ver estatísticas, moedas e premiações ▾';
   }));
+  const pager=$('communityPagination');
+  pager.innerHTML=pages>1
+   ?'<button type="button" class="secondary" data-community-page="prev" '+(communityPage===0?'disabled':'')+'>← Anterior</button>'+
+    '<span>Página '+(communityPage+1)+' de '+pages+' · '+users.length+' participantes</span>'+
+    '<button type="button" class="secondary" data-community-page="next" '+(communityPage>=pages-1?'disabled':'')+'>Próxima →</button>'
+   :'';
   const note=document.querySelector('.community-list-note');
-  if(note)note.textContent='Mostrando '+Math.min(users.length,40)+' participantes. Clique em um perfil para expandir os detalhes.';
+  if(note)note.textContent='Mostrando '+(first+1)+'–'+Math.min(first+pageUsers.length,users.length)+' de '+users.length+' participantes. Clique em um perfil para expandir os detalhes.';
  }catch(error){
   box.innerHTML='<div class="community-empty">'+escapeHtml(siteErrorMessage(error))+'</div>';
+  $('communityPagination').innerHTML='';
   console.error('Falha ao carregar a comunidade:',error);
  }
 }
@@ -3756,7 +3773,12 @@ $('openProfile').addEventListener('click',openProfileScreen);
 $('profileEditForm').addEventListener('submit',saveProfileEdits);
 $('changePasswordForm').addEventListener('submit',changePassword);
 $('backFromProfile').addEventListener('click',closeProfileScreen);
-$('communitySort').addEventListener('change',renderCommunityRanking);
+$('communitySort').addEventListener('change',()=>{communityPage=0;renderCommunityRanking();});
+$('communityPagination').addEventListener('click',event=>{
+ const button=event.target.closest('[data-community-page]');if(!button||button.disabled)return;
+ communityPage+=button.dataset.communityPage==='next'?1:-1;
+ renderCommunityRanking();
+});
 
 $('openTrainingMode').addEventListener('click',showTrainingMode);
 $('backToModeHubTraining').addEventListener('click',showModeHub);
