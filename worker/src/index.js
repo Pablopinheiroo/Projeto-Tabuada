@@ -772,8 +772,8 @@ function communitySummary(record) {
   const correct = questions.reduce((sum, item) => sum + (Number(item.correct) || 0), 0);
   const wrong = questions.reduce((sum, item) => sum + (Number(item.wrong) || 0), 0);
   const sessions = Array.isArray(history.sessions) ? history.sessions : [];
-  const timeMs = Math.max(0, Number(profile.studyTimeMs) || 0) +
-    sessions.reduce((sum, item) => sum + (Number(item?.timeMs) || 0), 0);
+  const recordedSessionMs = sessions.reduce((sum, item) => sum + (Number(item?.timeMs) || 0), 0);
+  const timeMs = Math.max(0, Number(profile.studyTimeMs) || 0, recordedSessionMs);
   const economy = normalizeGameEconomy(record);
   const stats = profile.challengeStats && typeof profile.challengeStats === "object" ? profile.challengeStats : {};
   const total = stats.total || {};
@@ -952,6 +952,8 @@ async function awardFinishedTournament(userFile, month, board, env) {
   const difficulty = participation.difficulty;
   const ranking = rankTournament(board, difficulty, userFile.data.username);
   if (!ranking.position) return null;
+  const existingAward = profile.tournamentAwards?.[month];
+  if (existingAward) return { ...existingAward, rank: ranking.position, top10: ranking.top10, alreadyAwarded: true };
   const rank = ranking.position;
   const economy = normalizeGameEconomy(userFile.data);
   const newAchievements = [];
@@ -1237,13 +1239,14 @@ async function handleApi(request, env, origin) {
       }
       const result = { score, totalMs: Math.round(totalMs), perfect: score === 50, completedAt: new Date().toISOString() };
       const updatedBoard = await updateTournamentBoard(month, difficulty, username, result, env);
-      participation.result = result;
+      const storedResult = updatedBoard.board.results[difficulty][username];
+      participation.result = storedResult;
       file.data.profile.monthlyTournaments[month] = participation;
       file.data.updatedAt = new Date().toISOString();
       await writeUser(username, file.data, file.sha, env);
       const ranking = rankTournament(updatedBoard.board, difficulty, username);
       return json({
-        result, position: ranking.position, total: ranking.total, top10: ranking.top10,
+        result: storedResult, position: ranking.position, total: ranking.total, top10: ranking.top10,
         month, difficulty, perfect: result.perfect
       }, 200, origin);
     }
