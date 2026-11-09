@@ -14,7 +14,7 @@ const AVATAR_GIF_COUNT = 12;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
 const CHALLENGE_PLAYER_METADATA_MAX = 45;
-const WORKER_BUILD_ID = "2026-11-09-group-challenges-tournament-autosave";
+const WORKER_BUILD_ID = "2026-11-09-free-group-ties-monthly-tournament-atomic-rewards";
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
 const CHALLENGE_DIRECTORY = "desafios/partidas";
@@ -1048,7 +1048,7 @@ async function handleApi(request, env, origin) {
           ok: false,
           service: "Projeto Tabuada API",
           buildId: WORKER_BUILD_ID,
-          features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true },
+          features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, challengeTies: true, atomicAdventureRewards: true, registeredPlayerNames: true, freeCompatible: true },
           githubSecretConfigured: false,
           githubConnected: false
         }, 503, origin);
@@ -1066,7 +1066,7 @@ async function handleApi(request, env, origin) {
         ok: true,
         service: "Projeto Tabuada API",
         buildId: WORKER_BUILD_ID,
-        features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true },
+        features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, challengeTies: true, atomicAdventureRewards: true, registeredPlayerNames: true, freeCompatible: true },
         githubSecretConfigured: true,
         githubConnected: true,
         githubContentReadAccess: true
