@@ -108,7 +108,7 @@ check(html.includes("community-rank-title-line")&&html.includes("community-chall
  "A comunidade não apresenta títulos e desafios na nova posição.");
 check(html.includes("featuredTitlesEditor")&&html.includes("profilesData[activeProfile].featuredTitles=selectedTitles")&&html.includes("function renderProfileFeaturedTitlesEditor()"),
  "O perfil não permite escolher e salvar até três títulos públicos.");
-check(html.includes("unlockedTitleItems.slice(0,3)")&&html.includes("selectedTitleItems.length"),
+check(html.includes("unlockedTitleItems.slice(0,3)")&&html.includes("selectedTitleItems.length")&&html.includes("const achievementBadges=communityTitles.map")&&html.includes("(achievementBadges||"),
  "A comunidade não limita os títulos aos três escolhidos ou aos três primeiros conquistados.");
 check(html.includes("grid-template-columns:repeat(2,minmax(0,1fr))")&&html.includes(".community-profile-details>.community-challenge-details"),
  "O perfil expandido da comunidade não usa estrutura horizontal em duas colunas.");

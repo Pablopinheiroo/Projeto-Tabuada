@@ -2443,7 +2443,8 @@ async function renderCommunityRanking(){
    ).join('');
    const titleLine=titleBadges
     ?'<div class="community-rank-title-line"><span class="community-title-label">TÍTULOS</span>'+titleBadges+'</div>':'';
-   const achievements=user.titles.map(title=>{
+   const communityTitles=Array.isArray(user.titles)?user.titles:[];
+   const achievementBadges=communityTitles.map(title=>{
     const item=ACHIEVEMENT_DEFINITIONS.find(entry=>entry.title===title||entry.id===title);
     return '<span class="community-rank-chip title community-title-chip">'+(item?renderBadgeIcon('achievement:'+item.id):'✨')+' '+escapeHtml(item?.title||title)+'</span>';
    }).join('');
@@ -2481,7 +2482,7 @@ async function renderCommunityRanking(){
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">⭐ DESTAQUES ESCOLHIDOS</span><div class="community-profile-detail-chips">'+(featured||'<span class="community-profile-empty">Nenhum destaque selecionado.</span>')+'</div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏅 MEDALHAS DE NÍVEL</span><div class="community-profile-detail-chips">'+(medals||'<span class="community-profile-empty">Ainda não conquistou medalhas de nível.</span>')+'</div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏆 PREMIAÇÕES MENSAIS</span><div class="community-profile-detail-chips">'+(awards||'<span class="community-profile-empty">Nenhuma premiação mensal registrada.</span>')+'</div></div>'+
-     '<div class="community-profile-detail-section"><span class="community-profile-detail-title">✨ CONQUISTAS</span><div class="community-profile-detail-chips">'+(achievements||'<span class="community-profile-empty">Ainda não desbloqueou conquistas.</span>')+'</div></div>'+
+     '<div class="community-profile-detail-section"><span class="community-profile-detail-title">✨ CONQUISTAS</span><div class="community-profile-detail-chips">'+(achievementBadges||'<span class="community-profile-empty">Ainda não desbloqueou conquistas.</span>')+'</div></div>'+
     '</div>'+
    '</details>';
   }).join('');
