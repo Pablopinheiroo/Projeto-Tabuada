@@ -87,13 +87,22 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .avatar-choice{display:grid;place-items:center;gap:4px;padding:7px 5px;border:2px solid #dbeafe;border-radius:14px;background:#f8fbff;color:#334155;font-size:.72rem;font-weight:750;min-width:0}
 .avatar-choice img{width:100%;max-width:66px;aspect-ratio:1;border-radius:50%;display:block}
 .avatar-choice.selected{border-color:#2563eb;background:#eff6ff;box-shadow:0 0 0 3px #2563eb20}
-.profile-identity{display:flex;align-items:center;gap:12px;margin:8px 0 14px}
-.profile-identity img{width:62px;height:62px;border-radius:50%;border:3px solid #bfdbfe;background:#eff6ff}
-.profile-identity strong{display:block;font-size:1.05rem}
-.profile-identity small{display:block;color:#64748b}
+.profile-box{position:relative;overflow:hidden;padding:16px;margin:0 0 18px;border:1px solid #397da7;border-radius:17px;background:linear-gradient(125deg,#102b49 0%,#172449 58%,#281b4b 100%);box-shadow:0 12px 30px #02061766,inset 0 1px #ffffff18}
+.profile-box:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:linear-gradient(180deg,#22d3ee,#8b5cf6)}
+.profile-box-heading{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 12px;color:#67e8f9;font-size:.7rem;font-weight:900;letter-spacing:.14em}
+.profile-box-badge{padding:5px 8px;border:1px solid #35769a;border-radius:999px;background:#0b2038;color:#b9eaff;font-size:.62rem;letter-spacing:.06em;white-space:nowrap}
+.profile-identity{position:relative;display:flex;align-items:center;gap:13px;min-width:0;margin:0 0 14px;padding:12px;border:1px solid #ffffff18;border-radius:13px;background:linear-gradient(110deg,#0a1b32aa,#20254c99)}
+.profile-identity img{flex:0 0 62px;width:62px;height:62px;border-radius:50%;border:3px solid #67dff5;background:#13223c;box-shadow:0 0 0 4px #22d3ee20,0 5px 14px #02061766}
+.profile-name-wrap{min-width:0}
+.profile-identity strong{display:block;max-width:100%;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:clamp(1.12rem,3.8vw,1.5rem);font-weight:900;line-height:1.18;letter-spacing:-.035em;text-shadow:0 2px 14px #020617aa;overflow-wrap:anywhere}
+.profile-identity small{display:block;margin-top:5px;color:#b9d5f1;font-size:.78rem;font-weight:600;line-height:1.35;overflow-wrap:anywhere}
+.profile-identity small span{color:#67e8f9;font-weight:800}
+.profile-actions{position:relative;display:flex;gap:8px;flex-wrap:wrap}
+.profile-actions .music-button{flex:1 1 145px;min-width:0}
+.profile-status{text-align:left;margin:10px 2px 0!important;color:#b9d5f1!important}
 .profile-section-title{margin:22px 0 10px;padding-top:16px;border-top:1px solid #e2e8f0}
 .profile-warning{padding:10px 12px;border-radius:10px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:.82rem;line-height:1.45}
-@media(max-width:440px){.avatar-grid{gap:6px}.avatar-choice{padding:5px 2px;font-size:.65rem}.avatar-choice img{max-width:56px}}
+@media(max-width:440px){.avatar-grid{gap:6px}.avatar-choice{padding:5px 2px;font-size:.65rem}.avatar-choice img{max-width:56px}.profile-box{padding:13px}.profile-identity{gap:10px;padding:10px}.profile-identity img{flex-basis:54px;width:54px;height:54px}.profile-box-badge{font-size:.56rem}.profile-actions .music-button{flex-basis:100%}}
 .auth-switch{display:flex;justify-content:center;align-items:center;gap:6px;margin-top:14px;flex-wrap:wrap;color:#64748b;font-size:.9rem}
 .link-button{background:transparent;color:#2563eb;padding:5px 8px}
 .auth-message{min-height:1.3em;text-align:center;margin:0;color:#b91c1c;font-size:.88rem}
@@ -369,6 +378,19 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 </section>
 
 <section id="setup" class="panel hidden">
+<div class="profile-box">
+ <div class="profile-box-heading"><span>👤 SEU PERFIL</span><span class="profile-box-badge">PROGRESSO SALVO</span></div>
+ <div class="profile-identity"><img id="currentAvatar" alt="Avatar do perfil"><div class="profile-name-wrap"><strong id="currentDisplayName"></strong><small>Conta: <span id="currentUsername"></span></small></div></div>
+ <input id="profileName" type="hidden">
+ <div class="profile-actions">
+  <button id="openProfile" class="music-button" type="button">👤 Meu perfil</button>
+  <button id="saveProfile" class="music-button" type="button">💾 Salvar dados</button>
+  <button id="resumeProfile" class="music-button" type="button" disabled>▶ Continuar de onde parei</button>
+  <button id="addNumbers" class="music-button" type="button" disabled>＋ Adicionar números à partida</button>
+  <button id="logout" class="music-button" type="button">Sair da conta</button>
+ </div>
+ <p id="profileStatus" class="small profile-status">Seu progresso fica salvo no perfil.</p>
+</div>
 <div class="community-ranking">
  <div class="community-heading"><div><span class="music-kicker">🏆 Comunidade</span><h2>Ranking dos participantes</h2><p class="hint" style="margin:5px 0 0">Veja o tempo de estudo e as contas que mais exigem prática.</p></div>
   <label class="ranking-sort">Ordenar por<select id="communitySort"><option value="time">Mais tempo estudado</option><option value="correct">Mais acertos</option><option value="wrong">Mais erros</option></select></label>
@@ -376,18 +398,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  <div id="communityRanking" class="community-list"></div>
  <p class="ranking-local-note">Ranking compartilhado entre os participantes cadastrados. Os dados são lidos do repositório privado de dados.</p>
 </div>
-<div class="profile-box" style="padding:14px;border:1px solid #dbeafe;background:#f8fbff;border-radius:14px;margin:16px 0">
- <div class="profile-identity"><img id="currentAvatar" alt="Avatar do perfil"><div><strong id="currentDisplayName"></strong><small>Conta: <span id="currentUsername"></span></small></div></div>
- <input id="profileName" type="hidden">
- <div style="display:flex;gap:8px;flex-wrap:wrap">
-  <button id="openProfile" class="music-button" type="button">👤 Meu perfil</button>
-  <button id="saveProfile" class="music-button" type="button">💾 Salvar dados</button>
-  <button id="resumeProfile" class="music-button" type="button" disabled>▶ Continuar de onde parei</button>
-  <button id="addNumbers" class="music-button" type="button" disabled>＋ Adicionar números à partida</button>
-  <button id="logout" class="music-button" type="button">Sair da conta</button>
- </div>
- <p id="profileStatus" class="small" style="text-align:left;margin:9px 0 0">Seu progresso fica salvo no perfil.</p>
-</div>
+
 <h2>Escolha as tabuadas</h2>
 <p class="hint">Marque uma ou mais tabuadas e escolha como as questões aparecerão.</p>
 <div id="tables" class="tables"></div>
