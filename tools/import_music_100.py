@@ -70,6 +70,11 @@ SINGLES = {
         ("upbeat-chiptune", "Chiptune Acelerado", "Desafio / Chiptune", "fasttheme.ogg", "nihilocrat", "https://opengameart.org/content/upbeat-chiptune-theme"),
         ("fairy-battles", "Batalha das Fadas", "Desafio / Fantasia", "fairy_battles_bpm180.ogg", "MintoDog", "https://opengameart.org/content/fairy-battles"),
         ("miniboss-eight-bit", "Minichefe em 8 Bits", "Desafio / Chiptune", "8bit_action_miniboss_battle_bpm175.mp3", "MintoDog", "https://opengameart.org/content/8bit-action-miniboss-battle"),
+        ("orchestral-battle", "Batalha Orquestral", "Desafio / Orquestral", "Battle.mp3", "Wolfgang_", "https://opengameart.org/content/battle-theme-0"),
+        ("midi-battle", "Duelo Retrô", "Desafio / Retrô", "battle.mp3", "tapatilorenzo", "https://opengameart.org/content/midi-battle-theme"),
+        ("oh-boss", "Oh, Chefão!", "Desafio / Batalha", "oh_boss.mp3", "haruta", "https://opengameart.org/content/oh-boss"),
+        ("prepare-to-fight", "Prepare-se para Lutar", "Desafio / Épico", "prepare_to_fight.mp3", "Basil", "https://opengameart.org/content/prepare-to-fight"),
+        ("eight-bit-boss", "Chefe em 8 Bits", "Desafio / Chiptune", "8bit_action_boss_battle_bpm145.mp3", "MintoDog", "https://opengameart.org/content/8bit-action-boss-battle"),
     ],
     "modo-jogo": [
         ("fairy-adventure", "Aventura das Fadas", "Fantasia / Aventura", "fairy_adventure_bpm140.ogg", "MintoDog", "https://opengameart.org/content/fairy-adventure"),
@@ -79,12 +84,9 @@ SINGLES = {
     ],
     "torneio": [
         ("boss-rpg-theme", "Tema de Batalha RPG", "Torneio / Orquestral", "CleytonRX - Battle RPG Theme.mp3", "CleytonKauffman", "https://opengameart.org/content/boss-battle-theme"),
-        ("orchestral-battle", "Batalha Orquestral", "Torneio / Orquestral", "Battle.mp3", "Wolfgang_", "https://opengameart.org/content/battle-theme-0"),
-        ("midi-battle", "Duelo Retrô", "Torneio / Retrô", "battle.mp3", "tapatilorenzo", "https://opengameart.org/content/midi-battle-theme"),
-        ("oh-boss", "Oh, Chefão!", "Torneio / Batalha", "oh_boss.mp3", "haruta", "https://opengameart.org/content/oh-boss"),
         ("urban-boss", "Chefe da Cidade", "Torneio / Brass", "urban_boss_battle_bpm135.mp3", "MintoDog", "https://opengameart.org/content/urban-boss-battle"),
         ("battle-spring", "Batalha Sintética", "Torneio / Retrô", "Battle 1.ogg", "Spring Spring", "https://opengameart.org/content/is-it-a-battle"),
-        ("prepare-to-fight", "Prepare-se para Lutar", "Torneio / Épico", "prepare_to_fight.mp3", "Basil", "https://opengameart.org/content/prepare-to-fight"),
+        ("epic-boss-loop", "Chefe Épico", "Torneio / Orquestral", "Juhani Junkala - Epic Boss Battle [Seamlessly Looping].wav", "SubspaceAudio", "https://opengameart.org/content/boss-battle-music"),
     ],
 }
 
@@ -100,7 +102,7 @@ PACKS = {
         ("lofi-collection", "lo-fi_and_chill_lofi_collection.zip", "https://opengameart.org/content/lo-fi-and-chill-collection", "Holizna", "Coleção lo-fi e calma"),
     ],
     "desafio": [
-        ("five-action-chiptunes", "5 Action Chiptunes By Juhani Junkala.zip", "https://opengameart.org/content/5-chiptunes-action", "SubspaceAudio", "Cinco composições de ação em chiptune"),
+        ("jrpg-action", "JRPG Music Pack #5 [Action] by Juhani Junkala.zip", "https://opengameart.org/content/jrpg-pack-5-action", "SubspaceAudio", "Ação para RPG"),
     ],
     "modo-jogo": [
         ("jrpg-exploration", "JRPG Music Pack #1 [Exploration] by Juhani Junkala.zip", "https://opengameart.org/content/jrpg-pack-1-exploration", "SubspaceAudio", "Exploração em RPG"),
@@ -109,7 +111,7 @@ PACKS = {
         ("exploration-theme", "exploration_theme.zip", "https://opengameart.org/content/exploration-theme", "CleytonKauffman", "Exploração atmosférica"),
     ],
     "torneio": [
-        ("jrpg-action", "JRPG Music Pack #5 [Action] by Juhani Junkala.zip", "https://opengameart.org/content/jrpg-pack-5-action", "SubspaceAudio", "Ação para RPG"),
+        ("five-action-chiptunes", "5 Action Chiptunes By Juhani Junkala.zip", "https://opengameart.org/content/5-chiptunes-action", "SubspaceAudio", "Cinco composições de ação em chiptune"),
         ("free-music-pack", "Alexander Ehlers - Free Music Pack.zip", "https://opengameart.org/content/free-music-pack", "Alexander Ehlers", "Músicas orquestrais, rock e experimentais"),
     ],
 }
