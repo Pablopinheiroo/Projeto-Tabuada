@@ -120,6 +120,15 @@ async function testViewport(name, viewport, mobile = false) {
   check(await page.locator("#loginPassword").isVisible(), name + ": campo de senha não está visível.");
   const rememberColor = await page.locator(".remember-session").evaluate(element => getComputedStyle(element).color);
   check(rememberColor === "rgb(66, 83, 107)", name + ": texto da opção manter conectado está com contraste incorreto (" + rememberColor + ").");
+  const rememberLayout = await page.locator(".remember-session").evaluate(element => {
+    const title = element.querySelector("b").getBoundingClientRect();
+    const detail = element.querySelector("small").getBoundingClientRect();
+    const box = element.getBoundingClientRect();
+    return { boxHeight: box.height, titleBottom: title.bottom, detailTop: detail.top, detailBottom: detail.bottom, boxBottom: box.bottom };
+  });
+  check(rememberLayout.boxHeight >= 42 && rememberLayout.detailTop >= rememberLayout.titleBottom + 1 &&
+    rememberLayout.detailBottom <= rememberLayout.boxBottom + 1,
+    name + ": título e explicação da opção manter conectado estão sobrepostos (" + JSON.stringify(rememberLayout) + ").");
 
   await page.screenshot({ path: "artifacts/" + name + "-inicio.png", fullPage: true });
 
