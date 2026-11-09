@@ -4260,7 +4260,7 @@ function playNote(frequency,start,duration,wave,volume){
  oscillator.start(start);oscillator.stop(start+duration+.04);
 }
 let uiSfxLibrary={},uiSfxAudioPool=new Map(),uiSfxPoolCursor=new Map(),uiSfxBuffers=new Map(),uiSfxGain=null,uiSfxCompressor=null;
-const SFX_OUTPUT_BOOST=1.25;
+const SFX_OUTPUT_BOOST=1.5;
 function updateUiSfxGain(){
  if(!audioContext)return;
  if(!uiSfxGain){
@@ -4384,7 +4384,7 @@ function playUiSound(name){
    const player=pool[index%pool.length];
    uiSfxPoolCursor.set(src,(index+1)%pool.length);
    try{player.pause();player.currentTime=0;}catch{}
-   player.volume=sfxVolumeLevel;
+   player.volume=Math.min(1,sfxVolumeLevel*SFX_OUTPUT_BOOST);
    const playback=player.play();
    if(playback&&typeof playback.catch==='function')playback.catch(()=>{});
    return;

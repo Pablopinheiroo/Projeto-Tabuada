@@ -308,8 +308,8 @@ async function testViewport(name, viewport, mobile = false) {
     name + ": ajuste de volume dos efeitos não atualizou.");
   check(await page.evaluate(() => Math.abs(sfxVolumeLevel - .55) < .01),
     name + ": o volume dos efeitos não foi aplicado.");
-  await page.waitForFunction(() => uiSfxGain && Math.abs(uiSfxGain.gain.value - .6875) < .02, null, { timeout: 3000 });
-  check(await page.evaluate(() => uiSfxGain && Math.abs(uiSfxGain.gain.value - .6875) < .02),
+  await page.waitForFunction(() => uiSfxGain && Math.abs(uiSfxGain.gain.value - .825) < .02, null, { timeout: 3000 });
+  check(await page.evaluate(() => uiSfxGain && Math.abs(uiSfxGain.gain.value - .825) < .02),
     name + ": o volume separado não chegou ao ganho dos efeitos sonoros.");
   await page.waitForFunction(() => window.__previewCalls > 0, null, { timeout: 3000 });
   check(await page.evaluate(() => soundOn), name + ": ajustar efeitos desligou indevidamente o estado da música.");
@@ -342,7 +342,7 @@ async function testViewport(name, viewport, mobile = false) {
   check((await communityIdentity.locator(".community-rank-title-line").textContent()).includes("Primeiro Ciclo"),
     name + ": o nome do perfil não foi tratado como título.");
   const communityStatsColor = await page.locator(".community-rank-public-stats").first().evaluate(element => getComputedStyle(element).color);
-  check(communityStatsColor === "rgb(41, 73, 103)",
+  check(communityStatsColor === "rgb(16, 43, 73)",
     name + ": estatísticas da comunidade continuam com pouco contraste (" + communityStatsColor + ").");
   await page.locator(".community-rank-summary").first().click();
   const challengePosition = await page.locator(".community-profile-details").first().evaluate(element => {
