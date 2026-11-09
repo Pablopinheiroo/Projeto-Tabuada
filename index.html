@@ -714,7 +714,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <label class="ranking-sort">Ordenar por<select id="communitySort"><option value="time">Mais tempo estudado</option><option value="correct">Mais acertos</option><option value="wrong">Mais erros</option></select></label>
  </div>
  <div id="communityRanking" class="community-list"></div>
- <p class="ranking-local-note">Ranking compartilhado entre os participantes cadastrados. Os dados são lidos do repositório privado de dados.</p>
+ <p class="ranking-local-note community-list-note">Ranking compartilhado entre os participantes cadastrados. Os dados são lidos do repositório privado de dados.</p>
 </div>
 
 <div id="modeHub" class="mode-hub">
@@ -1330,7 +1330,7 @@ async function retryPendingGameRewards(){
  rewardSyncBusy=true;
  try{
   const pending=readPendingGameRewards().filter(item=>item.username===activeProfile);
-  if(pending.some(item=>item.type==='adventure_stage'))await flushCloudSave();
+  if(pending.some(item=>item.type==='adventure_stage'))await flushCloudSave(true);
   for(const item of pending){
    try{
     await deliverPendingGameReward(item);
@@ -1914,8 +1914,8 @@ function saveProfile(showMessage=true){
  profilesData[name].updatedAt=new Date().toISOString();
  if(!persistProfiles()){$('profileStatus').textContent='Não foi possível salvar os dados neste navegador.';return false;}
  historyData=loadHistory();updateProfileButtons();
- scheduleCloudSave();
- if(showMessage)$('profileStatus').textContent='Perfil “'+name+'” salvo. O progresso será sincronizado online.';
+ if(showMessage){flushCloudSave(true);$('profileStatus').textContent='Perfil “'+name+'” salvo. O progresso será sincronizado online.';}
+ else scheduleCloudSave();
  return true;
 }
 function saveCheckpoint(){
@@ -2520,7 +2520,7 @@ function renderTournamentFinalNotice(notice){
  const award=notice.award?.frame?(' · moldura '+notice.award.frame):'';
  const rows=(notice.top10||[]).map((item,index)=>
   '<div class="tournament-rank-row '+(item.username===activeProfile?'me':'')+'"><strong>#'+(index+1)+'</strong><span>'+escapeHtml(item.username)+(item.username===activeProfile?' · você':'')+'</span><small>'+item.score+'/50 · '+formatDuration(item.totalMs)+'</small></div>'
- ).join('');
+ ).join('')+(notice.position>10?'<div class="tournament-rank-row me"><strong>#'+notice.position+'</strong><span>'+escapeHtml(activeProfile)+' · sua posição</span><small>'+notice.score+'/50</small></div>':'');
  box.innerHTML='<strong>🏆 Resultado final de '+escapeHtml(tournamentMonthName(notice.month))+' · '+escapeHtml(name)+'</strong>'+
   '<p>Você terminou em <b>'+place+'</b>, com '+notice.score+'/50 pontos'+escapeHtml(award)+'.</p>'+
   '<div class="tournament-ranking-list">'+rows+'</div>';
@@ -3067,7 +3067,7 @@ async function saveAdventureProgress(){
   return false;
  }
  if(status)status.textContent='Salvando seu avanço no perfil...';
- const saved=await flushCloudSave();
+ const saved=await flushCloudSave(true);
  if(status)status.textContent=saved?'✓ Progresso sincronizado no seu perfil.':'Progresso guardado neste aparelho; a sincronização será tentada novamente.';
  return saved;
 }
