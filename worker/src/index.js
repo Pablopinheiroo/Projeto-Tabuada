@@ -484,7 +484,14 @@ function buildChallengeQuestions(seed, tables, optionCount) {
 function safeChallengeSummary(challenge, username) {
   const participants = Array.isArray(challenge.participants) && challenge.participants.length
     ? challenge.participants : [challenge.challenger, challenge.recipient].filter(Boolean);
-  const myResult = challenge.results?.[username] || null;
+  const compactResults = Object.fromEntries(Object.entries(challenge.results || {}).map(([name, result]) => [name, {
+    score: Number(result.score) || 0,
+    correct: Number(result.correct) || 0,
+    wrong: Number(result.wrong) || 0,
+    totalMs: Number(result.totalMs) || 0,
+    submittedAt: result.submittedAt || null
+  }]));
+  const myResult = compactResults[username] || null;
   const other = participants.find(item => item !== username) || null;
   return {
     id: challenge.id,
@@ -499,7 +506,7 @@ function safeChallengeSummary(challenge, username) {
     musicTrack: challenge.musicTrack,
     seed: challenge.seed,
     createdAt: challenge.createdAt,
-    results: challenge.results || {},
+    results: compactResults,
     standings: Array.isArray(challenge.standings) ? challenge.standings : [],
     winners: Array.isArray(challenge.winners) ? challenge.winners : (challenge.winner && challenge.winner !== "empate" ? [challenge.winner] : []),
     status: challenge.status || "open",
