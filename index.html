@@ -518,6 +518,82 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  .challenge-score-box{min-width:95px}
 }
 
+
+/* Preferências de sessão e comunidade organizada */
+.remember-session{display:flex!important;align-items:flex-start;gap:9px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;background:#f8fafc;color:#334155;font-size:.86rem}
+.remember-session input{width:18px;height:18px;margin-top:2px;accent-color:#2563eb}
+.remember-session span{display:grid;gap:3px}
+.remember-session small{color:#64748b;font-weight:500}
+.community-list{display:grid;gap:10px;max-height:390px;overflow-y:auto;overscroll-behavior:contain;padding:2px 7px 8px 2px;scrollbar-width:thin;scrollbar-color:#6684aa #e5edf6}
+.community-list::-webkit-scrollbar{width:9px}
+.community-list::-webkit-scrollbar-track{background:#e5edf6;border-radius:99px}
+.community-list::-webkit-scrollbar-thumb{background:#6684aa;border-radius:99px}
+.community-rank-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px 12px;padding:13px;border:1px solid #cfdded;border-radius:15px;background:linear-gradient(115deg,#fff,#f2f7ff 65%,#f6f1ff);box-shadow:0 4px 12px #1534570d}
+.community-rank-main{display:flex;align-items:center;gap:10px;min-width:0}
+.community-rank-place{display:grid;place-items:center;flex:0 0 35px;width:35px;height:35px;border-radius:11px;background:#e2e8f0;color:#334155;font-weight:950}
+.community-rank-card.rank-gold .community-rank-place{background:linear-gradient(135deg,#fde68a,#f59e0b);color:#713f12}
+.community-rank-card.rank-silver .community-rank-place{background:linear-gradient(135deg,#e2e8f0,#94a3b8);color:#1e293b}
+.community-rank-card.rank-bronze .community-rank-place{background:linear-gradient(135deg,#fed7aa,#b45309);color:white}
+.community-rank-avatar{width:48px;height:48px;flex:0 0 48px;object-fit:cover;border-radius:50%;border:2px solid #8ec9df;background:#e0f2fe}
+.community-rank-identity{min-width:0;display:grid;gap:3px}
+.community-rank-identity strong{color:#102b49;font-size:.92rem;overflow-wrap:anywhere}
+.community-rank-identity small{color:#60758f;font-size:.72rem}
+.community-rank-trophy{justify-self:end;align-self:start;color:#8a5a0a;font-size:.74rem;font-weight:900}
+.community-rank-chips{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:5px}
+.community-rank-chip{padding:4px 7px;border:1px solid #d5e3f2;border-radius:999px;background:#edf5ff;color:#34516e;font-size:.65rem;font-weight:850}
+.community-rank-chip.title{background:#f2eefe;border-color:#ddd0ff;color:#5b3f8c}
+.community-rank-chip.medal{background:#fff5d8;border-color:#f1d48a;color:#80530d}
+.community-rank-metrics{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.community-rank-metric{padding:7px;border:1px solid #dce7f3;border-radius:9px;background:#fff;text-align:center}
+.community-rank-metric strong{display:block;color:#123d61;font-size:.92rem}
+.community-rank-metric small{display:block;color:#71839a;font-size:.64rem}
+.community-list-note{margin:8px 2px 0;color:#71839a;font-size:.7rem}
+.tournament-card{grid-column:1/-1;background:linear-gradient(120deg,#3a2c17,#302246 52%,#142b4b);border-color:#ad8845}
+.tournament-card .mode-card-icon{background:#5b411b;border-color:#e8c268}
+.tournament-card .mode-card-copy b{color:#fcd34d}
+.tournament-month-status{margin:0 0 12px;padding:11px;border:1px solid #45648c;border-radius:11px;background:#10233f;color:#dbeafe;font-size:.82rem;font-weight:800}
+.tournament-difficulty-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.tournament-difficulty{display:grid;gap:7px;padding:13px 10px;border:1px solid #45648c;border-radius:14px;background:#122640;color:#edf6ff;text-align:left}
+.tournament-difficulty strong{font-size:.95rem}
+.tournament-difficulty small{min-height:38px;color:#b7c9e2;font-size:.7rem;line-height:1.4}
+.tournament-difficulty b{color:#67e8f9;font-size:.76rem}
+.tournament-difficulty.easy{border-color:#4e9875;background:linear-gradient(145deg,#123b36,#172741)}
+.tournament-difficulty.medium{border-color:#9b7b42;background:linear-gradient(145deg,#3c2e1b,#1c2945)}
+.tournament-difficulty.hard{border-color:#a34c55;background:linear-gradient(145deg,#49222e,#241d43)}
+.tournament-difficulty:disabled{opacity:.42;filter:grayscale(.4)}
+.tournament-final-notice{margin:14px 0;padding:14px;border:1px solid #e1b94c;border-radius:14px;background:linear-gradient(120deg,#3b2b12,#292047);color:#fff3c4}
+.tournament-final-notice strong{display:block;color:#fde68a;margin-bottom:6px}
+.tournament-ranking-card{margin-top:17px;padding:14px;border:1px solid #385a80;border-radius:15px;background:linear-gradient(145deg,#10223d,#1a1c3c)}
+.tournament-ranking-card h3{margin:3px 0 0;color:#f1f7ff}
+.tournament-ranking-list{display:grid;gap:7px;margin-top:12px}
+.tournament-rank-row{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 10px;border:1px solid #385577;border-radius:10px;background:#0d1c34;color:#e8f2ff}
+.tournament-rank-row strong{color:#fcd34d}
+.tournament-rank-row small{color:#9fb4d2}
+.tournament-rank-row.me{border-color:#67e8f9;background:#12354a}
+.tournament-empty{padding:13px;border:1px dashed #45648c;border-radius:11px;color:#a9bfdd;font-size:.8rem}
+.tournament-result-card{border-color:#c49b4d;background:linear-gradient(145deg,#14223b,#2b2042)}
+.challenge-selection-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;padding:11px;border:1px solid #42628a;border-radius:12px;background:#0d1c34;color:#dbeafe}
+.challenge-selection-footer strong{font-size:.8rem}
+.challenge-selection-footer .primary{margin:0;padding:9px 12px;font-size:.78rem}
+.challenge-player-check{display:flex;align-items:center;gap:9px;min-width:0;flex:1}
+.challenge-player-check input{width:18px;height:18px;accent-color:#22d3ee}
+.challenge-player-avatar{width:38px;height:38px;flex:0 0 38px;object-fit:cover;border-radius:50%;border:2px solid #67e8f9}
+.challenge-result-scores .challenge-score-box.winner{border-color:#fbbf24;background:#3b2d17}
+.challenge-medal-shelf{margin-top:8px}
+.tournament-frame-gold{outline:3px solid #fbbf24;outline-offset:3px;box-shadow:0 0 0 6px #fbbf2433!important}
+.tournament-frame-silver{outline:3px solid #cbd5e1;outline-offset:3px;box-shadow:0 0 0 6px #cbd5e133!important}
+.tournament-frame-bronze{outline:3px solid #c08457;outline-offset:3px;box-shadow:0 0 0 6px #c0845733!important}
+.tournament-frame-top10{outline:3px solid #38bdf8;outline-offset:3px;box-shadow:0 0 0 6px #38bdf833!important}
+@media(max-width:560px){
+ .tournament-difficulty-grid{grid-template-columns:1fr}
+ .tournament-difficulty{grid-template-columns:minmax(0,1fr) auto;align-items:center}
+ .tournament-difficulty small{grid-column:1/-1;min-height:0}
+ .community-rank-card{padding:10px;gap:7px}
+ .community-rank-metrics{gap:4px}
+ .community-rank-metric{padding:6px 3px}
+ .challenge-selection-footer{align-items:stretch;flex-direction:column}
+}
+
 </style>
 </head>
 <body>
@@ -550,6 +626,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  <form id="loginForm" class="auth-form">
   <label>Nome de usuário<input id="loginUsername" maxlength="20" autocomplete="username" required placeholder="Seu nome de usuário"></label>
   <label>Senha<input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Sua senha cadastrada"></label>
+  <label class="remember-session"><input id="rememberSession" type="checkbox"> <span><b>Manter conectado neste aparelho</b><small>Guarda a sessão por até 7 dias. Sua senha não fica salva.</small></span></label>
   <button class="primary" type="submit">Entrar</button>
   <p id="loginMessage" class="auth-message" role="status"></p>
  </form>
@@ -596,6 +673,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   </div>
   <p class="economy-rules">Duelo personalizado conta nas vitórias e derrotas, mas não concede medalhas. Cada nível pré-definido tem uma medalha própria, conquistada ao atingir 10 vitórias naquele nível.</p>
   <div id="challengeMedalShelf" class="achievement-shelf"></div>
+  <h3 class="achievement-title">🏆 Premiações do torneio mensal</h3>
+  <div id="tournamentAwardShelf" class="achievement-shelf"></div>
  </div>
  <form id="profileEditForm" class="auth-form">
   <label>Nome que aparece no jogo<input id="profileDisplayName" maxlength="24" required placeholder="Seu nome de exibição"></label>
@@ -648,7 +727,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
    <span class="mode-card-icon">🗺️</span><span class="mode-card-copy"><strong>Modo Jogo</strong><small>Explore mundos, vença desafios, desbloqueie fases e avance até a tabuada do 20.</small><b>Entrar na aventura →</b></span>
   </button>
   <button id="openChallengeMode" class="mode-card challenge-card" type="button">
-   <span class="mode-card-icon">⚔️</span><span class="mode-card-copy"><strong>Modo Desafio <em id="challengeBadge" class="challenge-badge hidden">0</em></strong><small>Convide outro participante para um duelo de 10 questões e descubra quem consegue mais pontos.</small><b>Desafiar um participante →</b></span>
+   <span class="mode-card-icon">⚔️</span><span class="mode-card-copy"><strong>Modo Desafio <em id="challengeBadge" class="challenge-badge hidden">0</em></strong><small>Convide até quatro participantes para um duelo de 10 questões e descubra quem consegue mais pontos.</small><b>Desafiar participantes →</b></span>
+  </button>
+  <button id="openTournamentMode" class="mode-card tournament-card" type="button">
+   <span class="mode-card-icon">🏆</span><span class="mode-card-copy"><strong>Torneio Mensal</strong><small>50 questões, uma tentativa por mês e premiações para os melhores colocados.</small><b>Ver competição do mês →</b></span>
   </button>
  </div>
 </div>
@@ -693,6 +775,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <input id="challengePlayerSearch" class="challenge-search" type="search" placeholder="Pesquisar participante pelo usuário..." autocomplete="off">
   <p id="challengePlayersStatus" class="small" style="text-align:left"></p>
   <div id="challengePlayersList" class="challenge-player-list"></div>
+  <div class="challenge-selection-footer"><strong id="challengeSelectedCount">0 de 4 selecionados</strong><button id="challengeStartSelected" class="primary" type="button" disabled>Iniciar desafio →</button></div>
  </div>
 
  <div id="challengePlayPanel" class="hidden">
@@ -725,6 +808,55 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
    <strong id="challengeResultTime" class="adventure-result-reward"></strong>
    <p id="challengeResultStatus" class="hint"></p>
    <div class="adventure-result-actions"><button id="challengeResultBack" class="primary" type="button">Voltar aos desafios</button></div>
+  </div>
+ </div>
+</div>
+
+
+<div id="tournamentModeView" class="mode-view hidden">
+ <div id="tournamentHomePanel">
+  <div class="mode-view-heading"><div><span class="music-kicker">🏆 COMPETIÇÃO DO MÊS</span><h2>Torneio Mensal</h2><p class="hint" style="margin:5px 0 0">50 questões · 5 segundos por questão · uma dificuldade por mês.</p></div><button id="backFromTournament" class="secondary compact-back" type="button">← Modos</button></div>
+  <div class="challenge-rules"><b>Como funciona:</b> escolha Fácil, Médio ou Difícil. A escolha fica bloqueada até o próximo mês. Todos que participarem de uma dificuldade recebem a mesma sequência mensal de contas. O ranking considera acertos e, em caso de empate, o menor tempo.</div>
+  <div id="tournamentMonthStatus" class="tournament-month-status">Carregando torneio...</div>
+  <div id="tournamentDifficultyCards" class="tournament-difficulty-grid">
+   <button type="button" class="tournament-difficulty easy" data-tournament-start="easy"><strong>🌱 Fácil</strong><small>Tabuadas do 1 ao 10 · 4 alternativas</small><b>Participar</b></button>
+   <button type="button" class="tournament-difficulty medium" data-tournament-start="medium"><strong>⚔️ Médio</strong><small>Tabuadas do 1 ao 15 · 4 alternativas</small><b>Participar</b></button>
+   <button type="button" class="tournament-difficulty hard" data-tournament-start="hard"><strong>🔥 Difícil</strong><small>Tabuadas avançadas, sem 1, 2, 5, 10 ou 20 · 6 alternativas</small><b>Participar</b></button>
+  </div>
+  <p id="tournamentLockMessage" class="hint"></p>
+  <div id="tournamentFinalNotice" class="tournament-final-notice hidden"></div>
+  <div class="tournament-ranking-card">
+   <div class="community-heading"><div><span class="music-kicker">📊 CLASSIFICAÇÃO</span><h3>Ranking deste mês</h3></div><label class="ranking-sort">Dificuldade<select id="tournamentRankingDifficulty"><option value="easy">Fácil</option><option value="medium">Médio</option><option value="hard">Difícil</option></select></label></div>
+   <div id="tournamentRankingList" class="tournament-ranking-list"></div>
+  </div>
+ </div>
+
+ <div id="tournamentPlayPanel" class="hidden">
+  <div class="challenge-play-top"><div><span class="music-kicker">TORNEIO MENSAL</span><h2 id="tournamentPlayTitle">Dificuldade</h2><p id="tournamentPlayMeta" class="hint"></p></div><div class="challenge-live-badge">● EM ANDAMENTO</div></div>
+  <div class="challenge-countdown-grid">
+   <div class="challenge-countdown"><span>TEMPO DA QUESTÃO</span><strong id="tournamentRoundClock">5,0 s</strong></div>
+   <div class="challenge-countdown"><span>TEMPO TOTAL</span><strong id="tournamentTotalClock">00:00</strong></div>
+   <div class="challenge-countdown"><span>ACERTOS</span><strong id="tournamentScore">0/50</strong></div>
+  </div>
+  <div class="challenge-progress"><span id="tournamentProgressBar"></span></div>
+  <div class="challenge-question-card">
+   <span id="tournamentQuestionCounter" class="music-kicker">QUESTÃO 1 DE 50</span>
+   <div id="tournamentQuestionMath" class="challenge-equation">7 × 8 = ?</div>
+   <p id="tournamentQuestionFeedback" class="challenge-feedback">Escolha uma alternativa em até 5 segundos.</p>
+   <div id="tournamentOptions" class="challenge-options"></div>
+  </div>
+  <p class="hint">Esta é sua única tentativa nesta dificuldade durante o mês. Não feche a página enquanto estiver respondendo.</p>
+ </div>
+
+ <div id="tournamentResultPanel" class="hidden">
+  <div class="adventure-result-card tournament-result-card">
+   <div id="tournamentResultIcon" class="adventure-result-icon">🏆</div>
+   <span class="music-kicker">RESULTADO DO TORNEIO</span>
+   <h2 id="tournamentResultTitle">Resultado enviado</h2>
+   <p id="tournamentResultText"></p>
+   <div id="tournamentResultScores" class="challenge-result-scores"></div>
+   <div id="tournamentResultTop10" class="tournament-ranking-list"></div>
+   <div class="adventure-result-actions"><button id="tournamentResultBack" class="primary" type="button">Ver classificação</button></div>
   </div>
  </div>
 </div>
