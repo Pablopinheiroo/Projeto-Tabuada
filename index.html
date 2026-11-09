@@ -1004,7 +1004,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 
 <script>
 const tablesEl=document.getElementById('tables');
-for(let n=1;n<=10;n++){
+for(let n=1;n<=20;n++){
  const row=document.createElement('div');
  row.className='table-row';
  row.innerHTML='<label class="check"><input type="checkbox" value="'+n+'"><span>Tabuada do '+n+'</span></label><select class="mode" aria-label="Modo da tabuada '+n+'"><option value="normal">Normal</option><option value="random">Aleatório</option></select>';
@@ -1020,6 +1020,12 @@ let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,sessionS
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
 let gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
 let rewardSyncBusy=false;
+let selectedChallengePlayers=new Set();
+const REMEMBER_SESSION_KEY="projetoTabuadaSessaoLembradaV1";
+const ACTIVE_TIME_CACHE_KEY="projetoTabuadaTempoPendenteV1";
+const ACTIVE_TIME_SYNC_MS=30*60*1000;
+let pendingActiveMs=0,studyTimeBaseMs=0,activeTimeTimer=null,lastActiveTick=Date.now();
+let tournamentDashboard=null,tournamentCurrent=null,tournamentQuestions=[],tournamentAnswers=[],tournamentIndex=0,tournamentQuestionStarted=0,tournamentQuestionTimer=null,tournamentMatchStarted=0,tournamentBusy=false;
 
 const CHALLENGE_PRESETS_UI=[
  {id:"recruta",name:"Recruta",tables:[1,2],options:4,description:"Tabuadas do 1 ao 2 · 4 alternativas."},
@@ -1412,6 +1418,13 @@ function normalizeHistory(value){
  if(!value||typeof value!=='object')return {questions:{},sessions:[]};
  return {questions:value.questions&&typeof value.questions==='object'?value.questions:{},sessions:Array.isArray(value.sessions)?value.sessions:[]};
 }
+function loadPendingActiveTime(username){
+ try{const all=JSON.parse(localStorage.getItem(ACTIVE_TIME_CACHE_KEY)||'{}');return Math.max(0,Number(all[username])||0)}catch{return 0}
+}
+function savePendingActiveTime(username=activeProfile){
+ if(!username)return;
+ try{const all=JSON.parse(localStorage.getItem(ACTIVE_TIME_CACHE_KEY)||'{}');all[username]=Math.max(0,Math.floor(pendingActiveMs));localStorage.setItem(ACTIVE_TIME_CACHE_KEY,JSON.stringify(all))}catch(error){console.warn('Não foi possível guardar o tempo pendente neste aparelho.',error)}
+}
 function hydrateRemoteUser(username,record){
  remoteUserSha=record.sha||null;
  remoteUserData={
@@ -1425,6 +1438,9 @@ function hydrateRemoteUser(username,record){
  saveClientEconomyCache(username);
  authUsers={};
  profilesData={[username]:remoteUserData.profile};
+ studyTimeBaseMs=Math.max(0,Number(remoteUserData.profile.studyTimeMs)||0);
+ pendingActiveMs=loadPendingActiveTime(username);
+ profilesData[username].studyTimeMs=studyTimeBaseMs+pendingActiveMs;
  historyData=normalizeHistory(remoteUserData.history);
  activeProfile=username;
  persistProfiles();
@@ -1432,10 +1448,11 @@ function hydrateRemoteUser(username,record){
  communityCacheAt=0;
 }
 function buildRemoteUserData(){
+ const profile={...(profilesData[activeProfile]||{}),studyTimeMs:Math.max(0,studyTimeBaseMs+pendingActiveMs)};
  return {
   version:1,
   username:activeProfile,
-  profile:profilesData[activeProfile]||{},
+  profile,
   history:normalizeHistory(historyData),
   updatedAt:new Date().toISOString()
  };
@@ -1448,19 +1465,36 @@ async function writeRemoteUser(username,data){
  });
  return result.sha||null;
 }
+function trackActiveStudyTime(){
+ const now=Date.now();
+ const elapsed=Math.min(30_000,Math.max(0,now-lastActiveTick));
+ lastActiveTick=now;
+ if(!activeProfile||document.hidden||elapsed===0)return;
+ pendingActiveMs+=elapsed;
+ profilesData[activeProfile]=profilesData[activeProfile]||{};
+ profilesData[activeProfile].studyTimeMs=studyTimeBaseMs+pendingActiveMs;
+ persistProfiles();
+ savePendingActiveTime();
+ if(pendingActiveMs>=ACTIVE_TIME_SYNC_MS)scheduleCloudSave();
+}
+function startActiveTimeTracking(){
+ if(activeTimeTimer!==null)clearInterval(activeTimeTimer);
+ lastActiveTick=Date.now();
+ activeTimeTimer=setInterval(trackActiveStudyTime,15_000);
+}
+function stopActiveTimeTracking(){
+ if(activeTimeTimer!==null){clearInterval(activeTimeTimer);activeTimeTimer=null;}
+ savePendingActiveTime();
+}
 function scheduleCloudSave(immediate=false){
  if(!activeProfile||!remoteUserData||!cloudTokenReady())return;
- if(immediate){
-  if(cloudSyncTimer!==null){clearTimeout(cloudSyncTimer);cloudSyncTimer=null;}
-  flushCloudSave();
-  return;
- }
- if(cloudSyncTimer!==null)return;
- const wait=Math.max(2500,15000-(Date.now()-lastCloudSaveAt));
- cloudSyncTimer=setTimeout(()=>{cloudSyncTimer=null;flushCloudSave();},wait);
+ if(immediate){flushCloudSave(true);return;}
+ if(pendingActiveMs<ACTIVE_TIME_SYNC_MS)return;
+ flushCloudSave(false);
 }
-async function flushCloudSave(){
+async function flushCloudSave(force=false){
  if(!activeProfile||!remoteUserData||!cloudTokenReady())return false;
+ if(!force&&pendingActiveMs<ACTIVE_TIME_SYNC_MS)return false;
  if(cloudSyncBusy){cloudSyncQueued=true;return false;}
  cloudSyncBusy=true;
  try{
@@ -1470,10 +1504,15 @@ async function flushCloudSave(){
   if(activeProfile===username){
    remoteUserSha=newSha;
    remoteUserData=payload;
+   studyTimeBaseMs=Math.max(0,Number(payload.profile.studyTimeMs)||studyTimeBaseMs);
+   pendingActiveMs=0;
+   if(profilesData[username])profilesData[username].studyTimeMs=studyTimeBaseMs;
+   savePendingActiveTime(username);
+   persistProfiles();
    lastCloudSaveAt=Date.now();
    communityCacheAt=0;
    const status=$('profileStatus');
-   if(status)status.textContent='Dados de “'+username+'” sincronizados com o servidor seguro.';
+   if(status)status.textContent='Dados sincronizados. Próximo salvamento automático após mais 30 minutos de uso.';
   }
   return true;
  }catch(error){
@@ -1545,9 +1584,20 @@ async function renderCommunityRanking(){
  }
 }
 async function restoreCloudSession(){
- const rememberedUser=sessionStorage.getItem(AUTH_SESSION_KEY);
- const sessionToken=sessionStorage.getItem(API_TOKEN_KEY);
- if(!rememberedUser||!sessionToken){showLoginScreen();return;}
+ let rememberedUser=sessionStorage.getItem(AUTH_SESSION_KEY);
+ let sessionToken=sessionStorage.getItem(API_TOKEN_KEY);
+ let persistent=null;
+ try{persistent=JSON.parse(localStorage.getItem(REMEMBER_SESSION_KEY)||'null')}catch{persistent=null}
+ if((!rememberedUser||!sessionToken)&&persistent&&persistent.username&&persistent.token&&Number(persistent.expiresAt)>Date.now()){
+  rememberedUser=persistent.username;
+  sessionToken=persistent.token;
+  sessionStorage.setItem(AUTH_SESSION_KEY,rememberedUser);
+  sessionStorage.setItem(API_TOKEN_KEY,sessionToken);
+  if($('loginUsername'))$('loginUsername').value=rememberedUser;
+ }else if(persistent&&Number(persistent.expiresAt)<=Date.now()){
+  localStorage.removeItem(REMEMBER_SESSION_KEY);
+ }
+ if(!rememberedUser||!sessionToken){showLoginScreen();return}
  try{
   const record=await apiRequest('/api/me');
   hydrateRemoteUser(rememberedUser,record);
@@ -1555,6 +1605,7 @@ async function restoreCloudSession(){
  }catch(error){
   sessionStorage.removeItem(AUTH_SESSION_KEY);
   sessionStorage.removeItem(API_TOKEN_KEY);
+  localStorage.removeItem(REMEMBER_SESSION_KEY);
   showLoginScreen();
   $('loginMessage').textContent='Não foi possível restaurar a sessão: '+siteErrorMessage(error);
  }
@@ -1568,8 +1619,9 @@ function enterApp(username){
  refreshProfileIdentity();
  $('authScreen').classList.add('hidden');$('game').classList.add('hidden');$('report').classList.add('hidden');$('setup').classList.remove('hidden');
  selectProfile();renderCommunityRanking();refreshEconomyDisplay();renderChallengeProfileStats();
+ startActiveTimeTracking();
  setTimeout(retryPendingGameRewards,800);
- refreshChallengeData();startChallengePolling();
+ refreshChallengeData();startChallengePolling();refreshTournamentDashboard();
 }
 function showLoginScreen(){
  $('registerForm').classList.add('hidden');$('loginForm').classList.remove('hidden');
@@ -1603,18 +1655,30 @@ async function handleLogin(event){
   const result=await apiRequest('/api/auth/login',{method:'POST',body:{username,password}});
   sessionStorage.setItem(API_TOKEN_KEY,result.sessionToken);
   sessionStorage.setItem(AUTH_SESSION_KEY,username);
+  if($('rememberSession').checked){
+   localStorage.setItem(REMEMBER_SESSION_KEY,JSON.stringify({
+    username,token:result.sessionToken,expiresAt:Date.now()+7*24*60*60*1000
+   }));
+  }else localStorage.removeItem(REMEMBER_SESSION_KEY);
   hydrateRemoteUser(username,{data:result.data,sha:result.sha});
   $('loginPassword').value='';
   enterApp(username);
  }catch(error){$('loginMessage').textContent=siteErrorMessage(error);}
 }
+
 async function logout(){
- stopChallengePolling();stopChallengeTimers();stopChallengeMusic();challengeCurrent=null;challengeItems=[];
  if(!$('game').classList.contains('hidden')){alert('Encerre ou salve a partida antes de sair da conta.');return;}
- await flushCloudSave();
- 
- sessionStorage.removeItem(AUTH_SESSION_KEY);sessionStorage.removeItem(API_TOKEN_KEY);activeProfile='';remoteUserData=null;remoteUserSha=null;historyData=loadHistory();
+ stopActiveTimeTracking();
+ stopChallengePolling();stopChallengeTimers();stopChallengeMusic();
+ challengeCurrent=null;challengeItems=[];
+ await flushCloudSave(true);
+ localStorage.removeItem(REMEMBER_SESSION_KEY);
+ sessionStorage.removeItem(AUTH_SESSION_KEY);
+ sessionStorage.removeItem(API_TOKEN_KEY);
+ activeProfile='';
+ remoteUserData=null;remoteUserSha=null;historyData=loadHistory();
  gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
+ pendingActiveMs=0;studyTimeBaseMs=0;
  selectedRegisterAvatar='imagem:0';renderAvatarGrid('registerAvatarGrid',selectedRegisterAvatar,key=>{selectedRegisterAvatar=key;});refreshEconomyDisplay();
  $('setup').classList.add('hidden');$('report').classList.add('hidden');$('authScreen').classList.remove('hidden');
  $('loginForm').reset();$('registerForm').reset();showLoginScreen();
@@ -2973,7 +3037,7 @@ function toggleSound(){
  else {clearMainMusicTimer();if(soundtrackAudio)soundtrackAudio.pause();}
 }
 function replayTune(){if(soundOn)playNextTrack()}
-function stop(){finishSession();if(activeProfile&&profilesData[activeProfile]){profilesData[activeProfile].checkpoint=null;persistProfiles();updateProfileButtons();}scheduleCloudSave(true);}
+function stop(){finishSession();if(activeProfile&&profilesData[activeProfile]){profilesData[activeProfile].checkpoint=null;persistProfiles();updateProfileButtons();}scheduleCloudSave();}
 function backToMenu(){
  $('report').classList.add('hidden');
  $('setup').classList.remove('hidden');
@@ -3037,6 +3101,7 @@ $('challengeResultBack').addEventListener('click',async()=>{
  await refreshChallengeData();
 });
 document.addEventListener('visibilitychange',handleChallengeVisibility);
+document.addEventListener('visibilitychange',()=>{lastActiveTick=Date.now();if(!document.hidden&&pendingActiveMs>=ACTIVE_TIME_SYNC_MS)scheduleCloudSave();});
 $('backToModeHubMap').addEventListener('click',showModeHub);
 $('adventureIntroBack').addEventListener('click',showAdventureMap);
 $('adventureStartStage').addEventListener('click',()=>startAdventureStage(adventureActiveStageIndex));
@@ -3064,7 +3129,7 @@ $('stop').addEventListener('click',stop);
 $('backToMenu').addEventListener('click',backToMenu);
 $('playAgain').addEventListener('click',playAgain);
 ['reportScope','reportSort','reportTable','reportType'].forEach(id=>$(id).addEventListener('change',renderRanking));
-for(let n=1;n<=10;n++){const option=document.createElement('option');option.value=String(n);option.textContent='Tabuada do '+n;$('reportTable').appendChild(option)}
+for(let n=1;n<=20;n++){const option=document.createElement('option');option.value=String(n);option.textContent='Tabuada do '+n;$('reportTable').appendChild(option)}
 setInterval(saveCheckpoint,5000);
 restoreCloudSession();
 document.addEventListener('click',e=>{
