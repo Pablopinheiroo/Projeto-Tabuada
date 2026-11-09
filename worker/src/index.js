@@ -14,7 +14,7 @@ const AVATAR_GIF_COUNT = 12;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
 const CHALLENGE_PLAYER_METADATA_MAX = 45;
-const WORKER_BUILD_ID = "2026-11-09-public-profiles-no-draws-bet-challenges-coin-guard-retry-cap";
+const WORKER_BUILD_ID = "2026-11-09-profile-featured-awards-learning-modes";
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
 const CHALLENGE_DIRECTORY = "desafios/partidas";
@@ -985,6 +985,18 @@ function communitySummary(record) {
     .map(([month, award]) => ({ month, difficulty: String(award?.difficulty || "Torneio"), rank: Math.max(0, Number(award?.rank) || 0), score: Math.max(0, Number(award?.score) || 0), frame: String(award?.frame || "") }))
     .filter(award => /^\d{4}-\d{2}$/.test(award.month) && award.rank > 0)
     .sort((a, b) => b.month.localeCompare(a.month)).slice(0, 12);
+  const featuredAwards = Array.isArray(profile.featuredAwards)
+    ? [...new Set(profile.featuredAwards.filter(id => typeof id === "string" && id.length <= 80))]
+      .filter(id => {
+        const [kind, key] = id.split(":");
+        if (kind === "achievement") return Object.prototype.hasOwnProperty.call(economy.achievements, key);
+        if (kind === "medal") return Number(stats.levels?.[key]?.wins) >= 10;
+        if (kind === "award" && /^\d{4}-\d{2}$/.test(key)) {
+          return Number(profile.tournamentAwards?.[key]?.rank) > 0;
+        }
+        return false;
+      }).slice(0, 3)
+    : [];
   return {
     username: record.username,
     displayName: profile.displayName || record.username,
@@ -993,7 +1005,7 @@ function communitySummary(record) {
     coins: economy.coins, totalEarned: economy.totalEarned,
     trainingCycles: economy.trainingCycles, completedStages: economy.completedStages.length,
     achievementCount: Object.keys(economy.achievements).length,
-    titles, medals, awards,
+    titles, medals, awards, featuredAwards,
     challengeWins: Number(total.wins) || 0,
     challengeLosses: Number(total.losses) || 0,
     challengeTotal: (Number(total.wins) || 0) + (Number(total.losses) || 0),
