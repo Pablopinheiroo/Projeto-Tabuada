@@ -967,7 +967,7 @@ async function ensureTournamentBoard(month, env) {
 }
 async function updateTournamentBoard(month, difficulty, username, result, env) {
   const path = tournamentFilePath(month);
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < 5; attempt++) {
     const current = await ensureTournamentBoard(month, env);
     const data = current.data;
     data.results = data.results || { easy: {}, medium: {}, hard: {} };
@@ -978,7 +978,7 @@ async function updateTournamentBoard(month, difficulty, username, result, env) {
       const sha = await writeJsonFile(path, data, current.sha, env, "Registrar resultado mensal de " + username);
       return { board: data, sha, alreadySubmitted: false };
     } catch (error) {
-      if ((error.status !== 409 && error.status !== 422) || attempt === 2) throw error;
+      if ((error.status !== 409 && error.status !== 422) || attempt === 4) throw error;
     }
   }
   throw new Error("Não foi possível registrar o resultado do torneio.");
