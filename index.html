@@ -3477,9 +3477,9 @@ function playCurrentTrack(){
 function showAutoplayHint(){
  const track=musicalTracks[currentTrackIndex];
  if(!track)return;
- $('musicTitle').textContent='▶ Toque na página para iniciar: '+track.name;
- $('musicMenuLabel').textContent='Iniciar música';
- $('soundToggle').textContent='▶ Iniciar música';
+ $('musicTitle').textContent='🔇 O navegador bloqueou o início automático · '+track.name;
+ $('musicMenuLabel').textContent='Ativar música';
+ $('soundToggle').textContent='▶ Ativar música';
  $('soundToggle').setAttribute('aria-pressed','false');
 }
 function playTrack(index,resetQueue=true){
