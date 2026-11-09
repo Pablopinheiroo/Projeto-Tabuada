@@ -14,7 +14,7 @@ const AVATAR_GIF_COUNT = 12;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
 const CHALLENGE_PLAYER_METADATA_MAX = 45;
-const WORKER_BUILD_ID = "2026-11-09-challenge-profile-avatars-live-question-timer";
+const WORKER_BUILD_ID = "2026-11-09-tournament-time-limits-minimum-score-profile-stats";
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
 const CHALLENGE_DIRECTORY = "desafios/partidas";
@@ -24,6 +24,8 @@ const TOURNAMENT_PRESETS = {
   medium: { name: "Médio", tables: Array.from({ length: 15 }, (_, i) => i + 1), options: 4 },
   hard: { name: "Difícil", tables: [3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19], options: 6 }
 };
+const TOURNAMENT_SECONDS_PER_QUESTION = Object.freeze({ easy: 10, medium: 7, hard: 5 });
+const TOURNAMENT_MIN_VALID_SCORE = 30;
 const CHALLENGE_PRESETS = {
   recruta: { name: "Recruta", tables: [1, 2], options: 4 },
   aprendiz: { name: "Aprendiz", tables: [1, 2, 3, 4], options: 4 },
@@ -1314,7 +1316,7 @@ async function handleApi(request, env, origin) {
         month, difficulty, difficultyName: preset.name,
         attemptId: participation.attemptId,
         seed: board.data.seeds[difficulty],
-        questions, questionCount: 50, secondsPerQuestion: 5, optionCount: preset.options
+        questions, questionCount: 50, secondsPerQuestion: TOURNAMENT_SECONDS_PER_QUESTION[difficulty], optionCount: preset.options
       }, 200, origin);
     }
 
@@ -1333,6 +1335,8 @@ async function handleApi(request, env, origin) {
       if (answers.length !== 50) return json({ error: "O torneio precisa ter exatamente 50 respostas." }, 400, origin);
       const board = await ensureTournamentBoard(month, env);
       const questions = buildTournamentQuestions(board.data.seeds[difficulty], difficulty);
+      const secondsPerQuestion = TOURNAMENT_SECONDS_PER_QUESTION[difficulty];
+      const questionLimitMs = secondsPerQuestion * 1000;
       let score = 0, totalMs = 0;
       for (let i = 0; i < 50; i++) {
         const answer = answers[i] || {};
@@ -1342,8 +1346,19 @@ async function handleApi(request, env, origin) {
             (value !== null && !Number.isSafeInteger(value))) {
           return json({ error: "Uma das respostas do torneio está inválida." }, 400, origin);
         }
-        if (elapsed <= 5_000 && value === questions[i].answer) score++;
-        totalMs += Math.min(5_000, elapsed);
+        if (elapsed <= questionLimitMs && value === questions[i].answer) score++;
+        totalMs += Math.min(questionLimitMs, elapsed);
+      }
+      if (score < TOURNAMENT_MIN_VALID_SCORE) {
+        return json({
+          error: "Você acertou " + score + "/50. São necessários pelo menos " +
+            TOURNAMENT_MIN_VALID_SCORE + "/50 (60%) para validar a participação. Sua tentativa não entrou no ranking. Refaça o torneio na mesma dificuldade.",
+          score,
+          minimumScore: TOURNAMENT_MIN_VALID_SCORE,
+          questionCount: 50,
+          secondsPerQuestion,
+          retryAllowed: true
+        }, 422, origin);
       }
       const result = { score, totalMs: Math.round(totalMs), perfect: score === 50, completedAt: new Date().toISOString() };
       const updatedBoard = await updateTournamentBoard(month, difficulty, username, result, env);
