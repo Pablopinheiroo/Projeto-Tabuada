@@ -1024,7 +1024,7 @@ let selectedChallengePlayers=new Set();
 const REMEMBER_SESSION_KEY="projetoTabuadaSessaoLembradaV1";
 const ACTIVE_TIME_CACHE_KEY="projetoTabuadaTempoPendenteV1";
 const ACTIVE_TIME_SYNC_MS=30*60*1000;
-let pendingActiveMs=0,studyTimeBaseMs=0,activeTimeTimer=null,lastActiveTick=Date.now();
+let pendingActiveMs=0,studyTimeBaseMs=0,activeTimeTimer=null,lastActiveTick=Date.now(),lastCloudSaveAttemptAt=0;
 let tournamentDashboard=null,tournamentCurrent=null,tournamentQuestions=[],tournamentAnswers=[],tournamentIndex=0,tournamentQuestionStarted=0,tournamentQuestionTimer=null,tournamentMatchStarted=0,tournamentQuestionLocked=false,tournamentScore=0,tournamentBusy=false;
 
 const CHALLENGE_PRESETS_UI=[
@@ -1520,12 +1520,15 @@ function scheduleCloudSave(immediate=false){
  if(!activeProfile||!remoteUserData||!cloudTokenReady())return;
  if(immediate){flushCloudSave(true);return;}
  if(pendingActiveMs<ACTIVE_TIME_SYNC_MS)return;
+ if(lastCloudSaveAttemptAt&&Date.now()-lastCloudSaveAttemptAt<5*60*1000)return;
  flushCloudSave(false);
 }
 async function flushCloudSave(force=false){
  if(!activeProfile||!remoteUserData||!cloudTokenReady())return false;
  if(!force&&pendingActiveMs<ACTIVE_TIME_SYNC_MS)return false;
  if(cloudSyncBusy){cloudSyncQueued=true;return false;}
+ if(!force&&lastCloudSaveAttemptAt&&Date.now()-lastCloudSaveAttemptAt<5*60*1000)return false;
+ lastCloudSaveAttemptAt=Date.now();
  cloudSyncBusy=true;
  try{
   const username=activeProfile;
@@ -1540,6 +1543,7 @@ async function flushCloudSave(force=false){
    savePendingActiveTime(username);
    persistProfiles();
    lastCloudSaveAt=Date.now();
+   lastCloudSaveAttemptAt=0;
    communityCacheAt=0;
    const status=$('profileStatus');
    if(status)status.textContent='Dados sincronizados. Próximo salvamento automático após mais 30 minutos de uso.';
@@ -1975,6 +1979,8 @@ async function saveProfileEdits(event){
   const payload=buildRemoteUserData();
   const newSha=await writeRemoteUser(activeProfile,payload,remoteUserSha);
   remoteUserSha=newSha;remoteUserData=payload;
+  studyTimeBaseMs=Math.max(studyTimeBaseMs,Number(payload.profile.studyTimeMs)||0);
+  pendingActiveMs=0;savePendingActiveTime(activeProfile);persistProfiles();
   $('profileMessage').textContent='Perfil atualizado com sucesso!';
   refreshProfileIdentity();
   communityCacheAt=0;
