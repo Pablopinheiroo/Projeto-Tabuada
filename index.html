@@ -1413,7 +1413,7 @@ const CHALLENGE_MUSIC=[
  {name:"Duelo Decisivo",bpm:148,root:46,pattern:[0,7,12,17,15,12,10,7],wave:"sawtooth"}
 ];
 const CHALLENGE_SEEN_KEY="projetoTabuadaDesafiosVistosV1";
-let challengeItems=[],challengePlayers=[],challengeSetupMode="custom",challengeCurrent=null,challengeRole="",challengeQuestions=[],challengeAnswerLog=[],challengeQuestionIndex=0,challengeQuestionStarted=0,challengeQuestionTimer=null,challengeOverallTimer=null,challengeMusicTimer=null,challengeMatchStarted=0,challengeMatchDeadline=0,challengeQuestionLocked=false,challengeLocalScore=0,challengeVolumeLimit=100,challengePollTimer=null,challengeMusicActive=false,challengeBetMode=false,challengeMusicRequest=0;
+let challengeItems=[],challengePlayers=[],challengeSetupMode="custom",challengeCurrent=null,challengeRole="",challengeQuestions=[],challengeAnswerLog=[],challengeQuestionIndex=0,challengeQuestionStarted=0,challengeQuestionTimer=null,challengeOverallTimer=null,challengeMusicTimer=null,challengeMatchStarted=0,challengeMatchDeadline=0,challengeQuestionLocked=false,challengeLocalScore=0,challengeVolumeLimit=100,challengePollTimer=null,challengeMusicActive=false,challengeBetMode=false,challengeMusicRequest=0,challengeSynthInterval=null,challengeSynthStep=0;
 const AUTH_USERS_KEY='projetoTabuadaUsuariosV1';
 const AUTH_SESSION_KEY='projetoTabuadaSessaoV1';
 let authUsers={};
@@ -3089,19 +3089,41 @@ function stopChallengePolling(){
  if(challengePollTimer!==null){clearInterval(challengePollTimer);challengePollTimer=null;}
 }
 async function startChallengeMusic(trackIndex,isPreview=false){
- stopChallengeMusic();
- const request=++challengeMusicRequest;
- const tracks=musicTrackCollections.desafio||[];
- if(!tracks.length){console.error('Coleção de músicas do desafio indisponível.');return false;}
- setMusicCategory('desafio',false);
- const index=Math.max(0,Math.min(tracks.length-1,Number(trackIndex)||0));
- challengeMusicActive=true;
- challengeMusicTimer=isPreview?setTimeout(()=>stopChallengeMusic(),25_000):null;
- const playing=await playTrack(index,true);
- if(request!==challengeMusicRequest)return false;
- if(!playing){stopChallengeMusic();return false;}
- return true;
+  stopChallengeMusic();
+  const request=++challengeMusicRequest;
+  const tracks=musicTrackCollections.desafio||[];
+  if(!tracks.length){
+   const index=Math.max(0,Math.min(CHALLENGE_MUSIC.length-1,Math.floor(Number(trackIndex)||0)));
+   const track=CHALLENGE_MUSIC[index];
+   if(!track||!ensureAudio()||!audioContext)return false;
+   challengeMusicActive=true;
+   challengeSynthStep=0;
+   const beatMs=Math.max(140,Math.round(60000/Math.max(60,Number(track.bpm)||120)/2));
+   const playStep=()=>{
+    if(request!==challengeMusicRequest||!challengeMusicActive||!audioContext)return;
+    const semitone=track.pattern[challengeSynthStep%track.pattern.length]||0;
+    const when=audioContext.currentTime+.015;
+    const duration=beatMs/1000*.88;
+    playNote(midiToHz(track.root+semitone),when,duration,track.wave,.022);
+    if(challengeSynthStep%4===0)playNote(midiToHz(track.root-12),when,duration*1.15,'triangle',.007);
+    challengeSynthStep++;
+   };
+   playStep();
+   challengeSynthInterval=setInterval(playStep,beatMs);
+   challengeMusicTimer=isPreview?setTimeout(()=>stopChallengeMusic(),25_000):null;
+   return true;
+  }
+  setMusicCategory('desafio',false);
+  const index=Math.max(0,Math.min(tracks.length-1,Math.floor(Number(trackIndex)||0)));
+  challengeMusicActive=true;
+  const playing=await playTrack(index,true);
+  if(request!==challengeMusicRequest)return false;
+  if(!playing){stopChallengeMusic();return false;}
+  challengeMusicTimer=isPreview?setTimeout(()=>stopChallengeMusic(),25_000):null;
+  return true;
 }
+
+
 function updateChallengeMusicToggle(playing){
  const button=$('challengeMusicToggle');if(!button)return;
  button.textContent=playing?'♫ Pausar música':'▶ Ativar música';
@@ -3109,7 +3131,7 @@ function updateChallengeMusicToggle(playing){
 }
 async function toggleChallengeMusic(){
  if(!challengeCurrent)return;
- if(challengeMusicActive&&soundtrackAudio&&!soundtrackAudio.paused){
+ if(challengeMusicActive&&(challengeSynthInterval!==null||(soundtrackAudio&&!soundtrackAudio.paused))){
   stopChallengeMusic();updateChallengeMusicToggle(false);
   $('challengePlayStatus').textContent='Música pausada. Toque em “Ativar música” para ouvir novamente.';
   return;
@@ -3121,6 +3143,7 @@ async function toggleChallengeMusic(){
 function stopChallengeMusic(){
  challengeMusicRequest++;
  if(challengeMusicTimer!==null){clearTimeout(challengeMusicTimer);challengeMusicTimer=null;}
+  if(challengeSynthInterval!==null){clearInterval(challengeSynthInterval);challengeSynthInterval=null;}
  if(challengeMusicActive&&soundtrackAudio){
   soundtrackAudio.pause();
   try{soundtrackAudio.currentTime=0}catch{}
