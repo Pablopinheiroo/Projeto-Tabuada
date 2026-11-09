@@ -3632,6 +3632,7 @@ let adventureComboCount=0;
 let adventureBestCombo=0;
 let adventureHasAnswered=false;
 let adventureLastResultPassed=false;
+let adventureQuestionStartedAt=0,adventureStageTimeMs=0;
 
 function shuffleAdventure(items){
  const result=items.slice();
@@ -3766,6 +3767,7 @@ function renderAdventureQuestion(){
  const question=adventureQuestions[adventureQuestionIndex];
  if(!question)return;
  adventureHasAnswered=false;
+ adventureQuestionStartedAt=performance.now();
  $('adventureFeedback').classList.add('hidden');
  $('adventureFeedback').classList.remove('wrong');
  $('adventureAnswerForm').classList.toggle('hidden',question.type==='choice');
@@ -3791,6 +3793,7 @@ function startAdventureStage(index){
  adventureComboCount=0;
  adventureBestCombo=0;
  adventureHasAnswered=false;
+ adventureQuestionStartedAt=0;adventureStageTimeMs=0;
  $('adventureIntroView').classList.add('hidden');
  $('adventureResultView').classList.add('hidden');
  $('adventurePlayView').classList.remove('hidden');
@@ -3806,7 +3809,10 @@ function answerAdventureQuestion(value,choiceButton){
   return;
  }
  adventureHasAnswered=true;
+ const timeMs=adventureQuestionStartedAt?Math.max(0,performance.now()-adventureQuestionStartedAt):0;
+ adventureQuestionStartedAt=0;adventureStageTimeMs+=timeMs;
  const correct=value===question.answer;
+ addAnswerToHistory({a:question.table,b:question.factor,correct,timeMs,mode:'adventure'});
  if(correct){
   adventureFirstTryCorrect++;
   adventureComboCount++;
@@ -3847,6 +3853,13 @@ async function finishAdventureStage(){
  const required=stage.boss?8:6;
  const passed=adventureFirstTryCorrect>=required;
  const stars=passed?(adventureFirstTryCorrect===total?3:adventureFirstTryCorrect>=total-1?2:1):0;
+ historyData.sessions.unshift({
+  date:new Date().toISOString(),mode:'adventure',stageId:stage.id,stageTitle:stage.title,
+  answered:total,hits:adventureFirstTryCorrect,misses:Math.max(0,total-adventureFirstTryCorrect),
+  skipped:0,timeMs:Math.round(adventureStageTimeMs),completed:passed,stars
+ });
+ historyData.sessions=historyData.sessions.slice(0,300);
+ saveHistory();
  const progress=getAdventureProgress();
  const key=String(stage.id);
  const entry=progress.stages[key]||{attempts:0,completed:false,stars:0,bestCorrect:0};
@@ -3949,7 +3962,7 @@ function getMistakeTrainingFacts(){
    errorRate:attempts?wrong/attempts:0};
  }).filter(item=>Number.isInteger(item.a)&&item.a>=1&&item.a<=20&&Number.isInteger(item.b)&&item.b>=1&&item.b<=10&&item.attempts>0)
  .filter(item=>{
-  if(item.accuracy>=.90&&item.attempts>=5)return false;
+  if(item.accuracy>=.90)return false;
   return item.wrong>0||item.flags>0||item.avgTime>=5000;
  }).sort((a,b)=>{
   const score=item=>item.errorRate*.65+Math.min(1,item.avgTime/9000)*.20+Math.min(1,item.flags/3)*.15;
@@ -3960,7 +3973,7 @@ function updateReviewTrainingButton(){
  const facts=getMistakeTrainingFacts(),button=$('startReviewTraining'),note=$('reviewTrainingSummary');
  if(button){button.disabled=!facts.length;button.textContent=facts.length?'🎯 Treinar minhas dificuldades · '+facts.length+' contas':'🎯 Nenhuma conta pendente';}
  if(note)note.textContent=facts.length
-  ?'Treino personalizado com contas que você erra, marcou como difíceis ou demora mais. Cada conta sai da lista quando atingir 90% de acertos (com pelo menos 5 tentativas).'
+  ?'Treino personalizado com contas que você erra, marcou como difíceis ou demora mais. Cada conta sai da lista assim que atingir 90% de acertos.'
   :'Seu histórico não aponta dificuldades pendentes. Quando houver contas abaixo de 90%, elas aparecem aqui automaticamente.';
 }
 function startMistakeTraining(){
