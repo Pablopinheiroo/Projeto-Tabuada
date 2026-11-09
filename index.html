@@ -529,12 +529,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 
 
 /* Preferências de sessão e comunidade organizada */
-.remember-session{display:flex!important;align-items:flex-start;gap:7px;margin:1px 0!important;padding:6px 8px;border:1px solid #dce5f0;border-radius:8px;background:linear-gradient(110deg,#f1f5fb,#eef2ff);color:#42536b;font-size:.7rem;line-height:1.3}
-.auth-form label.remember-session{color:#42536b}
-.remember-session input{width:14px;height:14px;flex:0 0 14px;margin:1px 0 0;accent-color:#365b91}
-.remember-session span{display:grid;gap:1px}
-.remember-session b{font-size:.72rem;font-weight:750}
-.remember-session small{color:#718096;font-size:.64rem;font-weight:500;line-height:1.25}
+.remember-session{display:flex!important;align-items:center;gap:8px;min-height:46px;box-sizing:border-box;margin:1px 0!important;padding:7px 9px;border:1px solid #dce5f0;border-radius:8px;background:linear-gradient(110deg,#f1f5fb,#eef2ff);color:#42536b;font-size:.7rem;line-height:1.3}
+.auth-form label.remember-session{color:#42536b;font-size:.7rem;font-weight:600;gap:8px}
+.remember-session input{width:14px;height:14px;flex:0 0 14px;margin:0;accent-color:#365b91}
+.remember-session span{display:flex;flex:1;flex-direction:column;justify-content:center;gap:3px;min-width:0;line-height:1.2}
+.remember-session b{display:block;font-size:.72rem;font-weight:750;line-height:1.2}
+.remember-session small{display:block;color:#718096;font-size:.64rem;font-weight:500;line-height:1.25}
 .community-list{display:grid;gap:10px;padding:2px 0 4px}
 .community-pagination{margin:12px 0 4px}
 .community-pagination button{min-width:94px}
