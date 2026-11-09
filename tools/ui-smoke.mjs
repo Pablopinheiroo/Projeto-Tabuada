@@ -10,7 +10,7 @@ const check = (condition, message) => { if (!condition) fail(message); };
 
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, "assets/music/manifest.json"), "utf8"));
 const specs = {
-  principal: { bpm: [82, 100], energy: [0.54, 0.76], leads: ["keys", "flute", "bell", "strings", "pluck"], grooves: ["ambient", "cinematic", "adventure"], scales: ["major", "lydian", "mixolydian"] },
+  principal: { bpm: [110, 132], energy: [0.82, 1.12], leads: ["square", "saw", "strings", "flute", "keys", "guitar", "pluck", "bell", "brass"], grooves: ["arcade", "dance", "cinematic", "funk", "battle", "adventure", "electro", "rock", "stealth", "ambient", "synthwave"], scales: ["major", "mixolydian", "minor", "dorian", "phrygian", "lydian"] },
   treinamento: { bpm: [88, 110], energy: [0.62, 0.84], leads: ["keys", "bell", "pluck", "flute"], grooves: ["ambient", "funk", "adventure"], scales: ["major", "dorian", "mixolydian"] },
   desafio: { bpm: [144, 170], energy: [1.08, 1.30], leads: ["square", "saw", "guitar", "brass"], grooves: ["dance", "electro", "battle", "rock", "synthwave"], scales: ["minor", "phrygian", "mixolydian", "dorian"] },
   "modo-jogo": { bpm: [108, 132], energy: [0.78, 1.06], leads: ["strings", "flute", "brass", "bell", "guitar"], grooves: ["cinematic", "adventure", "battle"], scales: ["minor", "dorian", "major", "phrygian"] },
@@ -84,6 +84,20 @@ const inlineScripts = [...html.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)
   .map(match => match[1]).filter(script => script.trim());
 check(inlineScripts.length === 1, "Quantidade inesperada de scripts inline.");
 new Function(inlineScripts[0]);
+
+const logoutStart=html.indexOf("async function logout(){");
+const logoutEnd=html.indexOf("\nfunction escapeHtml",logoutStart);
+const logoutCode=logoutStart>=0&&logoutEnd>logoutStart?html.slice(logoutStart,logoutEnd):"";
+check(html.includes("const ACTIVE_TIME_SYNC_MS=30*60*1000;"), "O salvamento automático não está configurado para 30 minutos.");
+check(logoutCode.length>0&&!logoutCode.includes("flushCloudSave(true)"), "Sair da conta ainda força um salvamento antes dos 30 minutos.");
+check(html.includes("pendingActiveMs>0?loadHistory():remoteHistory"), "O login não preserva o histórico local que ainda não foi sincronizado.");
+check(html.includes("Último salvamento: "), "O perfil não mostra o rótulo do último salvamento.");
+const autosaveContract = {
+  thresholdMinutes: 30,
+  preservesPartialTimeOnLogout: true,
+  restoresLocalHistoryWhenPending: true,
+  displaysLastSavedLabel: true
+};
 const selectorRefs = [...inlineScripts[0].matchAll(/\$\(['"]([^'"]+)['"]\)/g)].map(match => match[1]);
 const missingIds = [...new Set(selectorRefs.filter(id => !ids.includes(id)))];
 check(missingIds.length === 0, "IDs usados no JavaScript e ausentes do HTML: " + missingIds.join(", "));
@@ -101,6 +115,9 @@ async function testViewport(name, viewport, mobile = false) {
   const pageErrors = [];
   page.on("pageerror", error => pageErrors.push(error.message));
 
+  await page.addInitScript(() => {
+    localStorage.setItem("projetoTabuadaUltimaFaixaV2:principal", "0");
+  });
   const response = await page.goto(SITE_URL, { waitUntil: "domcontentloaded", timeout: 60000 });
   check(response && response.status() === 200, name + ": a página inicial não respondeu com HTTP 200.");
   await page.locator("#authScreen").waitFor({ state: "visible", timeout: 20000 });
@@ -109,6 +126,11 @@ async function testViewport(name, viewport, mobile = false) {
     null,
     { timeout: 30000 }
   );
+  check((await page.locator("#trackSelect").inputValue()) !== "0",
+    name + ": a tela inicial repetiu a última faixa salva em vez de escolher outra.");
+  const musicNote = (await page.locator(".music-note").textContent()) || "";
+  check(musicNote.includes("100 trilhas") && musicNote.includes("20 para cada área"),
+    name + ": o site não explica que o catálogo possui 100 músicas.");
 
   const homeOverflow = await page.evaluate(() => ({
     viewport: window.innerWidth,
@@ -269,10 +291,114 @@ async function testViewport(name, viewport, mobile = false) {
   await page.close();
 }
 
+async function testAutosave(browser) {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, locale: "pt-BR" });
+  const writes = [];
+  await page.route("https://projeto-tabuada-api.nuvemx.workers.dev/**", async route => {
+    const request = route.request();
+    const pathname = new URL(request.url()).pathname;
+    if (request.method() === "PUT" && pathname === "/api/me") {
+      writes.push(JSON.parse(request.postData() || "{}"));
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ sha: "autosave-smoke-new-sha" })
+      });
+      return;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({})
+    });
+  });
+
+  try {
+    await page.goto(SITE_URL, { waitUntil: "domcontentloaded", timeout: 60000 });
+    await page.evaluate(() => {
+      const username = "autosave-smoke";
+      sessionStorage.setItem(API_TOKEN_KEY, "fake-session-token");
+      sessionStorage.setItem(AUTH_SESSION_KEY, username);
+      activeProfile = username;
+      remoteUserSha = "old-sha";
+      remoteUserData = {
+        version: 1, username, profile: { studyTimeMs: 0 },
+        history: { questions: {}, sessions: [] }, updatedAt: "2026-11-09T12:00:00.000Z"
+      };
+      profilesData[username] = {
+        displayName: "Perfil local preservado",
+        checkpoint: { marker: "não perder" },
+        studyTimeMs: 0
+      };
+      historyData = {
+        questions: {
+          "77x1": { a: 77, b: 1, attempts: 1, correct: 1, wrong: 0, totalTimeMs: 800, bestTimeMs: 800 }
+        },
+        sessions: [{ answered: 1, hits: 1, misses: 0 }]
+      };
+      persistProfiles();
+      saveHistory();
+      pendingActiveMs = 10 * 60 * 1000;
+      savePendingActiveTime(username);
+      lastActiveTick = Date.now();
+    });
+
+    await page.evaluate(() => logout());
+    check(writes.length === 0, "O logout salvou os dados antes de completar 30 minutos.");
+    const retainedTenMinutes = await page.evaluate(() => {
+      const map = JSON.parse(localStorage.getItem(ACTIVE_TIME_CACHE_KEY) || "{}");
+      return map["autosave-smoke"] || 0;
+    });
+    check(retainedTenMinutes >= 10 * 60 * 1000,
+      "Os 10 minutos não foram mantidos no aparelho depois de sair.");
+
+    await page.evaluate(async () => {
+      const username = "autosave-smoke";
+      await hydrateRemoteUser(username, {
+        sha: "remote-sha",
+        data: {
+          profile: { studyTimeMs: 0 },
+          history: { questions: {}, sessions: [] },
+          economy: {}
+        }
+      });
+    });
+    const restored = await page.evaluate(() => ({
+      pending: pendingActiveMs,
+      checkpoint: profilesData["autosave-smoke"]?.checkpoint?.marker,
+      localQuestion: !!historyData.questions["77x1"]
+    }));
+    check(restored.pending >= 10 * 60 * 1000, "O período anterior não foi somado ao entrar novamente.");
+    check(restored.checkpoint === "não perder" && restored.localQuestion,
+      "O histórico e o ponto da partida foram substituídos por dados antigos da nuvem.");
+    check(writes.length === 0, "O login disparou um salvamento antes dos 30 minutos.");
+
+    await page.evaluate(() => {
+      pendingActiveMs += 20 * 60 * 1000;
+      profilesData[activeProfile].studyTimeMs = studyTimeBaseMs + pendingActiveMs;
+      savePendingActiveTime(activeProfile);
+      scheduleCloudSave();
+    });
+    await page.waitForFunction(() => cloudSyncBusy === false &&
+      remoteUserData?.updatedAt !== "2026-11-09T12:00:00.000Z", null, { timeout: 15000 });
+    check(writes.length === 1, "O salvamento não ocorreu uma única vez ao completar 30 minutos.");
+    check(Number(writes[0].profile?.studyTimeMs) >= 30 * 60 * 1000,
+      "O salvamento não incluiu os 10 + 20 minutos acumulados.");
+    const lastSavedLabel = (await page.locator("#profileLastSavedAt").textContent()) || "";
+    check(lastSavedLabel.startsWith("Último salvamento:"),
+      "O perfil não exibiu a data e o horário do último salvamento.");
+
+    return { result: "PASS", minutesAccumulated: 30, writesAfterThreshold: writes.length, lastSavedLabel };
+  } finally {
+    await page.close();
+  }
+}
+
 try {
   await testViewport("celular", { width: 390, height: 844 }, true);
   await testViewport("celular-pequeno", { width: 360, height: 800 }, true);
   await testViewport("computador", { width: 1366, height: 900 }, false);
+  var autosaveResult = await testAutosave(browser);
 } finally {
   await browser.close();
 }
@@ -290,7 +416,9 @@ console.log(JSON.stringify({
     duplicateIds: duplicates.length,
     checkedJavaScriptSelectors: new Set(selectorRefs).size,
     missingIds: missingIds.length,
-    inlineJavaScriptSyntax: "valid"
+    inlineJavaScriptSyntax: "valid",
+    autosave: autosaveContract
   },
+  autosave: autosaveResult,
   browser: viewportResults
 }, null, 2));
