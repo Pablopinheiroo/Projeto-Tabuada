@@ -426,16 +426,23 @@ async function readChallengeIndex(username, env) {
   return { ids, sha: file?.sha || null };
 }
 async function appendChallengeIndex(username, challengeId, env) {
-  const index = await readChallengeIndex(username, env);
-  if (!index.ids.includes(challengeId)) index.ids.push(challengeId);
-  index.ids = index.ids.slice(-200);
-  return writeJsonFile(
-    challengeIndexPath(username),
-    { username, ids: index.ids, updatedAt: new Date().toISOString() },
-    index.sha,
-    env,
-    "Atualizar lista de desafios de " + username
-  );
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const index = await readChallengeIndex(username, env);
+    if (!index.ids.includes(challengeId)) index.ids.push(challengeId);
+    index.ids = index.ids.slice(-200);
+    try {
+      return await writeJsonFile(
+        challengeIndexPath(username),
+        { username, ids: index.ids, updatedAt: new Date().toISOString() },
+        index.sha,
+        env,
+        "Atualizar lista de desafios de " + username
+      );
+    } catch (error) {
+      if ((error.status !== 409 && error.status !== 422) || attempt === 3) throw error;
+    }
+  }
+  throw new Error("Não foi possível atualizar a lista de desafios.");
 }
 function challengeRandom(seed) {
   let state = Number(seed) >>> 0;
