@@ -10,11 +10,11 @@ const check = (condition, message) => { if (!condition) fail(message); };
 
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, "assets/music/manifest.json"), "utf8"));
 const specs = {
-  principal: { bpm: [82, 100], energy: [0.54, 0.76], leads: ["keys", "flute", "bell", "strings", "pluck"], grooves: ["ambient", "cinematic", "adventure"] },
-  treinamento: { bpm: [88, 110], energy: [0.62, 0.84], leads: ["keys", "bell", "pluck", "flute"], grooves: ["ambient", "funk", "adventure"] },
-  desafio: { bpm: [144, 170], energy: [1.08, 1.30], leads: ["square", "saw", "guitar", "brass"], grooves: ["dance", "electro", "battle", "rock", "synthwave"] },
-  "modo-jogo": { bpm: [108, 132], energy: [0.78, 1.06], leads: ["strings", "flute", "brass", "bell", "guitar"], grooves: ["cinematic", "adventure", "battle"] },
-  torneio: { bpm: [126, 156], energy: [1.00, 1.22], leads: ["brass", "strings", "saw", "square"], grooves: ["battle", "electro", "cinematic", "rock"] }
+  principal: { bpm: [82, 100], energy: [0.54, 0.76], leads: ["keys", "flute", "bell", "strings", "pluck"], grooves: ["ambient", "cinematic", "adventure"], scales: ["major", "lydian", "mixolydian"] },
+  treinamento: { bpm: [88, 110], energy: [0.62, 0.84], leads: ["keys", "bell", "pluck", "flute"], grooves: ["ambient", "funk", "adventure"], scales: ["major", "dorian", "mixolydian"] },
+  desafio: { bpm: [144, 170], energy: [1.08, 1.30], leads: ["square", "saw", "guitar", "brass"], grooves: ["dance", "electro", "battle", "rock", "synthwave"], scales: ["minor", "phrygian", "mixolydian", "dorian"] },
+  "modo-jogo": { bpm: [108, 132], energy: [0.78, 1.06], leads: ["strings", "flute", "brass", "bell", "guitar"], grooves: ["cinematic", "adventure", "battle"], scales: ["minor", "dorian", "major", "phrygian"] },
+  torneio: { bpm: [126, 156], energy: [1.00, 1.22], leads: ["brass", "strings", "saw", "square"], grooves: ["battle", "electro", "cinematic", "rock"], scales: ["minor", "phrygian", "dorian"] }
 };
 
 check(manifest.version === 2, "Versão inesperada do manifesto musical.");
@@ -38,7 +38,7 @@ for (const [category, spec] of Object.entries(specs)) {
     check(track.energy >= spec.energy[0] && track.energy <= spec.energy[1], track.name + ": energia fora do perfil de " + category + ".");
     check(spec.leads.includes(track.lead_instrument), track.name + ": instrumento incompatível com " + category + ".");
     check(spec.grooves.includes(track.rhythm_style), track.name + ": ritmo incompatível com " + category + ".");
-    check(typeof track.scale === "string" && track.scale.length > 0, track.name + ": escala não informada.");
+    check(spec.scales.includes(track.scale), track.name + ": escala incompatível com " + category + ".");
     check(track.src.startsWith("assets/music/" + category + "/"), track.name + ": caminho fora da coleção.");
     check(!srcs.has(track.src), track.name + ": caminho de áudio repetido.");
     srcs.add(track.src);
