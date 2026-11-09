@@ -635,8 +635,9 @@ async function listChallengesFor(username, env) {
   const [index, userFile] = await Promise.all([readChallengeIndex(username, env), readUser(username, env)]);
   const ids = index.ids.slice(-CHALLENGE_MAX_HISTORY).reverse();
   const items = [];
-  // Cada tentativa de recuperação de pagamento pode usar até quatro subrequests.
-  // Limite três por consulta para manter margem no teto de 50 do plano Free.
+  // Liquidação de aposta usa até 4 subrequests para pagar um vencedor
+  // ou até 6 para devolver as duas apostas em caso de empate.
+  // No máximo 3 liquidações por consulta, preservando o teto de 50 do plano Free.
   let payoutRetries = 0;
   const MAX_PAYOUT_RETRIES_PER_REQUEST = 3;
   for (let offset = 0; offset < ids.length; offset += 5) {
