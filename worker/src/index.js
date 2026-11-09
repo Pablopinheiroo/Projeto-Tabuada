@@ -1130,9 +1130,22 @@ async function handleApi(request, env, origin) {
     }
 
     if (route === "/api/challenges/players" && request.method === "GET") {
-      const records = await loadCommunitySummaries(env);
-      const players = records.filter(item => item.username !== username)
-        .map(item => ({ username: item.username, displayName: item.displayName, avatar: item.avatar }))
+      // Lista todos os perfis cadastrados com uma única subrequest ao GitHub.
+      const entries = await githubRequest(
+        "/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + GH_DIRECTORY +
+        "?ref=" + encodeURIComponent(GH_BRANCH), env
+      );
+      if (!Array.isArray(entries)) throw new Error("A lista de participantes não retornou um diretório.");
+      const cached = new Map((communitySummaryCache.records || []).map(item => [item.username, item]));
+      const players = entries.filter(item => item.type === "dir" && usernameIsValid(item.name) && item.name !== username)
+        .map(item => {
+          const known = cached.get(item.name);
+          return {
+            username: item.name,
+            displayName: known?.displayName || item.name,
+            avatar: known?.avatar || "imagem:0"
+          };
+        })
         .sort((a, b) => a.displayName.localeCompare(b.displayName));
       return json({ players }, 200, origin);
     }
