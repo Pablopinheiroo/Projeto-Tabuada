@@ -989,6 +989,9 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .community-profile-details .community-profile-detail-chips{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important;align-items:center;justify-content:flex-start;gap:7px}
 .community-profile-details .community-rank-chip,.community-profile-details .community-featured-badge{flex:0 0 auto;max-width:100%}
 @media(max-width:560px){.community-profile-details{grid-template-columns:minmax(0,1fr)!important}.community-profile-details>.community-profile-detail-section:not(.community-challenge-details){padding:10px 9px!important}.community-profile-detail-title{font-size:.69rem!important}.community-profile-details .community-profile-detail-chips{gap:6px}}
+.profile-audio-reset-row{display:flex;justify-content:flex-end;margin-top:9px}
+.profile-audio-reset{min-height:36px;padding:7px 11px;font-size:.75rem;border:1px solid #46658c;background:#142b49;color:#dcecff}
+.profile-audio-reset:hover{filter:brightness(1.12)}
 </style>
 </head>
 <body>
@@ -1100,7 +1103,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 
  </div>
 <section id="profileStatsPanel" class="profile-stats-panel hidden" aria-label="Estatísticas pessoais">
-  <div class="profile-subscreen-heading"><div><span class="music-kicker">PAINEL DE DESEMPENHO</span><h2>Seu mapa de aprendizagem</h2><p class="hint">Os gráficos usam seu histórico privado de treinamento, aventura, desafios e torneios.</p></div><button id="closeProfileStats" class="secondary" type="button">← Meu perfil</button></div>
+  <div class="profile-subscreen-heading"><div><span class="music-kicker">PAINEL DE DESEMPENHO</span><h2>Seu mapa de aprendizagem</h2><p class="hint">Os gráficos usam seu histórico privado de treinamento, aventura, desafios e torneios.</p></div><button id="closeProfileStats" class="secondary" type="button">← Menu principal</button></div>
   <div id="profileStatsOverview" class="profile-stats-overview"></div>
   <div class="profile-stats-chart-grid">
    <article class="stats-chart-card stats-radar-card"><h3>🕸️ Domínio das tabuadas · 1 a 20</h3><p>Quanto maior a área preenchida, maior seu domínio registrado em cada tabuada.</p><div id="profileStatsRadar" class="stats-radar"></div><small class="stats-chart-note">Tabuadas sem questões respondidas aparecem sem domínio medido.</small></article>
@@ -1115,25 +1118,36 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   <p class="stats-data-note">A análise considera erros, acertos e tempo médio por resposta. Os dados antigos continuam preservados; a separação por modo fica mais completa conforme você joga cada modalidade após esta atualização.</p>
  </section>
  <section id="profileOptionsPanel" class="profile-options-panel hidden" aria-label="Opções do jogo">
-  <div class="profile-subscreen-heading"><div><span class="music-kicker">PREFERÊNCIAS</span><h2>⚙️ Opções</h2><p class="hint">Ajuste os volumes. A música fica pausada nesta tela; o volume escolhido entra em vigor ao sair.</p></div><button id="closeProfileOptions" class="secondary" type="button">← Meu perfil</button></div>
+  <div class="profile-subscreen-heading"><div><span class="music-kicker">PREFERÊNCIAS</span><h2>⚙️ Opções</h2><p class="hint">Ouça a música e os efeitos enquanto ajusta cada volume. As mudanças são aplicadas na hora.</p></div><button id="closeProfileOptions" class="secondary" type="button">← Menu principal</button></div>
   <section class="profile-audio-settings" aria-label="Volume da música">
    <h3>🎵 Volume da música</h3>
-   <p>Controla as trilhas de fundo e também o volume máximo da música dos desafios.</p>
+   <p>Controla as trilhas de fundo e também o volume máximo da música dos desafios. A música continua tocando para você comparar o volume.</p>
    <label class="profile-sfx-volume" for="profileMusicVolume">
     <span>Volume da música</span>
     <input id="profileMusicVolume" type="range" min="0" max="100" step="1" value="100">
     <strong id="profileMusicVolumeValue">100%</strong>
    </label>
   </section>
-  <section class="profile-audio-settings" aria-label="Preferências dos efeitos sonoros">
-  <h3>🔊 Volume dos efeitos especiais</h3>
-  <p>Ajuste o volume dos cliques, teclas, acertos, erros e avisos. Ao mover o controle, um som de teste ajuda a comparar o volume.</p>
-  <label class="profile-sfx-volume" for="profileSfxVolume">
-   <span>Volume dos efeitos</span>
-   <input id="profileSfxVolume" type="range" min="0" max="100" step="1" value="82">
-   <strong id="profileSfxVolumeValue">82%</strong>
-  </label>
- </section>
+  <section class="profile-audio-settings" aria-label="Efeitos da interface">
+   <h3>🔊 Efeitos da interface</h3>
+   <p>Controla cliques, teclas e botões dos menus. Um som de teste toca enquanto você ajusta.</p>
+   <label class="profile-sfx-volume" for="profileSfxVolume">
+    <span>Volume dos efeitos da interface</span>
+    <input id="profileSfxVolume" type="range" min="0" max="100" step="1" value="82">
+    <strong id="profileSfxVolumeValue">82%</strong>
+   </label>
+   <div class="profile-audio-reset-row"><button id="resetProfileSfxVolume" class="secondary profile-audio-reset" type="button">↺ Restaurar padrão · 82%</button></div>
+  </section>
+  <section class="profile-audio-settings" aria-label="Efeitos do modo jogo">
+   <h3>🎮 Efeitos do modo jogo</h3>
+   <p>Controla somente os sons de Verificar, Acertei, Errei e Tive dificuldade. Uma prévia toca os quatro efeitos para você comparar.</p>
+   <label class="profile-sfx-volume" for="profileGameSfxVolume">
+    <span>Volume dos efeitos do modo jogo</span>
+    <input id="profileGameSfxVolume" type="range" min="0" max="100" step="1" value="75">
+    <strong id="profileGameSfxVolumeValue">75%</strong>
+   </label>
+   <div class="profile-audio-reset-row"><button id="resetProfileGameSfxVolume" class="secondary profile-audio-reset" type="button">↺ Restaurar padrão · 75%</button></div>
+  </section>
   <div class="profile-audio-save">
    <button id="saveProfileAudioPreferences" class="primary" type="button">💾 Salvar como padrão da conta</button>
    <p id="profileAudioSaveStatus" role="status" aria-live="polite">Depois de ajustar os volumes, salve para usar essas escolhas nos próximos acessos à sua conta.</p>
@@ -1523,9 +1537,9 @@ function updateTrainingGlobalModeControls(){
 }
 let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
 let trainingReviewMode=false,trainingReviewFacts=[],trainingRoundTarget=0,currentQuestionTimeMs=0,currentQuestionTimeStopped=false,currentDifficultyMarked=false;
-let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=1,sfxVolumeLevel=.82;
+let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=1,sfxVolumeLevel=.82,gameSfxVolumeLevel=.75;
 let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueuePosition=0,musicStartPending=false,mainMusicTimer=null;
-let profileOptionsOpen=false,profileOptionsResumeMusic=false,sfxPreviewTimer=null;
+let profileOptionsOpen=false,profileOptionsResumeMusic=false,sfxPreviewTimer=null,gameSfxPreviewTimers=[];
 const LAST_TRACK_STORAGE_KEY='projetoTabuadaUltimaFaixaV2:';
 let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0;
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
@@ -2690,7 +2704,7 @@ function endQuestionClock(){
  return elapsed;
 }
 function addAnswerToHistory(entry){
- playFeedback(!!entry.correct);
+ playFeedback(!!entry.correct,entry.mode==='training'?'game':'interface');
  const key=entry.a+'x'+entry.b;
  if(!historyData.questions[key])historyData.questions[key]={a:entry.a,b:entry.b,attempts:0,correct:0,wrong:0,totalTimeMs:0,bestTimeMs:null};
  const item=historyData.questions[key];
@@ -2847,12 +2861,12 @@ function showProfileOptions(){
  profileOptionsOpen=true;
  clearMainMusicTimer();
  musicWasPlayingBeforeHide=false;
- if(soundtrackAudio)soundtrackAudio.pause();
  $('siteMusicBox').classList.add('hidden');
  $('profileMainPanel').classList.add('hidden');
  $('profileStatsPanel').classList.add('hidden');
  $('profileOptionsPanel').classList.remove('hidden');
  restoreProfileSfxVolume();
+ restoreProfileGameSfxVolume();
  syncAudioPreferenceControls();
 }
 function closeProfileOptions(){
@@ -2860,16 +2874,14 @@ function closeProfileOptions(){
  profileOptionsOpen=false;
  profileOptionsResumeMusic=false;
  $('profileOptionsPanel').classList.add('hidden');
- $('profileMainPanel').classList.remove('hidden');
- $('siteMusicBox').classList.remove('hidden');
- if(resume&&soundOn){
+ closeProfileScreen();
+ if(resume&&soundOn&&soundtrackAudio&&soundtrackAudio.paused){
   if(document.hidden)musicWasPlayingBeforeHide=true;
   else playCurrentTrack();
  }
 }
 function closeProfileStats(){
- $('profileStatsPanel').classList.add('hidden');
- $('profileMainPanel').classList.remove('hidden');
+ closeProfileScreen();
 }
 function openProfileScreen(showStats=false){
  if(!$('game').classList.contains('hidden')){alert('Encerre a partida antes de editar o perfil.');return;}
@@ -3940,6 +3952,7 @@ function start(){
 }
 function verify(){
  if(revealed)return;
+ playUiSound('verify','game');
  revealed=true;
  currentQuestionTimeMs=endQuestionClock();currentQuestionTimeStopped=true;
  $('answer').textContent=current.a+' × '+current.b+' = '+(current.a*current.b);
@@ -4353,6 +4366,7 @@ function startMistakeTraining(){
 }
 function markCurrentQuestionDifficulty(){
  if(!current||!revealed||currentDifficultyMarked)return;
+ playUiSound('click','game');
  const key=current.a+'x'+current.b;
  if(!historyData.questions[key])historyData.questions[key]={a:current.a,b:current.b,attempts:0,correct:0,wrong:0,totalTimeMs:0,bestTimeMs:null};
  const item=historyData.questions[key];
@@ -4404,7 +4418,7 @@ function ensureAudio(resume=true){
  return true;
 }
 function midiToHz(note){return 440*Math.pow(2,(note-69)/12)}
-function playNote(frequency,start,duration,wave,volume){
+function playNote(frequency,start,duration,wave,volume,destination=masterGain){
  if(!ensureAudio())return;
  const oscillator=audioContext.createOscillator();
  const envelope=audioContext.createGain();
@@ -4413,12 +4427,12 @@ function playNote(frequency,start,duration,wave,volume){
  envelope.gain.setValueAtTime(.0001,start);
  envelope.gain.exponentialRampToValueAtTime(Math.max(.0002,volume),start+.018);
  envelope.gain.exponentialRampToValueAtTime(.0001,start+duration);
- oscillator.connect(envelope);envelope.connect(masterGain);
+ oscillator.connect(envelope);envelope.connect(destination||masterGain);
  activeSounds.add(oscillator);
  oscillator.onended=()=>{activeSounds.delete(oscillator);oscillator.disconnect();envelope.disconnect()};
  oscillator.start(start);oscillator.stop(start+duration+.04);
 }
-let uiSfxLibrary={},uiSfxAudioPool=new Map(),uiSfxPoolCursor=new Map(),uiSfxBuffers=new Map(),uiSfxGain=null,uiSfxCompressor=null;
+let uiSfxLibrary={},uiSfxAudioPool=new Map(),uiSfxPoolCursor=new Map(),uiSfxBuffers=new Map(),uiSfxGain=null,uiSfxCompressor=null,gameSfxGain=null,gameSfxCompressor=null;
 const SFX_OUTPUT_BOOST=1.0;
 
 const SOFT_UI_CLICK_VARIANTS=[
@@ -4473,39 +4487,63 @@ function prepareSoftUiClickBuffers(){
   catch(error){console.warn('Variação suave de clique indisponível:',variant.id,error);}
  }
 }
+function configureSfxCompressor(compressor){
+ compressor.threshold.setValueAtTime(-12,audioContext.currentTime);
+ compressor.knee.setValueAtTime(10,audioContext.currentTime);
+ compressor.ratio.setValueAtTime(4,audioContext.currentTime);
+ compressor.attack.setValueAtTime(.005,audioContext.currentTime);
+ compressor.release.setValueAtTime(.14,audioContext.currentTime);
+}
 function updateUiSfxGain(){
  if(!audioContext)return;
  if(!uiSfxGain){
   uiSfxGain=audioContext.createGain();
   uiSfxCompressor=audioContext.createDynamicsCompressor();
-  uiSfxCompressor.threshold.setValueAtTime(-12,audioContext.currentTime);
-  uiSfxCompressor.knee.setValueAtTime(10,audioContext.currentTime);
-  uiSfxCompressor.ratio.setValueAtTime(4,audioContext.currentTime);
-  uiSfxCompressor.attack.setValueAtTime(.005,audioContext.currentTime);
-  uiSfxCompressor.release.setValueAtTime(.14,audioContext.currentTime);
+  configureSfxCompressor(uiSfxCompressor);
   uiSfxGain.connect(uiSfxCompressor);
   uiSfxCompressor.connect(audioContext.destination);
  }
+ if(!gameSfxGain){
+  gameSfxGain=audioContext.createGain();
+  gameSfxCompressor=audioContext.createDynamicsCompressor();
+  configureSfxCompressor(gameSfxCompressor);
+  gameSfxGain.connect(gameSfxCompressor);
+  gameSfxCompressor.connect(audioContext.destination);
+ }
  uiSfxGain.gain.setTargetAtTime(sfxVolumeLevel*SFX_OUTPUT_BOOST,audioContext.currentTime,.012);
+ gameSfxGain.gain.setTargetAtTime(gameSfxVolumeLevel*SFX_OUTPUT_BOOST,audioContext.currentTime,.012);
 }
-function playUiSfxBuffer(buffer){
+function playUiSfxBuffer(buffer,channel='interface'){
  if(!buffer||!ensureAudio())return false;
  updateUiSfxGain();
  const source=audioContext.createBufferSource();
  source.buffer=buffer;
- source.connect(uiSfxGain);
+ source.connect(channel==='game'?gameSfxGain:uiSfxGain);
  source.start(audioContext.currentTime+.002);
  return true;
 }
 const SFX_VOLUME_CACHE_KEY='projetoTabuadaVolumeEfeitosV1';
+const GAME_SFX_VOLUME_CACHE_KEY='projetoTabuadaVolumeModoJogoV1';
 const MUSIC_VOLUME_CACHE_KEY='projetoTabuadaVolumeMusicaV1';
 function applySfxVolumeToPlayers(){
  const value=Math.max(0,Math.min(1,sfxVolumeLevel));
- const outputValue=Math.min(1,value*SFX_OUTPUT_BOOST);
- for(const pool of uiSfxAudioPool.values())for(const player of pool)player.volume=outputValue;
+ const gameValue=Math.max(0,Math.min(1,gameSfxVolumeLevel));
+ for(const pool of uiSfxAudioPool.values())for(const player of pool){
+  const channel=player.dataset.sfxChannel||'interface';
+  player.volume=Math.min(1,(channel==='game'?gameValue:value)*SFX_OUTPUT_BOOST);
+ }
  if(uiSfxGain&&audioContext)uiSfxGain.gain.setTargetAtTime(value*SFX_OUTPUT_BOOST,audioContext.currentTime,.012);
  if($('profileSfxVolume'))$('profileSfxVolume').value=String(Math.round(value*100));
  if($('profileSfxVolumeValue'))$('profileSfxVolumeValue').textContent=Math.round(value*100)+'%';
+}
+function applyGameSfxVolume(){
+ const value=Math.max(0,Math.min(1,gameSfxVolumeLevel));
+ if(gameSfxGain&&audioContext)gameSfxGain.gain.setTargetAtTime(value*SFX_OUTPUT_BOOST,audioContext.currentTime,.012);
+ if($('profileGameSfxVolume'))$('profileGameSfxVolume').value=String(Math.round(value*100));
+ if($('profileGameSfxVolumeValue'))$('profileGameSfxVolumeValue').textContent=Math.round(value*100)+'%';
+ for(const pool of uiSfxAudioPool.values())for(const player of pool){
+  if(player.dataset.sfxChannel==='game')player.volume=Math.min(1,value*SFX_OUTPUT_BOOST);
+ }
 }
 function restoreProfileSfxVolume(){
  const profile=profilesData[activeProfile]||{};
@@ -4520,6 +4558,20 @@ function restoreProfileSfxVolume(){
  }
  sfxVolumeLevel=saved===null?.82:Math.max(0,Math.min(1,saved));
  applySfxVolumeToPlayers();
+}
+function restoreProfileGameSfxVolume(){
+ const profile=profilesData[activeProfile]||{};
+ let saved=null;
+ if(profile.gameSfxVolume!==undefined&&Number.isFinite(Number(profile.gameSfxVolume)))saved=Number(profile.gameSfxVolume);
+ if(saved===null){
+  try{
+   const prefs=JSON.parse(localStorage.getItem(GAME_SFX_VOLUME_CACHE_KEY)||'{}');
+   const cached=prefs?prefs[activeProfile]:null;
+   if(cached!==null&&cached!==undefined&&Number.isFinite(Number(cached)))saved=Number(cached);
+  }catch{}
+ }
+ gameSfxVolumeLevel=saved===null?.75:Math.max(0,Math.min(1,saved));
+ applyGameSfxVolume();
 }
 function restoreProfileMusicVolume(){
  const profile=profilesData[activeProfile]||{};
@@ -4537,6 +4589,8 @@ function restoreProfileMusicVolume(){
 function syncAudioPreferenceControls(){
  if($('profileSfxVolume'))$('profileSfxVolume').value=String(Math.round(sfxVolumeLevel*100));
  if($('profileSfxVolumeValue'))$('profileSfxVolumeValue').textContent=Math.round(sfxVolumeLevel*100)+'%';
+ if($('profileGameSfxVolume'))$('profileGameSfxVolume').value=String(Math.round(gameSfxVolumeLevel*100));
+ if($('profileGameSfxVolumeValue'))$('profileGameSfxVolumeValue').textContent=Math.round(gameSfxVolumeLevel*100)+'%';
  if($('profileMusicVolume'))$('profileMusicVolume').value=String(Math.round(volumeLevel*100));
  if($('profileMusicVolumeValue'))$('profileMusicVolumeValue').textContent=Math.round(volumeLevel*100)+'%';
 }
@@ -4546,8 +4600,23 @@ function setProfileSfxVolume(value){
 }
 function previewSfxVolume(){
  if(sfxPreviewTimer)clearTimeout(sfxPreviewTimer);
- sfxPreviewTimer=setTimeout(()=>{sfxPreviewTimer=null;playUiSound('click');},90);
+ sfxPreviewTimer=setTimeout(()=>{sfxPreviewTimer=null;playUiSound('click','interface');},90);
 }
+function setProfileGameSfxVolume(value){
+ gameSfxVolumeLevel=Math.max(0,Math.min(1,Number(value)/100));
+ applyGameSfxVolume();
+}
+function previewGameSfxVolume(){
+ gameSfxPreviewTimers.forEach(timer=>clearTimeout(timer));
+ gameSfxPreviewTimers=[];
+ const samples=['verify','correct','wrong','click'];
+ samples.forEach((name,index)=>{
+  const timer=setTimeout(()=>playUiSound(name,'game'),90+index*230);
+  gameSfxPreviewTimers.push(timer);
+ });
+}
+function resetProfileSfxVolume(){setProfileSfxVolume(82);previewSfxVolume();}
+function resetProfileGameSfxVolume(){setProfileGameSfxVolume(75);previewGameSfxVolume();}
 async function saveProfileAudioPreferences(){
  const username=activeProfile;
  const status=$('profileAudioSaveStatus');
@@ -4557,6 +4626,7 @@ async function saveProfileAudioPreferences(){
  status.textContent='Salvando suas preferências...';
  const profile=profilesData[username]||(profilesData[username]={});
  profile.sfxVolume=sfxVolumeLevel;
+ profile.gameSfxVolume=gameSfxVolumeLevel;
  profile.musicVolume=volumeLevel;
  profile.audioPreferencesSavedAt=new Date().toISOString();
  persistProfiles();
@@ -4564,6 +4634,9 @@ async function saveProfileAudioPreferences(){
   const effectPrefs=JSON.parse(localStorage.getItem(SFX_VOLUME_CACHE_KEY)||'{}');
   effectPrefs[username]=sfxVolumeLevel;
   localStorage.setItem(SFX_VOLUME_CACHE_KEY,JSON.stringify(effectPrefs));
+  const gameEffectPrefs=JSON.parse(localStorage.getItem(GAME_SFX_VOLUME_CACHE_KEY)||'{}');
+  gameEffectPrefs[username]=gameSfxVolumeLevel;
+  localStorage.setItem(GAME_SFX_VOLUME_CACHE_KEY,JSON.stringify(gameEffectPrefs));
   const musicPrefs=JSON.parse(localStorage.getItem(MUSIC_VOLUME_CACHE_KEY)||'{}');
   musicPrefs[username]=volumeLevel;
   localStorage.setItem(MUSIC_VOLUME_CACHE_KEY,JSON.stringify(musicPrefs));
@@ -4622,8 +4695,10 @@ async function loadUiSfx(){
   applySfxVolumeToPlayers();
  }catch(error){console.warn('Efeitos sonoros indisponíveis:',error);}
 }
-function playUiSound(name){
+function playUiSound(name,channel='interface'){
  if(document.hidden)return;
+ const isGameChannel=channel==='game';
+ const channelVolume=isGameChannel?gameSfxVolumeLevel:sfxVolumeLevel;
  const files=[...(uiSfxLibrary[name]||[])];
  if(name==='click')files.push(...SOFT_UI_CLICK_VARIANTS.map(variant=>'generated:click:'+variant.id));
  if(files.length){
@@ -4631,10 +4706,10 @@ function playUiSound(name){
   const buffer=uiSfxBuffers.get(src);
   if(buffer){
    if(audioContext&&audioContext.state==='suspended'){
-    audioContext.resume().then(()=>playUiSfxBuffer(buffer)).catch(()=>{});
+    audioContext.resume().then(()=>playUiSfxBuffer(buffer,channel)).catch(()=>{});
     return;
    }
-   if(playUiSfxBuffer(buffer))return;
+   if(playUiSfxBuffer(buffer,channel))return;
   }
   const pool=uiSfxAudioPool.get(src)||[];
   if(pool.length){
@@ -4642,17 +4717,20 @@ function playUiSound(name){
    const player=pool[index%pool.length];
    uiSfxPoolCursor.set(src,(index+1)%pool.length);
    try{player.pause();player.currentTime=0;}catch{}
-   player.volume=Math.min(1,sfxVolumeLevel*SFX_OUTPUT_BOOST);
+   player.dataset.sfxChannel=channel;
+   player.volume=Math.min(1,channelVolume*SFX_OUTPUT_BOOST);
    const playback=player.play();
    if(playback&&typeof playback.catch==='function')playback.catch(()=>{});
    return;
   }
  }
  if(!ensureAudio())return;
+ updateUiSfxGain();
+ const destination=isGameChannel?gameSfxGain:uiSfxGain;
  const when=audioContext.currentTime+.01;
- if(name==='correct') [72,76].forEach((note,i)=>playNote(midiToHz(note),when+i*.105,.16,'sine',.016));
- else if(name==='wrong') [62,58].forEach((note,i)=>playNote(midiToHz(note),when+i*.105,.16,'sine',.011));
- else playNote(name==='key'?520:285,when,.075,'sine',.004);
+ if(name==='correct') [72,76].forEach((note,i)=>playNote(midiToHz(note),when+i*.105,.16,'sine',.016,destination));
+ else if(name==='wrong') [62,58].forEach((note,i)=>playNote(midiToHz(note),when+i*.105,.16,'sine',.011,destination));
+ else playNote(name==='key'?520:285,when,.075,'sine',.004,destination);
 }
 function unlockUiAudio(){
  if(audioContext&&audioContext.state==='suspended')audioContext.resume().catch(()=>{});
@@ -4660,7 +4738,7 @@ function unlockUiAudio(){
 document.addEventListener('pointerdown',unlockUiAudio,true);
 document.addEventListener('keydown',unlockUiAudio,true);
 function playUiClick(){playUiSound('click')}
-function playFeedback(correct){playUiSound(correct?'correct':'wrong')}
+function playFeedback(correct,channel='interface'){playUiSound(correct?'correct':'wrong',channel)}
 function setVolume(value){
  volumeLevel=Math.max(0,Math.min(1,Number(value)/100));
  const outputLevel=challengeMusicActive?challengeVolumeLimit/100*volumeLevel:volumeLevel;
@@ -4707,7 +4785,7 @@ function watchGameScreenForMusic(){
  observer.observe(game,{attributes:true,attributeFilter:['class']});
 }
 function playCurrentTrack(){
- if(!soundtrackAudio||currentTrackIndex<0||!soundOn||profileOptionsOpen||document.hidden)return Promise.resolve(false);
+ if(!soundtrackAudio||currentTrackIndex<0||!soundOn||document.hidden)return Promise.resolve(false);
  if(musicStartPending)return Promise.resolve(false);
  soundtrackAudio.volume=challengeMusicActive?challengeVolumeLimit/100*volumeLevel:volumeLevel;
  musicStartPending=true;
@@ -4869,6 +4947,9 @@ $('musicMenuToggle').addEventListener('click',toggleMusicMenu);
 $('trackSelect').addEventListener('change',e=>chooseTrack(e.target.value));
 $('globalVolume').addEventListener('input',e=>setVolume(e.target.value));
 $('profileSfxVolume').addEventListener('input',e=>{setProfileSfxVolume(e.target.value);previewSfxVolume();});
+$('profileGameSfxVolume').addEventListener('input',e=>{setProfileGameSfxVolume(e.target.value);previewGameSfxVolume();});
+$('resetProfileSfxVolume').addEventListener('click',resetProfileSfxVolume);
+$('resetProfileGameSfxVolume').addEventListener('click',resetProfileGameSfxVolume);
 $('profileMusicVolume').addEventListener('input',e=>setVolume(e.target.value));
 $('saveProfileAudioPreferences').addEventListener('click',saveProfileAudioPreferences);
 $('soundToggle').addEventListener('click',toggleSound);
@@ -5029,7 +5110,7 @@ restoreCloudSession();
 const pendingUiButtonClicks=new WeakMap();
 document.addEventListener('click',event=>{
  const button=event.target.closest('button');
- if(!button||button.disabled||['right','wrong','soundToggle','replayTune'].includes(button.id))return;
+ if(!button||button.disabled||['verify','markDifficulty','right','wrong','soundToggle','replayTune'].includes(button.id))return;
  if(button.hasAttribute('data-challenge-answer')||button.hasAttribute('data-tournament-answer')||button.hasAttribute('data-adventure-answer'))return;
  pendingUiButtonClicks.set(event,button.dataset.sfx||'click');
 },true);
