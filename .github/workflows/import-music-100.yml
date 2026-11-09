@@ -1,0 +1,71 @@
+name: Importar 100 trilhas CC0 distintas
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "tools/import_music_100.py"
+      - ".github/workflows/import-music-100.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: import-music-100
+  cancel-in-progress: false
+
+jobs:
+  import-music:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Baixar o projeto
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Preparar FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Baixar, converter e validar 100 trilhas
+        run: python tools/import_music_100.py
+
+      - name: Conferir o catálogo gerado
+        run: |
+          python - <<'PY'
+          import json, pathlib, hashlib
+          root = pathlib.Path(".")
+          data = json.loads((root / "assets/music/manifest.json").read_text(encoding="utf-8"))
+          assert data["minimum_tracks_per_category"] == 20
+          assert data["minimum_total_tracks"] == 100
+          paths, hashes = set(), set()
+          for category, tracks in data["playlists"].items():
+              assert len(tracks) == 20, (category, len(tracks))
+              for track in tracks:
+                  p = root / track["src"]
+                  assert p.is_file() and p.stat().st_size > 10000, track["src"]
+                  assert track["license"] == "CC0 1.0"
+                  assert track["duration_seconds"] >= 30
+                  assert track["src"] not in paths
+                  paths.add(track["src"])
+                  digest = hashlib.sha256(p.read_bytes()).hexdigest()
+                  assert digest not in hashes, track["name"]
+                  hashes.add(digest)
+          assert len(paths) == len(hashes) == 100
+          print("PASS: 100 faixas CC0, 20 por área, sem arquivos duplicados.")
+          PY
+
+      - name: Publicar arquivos de áudio no repositório
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/music
+          if git diff --cached --quiet; then
+            echo "Nenhuma alteração de áudio."
+          else
+            git commit -m "Add 100 distinct CC0 soundtracks across five modes"
+            git push
+          fi
