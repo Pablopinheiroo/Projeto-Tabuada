@@ -656,6 +656,89 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .challenge-bet-hint{min-height:0;margin:0 0 10px;color:#9bb7d4;font-size:.78rem;text-align:left}.challenge-bet-hint.low-coins{color:#f0b66d}
 .community-pagination{flex-wrap:wrap}
 .challenge-list-actions button{min-height:40px}
+
+/* Navegação e leitura mais claras */
+.main-quick-nav{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin:14px 0 20px}
+.main-quick-nav button{min-height:48px;padding:10px 8px;border:1px solid #52739c;border-radius:13px;background:linear-gradient(145deg,#173352,#20254a);color:#eff8ff;font:inherit;font-size:.82rem;font-weight:900;box-shadow:0 5px 12px #02061755;cursor:pointer}
+.main-quick-nav button:hover{border-color:#67e8f9;transform:translateY(-1px)}
+.primary,.secondary,.compact-back{min-height:48px;padding:12px 17px;font-weight:900;letter-spacing:.01em;border-radius:13px}
+.compact-back{min-width:116px;background:linear-gradient(140deg,#254568,#30305a);border:1px solid #75b8e8;color:#f2f8ff;box-shadow:0 4px 12px #02061755}
+.mode-view-heading{gap:12px;align-items:center}
+.mode-view-heading .compact-back{flex:0 0 auto}
+button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #67e8f9;outline-offset:3px}
+.profile-last-saved{display:block;margin:3px 0 8px 2px;color:#d5e8ff;font-size:.78rem;font-weight:900;line-height:1.4;font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.coin-symbol{display:inline-grid;place-items:center;position:relative;vertical-align:-3px;width:19px;height:19px;margin-right:3px;border:2px solid #ffdf75;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff0a8,#efb52b 58%,#a9650e);box-shadow:0 0 0 1px #8a5a16,0 2px 5px #0006}
+.coin-symbol:before{content:'★';font-size:10px;line-height:1;color:#87500a;text-shadow:0 1px #ffe99a}
+.wallet-inline .coin-symbol{margin-right:5px}
+.ranking-details{margin-top:3px;border:1px solid #395879;border-radius:12px;background:#101f38;overflow:hidden}
+.ranking-details>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;padding:12px 14px;margin:0!important;color:#cae6ff;font-weight:800}
+.ranking-details>summary::-webkit-details-marker{display:none}
+.ranking-details>summary:after{content:'＋ Mostrar';flex:0 0 auto;color:#67e8f9;font-size:.75rem;font-weight:900}
+.ranking-details[open]>summary:after{content:'− Ocultar'}
+.ranking-details .ranking-list{padding:0 10px 10px}
+.profile-stats-entry{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:14px 0;padding:14px;border:1px solid #4b719c;border-radius:15px;background:linear-gradient(110deg,#142f4d,#242044)}
+.profile-stats-entry strong,.profile-stats-entry small{display:block}
+.profile-stats-entry strong{color:#f4f8ff;font-size:.98rem}
+.profile-stats-entry small{margin-top:4px;color:#b9cee9;font-size:.76rem;line-height:1.4}
+.profile-stats-entry .primary{margin:0;min-width:152px}
+.profile-stats-panel{margin:12px 0 20px;padding:14px;border:1px solid #47678d;border-radius:17px;background:linear-gradient(145deg,#0d1c33,#171b38)}
+.profile-stats-heading h2{margin:4px 0;color:#eff6ff;font-size:1.2rem}
+.profile-stats-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}
+.profile-stat-tile{padding:11px 8px;border:1px solid #385b80;border-radius:12px;background:#102541;text-align:center}
+.profile-stat-tile strong{display:block;color:#f8d879;font-size:1.15rem;font-weight:950}
+.profile-stat-tile small{display:block;margin-top:4px;color:#a9c5e3;font-size:.68rem}
+.profile-stats-chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stats-chart-card,.stats-review-card{min-width:0;padding:13px;border:1px solid #385579;border-radius:14px;background:#0e1d34}
+.stats-chart-card h3,.stats-review-card h3{margin:0;color:#e6f2ff;font-size:.92rem}
+.stats-chart-card>p{margin:5px 0 10px;color:#9fb8d6;font-size:.72rem;line-height:1.4}
+.stats-radar{display:grid;place-items:center;min-height:250px;overflow:hidden}
+.stats-radar svg{display:block;width:100%;max-width:370px;height:auto;overflow:visible}
+.stats-chart-note,.stats-data-note{display:block;margin-top:8px;color:#91a8c4;font-size:.68rem;line-height:1.45}
+.stats-pie-wrap{display:flex;align-items:center;justify-content:center;gap:18px;min-height:215px;flex-wrap:wrap}
+.stats-pie{display:grid;place-items:center;width:142px;height:142px;border-radius:50%;background:conic-gradient(#22c55e 0 0%,#f87171 0 100%);position:relative;box-shadow:0 0 22px #0005}
+.stats-pie:after{content:'';position:absolute;inset:27px;border-radius:50%;background:#10223b;border:1px solid #47617f}
+.stats-pie strong{position:relative;z-index:1;color:#f4f8ff;font-size:1.05rem}
+.stats-pie-legend{display:grid;gap:9px;color:#c7d9ef;font-size:.76rem}
+.stats-pie-legend span{display:flex;align-items:center;gap:7px}
+.stats-legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.stats-line svg{display:block;width:100%;height:auto;min-height:170px}
+.stats-mode-list{display:grid;gap:10px}
+.stats-mode-row{display:grid;grid-template-columns:85px minmax(0,1fr) 42px;align-items:center;gap:8px;color:#c8d9ed;font-size:.72rem}
+.stats-mode-track{height:10px;overflow:hidden;border-radius:99px;background:#263c5a}
+.stats-mode-track span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#22d3ee,#8b5cf6)}
+.stats-review-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+.stats-weak-list{display:grid;gap:8px;margin-top:10px}
+.stats-weak-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 10px;border:1px solid #345574;border-radius:10px;background:#142945;color:#e7f2ff;font-size:.76rem}
+.stats-weak-item strong{display:block;font-size:.82rem}
+.stats-weak-item small{display:block;margin-top:3px;color:#a8bfd9;font-size:.68rem}
+.stats-weak-score{flex:0 0 auto;color:#fbbf74;font-weight:950;text-align:right}
+.stats-missing{margin:10px 0 0;color:#b8d4ef;font-size:.8rem;line-height:1.6}
+.stats-subheading{margin-top:18px!important}
+.stats-data-note{padding-top:10px;border-top:1px solid #2e4767}
+.featured-awards-editor{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:10px 0}
+.featured-award-option{display:flex;align-items:center;gap:8px;min-width:0;padding:9px;border:1px solid #3d5c7e;border-radius:10px;background:#10233d;color:#dcecff;font-size:.74rem;cursor:pointer}
+.featured-award-option input{width:17px;height:17px;flex:0 0 17px;accent-color:#38bdf8}
+.featured-award-option .featured-award-icon{font-size:1.25rem;flex:0 0 24px;text-align:center}
+.featured-award-option small{display:block;color:#95aecb;font-size:.64rem}
+.profile-featured-display{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 3px}
+.profile-featured-badge,.community-featured-badge{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid #b88b3e;border-radius:999px;background:linear-gradient(120deg,#473418,#33234a);color:#ffe7a7;font-size:.72rem;font-weight:900}
+.community-rank-name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.community-wallet-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border:1px solid #8d702e;border-radius:999px;background:#342b19;color:#ffe29a;font-size:.7rem;font-weight:950}
+.community-rank-public-stats{display:flex;flex-wrap:wrap;gap:5px 10px;margin-top:5px;color:#a9c2de;font-size:.68rem;font-weight:700}
+.community-rank-public-stats span{white-space:nowrap}
+.community-rank-public-honors{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 2px}
+.community-rank-public-honors .community-rank-chip{margin:0}
+@media(max-width:680px){
+ .main-quick-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .profile-stats-overview{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .profile-stats-chart-grid,.stats-review-grid{grid-template-columns:1fr}
+ .profile-stats-entry{align-items:stretch;flex-direction:column}
+ .profile-stats-entry .primary{width:100%}
+ .featured-awards-editor{grid-template-columns:1fr}
+ .ranking-details>summary{align-items:flex-start;flex-direction:column}
+ .ranking-details>summary:after{align-self:flex-end}
+}
+@media(max-width:420px){.stats-mode-row{grid-template-columns:73px minmax(0,1fr) 34px}.stats-radar{min-height:210px}}
 </style>
 </head>
 <body>
@@ -719,7 +802,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  </div>
  <div class="economy-panel">
   <div class="wallet-grid">
-   <div class="wallet-stat"><span>🪙 MOEDAS DISPONÍVEIS</span><strong id="profileCoins">0</strong></div>
+   <div class="wallet-stat"><span><i class="coin-symbol" aria-hidden="true"></i> MOEDAS DISPONÍVEIS</span><strong id="profileCoins">0</strong></div>
    <div class="wallet-stat"><span>✨ TOTAL GANHO</span><strong id="profileTotalEarned">0</strong></div>
    <div class="wallet-stat"><span>🏁 CICLOS DE TREINO</span><strong id="profileTrainingCycles">0</strong></div>
    <div class="wallet-stat"><span>🗺️ FASES CONCLUÍDAS</span><strong id="profileCompletedStages">0/26</strong></div>
@@ -736,7 +819,27 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <div id="achievementShelf" class="achievement-shelf"></div>
   <h3 class="achievement-title">🏆 Premiações do torneio mensal</h3>
   <div id="tournamentAwardShelf" class="achievement-shelf"></div>
+  <h3 class="achievement-title">⭐ Destaques do perfil público</h3>
+  <p class="economy-rules">Escolha até 3 conquistas, medalhas ou premiações para aparecerem ao lado do seu nome no ranking, sem precisar abrir os detalhes.</p>
+  <div id="featuredAwardsEditor" class="featured-awards-editor"></div>
+  <div id="profileFeaturedDisplay" class="profile-featured-display"></div>
  </div>
+ <div class="profile-stats-entry"><div><strong>📊 Suas estatísticas</strong><small>Veja seu desempenho, evolução e contas que merecem revisão.</small></div><button id="toggleProfileStats" class="primary" type="button" aria-expanded="false">Ver estatísticas</button></div>
+ <section id="profileStatsPanel" class="profile-stats-panel hidden" aria-label="Estatísticas pessoais">
+  <div class="profile-stats-heading"><div><span class="music-kicker">PAINEL DE DESEMPENHO</span><h2>Seu mapa de aprendizagem</h2><p class="hint">Os gráficos usam seu histórico privado de treinamento, aventura, desafios e torneios.</p></div></div>
+  <div id="profileStatsOverview" class="profile-stats-overview"></div>
+  <div class="profile-stats-chart-grid">
+   <article class="stats-chart-card stats-radar-card"><h3>🕸️ Domínio das tabuadas · 1 a 20</h3><p>Quanto maior a área preenchida, maior seu domínio registrado em cada tabuada.</p><div id="profileStatsRadar" class="stats-radar"></div><small class="stats-chart-note">Tabuadas sem questões respondidas aparecem sem domínio medido.</small></article>
+   <article class="stats-chart-card"><h3>🍕 Acertos e erros</h3><p>Distribuição de todas as respostas registradas nos modos.</p><div id="profileStatsPie" class="stats-pie-wrap"></div></article>
+   <article class="stats-chart-card"><h3>📈 Evolução por sessão</h3><p>Precisão nas últimas sessões registradas.</p><div id="profileStatsLine" class="stats-line"></div></article>
+   <article class="stats-chart-card"><h3>🎮 Desempenho por modo</h3><p>Compare os modos que você já jogou.</p><div id="profileStatsModes" class="stats-mode-list"></div></article>
+  </div>
+  <div class="stats-review-grid">
+   <article class="stats-review-card"><h3>🎯 Resumo: o que treinar agora</h3><p id="profileStatsSummaryText" class="hint"></p><div id="profileStatsWeakPoints" class="stats-weak-list"></div></article>
+   <article class="stats-review-card"><h3>🧩 Tabuadas ainda sem dados</h3><p id="profileStatsMissingTables" class="stats-missing"></p><h3 class="stats-subheading">📚 Tabuadas que mais precisam de atenção</h3><div id="profileStatsWeakTables" class="stats-weak-list"></div></article>
+  </div>
+  <p class="stats-data-note">A análise considera erros, acertos e tempo médio por resposta. Os dados antigos continuam preservados; a separação por modo fica mais completa conforme você joga cada modalidade após esta atualização.</p>
+ </section>
  <form id="profileEditForm" class="auth-form">
   <label>Nome que aparece no jogo<input id="profileDisplayName" maxlength="24" required placeholder="Seu nome de exibição"></label>
   <div class="avatar-field">Loja de avatares <small class="shop-rules">Imagem: 100 moedas · GIF animado: 1.500 moedas. Seu avatar inicial é gratuito. Avatares comprados ficam na sua conta.</small><div id="profileAvatarGrid" class="avatar-grid" role="group" aria-label="Loja e seleção de avatares"></div></div>
@@ -752,14 +855,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <p id="passwordMessage" class="auth-message" role="status"></p>
  </form>
  <div class="profile-warning">A troca de senha só fica disponível enquanto você está conectado à conta. Não existe opção de recuperação ou “esqueci minha senha”. Guarde sua nova senha.</div>
- <div class="report-actions"><button id="backFromProfile" class="secondary" type="button">Voltar ao jogo</button></div>
+ <div class="report-actions"><button id="backFromProfile" class="secondary" type="button">← Voltar ao jogo</button></div>
 </section>
 
 <section id="setup" class="panel hidden">
 <div class="profile-box">
  <div class="profile-box-heading"><span>👤 SEU PERFIL</span><span class="profile-box-badge">PROGRESSO SALVO</span></div>
  <div class="profile-identity"><img id="currentAvatar" alt="Avatar do perfil"><div class="profile-name-wrap"><strong id="currentDisplayName"></strong><small>Conta: <span id="currentUsername"></span></small></div></div>
- <div class="wallet-inline"><span>🪙 Moedas: <strong id="currentCoins">0</strong></span><span>🏆 Conquistas: <strong id="currentAchievementCount">0/13</strong></span></div>
+ <div class="wallet-inline"><span><i class="coin-symbol" aria-hidden="true"></i> Moedas: <strong id="currentCoins">0</strong></span><span>🏆 Conquistas: <strong id="currentAchievementCount">0/13</strong></span></div>
  <input id="profileName" type="hidden">
  <div class="profile-actions">
   <button id="openProfile" class="music-button" type="button">👤 Meu perfil</button>
@@ -769,16 +872,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <button id="logout" class="music-button" type="button">Sair da conta</button>
  </div>
  <p id="profileStatus" class="small profile-status">Progresso salvo</p>
- <small id="profileLastSavedAt" class="profile-last-saved">Aguardando sincronização.</small>
+ <strong id="profileLastSavedAt" class="profile-last-saved">Aguardando sincronização.</strong>
 </div>
-<div class="community-ranking">
- <div class="community-heading"><div><span class="music-kicker">🏆 Comunidade</span><h2>Ranking dos participantes</h2><p class="hint" style="margin:5px 0 0">Veja o tempo de estudo e as contas que mais exigem prática.</p></div>
-  <label class="ranking-sort">Ordenar por<select id="communitySort"><option value="time">Mais tempo estudado</option><option value="correct">Mais acertos</option><option value="wrong">Mais erros</option></select></label>
- </div>
- <div id="communityRanking" class="community-list"></div>
- <div id="communityPagination" class="list-pagination community-pagination" aria-label="Paginação da comunidade"></div>
- <p class="ranking-local-note community-list-note">Ranking compartilhado entre os participantes cadastrados. Os dados são lidos do repositório privado de dados.</p>
-</div>
+<nav class="main-quick-nav" aria-label="Atalhos principais">
+ <button id="navProfile" type="button">👤 Perfil</button>
+ <button id="navTraining" type="button">📘 Treinar</button>
+ <button id="navAdventure" type="button">🗺️ Modo jogo</button>
+ <button id="navCommunity" type="button">🏆 Comunidade</button>
+</nav>
 
 <div id="modeHub" class="mode-hub">
  <div class="mode-hub-heading"><span class="music-kicker">ESCOLHA SUA JORNADA</span><h2>Como você quer aprender hoje?</h2><p class="hint">Você pode treinar livremente ou seguir uma aventura com fases e história.</p></div>
@@ -1024,6 +1125,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   </div>
  </div>
 </div>
+<div class="community-ranking">
+ <div class="community-heading"><div><span class="music-kicker">🏆 Comunidade</span><h2>Ranking dos participantes</h2><p class="hint" style="margin:5px 0 0">Veja o tempo de estudo e as contas que mais exigem prática.</p></div>
+  <label class="ranking-sort">Ordenar por<select id="communitySort"><option value="time">Mais tempo estudado</option><option value="correct">Mais acertos</option><option value="wrong">Mais erros</option></select></label>
+ </div>
+ <div id="communityRanking" class="community-list"></div>
+ <div id="communityPagination" class="list-pagination community-pagination" aria-label="Paginação da comunidade"></div>
+ <p class="ranking-local-note community-list-note">Ranking compartilhado entre os participantes cadastrados. Os dados são lidos do repositório privado de dados.</p>
+</div>
 </section>
 
 <section id="game" class="panel hidden" aria-live="polite">
@@ -1087,8 +1196,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
    </select>
   </label>
  </div>
- <div id="rankingCaption" class="small" style="margin:0 0 10px;text-align:left"></div>
- <div id="ranking" class="ranking-list"></div>
+ <details class="ranking-details">
+  <summary id="rankingCaption" class="small">Mostrar detalhes do treinamento</summary>
+  <div id="ranking" class="ranking-list"></div>
+ </details>
  <div class="report-actions">
   <button id="backToMenu" class="secondary" type="button">Voltar ao menu</button>
   <button id="playAgain" class="primary" type="button" style="margin-top:0">Fazer outro treino</button>
@@ -1626,7 +1737,7 @@ function updateProfileLastSavedAt(){
  const value=remoteUserData?.updatedAt||profilesData[activeProfile]?.updatedAt||null;
  if(!value){label.textContent='Aguardando sincronização.';return;}
  const date=new Date(value);
- label.textContent=Number.isNaN(date.getTime())?'Data indisponível.':date.toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
+ label.textContent=Number.isNaN(date.getTime())?'Data indisponível.':date.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 function buildRemoteUserData(){
  const profile={...(profilesData[activeProfile]||{}),studyTimeMs:Math.max(0,studyTimeBaseMs+pendingActiveMs)};
@@ -1976,14 +2087,20 @@ function endQuestionClock(){
 }
 function addAnswerToHistory(entry){
  const key=entry.a+'x'+entry.b;
- if(!historyData.questions[key]){
-  historyData.questions[key]={a:entry.a,b:entry.b,attempts:0,correct:0,wrong:0,totalTimeMs:0,bestTimeMs:null};
- }
+ if(!historyData.questions[key])historyData.questions[key]={a:entry.a,b:entry.b,attempts:0,correct:0,wrong:0,totalTimeMs:0,bestTimeMs:null};
  const item=historyData.questions[key];
+ const mode=['training','adventure','challenge','tournament'].includes(entry.mode)?entry.mode:'training';
+ if(!item.modes||typeof item.modes!=='object')item.modes={training:{attempts:item.attempts,correct:item.correct,wrong:item.wrong,totalTimeMs:item.totalTimeMs}};
  item.attempts++;
- if(entry.correct){item.correct++}else{item.wrong++}
- item.totalTimeMs+=entry.timeMs;
- item.bestTimeMs=item.bestTimeMs===null?entry.timeMs:Math.min(item.bestTimeMs,entry.timeMs);
+ if(entry.correct)item.correct++;else item.wrong++;
+ const timeMs=Math.max(0,Number(entry.timeMs)||0);
+ item.totalTimeMs+=timeMs;
+ item.bestTimeMs=item.bestTimeMs===null?timeMs:Math.min(item.bestTimeMs,timeMs);
+ if(!item.modes[mode])item.modes[mode]={attempts:0,correct:0,wrong:0,totalTimeMs:0};
+ const modeItem=item.modes[mode];
+ modeItem.attempts++;if(entry.correct)modeItem.correct++;else modeItem.wrong++;
+ modeItem.totalTimeMs+=timeMs;
+ item.lastMode=mode;
  item.lastAt=new Date().toISOString();
  saveHistory();
 }
@@ -2029,7 +2146,7 @@ function renderRanking(){
  };
  rows.sort(sorting[sort]||sorting.errors);
  const shown=rows.slice(0,30);
- $('rankingCaption').textContent=rows.length+' conta(s) encontrada(s) · exibindo '+shown.length+' no ranking.';
+ $('rankingCaption').textContent='Detalhes do treinamento · '+rows.length+' conta(s) encontrada(s) · exibindo '+shown.length+' no ranking.';
  if(!shown.length){
   $('ranking').innerHTML='<div class="empty-ranking">Ainda não há dados para este filtro. Responda algumas questões para criar seu ranking.</div>';
   return;
@@ -2074,7 +2191,7 @@ function finishSession(){
   sessionSkipped++;
  }
  if(sessionStartedAt){
-  const summary={date:new Date().toISOString(),answered:sessionAnswers.length,hits,misses,skipped:sessionSkipped,timeMs:sessionQuestionTimeMs};
+  const summary={date:new Date().toISOString(),mode:'training',answered:sessionAnswers.length,hits,misses,skipped:sessionSkipped,timeMs:sessionQuestionTimeMs};
   historyData.sessions.unshift(summary);
   historyData.sessions=historyData.sessions.slice(0,300);
   saveHistory();
@@ -2731,6 +2848,7 @@ function submitChallengeChoice(value){
  const question=challengeQuestions[challengeQuestionIndex];
  const correct=chosen!==null&&chosen===question.answer;
  challengeAnswerLog.push({value:chosen,elapsedMs:Math.round(Math.min(60_000,elapsed))});
+ addAnswerToHistory({a:question.a,b:question.b,correct,timeMs:elapsed,mode:'challenge'});
  if(correct)challengeLocalScore++;
  $('challengeScore').textContent=challengeLocalScore+'/10';
  $('challengeOptions').querySelectorAll('button').forEach(button=>{
@@ -2751,6 +2869,8 @@ function submitChallengeChoice(value){
 }
 async function finishChallengeMatch(){
  stopChallengeTimers();
+ historyData.sessions.unshift({date:new Date().toISOString(),mode:'challenge',answered:challengeAnswerLog.length,hits:challengeLocalScore,misses:challengeAnswerLog.length-challengeLocalScore,skipped:0,timeMs:Math.max(0,performance.now()-challengeMatchStarted)});
+ historyData.sessions=historyData.sessions.slice(0,300);saveHistory();
  stopChallengeMusic();
  $('challengePlayPanel').classList.add('hidden');
  $('challengeResultPanel').classList.remove('hidden');
@@ -3009,6 +3129,7 @@ function submitTournamentAnswer(value){
  const limitMs=secondsPerQuestion*1000;
  const correct=chosen!==null&&chosen===question.answer&&elapsed<=limitMs;
  tournamentAnswers.push({value:chosen,elapsedMs:Math.round(Math.min(60_000,elapsed))});
+ addAnswerToHistory({a:question.a,b:question.b,correct,timeMs:elapsed,mode:'tournament'});
  $('tournamentQuestionTimeBar').style.width='0%';
  $('tournamentQuestionTimeBar').parentElement.setAttribute('aria-valuenow','0');
  if(correct)tournamentScore++;
@@ -3027,6 +3148,8 @@ function submitTournamentAnswer(value){
 }
 async function finishMonthlyTournament(){
  stopTournamentClock();
+ historyData.sessions.unshift({date:new Date().toISOString(),mode:'tournament',answered:tournamentQuestions.length,hits:tournamentScore,misses:tournamentQuestions.length-tournamentScore,skipped:0,timeMs:Math.max(0,performance.now()-tournamentMatchStarted)});
+ historyData.sessions=historyData.sessions.slice(0,300);saveHistory();
  if(tournamentBusy)return;
  tournamentBusy=true;
  showTournamentSubPanel('tournamentResultPanel');
@@ -3428,7 +3551,7 @@ let adventureFirstTryCorrect=0;
 let adventureComboCount=0;
 let adventureBestCombo=0;
 let adventureHasAnswered=false;
-let adventureLastResultPassed=false;
+let adventureLastResultPassed=false,adventureQuestionStartedAt=0,adventureSessionTimeMs=0;
 
 function shuffleAdventure(items){
  const result=items.slice();
@@ -3567,6 +3690,7 @@ function renderAdventureQuestion(){
  $('adventureQuestionPrompt').textContent=question.prompt;
  $('adventureQuestionMath').textContent=question.math;
  $('adventureAnswerInput').value='';
+ adventureQuestionStartedAt=performance.now();
  $('adventureAnswerInput').setAttribute('aria-label',question.type==='missing'?'Digite o fator que falta':'Digite o resultado da multiplicação');
  if(question.type==='choice'){
   $('adventureChoices').innerHTML=question.options.map(value=>'<button class="adventure-choice" type="button" data-adventure-answer="'+value+'">'+value+'</button>').join('');
@@ -3579,6 +3703,7 @@ function startAdventureStage(index){
  if(index<0||index>progress.unlockedStage)return;
  adventureActiveStageIndex=index;
  adventureQuestions=createAdventureQuestionSet(ADVENTURE_STAGES[index]);
+ adventureSessionTimeMs=0;adventureQuestionStartedAt=0;
  adventureQuestionIndex=0;
  adventureFirstTryCorrect=0;
  adventureComboCount=0;
@@ -3599,7 +3724,10 @@ function answerAdventureQuestion(value,choiceButton){
   return;
  }
  adventureHasAnswered=true;
+ const timeMs=adventureQuestionStartedAt?Math.max(0,performance.now()-adventureQuestionStartedAt):0;
+ adventureQuestionStartedAt=0;adventureSessionTimeMs+=timeMs;
  const correct=value===question.answer;
+ addAnswerToHistory({a:question.table,b:question.factor,correct,timeMs,mode:'adventure'});
  if(correct){
   adventureFirstTryCorrect++;
   adventureComboCount++;
@@ -3661,6 +3789,8 @@ async function finishAdventureStage(){
  }
  progress.stages[key]=entry;
  progress.lastStageId=stage.id;
+ historyData.sessions.unshift({date:new Date().toISOString(),mode:'adventure',stage:stage.id,answered:total,hits:adventureFirstTryCorrect,misses:total-adventureFirstTryCorrect,skipped:0,timeMs:adventureSessionTimeMs});
+ historyData.sessions=historyData.sessions.slice(0,300);saveHistory();
  adventureLastResultPassed=passed;
  profilesData[activeProfile]=profilesData[activeProfile]||(profilesData[activeProfile]={});
  profilesData[activeProfile].adventureProgress=progress;
