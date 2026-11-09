@@ -70,7 +70,8 @@ for(const [effect,files] of Object.entries(sfxManifest.effects)){
  }
 }
 check(sfxManifest.effects.verify?.[0]==="assets/sfx/kenney/open_001.ogg"&&!sfxManifest.effects.click.includes(sfxManifest.effects.verify[0]),"O botão Verificar precisa de um som diferente do clique.");
-check(sfxPaths.size===16&&sfxHashes.size===16,"Esperados 16 arquivos sonoros CC0 distintos.");
+check(sfxPaths.size===14&&sfxHashes.size===14,"Esperados 14 arquivos OGG originais CC0 distintos.");
+check(sfxManifest.effects.click.length===3&&sfxManifest.generated_effects?.click?.length===4,"O clique padrão deve ter três sons originais e quatro variações suaves novas.");
 
 const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(match => match[1]);
@@ -84,17 +85,18 @@ new Function(inlineScripts[0]);
 const logoutStart=html.indexOf("async function logout(){");
 const logoutEnd=html.indexOf("\nfunction escapeHtml",logoutStart);
 const logoutCode=logoutStart>=0&&logoutEnd>logoutStart?html.slice(logoutStart,logoutEnd):"";
-check(html.includes("loadUiSfx();")&&html.includes("playUiSound('key')")&&html.includes("document.addEventListener('pointerdown'"),"Efeitos de clique/tecla não ligados no instante do toque.");
+check(html.includes("loadUiSfx();")&&html.includes("playUiSound('key')")&&html.includes("document.addEventListener('click',event=>")&&!html.includes("document.addEventListener('pointerdown',event=>"),"O clique padrão deve tocar somente quando o botão executa a ação.");
+check(html.includes("SOFT_UI_CLICK_VARIANTS")&&html.includes("prepareSoftUiClickBuffers()")&&html.includes("const SFX_OUTPUT_BOOST=1.0;"),"As quatro variações suaves ou a redução de ganho dos efeitos estão ausentes.");
 check(html.includes('data-sfx="verify"')&&html.includes("button.dataset.sfx||'click'"),"O botão Verificar não usa seu efeito próprio.");
 check(html.includes("profileOptionsOpen||")&&html.includes("function showProfileOptions()")&&html.includes("function closeProfileOptions()"),"A música não é pausada e restaurada na tela Opções.");
 check(html.includes('id="openProfileStats"')&&html.includes('id="openProfileOptions"')&&html.includes('id="profileOptionsPanel"'),"Os atalhos de Estatísticas e Opções não estão no cartão de perfil.");
 check(!html.includes('id="resumeProfile"')&&!html.includes('id="addNumbers"')&&!html.includes('id="toggleProfileStats"'),"Os botões antigos continuam no perfil.");
-check(html.includes("SFX_OUTPUT_BOOST")&&html.includes("function previewSfxVolume()"),"O reforço e a prévia do volume dos efeitos estão ausentes.");
+check(html.includes("SFX_OUTPUT_BOOST")&&html.includes("function previewSfxVolume()"),"O controle e a prévia do volume dos efeitos estão ausentes.");
 check(html.includes('id="profileMusicVolume"')&&html.includes("MUSIC_VOLUME_CACHE_KEY")&&html.includes("function restoreProfileMusicVolume()"),"O volume da música não é configurável nem restaurado por conta.");
 check(html.includes('id="saveProfileAudioPreferences"')&&html.includes("async function saveProfileAudioPreferences()")&&html.includes("Padrão salvo na sua conta"),"O salvamento do padrão de áudio da conta está ausente.");
 check(html.includes("profile.musicVolume=volumeLevel")&&html.includes("profile.sfxVolume=sfxVolumeLevel"),"O salvamento não inclui os dois volumes no perfil remoto.");
 check(html.includes("challengeVolumeLimit/100*volumeLevel"),"A música dos desafios não respeita o volume global salvo.");
-check(html.includes("uiSfxBuffers.set(src,buffer)")&&html.includes("source.start(audioContext.currentTime+.002)"),
+check(html.includes("uiSfxBuffers.set(src,buffer)")&&html.includes("source.start(audioContext.currentTime+.002)")&&html.includes("createSoftUiClickBuffer(variant)"),
  "Efeitos sonoros não são decodificados e reproduzidos em memória.");
 check(html.includes('id="profileSfxVolume"')&&html.includes("SFX_VOLUME_CACHE_KEY"),
  "O perfil não oferece volume independente e persistente para os efeitos.");
@@ -141,9 +143,28 @@ async function testViewport(name, viewport, mobile = false) {
   const response = await page.goto(SITE_URL, { waitUntil: "domcontentloaded", timeout: 60000 });
   check(response && response.status() === 200, name + ": a página inicial não respondeu com HTTP 200.");
   await page.locator("#authScreen").waitFor({ state: "visible", timeout: 20000 });
-  await page.waitForFunction(() => uiSfxBuffers.size === 16, null, { timeout: 30000 });
-  check(await page.evaluate(() => uiSfxBuffers.size) === 16,
-    name + ": os 16 efeitos sonoros não foram pré-carregados e decodificados.");
+  await page.waitForFunction(() => uiSfxBuffers.size === 18, null, { timeout: 30000 });
+  check(await page.evaluate(() => uiSfxBuffers.size) === 18,
+    name + ": os 14 áudios originais e as quatro variações suaves não foram pré-carregados.");
+  const clickActionTiming = await page.evaluate(() => {
+    const events=[];
+    const original=window.playUiSound;
+    window.playUiSound=name=>events.push('sound:'+name);
+    const button=document.createElement('button');
+    button.type='button';button.textContent='Teste de clique';
+    button.addEventListener('click',()=>events.push('action'));
+    document.body.appendChild(button);
+    button.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerType:'touch'}));
+    const afterPress=events.slice();
+    button.click();
+    const afterClick=events.slice();
+    button.remove();window.playUiSound=original;
+    return {afterPress,afterClick};
+  });
+  check(clickActionTiming.afterPress.length===0,
+    name + ": o som tocou no toque/pressionamento antes da execução do botão.");
+  check(JSON.stringify(clickActionTiming.afterClick)===JSON.stringify(['action','sound:click']),
+    name + ": o som não tocou uma única vez depois da execução da ação do botão ("+JSON.stringify(clickActionTiming)+").");
   await page.waitForFunction(
     () => document.querySelectorAll("#trackSelect option").length === 20,
     null,
@@ -320,7 +341,7 @@ async function testViewport(name, viewport, mobile = false) {
   check((await page.locator("#volumeValue").textContent()).trim()==="43%",name+": o volume musical geral não sincronizou.");
   check(await page.evaluate(()=>Math.abs(sfxVolumeLevel-.55)<.01),name+": o volume dos efeitos não foi aplicado.");
   check(await page.evaluate(()=>Math.abs(volumeLevel-.43)<.01),name+": o volume da música não foi aplicado.");
-  await page.waitForFunction(()=>uiSfxGain&&Math.abs(uiSfxGain.gain.value-.825)<.02,null,{timeout:3000});
+  await page.waitForFunction(()=>uiSfxGain&&Math.abs(uiSfxGain.gain.value-.55)<.02,null,{timeout:3000});
   await page.waitForFunction(()=>window.__previewCalls>0,null,{timeout:3000});
   await page.locator("#saveProfileAudioPreferences").click();
   await page.waitForFunction(()=>window.__audioPreferenceWrites===1,null,{timeout:5000});

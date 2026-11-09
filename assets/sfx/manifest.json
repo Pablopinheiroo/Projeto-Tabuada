@@ -5,13 +5,11 @@
   "license": "CC0 1.0",
   "source": "https://kenney.nl/assets/interface-sounds",
   "sourceOpenGameArt": "https://opengameart.org/content/interface-sounds",
-  "notice": "Pacote original com 100 efeitos OGG individuais. Foram incorporados 16 arquivos originais distintos. O botão Verificar usa um efeito separado dos cliques.",
+  "notice": "O pacote original contém 100 efeitos OGG. O Projeto Tabuada utiliza 14 arquivos originais distintos e acrescenta quatro variações suaves de clique geradas no próprio código, sem tons agudos.",
   "effects": {
     "click": [
       "assets/sfx/kenney/click_001.ogg",
-      "assets/sfx/kenney/click_002.ogg",
       "assets/sfx/kenney/click_003.ogg",
-      "assets/sfx/kenney/click_004.ogg",
       "assets/sfx/kenney/click_005.ogg"
     ],
     "key": [
@@ -58,27 +56,9 @@
       "source": "https://kenney.nl/assets/interface-sounds"
     },
     {
-      "id": "click_002",
-      "name": "click 002",
-      "src": "assets/sfx/kenney/click_002.ogg",
-      "format": "OGG",
-      "creator": "Kenney",
-      "license": "CC0 1.0",
-      "source": "https://kenney.nl/assets/interface-sounds"
-    },
-    {
       "id": "click_003",
       "name": "click 003",
       "src": "assets/sfx/kenney/click_003.ogg",
-      "format": "OGG",
-      "creator": "Kenney",
-      "license": "CC0 1.0",
-      "source": "https://kenney.nl/assets/interface-sounds"
-    },
-    {
-      "id": "click_004",
-      "name": "click 004",
-      "src": "assets/sfx/kenney/click_004.ogg",
       "format": "OGG",
       "creator": "Kenney",
       "license": "CC0 1.0",
@@ -192,5 +172,33 @@
       "license": "CC0 1.0",
       "source": "https://kenney.nl/assets/interface-sounds"
     }
-  ]
+  ],
+  "generated_effects": {
+    "click": [
+      {
+        "id": "soft-wood",
+        "name": "Toque de madeira suave",
+        "source": "Web Audio API",
+        "license": "CC0 1.0"
+      },
+      {
+        "id": "soft-pop",
+        "name": "Pop arredondado",
+        "source": "Web Audio API",
+        "license": "CC0 1.0"
+      },
+      {
+        "id": "soft-cushion",
+        "name": "Toque macio",
+        "source": "Web Audio API",
+        "license": "CC0 1.0"
+      },
+      {
+        "id": "soft-double",
+        "name": "Toque duplo suave",
+        "source": "Web Audio API",
+        "license": "CC0 1.0"
+      }
+    ]
+  }
 }

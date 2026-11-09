@@ -4282,17 +4282,70 @@ function playNote(frequency,start,duration,wave,volume){
  oscillator.start(start);oscillator.stop(start+duration+.04);
 }
 let uiSfxLibrary={},uiSfxAudioPool=new Map(),uiSfxPoolCursor=new Map(),uiSfxBuffers=new Map(),uiSfxGain=null,uiSfxCompressor=null;
-const SFX_OUTPUT_BOOST=1.5;
+const SFX_OUTPUT_BOOST=1.0;
+
+const SOFT_UI_CLICK_VARIANTS=[
+ {id:'wood',duration:.115,frequency:220,secondary:340,decay:34,noise:.13,noiseDecay:43},
+ {id:'pop',duration:.14,startFrequency:370,endFrequency:185,decay:31,noise:.09,noiseDecay:45},
+ {id:'cushion',duration:.105,frequency:285,secondary:430,decay:39,noise:.15,noiseDecay:50},
+ {id:'double',duration:.205,taps:[{at:0,frequency:235,level:1},{at:.074,frequency:305,level:.58}],decay:38,noise:.12,noiseDecay:48}
+];
+function createSoftUiClickBuffer(variant){
+ const sampleRate=audioContext.sampleRate;
+ const frames=Math.ceil(sampleRate*variant.duration);
+ const buffer=audioContext.createBuffer(1,frames,sampleRate);
+ const data=buffer.getChannelData(0);
+ let filteredNoise=0,peak=0;
+ for(let i=0;i<frames;i++){
+  const t=i/sampleRate;
+  filteredNoise+=(Math.random()*2-1-filteredNoise)*.12;
+  let tone=0,noiseEnvelope=0;
+  if(variant.taps){
+   for(const tap of variant.taps){
+    const local=t-tap.at;
+    if(local<0)continue;
+    const fade=Math.min(1,local/.0018);
+    const envelope=Math.exp(-local*variant.decay)*fade;
+    tone+=Math.sin(2*Math.PI*tap.frequency*local)*tap.level*envelope;
+    noiseEnvelope+=tap.level*Math.exp(-local*variant.noiseDecay)*fade;
+   }
+  }else{
+   const fade=Math.min(1,t/.0018);
+   const envelope=Math.exp(-t*variant.decay)*fade;
+   if(variant.startFrequency){
+    const sweep=(variant.endFrequency-variant.startFrequency)/variant.duration;
+    const phase=2*Math.PI*(variant.startFrequency*t+.5*sweep*t*t);
+    tone=Math.sin(phase)*envelope;
+   }else{
+    tone=(Math.sin(2*Math.PI*variant.frequency*t)+
+     (variant.secondary?Math.sin(2*Math.PI*variant.secondary*t)*.16:0))*envelope;
+   }
+   noiseEnvelope=Math.exp(-t*variant.noiseDecay)*fade;
+  }
+  data[i]=tone+filteredNoise*variant.noise*noiseEnvelope;
+  peak=Math.max(peak,Math.abs(data[i]));
+ }
+ const safeScale=peak > 0 ? .27/peak : 1;
+ for(let i=0;i<frames;i++)data[i]*=safeScale;
+ return buffer;
+}
+function prepareSoftUiClickBuffers(){
+ if(!audioContext)return;
+ for(const variant of SOFT_UI_CLICK_VARIANTS){
+  try{uiSfxBuffers.set('generated:click:'+variant.id,createSoftUiClickBuffer(variant));}
+  catch(error){console.warn('Variação suave de clique indisponível:',variant.id,error);}
+ }
+}
 function updateUiSfxGain(){
  if(!audioContext)return;
  if(!uiSfxGain){
   uiSfxGain=audioContext.createGain();
   uiSfxCompressor=audioContext.createDynamicsCompressor();
-  uiSfxCompressor.threshold.setValueAtTime(-8,audioContext.currentTime);
-  uiSfxCompressor.knee.setValueAtTime(5,audioContext.currentTime);
-  uiSfxCompressor.ratio.setValueAtTime(8,audioContext.currentTime);
-  uiSfxCompressor.attack.setValueAtTime(.003,audioContext.currentTime);
-  uiSfxCompressor.release.setValueAtTime(.09,audioContext.currentTime);
+  uiSfxCompressor.threshold.setValueAtTime(-12,audioContext.currentTime);
+  uiSfxCompressor.knee.setValueAtTime(10,audioContext.currentTime);
+  uiSfxCompressor.ratio.setValueAtTime(4,audioContext.currentTime);
+  uiSfxCompressor.attack.setValueAtTime(.005,audioContext.currentTime);
+  uiSfxCompressor.release.setValueAtTime(.14,audioContext.currentTime);
   uiSfxGain.connect(uiSfxCompressor);
   uiSfxCompressor.connect(audioContext.destination);
  }
@@ -4408,6 +4461,7 @@ async function loadUiSfx(){
   // toque do usuário, as respostas são reproduzidas direto da memória, sem
   // aguardar criação de Audio nem decodificação no momento do clique.
   const canDecode=ensureAudio(false)&&typeof audioContext.decodeAudioData==='function';
+  prepareSoftUiClickBuffers();
   await Promise.all(sources.map(async src=>{
    const pool=[0,1].map(()=>{
     const player=new Audio();
@@ -4433,7 +4487,8 @@ async function loadUiSfx(){
 }
 function playUiSound(name){
  if(document.hidden)return;
- const files=uiSfxLibrary[name]||[];
+ const files=[...(uiSfxLibrary[name]||[])];
+ if(name==='click')files.push(...SOFT_UI_CLICK_VARIANTS.map(variant=>'generated:click:'+variant.id));
  if(files.length){
   const src=files[Math.floor(Math.random()*files.length)];
   const buffer=uiSfxBuffers.get(src);
@@ -4460,7 +4515,7 @@ function playUiSound(name){
  const when=audioContext.currentTime+.01;
  if(name==='correct') [72,76].forEach((note,i)=>playNote(midiToHz(note),when+i*.105,.16,'sine',.016));
  else if(name==='wrong') [62,58].forEach((note,i)=>playNote(midiToHz(note),when+i*.105,.16,'sine',.011));
- else playNote(name==='key'?740:660,when,.055,'sine',.0045);
+ else playNote(name==='key'?520:285,when,.075,'sine',.004);
 }
 function unlockUiAudio(){
  if(audioContext&&audioContext.state==='suspended')audioContext.resume().catch(()=>{});
@@ -4819,19 +4874,13 @@ for(let n=1;n<=20;n++){const option=document.createElement('option');option.valu
 setInterval(saveCheckpoint,5000);
 loadUiSfx();
 restoreCloudSession();
-document.addEventListener('pointerdown',event=>{
- const button=event.target.closest('button');
- if(!button||button.disabled||['right','wrong','soundToggle','replayTune'].includes(button.id))return;
- if(button.hasAttribute('data-challenge-answer')||button.hasAttribute('data-tournament-answer')||button.hasAttribute('data-adventure-answer'))return;
- playUiSound(button.dataset.sfx||'click');
-},true);
+// O som do botão sai somente no click, depois que os handlers da ação foram executados.
 document.addEventListener('click',event=>{
- if(event.detail!==0)return;
  const button=event.target.closest('button');
  if(!button||button.disabled||['right','wrong','soundToggle','replayTune'].includes(button.id))return;
  if(button.hasAttribute('data-challenge-answer')||button.hasAttribute('data-tournament-answer')||button.hasAttribute('data-adventure-answer'))return;
  playUiSound(button.dataset.sfx||'click');
-},true);
+},false);
 document.addEventListener('keydown',event=>{
  if(event.repeat||event.ctrlKey||event.metaKey||event.altKey)return;
  const field=event.target;
