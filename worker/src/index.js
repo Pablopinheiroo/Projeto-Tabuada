@@ -7,7 +7,7 @@ const GH_REPO = "Projeto-Tabuada-Dados";
 const GH_BRANCH = "main";
 const GH_DIRECTORY = "usuarios";
 const GH_API = "https://api.github.com";
-const PASSWORD_ITERATIONS = 180000;
+const PASSWORD_ITERATIONS = 100000;
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 
 function json(data, status = 200, origin = "") {
@@ -296,7 +296,7 @@ async function handleApi(request, env, origin) {
       const data = {
         version: 1,
         username,
-        auth: { username, salt, hash, createdAt: new Date().toISOString() },
+        auth: { username, salt, hash, iterations: PASSWORD_ITERATIONS, createdAt: new Date().toISOString() },
         profile: {
           displayName: username,
           avatar: body.profile?.avatar ?? "imagem:0"
@@ -354,6 +354,7 @@ async function handleApi(request, env, origin) {
           username,
           salt,
           hash,
+          iterations: PASSWORD_ITERATIONS,
           passwordChangedAt: new Date().toISOString()
         },
         updatedAt: new Date().toISOString()
