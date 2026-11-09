@@ -876,19 +876,19 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 </div>
 <nav class="main-quick-nav" aria-label="Atalhos principais">
  <button id="navProfile" type="button">👤 Perfil</button>
- <button id="navTraining" type="button">📘 Treinar</button>
  <button id="navAdventure" type="button">🗺️ Modo jogo</button>
+ <button id="navTraining" type="button">📘 Treinar</button>
  <button id="navCommunity" type="button">🏆 Comunidade</button>
 </nav>
 
 <div id="modeHub" class="mode-hub">
  <div class="mode-hub-heading"><span class="music-kicker">ESCOLHA SUA JORNADA</span><h2>Como você quer aprender hoje?</h2><p class="hint">Você pode treinar livremente ou seguir uma aventura com fases e história.</p></div>
  <div class="mode-cards">
-  <button id="openTrainingMode" class="mode-card training-card" type="button">
-   <span class="mode-card-icon">📘</span><span class="mode-card-copy"><strong>Treinamento</strong><small>Escolha as tabuadas, pratique no seu ritmo e acompanhe seus acertos.</small><b>Treino livre →</b></span>
-  </button>
   <button id="openAdventureMode" class="mode-card adventure-card" type="button">
    <span class="mode-card-icon">🗺️</span><span class="mode-card-copy"><strong>Modo Jogo</strong><small>Explore mundos, vença desafios, desbloqueie fases e avance até a tabuada do 20.</small><b>Entrar na aventura →</b></span>
+  </button>
+  <button id="openTrainingMode" class="mode-card training-card" type="button">
+   <span class="mode-card-icon">📘</span><span class="mode-card-copy"><strong>Treinamento</strong><small>Escolha as tabuadas, pratique no seu ritmo e acompanhe seus acertos.</small><b>Treino livre →</b></span>
   </button>
   <button id="openChallengeMode" class="mode-card challenge-card" type="button">
    <span class="mode-card-icon">⚔️</span><span class="mode-card-copy"><strong>Modo Desafio <em id="challengeBadge" class="challenge-badge hidden">0</em></strong><small>Convide até quatro participantes para um duelo de 10 questões e descubra quem consegue mais pontos.</small><b>Desafiar participantes →</b></span>
@@ -2333,6 +2333,7 @@ function showReport(){
  $('reportTable').value='all';
  $('reportType').value='all';
  $('reportSort').value='errors';
+ const rankingDetails=$('rankingCaption')?.closest('details');if(rankingDetails)rankingDetails.open=false;
  renderRanking();
 }
 function finishSession(){
