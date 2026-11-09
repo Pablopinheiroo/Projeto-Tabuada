@@ -412,11 +412,44 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
  .adventure-answer-form>div{display:grid}
  .adventure-answer-form button{width:100%}
 }
+
+/* Moedas, loja de avatares e conquistas */
+.wallet-inline{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 13px;margin:-2px 0 14px;border:1px solid #39729a;border-radius:12px;background:linear-gradient(110deg,#0b2038,#211b46);color:#c9eaff;font-size:.86rem}
+.wallet-inline strong{color:#fde68a;font-size:1.05rem}
+.economy-panel{margin:17px 0 20px;padding:15px;border:1px solid #37547b;border-radius:16px;background:linear-gradient(145deg,#101f39,#191b3e)}
+.wallet-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.wallet-stat{padding:11px 8px;border:1px solid #355276;border-radius:12px;background:#0c1a31;text-align:center}
+.wallet-stat span{display:block;color:#9fb8d8;font-size:.65rem;font-weight:850;letter-spacing:.04em}
+.wallet-stat strong{display:block;margin-top:5px;color:#fcd34d;font-size:1.4rem;font-weight:950}
+.economy-rules{margin:12px 2px 18px;color:#a9c1e5;font-size:.82rem;line-height:1.5}
+.economy-rules b{color:#fde68a}
+.achievement-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;padding-top:14px;border-top:1px solid #304969;font-size:1rem}
+.achievement-title span{color:#67e8f9;font-size:.8rem}
+.achievement-shelf{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.achievement-card{display:flex;align-items:center;gap:10px;min-width:0;padding:11px;border:1px solid #385577;border-radius:12px;background:#0e1b32}
+.achievement-card .achievement-icon{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:12px;background:#1b3150;font-size:1.45rem}
+.achievement-card strong{display:block;color:#e9f4ff;font-size:.82rem}
+.achievement-card p{margin:3px 0;color:#a6bad6;font-size:.72rem;line-height:1.35}
+.achievement-card small{color:#67e8f9;font-size:.66rem}
+.achievement-card.locked{opacity:.58;filter:saturate(.35);border-style:dashed}
+.achievement-card.unlocked{border-color:#a78bfa66;background:linear-gradient(120deg,#152c48,#241d45);box-shadow:inset 0 0 18px #8b5cf622}
+.achievement-card.unlocked .achievement-icon{background:linear-gradient(140deg,#17466a,#4b2775);box-shadow:0 0 14px #22d3ee22}
+.shop-rules{display:block;margin-top:4px;color:#a9c1e5;font-weight:500;line-height:1.5}
+.avatar-choice.locked{position:relative;overflow:hidden;border-color:#53627a;background:#0b172a;filter:saturate(.5)}
+.avatar-choice.locked img{filter:grayscale(.75) brightness(.62)}
+.avatar-choice.locked .avatar-status{color:#fde68a;font-weight:900}
+.avatar-status{display:block;line-height:1.25;font-size:.64rem}
+.avatar-choice:not(.locked) .avatar-status{color:#67e8f9}
+.game-reward-toast{position:sticky;top:8px;z-index:20;width:max-content;max-width:min(92vw,560px);margin:0 auto 12px;padding:11px 17px;border:1px solid #fbbf24;border-radius:999px;background:linear-gradient(110deg,#422006,#713f12);color:#fef3c7;font-weight:900;text-align:center;box-shadow:0 8px 26px #02061788;animation:rewardPop .22s ease-out}
+@keyframes rewardPop{from{opacity:0;transform:translateY(-7px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:620px){.wallet-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.achievement-shelf{grid-template-columns:1fr}.wallet-inline{align-items:flex-start}}
+@media(prefers-reduced-motion:reduce){.game-reward-toast{animation:none}}
 </style>
 </head>
 <body>
 <main>
 <header class="brand"><h1>📚 Projeto Tabuada</h1><p>Pratique no seu ritmo, uma questão de cada vez.</p></header>
+<div id="gameRewardToast" class="game-reward-toast hidden" role="status" aria-live="polite"></div>
 <div class="music-box" id="siteMusicBox">
  <button class="music-menu-toggle" id="musicMenuToggle" type="button" aria-expanded="false" aria-controls="musicControls">
   <span class="music-menu-icon" aria-hidden="true">♫</span>
@@ -471,9 +504,20 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <img id="profilePreviewAvatar" alt="Avatar escolhido">
   <div><strong id="profilePreviewName"></strong><small>Seu nome de usuário para entrar não muda.</small></div>
  </div>
+ <div class="economy-panel">
+  <div class="wallet-grid">
+   <div class="wallet-stat"><span>🪙 MOEDAS DISPONÍVEIS</span><strong id="profileCoins">0</strong></div>
+   <div class="wallet-stat"><span>✨ TOTAL GANHO</span><strong id="profileTotalEarned">0</strong></div>
+   <div class="wallet-stat"><span>🏁 CICLOS DE TREINO</span><strong id="profileTrainingCycles">0</strong></div>
+   <div class="wallet-stat"><span>🗺️ FASES CONCLUÍDAS</span><strong id="profileCompletedStages">0/26</strong></div>
+  </div>
+  <p class="economy-rules">Recompensas: <b>+10 moedas</b> por ciclo completo no treinamento e <b>+50 moedas</b> na primeira conclusão de cada fase do desafio.</p>
+  <h3 class="achievement-title">🏆 Vitrine de conquistas <span id="achievementCount">0/13</span></h3>
+  <div id="achievementShelf" class="achievement-shelf"></div>
+ </div>
  <form id="profileEditForm" class="auth-form">
   <label>Nome que aparece no jogo<input id="profileDisplayName" maxlength="24" required placeholder="Seu nome de exibição"></label>
-  <div class="avatar-field">Escolha outro avatar<div id="profileAvatarGrid" class="avatar-grid" role="group" aria-label="Escolha seu avatar"></div></div>
+  <div class="avatar-field">Loja de avatares <small class="shop-rules">Imagem: 100 moedas · GIF animado: 1.500 moedas. Seu avatar inicial é gratuito. Avatares comprados ficam na sua conta.</small><div id="profileAvatarGrid" class="avatar-grid" role="group" aria-label="Loja e seleção de avatares"></div></div>
   <button class="primary" type="submit">Salvar perfil</button>
   <p id="profileMessage" class="auth-message" role="status"></p>
  </form>
@@ -493,6 +537,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 <div class="profile-box">
  <div class="profile-box-heading"><span>👤 SEU PERFIL</span><span class="profile-box-badge">PROGRESSO SALVO</span></div>
  <div class="profile-identity"><img id="currentAvatar" alt="Avatar do perfil"><div class="profile-name-wrap"><strong id="currentDisplayName"></strong><small>Conta: <span id="currentUsername"></span></small></div></div>
+ <div class="wallet-inline"><span>🪙 Moedas: <strong id="currentCoins">0</strong></span><span>🏆 Conquistas: <strong id="currentAchievementCount">0/13</strong></span></div>
  <input id="profileName" type="hidden">
  <div class="profile-actions">
   <button id="openProfile" class="music-button" type="button">👤 Meu perfil</button>
@@ -680,6 +725,8 @@ let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueu
 const LAST_TRACK_STORAGE_KEY='projetoTabuadaUltimaFaixaV1';
 let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0;
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
+let gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
+let rewardSyncBusy=false;
 const AUTH_USERS_KEY='projetoTabuadaUsuariosV1';
 const AUTH_SESSION_KEY='projetoTabuadaSessaoV1';
 let authUsers={};
@@ -785,19 +832,27 @@ function avatarImage(value){
  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="'+avatar.bg[0]+'"/><stop offset="1" stop-color="'+avatar.bg[1]+'"/></linearGradient></defs><rect width="128" height="128" rx="64" fill="url(#g)"/><circle cx="64" cy="64" r="54" fill="#ffffff" fill-opacity=".13"/><circle cx="64" cy="64" r="48" fill="none" stroke="#ffffff" stroke-opacity=".55" stroke-width="3"/><text x="64" y="83" text-anchor="middle" font-size="66">'+avatar.emoji+'</text><circle cx="100" cy="27" r="7" fill="#ffffff" fill-opacity=".8"/><circle cx="26" cy="94" r="4" fill="#ffffff" fill-opacity=".65"/></svg>';
  return 'data:image/svg+xml;charset=UTF-8,'+encodeURIComponent(svg);
 }
+function avatarPrice(key){
+ if(key==='imagem:0')return 0;
+ return key.startsWith('gif:')?1500:100;
+}
 function renderAvatarGrid(containerId,selectedKey,onSelect){
  const box=$(containerId);if(!box)return;
  const selected=normalizeAvatarKey(selectedKey);
+ const isRegistration=containerId==='registerAvatarGrid';
+ const owned=new Set(Array.isArray(gameEconomy.ownedAvatars)?gameEconomy.ownedAvatars:['imagem:0']);
  const renderGroup=(title,list,kind)=>'<div class="avatar-section-title">'+title+'</div><div class="avatar-grid-list">'+list.map((avatar,index)=>{
-  const key=kind+':'+index,active=key===selected;
-  return '<button type="button" class="avatar-choice '+(kind==='gif'?'gif-choice':'image-choice')+(active?' selected':'')+'" data-avatar-key="'+key+'" aria-pressed="'+active+'"><img src="'+avatarImage(key)+'" alt=""><span>'+avatar.name+'</span></button>';
+  const key=kind+':'+index,active=key===selected,isOwned=owned.has(key),price=avatarPrice(key);
+  const classes='avatar-choice '+(kind==='gif'?'gif-choice':'image-choice')+(active?' selected':'')+(!isOwned?' locked':'');
+  const status=isOwned?(active?'✓ Equipado':'✓ Disponível'):(isRegistration?'🔒 Após cadastro':'🔒 '+price.toLocaleString('pt-BR')+' moedas');
+  const action=isOwned?'data-avatar-key="'+key+'"':(!isRegistration?'data-avatar-buy="'+key+'"':'disabled');
+  return '<button type="button" class="'+classes+'" '+action+' aria-pressed="'+(isOwned&&active)+'" title="'+(isOwned?'Selecionar avatar':(isRegistration?'Disponível após cadastro':'Comprar por '+price+' moedas'))+'"><img src="'+avatarImage(key)+'" alt=""><span>'+avatar.name+'</span><small class="avatar-status">'+status+'</small></button>';
  }).join('')+'</div>';
- box.innerHTML=renderGroup('🖼️ Avatares de imagem',AVATARS,'imagem')+renderGroup('✨ Avatares em GIF',GIF_AVATARS,'gif');
+ box.innerHTML=renderGroup('🖼️ Imagens · 100 moedas cada',AVATARS,'imagem')+renderGroup('✨ GIFs animados · 1.500 moedas cada',GIF_AVATARS,'gif');
  box.querySelectorAll('[data-avatar-key]').forEach(button=>button.addEventListener('click',()=>{
-  const key=button.dataset.avatarKey;
-  onSelect(key);
-  renderAvatarGrid(containerId,key,onSelect);
+  const key=button.dataset.avatarKey;onSelect(key);renderAvatarGrid(containerId,key,onSelect);
  }));
+ box.querySelectorAll('[data-avatar-buy]').forEach(button=>button.addEventListener('click',()=>purchaseAvatar(button.dataset.avatarBuy)));
 }
 function refreshProfileIdentity(){
  const profile=profilesData[activeProfile]||{};
@@ -811,6 +866,141 @@ function refreshProfileIdentity(){
  if($('profilePreviewName'))$('profilePreviewName').textContent=displayName;
  if($('profilePreviewAvatar')){$('profilePreviewAvatar').src=avatar;$('profilePreviewAvatar').classList.toggle('gif-avatar',animated);}
 }
+const ACHIEVEMENT_DEFINITIONS=[
+ {id:'training_first',icon:'🌱',title:'Primeiro Ciclo',description:'Conclua seu primeiro ciclo completo no treinamento.'},
+ {id:'training_5',icon:'🔥',title:'Ritmo de Treino',description:'Conclua 5 ciclos de treinamento.'},
+ {id:'training_25',icon:'💪',title:'Disciplina',description:'Conclua 25 ciclos de treinamento.'},
+ {id:'adventure_first',icon:'🧭',title:'A Jornada Começa',description:'Conclua sua primeira fase do desafio.'},
+ {id:'adventure_5',icon:'🗺️',title:'Explorador',description:'Conclua 5 fases do desafio.'},
+ {id:'adventure_13',icon:'⛰️',title:'Desbravador',description:'Conclua 13 fases do desafio.'},
+ {id:'adventure_26',icon:'👑',title:'Lenda da Tabuada',description:'Conclua as 26 fases da aventura.'},
+ {id:'perfect_first',icon:'🎯',title:'Precisão de Ouro',description:'Conclua uma fase com 3 estrelas.'},
+ {id:'perfect_5',icon:'💎',title:'Mestre da Precisão',description:'Conclua 5 fases com 3 estrelas.'},
+ {id:'combo_5',icon:'⚡',title:'Sequência Brilhante',description:'Acerte 5 questões seguidas em uma fase.'},
+ {id:'coins_100',icon:'🪙',title:'Primeiras Economias',description:'Ganhe 100 moedas ao longo do jogo.'},
+ {id:'coins_500',icon:'💰',title:'Tesouro da Tabuada',description:'Ganhe 500 moedas ao longo do jogo.'},
+ {id:'collector_5',icon:'🎨',title:'Colecionador',description:'Desbloqueie 5 avatares.'}
+];
+const ECONOMY_CACHE_KEY='projetoTabuadaEconomiaCacheV1';
+const PENDING_REWARDS_KEY='projetoTabuadaRecompensasPendentesV1';
+function normalizeClientEconomy(value,currentAvatar='imagem:0'){
+ const raw=value&&typeof value==='object'?value:{};
+ const validKey=key=>typeof key==='string'&&/^(imagem|gif):(0|[1-9]|1[01])$/.test(key);
+ const legacy=validKey(currentAvatar)?currentAvatar:'imagem:0';
+ const owned=Array.isArray(raw.ownedAvatars)?raw.ownedAvatars.filter(validKey):['imagem:0',legacy];
+ return {
+  version:1,coins:Math.max(0,Math.floor(Number(raw.coins)||0)),
+  totalEarned:Math.max(0,Math.floor(Number(raw.totalEarned)||0)),
+  trainingCycles:Math.max(0,Math.floor(Number(raw.trainingCycles)||0)),
+  completedStages:Array.isArray(raw.completedStages)?raw.completedStages.map(Number).filter(n=>Number.isInteger(n)&&n>=1&&n<=26):[],
+  perfectStages:Array.isArray(raw.perfectStages)?raw.perfectStages.map(Number).filter(n=>Number.isInteger(n)&&n>=1&&n<=26):[],
+  comboStages:Array.isArray(raw.comboStages)?raw.comboStages.map(Number).filter(n=>Number.isInteger(n)&&n>=1&&n<=26):[],
+  trainingClaimIds:Array.isArray(raw.trainingClaimIds)?raw.trainingClaimIds.filter(id=>typeof id==='string').slice(-500):[],
+  ownedAvatars:[...new Set(['imagem:0',...owned])],
+  achievements:raw.achievements&&typeof raw.achievements==='object'?raw.achievements:{}
+ };
+}
+function saveClientEconomyCache(username=activeProfile){
+ if(!username)return;
+ try{const all=JSON.parse(localStorage.getItem(ECONOMY_CACHE_KEY)||'{}');all[username]=gameEconomy;localStorage.setItem(ECONOMY_CACHE_KEY,JSON.stringify(all));}catch(error){console.warn('Não foi possível guardar o cache de moedas.',error);}
+}
+function refreshEconomyDisplay(){
+ const earned=Object.keys(gameEconomy.achievements||{}).length,total=ACHIEVEMENT_DEFINITIONS.length;
+ ['currentCoins','profileCoins'].forEach(id=>{if($(id))$(id).textContent=gameEconomy.coins.toLocaleString('pt-BR');});
+ if($('profileTotalEarned'))$('profileTotalEarned').textContent=gameEconomy.totalEarned.toLocaleString('pt-BR');
+ if($('profileTrainingCycles'))$('profileTrainingCycles').textContent=gameEconomy.trainingCycles.toLocaleString('pt-BR');
+ if($('profileCompletedStages'))$('profileCompletedStages').textContent=gameEconomy.completedStages.length+'/26';
+ ['currentAchievementCount','achievementCount'].forEach(id=>{if($(id))$(id).textContent=earned+'/'+total;});
+}
+function renderAchievementShelf(){
+ const shelf=$('achievementShelf');if(!shelf)return;
+ const earned=gameEconomy.achievements||{};
+ shelf.innerHTML=ACHIEVEMENT_DEFINITIONS.map(item=>{
+  const date=earned[item.id],unlocked=!!date;
+  const dateText=unlocked&&date!==true?new Date(date).toLocaleDateString('pt-BR'):'Conquista desbloqueada';
+  return '<article class="achievement-card '+(unlocked?'unlocked':'locked')+'"><span class="achievement-icon">'+(unlocked?item.icon:'🔒')+'</span><div><strong>'+item.title+'</strong><p>'+item.description+'</p><small>'+(unlocked?dateText:'Ainda não conquistada')+'</small></div></article>';
+ }).join('');
+ refreshEconomyDisplay();
+}
+let rewardToastTimer=null;
+function showGameRewardToast(message){
+ const toast=$('gameRewardToast');if(!toast)return;
+ toast.textContent=message;toast.classList.remove('hidden');
+ if(rewardToastTimer!==null)clearTimeout(rewardToastTimer);
+ rewardToastTimer=setTimeout(()=>toast.classList.add('hidden'),3800);
+}
+function readPendingGameRewards(){
+ try{const list=JSON.parse(localStorage.getItem(PENDING_REWARDS_KEY)||'[]');return Array.isArray(list)?list:[];}catch{return [];}
+}
+function savePendingGameRewards(list){try{localStorage.setItem(PENDING_REWARDS_KEY,JSON.stringify(list.slice(-100)));}catch{}}
+async function deliverPendingGameReward(item){
+ const path=item.type==='shop'?'/api/game/shop':'/api/game/reward';
+ const result=await apiRequest(path,{method:'POST',body:item.body});
+ if(result.economy)gameEconomy=normalizeClientEconomy(result.economy);
+ if(result.sha)remoteUserSha=result.sha;
+ if(result.newAchievements&&result.newAchievements.length){
+  const names=result.newAchievements.map(id=>ACHIEVEMENT_DEFINITIONS.find(a=>a.id===id)?.title||id);
+  showGameRewardToast('🏆 Nova conquista: '+names.join(', '));
+ }
+ if(result.coinsAdded>0)showGameRewardToast('🪙 +'+result.coinsAdded+' moedas!');
+ saveClientEconomyCache();refreshEconomyDisplay();renderAchievementShelf();
+ if($('profileAvatarGrid')&&!$('profileScreen').classList.contains('hidden')){
+  renderAvatarGrid('profileAvatarGrid',selectedProfileAvatar,key=>{selectedProfileAvatar=key;});
+ }
+ return result;
+}
+async function retryPendingGameRewards(){
+ if(rewardSyncBusy||!cloudTokenReady()||!activeProfile)return;
+ rewardSyncBusy=true;
+ try{
+  const pending=readPendingGameRewards().filter(item=>item.username===activeProfile);
+  if(pending.some(item=>item.type==='adventure_stage'))await flushCloudSave();
+  for(const item of pending){
+   try{
+    await deliverPendingGameReward(item);
+    savePendingGameRewards(readPendingGameRewards().filter(entry=>!(entry.username===item.username&&entry.key===item.key)));
+   }catch(error){console.warn('Recompensa aguardando sincronização:',error);}
+  }
+ }finally{rewardSyncBusy=false;}
+}
+async function claimGameReward(type,payload){
+ if(!activeProfile||!cloudTokenReady()){
+  showGameRewardToast('Entre na sua conta para receber e guardar suas moedas.');return null;
+ }
+ const body=type==='training_cycle'?{type,claimId:payload.claimId}:{type,stageId:payload.stageId};
+ const key=type==='training_cycle'?'training:'+payload.claimId:'stage:'+payload.stageId;
+ const pending=readPendingGameRewards();
+ if(!pending.some(item=>item.username===activeProfile&&item.key===key)){
+  pending.push({username:activeProfile,key,type,body});savePendingGameRewards(pending);
+ }
+ try{
+  const result=await deliverPendingGameReward({username:activeProfile,key,type,body});
+  savePendingGameRewards(readPendingGameRewards().filter(item=>!(item.username===activeProfile&&item.key===key)));
+  return result;
+ }catch(error){
+  showGameRewardToast('Recompensa pendente. Vamos tentar sincronizar novamente.');
+  console.warn('Não foi possível entregar a recompensa agora:',error);return null;
+ }
+}
+async function purchaseAvatar(key){
+ const price=avatarPrice(key);
+ if(!gameEconomy.ownedAvatars.includes(key)&&gameEconomy.coins<price){
+  $('profileMessage').textContent='Você tem '+gameEconomy.coins+' moedas. Este avatar custa '+price+'. Continue treinando para juntar moedas.';return;
+ }
+ try{
+  const result=await apiRequest('/api/game/shop',{method:'POST',body:{avatarKey:key}});
+  if(result.economy)gameEconomy=normalizeClientEconomy(result.economy);
+  if(result.sha)remoteUserSha=result.sha;
+  saveClientEconomyCache();refreshEconomyDisplay();renderAchievementShelf();
+  renderAvatarGrid('profileAvatarGrid',selectedProfileAvatar,value=>{selectedProfileAvatar=value;});
+  $('profileMessage').textContent=result.alreadyOwned?'Este avatar já está na sua coleção.':'Avatar desbloqueado! Selecione-o e salve seu perfil para usar.';
+  if(result.newAchievements?.length){
+   const names=result.newAchievements.map(id=>ACHIEVEMENT_DEFINITIONS.find(a=>a.id===id)?.title||id);
+   showGameRewardToast('🏆 Nova conquista: '+names.join(', '));
+  }else showGameRewardToast('🎨 Avatar desbloqueado!');
+ }catch(error){$('profileMessage').textContent=error.message||'Não foi possível comprar este avatar.';}
+}
+
 function makeSalt(){return [...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,'0')).join('')}
 async function passwordHash(password,saltHex){
  if(!window.crypto||!crypto.subtle)throw new Error('Este navegador não oferece proteção de senha compatível. Atualize o navegador e tente novamente.');
@@ -889,6 +1079,8 @@ function hydrateRemoteUser(username,record){
   history:normalizeHistory(record.data.history),
   updatedAt:record.data.updatedAt||new Date().toISOString()
  };
+ gameEconomy=normalizeClientEconomy(record.data.economy,remoteUserData.profile.avatar);
+ saveClientEconomyCache(username);
  authUsers={};
  profilesData={[username]:remoteUserData.profile};
  historyData=normalizeHistory(remoteUserData.history);
@@ -1033,7 +1225,8 @@ function enterApp(username){
  if(profilesData[username].avatar===undefined||profilesData[username].avatar===null)profilesData[username].avatar='imagem:0';
  refreshProfileIdentity();
  $('authScreen').classList.add('hidden');$('game').classList.add('hidden');$('report').classList.add('hidden');$('setup').classList.remove('hidden');
- selectProfile();renderCommunityRanking();
+ selectProfile();renderCommunityRanking();refreshEconomyDisplay();
+ setTimeout(retryPendingGameRewards,800);
 }
 function showLoginScreen(){
  $('registerForm').classList.add('hidden');$('loginForm').classList.remove('hidden');
@@ -1295,6 +1488,7 @@ function openProfileScreen(){
  $('passwordMessage').textContent='';
  $('changePasswordForm').reset();
  renderAvatarGrid('profileAvatarGrid',selectedProfileAvatar,index=>{selectedProfileAvatar=index;});
+ renderAchievementShelf();refreshEconomyDisplay();
  refreshProfileIdentity();
  $('setup').classList.add('hidden');
  $('profileScreen').classList.remove('hidden');
@@ -1308,6 +1502,9 @@ async function saveProfileEdits(event){
  }
  profilesData[activeProfile]=profilesData[activeProfile]||{};
  profilesData[activeProfile].displayName=displayName;
+ if(!gameEconomy.ownedAvatars.includes(selectedProfileAvatar)){
+  $('profileMessage').textContent='Este avatar ainda não foi desbloqueado. Use a loja para comprá-lo.';return;
+ }
  profilesData[activeProfile].avatar=selectedProfileAvatar;
  profilesData[activeProfile].updatedAt=new Date().toISOString();
  persistProfiles();
@@ -1604,7 +1801,13 @@ function updateStats(){
  $('bar').style.width=(roundCorrect.size/(selected.length*10)*100)+'%';
 }
 function next(){
- if(position>=deck.length)startRound();
+ if(position>=deck.length){
+  if(round>0&&selected.length&&roundCorrect.size===selected.length*10){
+   const claimId=crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);
+   claimGameReward('training_cycle',{claimId});
+  }
+  startRound();
+ }
  current=deck[position];
  revealed=false;
  $('equation').textContent=current.a+' × '+current.b;
@@ -1693,6 +1896,7 @@ let adventureQuestions=[];
 let adventureQuestionIndex=0;
 let adventureFirstTryCorrect=0;
 let adventureComboCount=0;
+let adventureBestCombo=0;
 let adventureHasAnswered=false;
 let adventureLastResultPassed=false;
 
@@ -1848,6 +2052,7 @@ function startAdventureStage(index){
  adventureQuestionIndex=0;
  adventureFirstTryCorrect=0;
  adventureComboCount=0;
+ adventureBestCombo=0;
  adventureHasAnswered=false;
  $('adventureIntroView').classList.add('hidden');
  $('adventureResultView').classList.add('hidden');
@@ -1868,6 +2073,7 @@ function answerAdventureQuestion(value,choiceButton){
  if(correct){
   adventureFirstTryCorrect++;
   adventureComboCount++;
+  adventureBestCombo=Math.max(adventureBestCombo,adventureComboCount);
   $('adventureFeedback').classList.remove('wrong');
   $('adventureFeedbackTitle').textContent=adventureComboCount>=3?'🔥 Incrível! '+adventureComboCount+' acertos seguidos!':'✓ Muito bem! Resposta correta.';
  }else{
@@ -1913,6 +2119,7 @@ async function finishAdventureStage(){
  entry.bestCorrect=Math.max(Number(entry.bestCorrect)||0,adventureFirstTryCorrect);
  entry.bestTotal=total;
  entry.lastCorrect=adventureFirstTryCorrect;
+ entry.bestCombo=Math.max(Number(entry.bestCombo)||0,adventureBestCombo);
  entry.lastPlayedAt=new Date().toISOString();
  if(passed){
   entry.completed=true;
@@ -1926,6 +2133,8 @@ async function finishAdventureStage(){
  progress.lastStageId=stage.id;
  adventureLastResultPassed=passed;
  const saved=await saveAdventureProgress();
+ let coinReward=null;
+ if(passed)coinReward=await claimGameReward('adventure_stage',{stageId:stage.id});
  const bestStars=entry.stars||0;
  $('adventurePlayView').classList.add('hidden');
  $('adventureResultView').classList.remove('hidden');
@@ -1935,7 +2144,10 @@ async function finishAdventureStage(){
  $('adventureResultText').textContent=passed
   ?'Você acertou '+adventureFirstTryCorrect+' de '+total+' questões e abriu o próximo caminho. '+(wasCompleted?'Seu melhor resultado continua registrado.':'Uma nova parte da expedição está liberada!')
   :'Você acertou '+adventureFirstTryCorrect+' de '+total+'. Para abrir a próxima fase, precisa acertar '+required+'. Leia a dica e tente outra vez — seu avanço anterior continua guardado.';
- $('adventureResultReward').textContent=passed?(wasCompleted?(stars>oldStars?'⭐ Melhorou seu recorde! +'+((stars-oldStars)*5)+' XP':'Fase já conquistada. Seu recorde foi mantido.'):'✨ Recompensa: '+(30+adventureFirstTryCorrect*10)+' XP'):'Seu progresso não foi perdido. Continue praticando!';
+ $('adventureResultReward').textContent=passed
+  ?((wasCompleted?(stars>oldStars?'⭐ Melhorou seu recorde! +'+((stars-oldStars)*5)+' XP':'Fase já conquistada. Seu recorde foi mantido.'):'✨ Recompensa: '+(30+adventureFirstTryCorrect*10)+' XP')+
+    (coinReward?.coinsAdded?' · 🪙 +50 moedas':(coinReward?.alreadyClaimed?' · Moedas desta fase já recebidas':' · Moedas aguardando sincronização')))
+  :'Seu progresso não foi perdido. Continue praticando!';
  $('adventureResultNext').textContent=passed&&adventureActiveStageIndex<ADVENTURE_STAGES.length-1?'Próxima fase →':'Voltar ao mapa';
  if(!saved&&$('adventureSaveStatus'))$('adventureSaveStatus').textContent='Atenção: o avanço ficou no aparelho, mas ainda não foi sincronizado.';
 }

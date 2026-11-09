@@ -9,6 +9,9 @@ const GH_DIRECTORY = "usuarios";
 const GH_API = "https://api.github.com";
 const PASSWORD_ITERATIONS = 100000;
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
+const AVATAR_IMAGE_COUNT = 12;
+const AVATAR_GIF_COUNT = 12;
+const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 35;
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 let communitySummaryCache = { expiresAt: 0, records: null, pending: null };
@@ -154,93 +157,81 @@ async function writeUser(username, data, sha, env) {
   return result.content.sha;
 }
 
+function defaultGameEconomy(currentAvatar = "imagem:0") {
+  const legacyAvatar = /^(imagem|gif):(0|[1-9]|1[01])$/.test(String(currentAvatar || ""))
+    ? String(currentAvatar) : "imagem:0";
+  return {
+    version: 1, coins: 0, totalEarned: 0, trainingCycles: 0,
+    completedStages: [], perfectStages: [], comboStages: [],
+    trainingClaimIds: [], ownedAvatars: [...new Set(["imagem:0", legacyAvatar])],
+    achievements: {}
+  };
+}
+function validAvatarKey(value) {
+  if (typeof value !== "string") return false;
+  const match = value.match(/^(imagem|gif):(\d+)$/);
+  if (!match) return false;
+  const index = Number(match[2]);
+  return Number.isInteger(index) && index >= 0 &&
+    index < (match[1] === "imagem" ? AVATAR_IMAGE_COUNT : AVATAR_GIF_COUNT);
+}
+function normalizeGameEconomy(record) {
+  const profile = record?.profile && typeof record.profile === "object" ? record.profile : {};
+  const raw = record?.economy && typeof record.economy === "object" ? record.economy : null;
+  const base = defaultGameEconomy(profile.avatar);
+  const owned = raw && Array.isArray(raw.ownedAvatars) ? raw.ownedAvatars.filter(validAvatarKey) : base.ownedAvatars;
+  const uniqueOwned = [...new Set(["imagem:0", ...owned])];
+  const safeInt = (value, max = 1_000_000_000) => Math.max(0, Math.min(max, Math.floor(Number(value) || 0)));
+  const achievements = raw?.achievements && typeof raw.achievements === "object" && !Array.isArray(raw.achievements)
+    ? Object.fromEntries(Object.entries(raw.achievements).filter(([key, value]) => /^[a-z0-9_]+$/.test(key) && typeof value === "string")) : {};
+  return {
+    version: 1,
+    coins: safeInt(raw?.coins),
+    totalEarned: safeInt(raw?.totalEarned),
+    trainingCycles: safeInt(raw?.trainingCycles),
+    completedStages: [...new Set((Array.isArray(raw?.completedStages) ? raw.completedStages : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= ADVENTURE_STAGE_COUNT))],
+    perfectStages: [...new Set((Array.isArray(raw?.perfectStages) ? raw.perfectStages : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= ADVENTURE_STAGE_COUNT))],
+    comboStages: [...new Set((Array.isArray(raw?.comboStages) ? raw.comboStages : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= ADVENTURE_STAGE_COUNT))],
+    trainingClaimIds: [...new Set((Array.isArray(raw?.trainingClaimIds) ? raw.trainingClaimIds : []).filter(id => typeof id === "string" && id.length <= 100))].slice(-500),
+    ownedAvatars: uniqueOwned, achievements
+  };
+}
+function evaluateGameAchievements(economy) {
+  const completed = economy.completedStages.length, perfect = economy.perfectStages.length;
+  const tests = [
+    ["training_first", economy.trainingCycles >= 1],
+    ["training_5", economy.trainingCycles >= 5],
+    ["training_25", economy.trainingCycles >= 25],
+    ["adventure_first", completed >= 1],
+    ["adventure_5", completed >= 5],
+    ["adventure_13", completed >= 13],
+    ["adventure_26", completed >= ADVENTURE_STAGE_COUNT],
+    ["perfect_first", perfect >= 1],
+    ["perfect_5", perfect >= 5],
+    ["combo_5", economy.comboStages.length >= 1],
+    ["coins_100", economy.totalEarned >= 100],
+    ["coins_500", economy.totalEarned >= 500],
+    ["collector_5", economy.ownedAvatars.length >= 5]
+  ];
+  const newlyUnlocked = [];
+  for (const [id, earned] of tests) {
+    if (earned && !economy.achievements[id]) {
+      economy.achievements[id] = new Date().toISOString();
+      newlyUnlocked.push(id);
+    }
+  }
+  return newlyUnlocked;
+}
+
 function publicRecord(record) {
   return {
     username: record.username,
     profile: record.profile && typeof record.profile === "object" ? record.profile : {},
     history: record.history && typeof record.history === "object"
       ? record.history : { questions: {}, sessions: [] },
+    economy: normalizeGameEconomy(record),
     updatedAt: record.updatedAt || null
   };
-}
-
-function communitySummary(record) {
-  const profile = record.profile && typeof record.profile === "object" ? record.profile : {};
-  const history = safeHistory(record.history);
-  const questions = Object.values(history.questions).filter(item => item && typeof item === "object");
-  const correct = questions.reduce((sum, item) => sum + (Number(item.correct) || 0), 0);
-  const wrong = questions.reduce((sum, item) => sum + (Number(item.wrong) || 0), 0);
-  const sessions = Array.isArray(history.sessions) ? history.sessions : [];
-  let timeMs = sessions.reduce((sum, item) => sum + (Number(item?.timeMs) || 0), 0);
-  const checkpoint = profile.checkpoint;
-  if (checkpoint && typeof checkpoint === "object") {
-    timeMs += (Number(checkpoint.sessionQuestionTimeMs) || 0) +
-      (Number(checkpoint.currentElapsedMs) || 0);
-  }
-  const hard = questions
-    .filter(item => (Number(item.wrong) || 0) > 0)
-    .sort((a, b) => (Number(b.wrong) || 0) - (Number(a.wrong) || 0) ||
-      ((Number(b.wrong) || 0) / Math.max(1, Number(b.attempts) || 1)) -
-      ((Number(a.wrong) || 0) / Math.max(1, Number(a.attempts) || 1)))
-    .slice(0, 3)
-    .map(item => ({ a: Number(item.a) || 0, b: Number(item.b) || 0, wrong: Number(item.wrong) || 0 }));
-
-  return {
-    username: record.username,
-    displayName: profile.displayName || record.username,
-    avatar: profile.avatar || "imagem:0",
-    correct,
-    wrong,
-    attempts: correct + wrong,
-    timeMs,
-    hard
-  };
-}
-
-async function loadCommunitySummaries(env) {
-  if (communitySummaryCache.records && Date.now() < communitySummaryCache.expiresAt) {
-    return communitySummaryCache.records;
-  }
-  if (communitySummaryCache.pending) return communitySummaryCache.pending;
-
-  const pending = (async () => {
-    const entries = await githubRequest(
-      "/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" +
-      GH_DIRECTORY + "?ref=" + encodeURIComponent(GH_BRANCH),
-      env
-    );
-    if (!Array.isArray(entries)) throw new Error("A pasta de participantes não retornou uma lista.");
-
-    // 1 chamada para listar + no máximo 35 leituras individuais = 36 subrequests.
-    const folders = entries.filter(item => item.type === "dir" && usernameIsValid(item.name))
-      .slice(0, COMMUNITY_MAX_USERS);
-    const summaries = [];
-
-    // Limita concorrência e mantém cada execução abaixo das 6 conexões externas simultâneas.
-    for (let index = 0; index < folders.length; index += 6) {
-      const batch = folders.slice(index, index + 6);
-      const results = await Promise.all(batch.map(async item => {
-        try {
-          const record = await readUser(item.name, env);
-          return record ? communitySummary(record.data) : null;
-        } catch {
-          return null;
-        }
-      }));
-      summaries.push(...results.filter(Boolean));
-    }
-    return summaries;
-  })();
-
-  communitySummaryCache.pending = pending;
-  try {
-    const records = await pending;
-    communitySummaryCache.records = records;
-    communitySummaryCache.expiresAt = Date.now() + COMMUNITY_CACHE_TTL_MS;
-    return records;
-  } finally {
-    if (communitySummaryCache.pending === pending) communitySummaryCache.pending = null;
-  }
 }
 
 function randomHex(size) {
@@ -439,9 +430,10 @@ async function handleApi(request, env, origin) {
         auth: { username, salt, hash, iterations: PASSWORD_ITERATIONS, createdAt: new Date().toISOString() },
         profile: {
           displayName: username,
-          avatar: body.profile?.avatar ?? "imagem:0"
+          avatar: "imagem:0"
         },
         history: { questions: {}, sessions: [] },
+        economy: defaultGameEconomy("imagem:0"),
         updatedAt: new Date().toISOString()
       };
 
@@ -499,6 +491,83 @@ async function handleApi(request, env, origin) {
       const limited = await rateLimitResponse(env.PROFILE_WRITE_LIMITER, username + ":profile-write",
         "Muitos salvamentos em pouco tempo. Seus dados permanecem no dispositivo; aguarde um minuto para sincronizar novamente.", origin);
       if (limited) return limited;
+    }
+
+    if ((route === "/api/game/reward" || route === "/api/game/shop") && request.method === "POST") {
+      const limited = await rateLimitResponse(env.GAME_ACTION_LIMITER, username,
+        "Muitas ações de jogo em pouco tempo. Aguarde um minuto e tente novamente.", origin);
+      if (limited) return limited;
+      const body = await readJson(request);
+      const record = await readUser(username, env);
+      if (!record) return json({ error: "A conta não foi encontrada." }, 404, origin);
+      const economy = normalizeGameEconomy(record.data);
+      let coinsAdded = 0, alreadyClaimed = false, changed = false;
+
+      if (route === "/api/game/reward") {
+        if (body.type === "training_cycle") {
+          const claimId = typeof body.claimId === "string" ? body.claimId : "";
+          if (!/^[A-Za-z0-9:_-]{8,100}$/.test(claimId)) {
+            return json({ error: "Identificador de ciclo inválido." }, 400, origin);
+          }
+          if (economy.trainingClaimIds.includes(claimId)) {
+            alreadyClaimed = true;
+          } else {
+            economy.trainingClaimIds.push(claimId);
+            economy.trainingClaimIds = economy.trainingClaimIds.slice(-500);
+            economy.trainingCycles += 1;
+            economy.coins += 10;
+            economy.totalEarned += 10;
+            coinsAdded = 10;
+            changed = true;
+          }
+        } else if (body.type === "adventure_stage") {
+          const stageId = Number(body.stageId);
+          if (!Number.isInteger(stageId) || stageId < 1 || stageId > ADVENTURE_STAGE_COUNT) {
+            return json({ error: "Fase inválida." }, 400, origin);
+          }
+          const stageProgress = record.data.profile?.adventureProgress?.stages?.[String(stageId)];
+          if (!stageProgress || stageProgress.completed !== true) {
+            return json({ error: "A conclusão desta fase ainda não foi sincronizada. Tente novamente após salvar seu progresso." }, 409, origin);
+          }
+          if (economy.completedStages.includes(stageId)) {
+            alreadyClaimed = true;
+          } else {
+            economy.completedStages.push(stageId);
+            economy.coins += 50;
+            economy.totalEarned += 50;
+            coinsAdded = 50;
+            changed = true;
+            if (Number(stageProgress.stars) === 3) economy.perfectStages.push(stageId);
+            if (Number(stageProgress.bestCombo) >= 5) economy.comboStages.push(stageId);
+          }
+        } else {
+          return json({ error: "Tipo de recompensa inválido." }, 400, origin);
+        }
+      } else {
+        const avatarKey = body.avatarKey;
+        if (!validAvatarKey(avatarKey) || avatarKey === "imagem:0") {
+          return json({ error: "Avatar inválido ou já disponível gratuitamente." }, 400, origin);
+        }
+        if (economy.ownedAvatars.includes(avatarKey)) {
+          return json({ economy, alreadyOwned: true, coinsAdded: 0, newAchievements: [] }, 200, origin);
+        }
+        const price = avatarKey.startsWith("gif:") ? 1500 : 100;
+        if (economy.coins < price) {
+          return json({ error: "Você ainda não tem moedas suficientes. Este avatar custa " + price + " moedas." }, 400, origin);
+        }
+        economy.coins -= price;
+        economy.ownedAvatars.push(avatarKey);
+        changed = true;
+      }
+
+      const newAchievements = evaluateGameAchievements(economy);
+      if (changed || newAchievements.length) {
+        record.data.economy = economy;
+        record.data.updatedAt = new Date().toISOString();
+        const sha = await writeUser(username, record.data, record.sha, env);
+        return json({ economy, coinsAdded, alreadyClaimed, newAchievements, sha }, 200, origin);
+      }
+      return json({ economy, coinsAdded, alreadyClaimed, newAchievements, sha: record.sha }, 200, origin);
     }
 
     if (route === "/api/me/password" && request.method === "POST") {

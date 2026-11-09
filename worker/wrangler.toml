@@ -43,6 +43,13 @@ namespace_id = "8731005"
 limit = 3
 period = 60
 
+[[ratelimits]]
+name = "GAME_ACTION_LIMITER"
+namespace_id = "8731006"
+[ratelimits.simple]
+limit = 12
+period = 60
+
 [observability]
 enabled = false
 
