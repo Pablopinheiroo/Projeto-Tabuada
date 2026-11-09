@@ -1,39 +1,39 @@
 {
-  "version": 3,
-  "title": "Biblioteca original de trilhas livres do Projeto Tabuada",
-  "minimum_tracks_per_category": 4,
-  "minimum_total_tracks": 20,
+  "version": 4,
+  "title": "Biblioteca de 100 trilhas CC0 distintas do Projeto Tabuada",
+  "minimum_tracks_per_category": 20,
+  "minimum_total_tracks": 100,
   "minimum_duration_seconds": 30,
   "categories": [
     {
       "id": "principal",
       "title": "Tela principal",
       "style": "Menu leve, divertido e com clima de videogame.",
-      "tracks": 4
+      "tracks": 20
     },
     {
       "id": "treinamento",
       "title": "Treinamento",
       "style": "Trilhas tranquilas para manter a concentração.",
-      "tracks": 4
+      "tracks": 20
     },
     {
       "id": "desafio",
       "title": "Desafio",
       "style": "Trilhas rápidas, agitadas e emocionantes para partidas cronometradas.",
-      "tracks": 4
+      "tracks": 20
     },
     {
       "id": "modo-jogo",
       "title": "Modo Jogo",
       "style": "Aventura, fantasia e exploração.",
-      "tracks": 4
+      "tracks": 20
     },
     {
       "id": "torneio",
       "title": "Torneio",
       "style": "Competição intensa, tensão e clima de batalha.",
-      "tracks": 4
+      "tracks": 20
     }
   ],
   "playlists": {
@@ -81,6 +81,182 @@
         "license": "CC0 1.0",
         "source": "https://opengameart.org/content/a-soundtrack",
         "category": "principal"
+      },
+      {
+        "id": "principal-05-hella-bumps",
+        "name": "Hella Bumps",
+        "genre": "Menu / House animado",
+        "src": "assets/music/principal-05-hella-bumps.mp3",
+        "duration_seconds": 58.75,
+        "author": "cynicmusic",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/hella-bumps-menu-music",
+        "category": "principal"
+      },
+      {
+        "id": "principal-06-menu-sinking",
+        "name": "Menu Sinking",
+        "genre": "Menu / Eletrônica",
+        "src": "assets/music/principal-06-menu-sinking.mp3",
+        "duration_seconds": 123.38,
+        "author": "carlofcool",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/menu-sound",
+        "category": "principal"
+      },
+      {
+        "id": "principal-07-menu-em-8-bits",
+        "name": "Menu em 8 Bits",
+        "genre": "Menu / Chiptune",
+        "src": "assets/music/principal-07-menu-em-8-bits.mp3",
+        "duration_seconds": 65.75,
+        "author": "tamesu",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/menu-theme",
+        "category": "principal"
+      },
+      {
+        "id": "principal-08-menu-espacial",
+        "name": "Menu Espacial",
+        "genre": "Menu / Ambiente",
+        "src": "assets/music/principal-08-menu-espacial.mp3",
+        "duration_seconds": 48.07,
+        "author": "kerker97",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/main-menu-music",
+        "category": "principal"
+      },
+      {
+        "id": "principal-09-menu-de-explora-o",
+        "name": "Menu de Exploração",
+        "genre": "Menu / Eletrônica",
+        "src": "assets/music/principal-09-menu-de-explora-o.mp3",
+        "duration_seconds": 107.18,
+        "author": "Umplix",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/overworldmenu",
+        "category": "principal"
+      },
+      {
+        "id": "principal-10-brilho-e-energia",
+        "name": "Brilho e Energia",
+        "genre": "Menu / Alegre",
+        "src": "assets/music/principal-10-brilho-e-energia.mp3",
+        "duration_seconds": 61.75,
+        "author": "zesona",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/shine-blitz",
+        "category": "principal"
+      },
+      {
+        "id": "principal-11-wealthy",
+        "name": "Wealthy",
+        "genre": "Menu / Eletrônica",
+        "src": "assets/music/principal-11-wealthy.mp3",
+        "duration_seconds": 156.03,
+        "author": "awdawdawdwda",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/songs-0",
+        "category": "principal"
+      },
+      {
+        "id": "principal-12-woke",
+        "name": "Woke",
+        "genre": "Menu / Eletrônica",
+        "src": "assets/music/principal-12-woke.mp3",
+        "duration_seconds": 208.04,
+        "author": "awdawdawdwda",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/songs-0",
+        "category": "principal"
+      },
+      {
+        "id": "principal-13-billion",
+        "name": "Billion",
+        "genre": "Menu / Eletrônica",
+        "src": "assets/music/principal-13-billion.mp3",
+        "duration_seconds": 240.04,
+        "author": "awdawdawdwda",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/songs-0",
+        "category": "principal"
+      },
+      {
+        "id": "principal-14-farm",
+        "name": "Farm",
+        "genre": "Menu / Eletrônica",
+        "src": "assets/music/principal-14-farm.mp3",
+        "duration_seconds": 192.03,
+        "author": "awdawdawdwda",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/songs-0",
+        "category": "principal"
+      },
+      {
+        "id": "principal-15-trailer",
+        "name": "Trailer",
+        "genre": "Menu / Cinemática",
+        "src": "assets/music/principal-15-trailer.mp3",
+        "duration_seconds": 75.05,
+        "author": "awdawdawdwda",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/songs-0",
+        "category": "principal"
+      },
+      {
+        "id": "principal-16-rush",
+        "name": "Rush",
+        "genre": "Menu / Eletrônica",
+        "src": "assets/music/principal-16-rush.mp3",
+        "duration_seconds": 474.1,
+        "author": "awdawdawdwda",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/songs-0",
+        "category": "principal"
+      },
+      {
+        "id": "principal-17-sakuriasis",
+        "name": "Sakuriasis",
+        "genre": "Menu / Eletrônica",
+        "src": "assets/music/principal-17-sakuriasis.mp3",
+        "duration_seconds": 96.03,
+        "author": "awdawdawdwda",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/songs-0",
+        "category": "principal"
+      },
+      {
+        "id": "principal-18-vox",
+        "name": "Vox",
+        "genre": "Menu / Eletrônica",
+        "src": "assets/music/principal-18-vox.mp3",
+        "duration_seconds": 105.17,
+        "author": "awdawdawdwda",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/songs-0",
+        "category": "principal"
+      },
+      {
+        "id": "principal-19-beatnik",
+        "name": "Beatnik",
+        "genre": "Menu / Eletrônica",
+        "src": "assets/music/principal-19-beatnik.mp3",
+        "duration_seconds": 188.6,
+        "author": "awdawdawdwda",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/songs-0",
+        "category": "principal"
+      },
+      {
+        "id": "principal-20-moments",
+        "name": "Moments",
+        "genre": "Menu / Eletrônica",
+        "src": "assets/music/principal-20-moments.mp3",
+        "duration_seconds": 223.09,
+        "author": "awdawdawdwda",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/songs-0",
+        "category": "principal"
       }
     ],
     "treinamento": [
@@ -127,6 +303,182 @@
         "license": "CC0 1.0",
         "source": "https://opengameart.org/content/a-soundtrack",
         "category": "treinamento"
+      },
+      {
+        "id": "treinamento-05-calma-e-concentra-o",
+        "name": "Calma e Concentração",
+        "genre": "Calma / Ambiente",
+        "src": "assets/music/treinamento-05-calma-e-concentra-o.mp3",
+        "duration_seconds": 249.29,
+        "author": "pmiller",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/calm-track",
+        "category": "treinamento"
+      },
+      {
+        "id": "treinamento-06-melodia-tranquila",
+        "name": "Melodia Tranquila",
+        "genre": "Calma / RPG",
+        "src": "assets/music/treinamento-06-melodia-tranquila.mp3",
+        "duration_seconds": 179.8,
+        "author": "Tozan",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/bgm-music",
+        "category": "treinamento"
+      },
+      {
+        "id": "treinamento-07-tema-tranquilo",
+        "name": "Tema Tranquilo",
+        "genre": "Calma / Exploração",
+        "src": "assets/music/treinamento-07-tema-tranquilo.mp3",
+        "duration_seconds": 117.24,
+        "author": "pebonius",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/calm-music-0",
+        "category": "treinamento"
+      },
+      {
+        "id": "treinamento-08-plan-cies-ao-p-r-do-sol",
+        "name": "Planícies ao Pôr do Sol",
+        "genre": "Calma / Natureza",
+        "src": "assets/music/treinamento-08-plan-cies-ao-p-r-do-sol.mp3",
+        "duration_seconds": 329.72,
+        "author": "Yoiyami",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/sunset-plains",
+        "category": "treinamento"
+      },
+      {
+        "id": "treinamento-09-instrumentais-relaxantes-02-holiznacc0-night-driving",
+        "name": "Instrumentais relaxantes: 02 Holiznacc0   Night Driving",
+        "genre": "Treinamento",
+        "src": "assets/music/treinamento-09-instrumentais-relaxantes-02-holiznacc0-night-driving.mp3",
+        "duration_seconds": 131.37,
+        "author": "Holizna",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/relaxing-instrumentals-collection",
+        "category": "treinamento"
+      },
+      {
+        "id": "treinamento-10-instrumentais-relaxantes-03-holiznacc0-boredom",
+        "name": "Instrumentais relaxantes: 03 Holiznacc0   Boredom",
+        "genre": "Treinamento",
+        "src": "assets/music/treinamento-10-instrumentais-relaxantes-03-holiznacc0-boredom.mp3",
+        "duration_seconds": 170.66,
+        "author": "Holizna",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/relaxing-instrumentals-collection",
+        "category": "treinamento"
+      },
+      {
+        "id": "treinamento-11-instrumentais-relaxantes-05-holiznacc0-love",
+        "name": "Instrumentais relaxantes: 05 Holiznacc0   Love",
+        "genre": "Treinamento",
+        "src": "assets/music/treinamento-11-instrumentais-relaxantes-05-holiznacc0-love.mp3",
+        "duration_seconds": 187.95,
+        "author": "Holizna",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/relaxing-instrumentals-collection",
+        "category": "treinamento"
+      },
+      {
+        "id": "treinamento-12-instrumentais-relaxantes-06-holiznacc0-lost-in-your-eyes",
+        "name": "Instrumentais relaxantes: 06 Holiznacc0   Lost In Your Eyes",
+        "genre": "Treinamento",
+        "src": "assets/music/treinamento-12-instrumentais-relaxantes-06-holiznacc0-lost-in-your-eyes.mp3",
+        "duration_seconds": 236.49,
+        "author": "Holizna",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/relaxing-instrumentals-collection",
+        "category": "treinamento"
+      },
+      {
+        "id": "treinamento-13-instrumentais-relaxantes-18-holiznacc0-you-loved-me-once",
+        "name": "Instrumentais relaxantes: 18 Holiznacc0   You Loved Me Once",
+        "genre": "Treinamento",
+        "src": "assets/music/treinamento-13-instrumentais-relaxantes-18-holiznacc0-you-loved-me-once.mp3",
+        "duration_seconds": 182.39,
+        "author": "Holizna",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/relaxing-instrumentals-collection",
+        "category": "treinamento"
+      },
+      {
+        "id": "treinamento-14-batidas-tranquilas-01-holiznacc0-city-in-the-rearview",
+        "name": "Batidas tranquilas: 01 Holiznacc0   City In The Rearview",
+        "genre": "Treinamento",
+        "src": "assets/music/treinamento-14-batidas-tranquilas-01-holiznacc0-city-in-the-rearview.mp3",
+        "duration_seconds": 175.7,
+        "author": "Holizna",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/chill-beats-collection",
+        "category": "treinamento"
+      },
+      {
+        "id": "treinamento-15-batidas-tranquilas-03-holiznacc0-families",
+        "name": "Batidas tranquilas: 03 Holiznacc0   Families",
+        "genre": "Treinamento",
+        "src": "assets/music/treinamento-15-batidas-tranquilas-03-holiznacc0-families.mp3",
+        "duration_seconds": 143.99,
+        "author": "Holizna",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/chill-beats-collection",
+        "category": "treinamento"
+      },
+      {
+        "id": "treinamento-16-batidas-tranquilas-05-holiznacc0-opinions",
+        "name": "Batidas tranquilas: 05 Holiznacc0   Opinions",
+        "genre": "Treinamento",
+        "src": "assets/music/treinamento-16-batidas-tranquilas-05-holiznacc0-opinions.mp3",
+        "duration_seconds": 167.99,
+        "author": "Holizna",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/chill-beats-collection",
+        "category": "treinamento"
+      },
+      {
+        "id": "treinamento-17-batidas-tranquilas-06-holiznacc0-old-age",
+        "name": "Batidas tranquilas: 06 Holiznacc0   Old Age",
+        "genre": "Treinamento",
+        "src": "assets/music/treinamento-17-batidas-tranquilas-06-holiznacc0-old-age.mp3",
+        "duration_seconds": 213.92,
+        "author": "Holizna",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/chill-beats-collection",
+        "category": "treinamento"
+      },
+      {
+        "id": "treinamento-18-batidas-tranquilas-08-holiznacc0-dream-pop",
+        "name": "Batidas tranquilas: 08 Holiznacc0   Dream Pop",
+        "genre": "Treinamento",
+        "src": "assets/music/treinamento-18-batidas-tranquilas-08-holiznacc0-dream-pop.mp3",
+        "duration_seconds": 241.71,
+        "author": "Holizna",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/chill-beats-collection",
+        "category": "treinamento"
+      },
+      {
+        "id": "treinamento-19-batidas-tranquilas-28-holiznacc0-autumn",
+        "name": "Batidas tranquilas: 28 Holiznacc0   Autumn",
+        "genre": "Treinamento",
+        "src": "assets/music/treinamento-19-batidas-tranquilas-28-holiznacc0-autumn.mp3",
+        "duration_seconds": 169.85,
+        "author": "Holizna",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/chill-beats-collection",
+        "category": "treinamento"
+      },
+      {
+        "id": "treinamento-20-cole-o-lo-fi-e-calma-01-holiznacc0-first-snow-mp3",
+        "name": "Coleção lo-fi e calma: 01 Holiznacc0   First Snow.Mp3",
+        "genre": "Treinamento",
+        "src": "assets/music/treinamento-20-cole-o-lo-fi-e-calma-01-holiznacc0-first-snow-mp3.mp3",
+        "duration_seconds": 174.13,
+        "author": "Holizna",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/lo-fi-and-chill-collection",
+        "category": "treinamento"
       }
     ],
     "desafio": [
@@ -164,14 +516,190 @@
         "category": "desafio"
       },
       {
-        "id": "strange-factory-climax",
-        "name": "Última Volta",
-        "genre": "Corrida / Alta energia",
-        "src": "assets/music/strange-factory-climax.mp3",
-        "duration_seconds": 93.65,
+        "id": "desafio-04-chefe-em-alta-tens-o",
+        "name": "Chefe em Alta Tensão",
+        "genre": "Desafio / Batalha",
+        "src": "assets/music/desafio-04-chefe-em-alta-tens-o.mp3",
+        "duration_seconds": 135.08,
+        "author": "haruta",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/intense-boss-battle",
+        "category": "desafio"
+      },
+      {
+        "id": "desafio-05-chefe-implac-vel",
+        "name": "Chefe Implacável",
+        "genre": "Desafio / Synth",
+        "src": "assets/music/desafio-05-chefe-implac-vel.mp3",
+        "duration_seconds": 80.14,
         "author": "MintoDog",
         "license": "CC0 1.0",
-        "source": "https://opengameart.org/content/strange-factory",
+        "source": "https://opengameart.org/content/hard-boss-battle-1",
+        "category": "desafio"
+      },
+      {
+        "id": "desafio-06-batalha-eletr-nica",
+        "name": "Batalha Eletrônica",
+        "genre": "Desafio / Techno",
+        "src": "assets/music/desafio-06-batalha-eletr-nica.mp3",
+        "duration_seconds": 89.18,
+        "author": "MintoDog",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/hard-battle-2",
+        "category": "desafio"
+      },
+      {
+        "id": "desafio-07-chiptune-acelerado",
+        "name": "Chiptune Acelerado",
+        "genre": "Desafio / Chiptune",
+        "src": "assets/music/desafio-07-chiptune-acelerado.mp3",
+        "duration_seconds": 56.92,
+        "author": "nihilocrat",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/upbeat-chiptune-theme",
+        "category": "desafio"
+      },
+      {
+        "id": "desafio-08-batalha-das-fadas",
+        "name": "Batalha das Fadas",
+        "genre": "Desafio / Fantasia",
+        "src": "assets/music/desafio-08-batalha-das-fadas.mp3",
+        "duration_seconds": 97.38,
+        "author": "MintoDog",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/fairy-battles",
+        "category": "desafio"
+      },
+      {
+        "id": "desafio-09-minichefe-em-8-bits",
+        "name": "Minichefe em 8 Bits",
+        "genre": "Desafio / Chiptune",
+        "src": "assets/music/desafio-09-minichefe-em-8-bits.mp3",
+        "duration_seconds": 68.6,
+        "author": "MintoDog",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/8bit-action-miniboss-battle",
+        "category": "desafio"
+      },
+      {
+        "id": "desafio-10-batalha-orquestral",
+        "name": "Batalha Orquestral",
+        "genre": "Desafio / Orquestral",
+        "src": "assets/music/desafio-10-batalha-orquestral.mp3",
+        "duration_seconds": 116.14,
+        "author": "Wolfgang_",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/battle-theme-0",
+        "category": "desafio"
+      },
+      {
+        "id": "desafio-11-duelo-retr",
+        "name": "Duelo Retrô",
+        "genre": "Desafio / Retrô",
+        "src": "assets/music/desafio-11-duelo-retr.mp3",
+        "duration_seconds": 123.51,
+        "author": "tapatilorenzo",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/midi-battle-theme",
+        "category": "desafio"
+      },
+      {
+        "id": "desafio-12-oh-chef-o",
+        "name": "Oh, Chefão!",
+        "genre": "Desafio / Batalha",
+        "src": "assets/music/desafio-12-oh-chef-o.mp3",
+        "duration_seconds": 123.09,
+        "author": "haruta",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/oh-boss",
+        "category": "desafio"
+      },
+      {
+        "id": "desafio-13-prepare-se-para-lutar",
+        "name": "Prepare-se para Lutar",
+        "genre": "Desafio / Épico",
+        "src": "assets/music/desafio-13-prepare-se-para-lutar.mp3",
+        "duration_seconds": 123.04,
+        "author": "Basil",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/prepare-to-fight",
+        "category": "desafio"
+      },
+      {
+        "id": "desafio-14-chefe-em-8-bits",
+        "name": "Chefe em 8 Bits",
+        "genre": "Desafio / Chiptune",
+        "src": "assets/music/desafio-14-chefe-em-8-bits.mp3",
+        "duration_seconds": 62.93,
+        "author": "MintoDog",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/8bit-action-boss-battle",
+        "category": "desafio"
+      },
+      {
+        "id": "desafio-15-chefe-em-8-bits-estilo-aventura",
+        "name": "Chefe em 8 Bits — Estilo Aventura",
+        "genre": "Desafio / Chiptune",
+        "src": "assets/music/desafio-15-chefe-em-8-bits-estilo-aventura.mp3",
+        "duration_seconds": 101.88,
+        "author": "HydroGene",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/zelda-style-8-bit-boss-theme",
+        "category": "desafio"
+      },
+      {
+        "id": "desafio-16-batalha-do-chef-o-2",
+        "name": "Batalha do Chefão 2",
+        "genre": "Desafio / 8 Bits",
+        "src": "assets/music/desafio-16-batalha-do-chef-o-2.mp3",
+        "duration_seconds": 59.61,
+        "author": "nene",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/boss-battle-2-8-bit",
+        "category": "desafio"
+      },
+      {
+        "id": "desafio-17-prepare-suas-espadas",
+        "name": "Prepare suas Espadas",
+        "genre": "Desafio / Fantasia",
+        "src": "assets/music/desafio-17-prepare-suas-espadas.mp3",
+        "duration_seconds": 88.32,
+        "author": "Bojidar Marinov",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/prepare-your-swords",
+        "category": "desafio"
+      },
+      {
+        "id": "desafio-18-a-o-para-rpg-action1-encounter-with-the-witches",
+        "name": "Ação para RPG: Action1   Encounter With The Witches",
+        "genre": "Desafio",
+        "src": "assets/music/desafio-18-a-o-para-rpg-action1-encounter-with-the-witches.mp3",
+        "duration_seconds": 113.58,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/jrpg-pack-5-action",
+        "category": "desafio"
+      },
+      {
+        "id": "desafio-19-a-o-para-rpg-action2-army-approaching",
+        "name": "Ação para RPG: Action2   Army Approaching",
+        "genre": "Desafio",
+        "src": "assets/music/desafio-19-a-o-para-rpg-action2-army-approaching.mp3",
+        "duration_seconds": 124.26,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/jrpg-pack-5-action",
+        "category": "desafio"
+      },
+      {
+        "id": "desafio-20-a-o-para-rpg-action3-preparing-for-battle",
+        "name": "Ação para RPG: Action3   Preparing For Battle",
+        "genre": "Desafio",
+        "src": "assets/music/desafio-20-a-o-para-rpg-action3-preparing-for-battle.mp3",
+        "duration_seconds": 54.91,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/jrpg-pack-5-action",
         "category": "desafio"
       }
     ],
@@ -219,6 +747,182 @@
         "license": "CC0 1.0",
         "source": "https://opengameart.org/content/hard-dungeon",
         "category": "modo-jogo"
+      },
+      {
+        "id": "modo-jogo-05-aventura-das-fadas",
+        "name": "Aventura das Fadas",
+        "genre": "Fantasia / Aventura",
+        "src": "assets/music/modo-jogo-05-aventura-das-fadas.mp3",
+        "duration_seconds": 144.04,
+        "author": "MintoDog",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/fairy-adventure",
+        "category": "modo-jogo"
+      },
+      {
+        "id": "modo-jogo-06-explora-o-medieval",
+        "name": "Exploração Medieval",
+        "genre": "Fantasia / RPG",
+        "src": "assets/music/modo-jogo-06-explora-o-medieval.mp3",
+        "duration_seconds": 236.38,
+        "author": "RandomMind",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/medieval-exploration",
+        "category": "modo-jogo"
+      },
+      {
+        "id": "modo-jogo-07-passeio-pela-vila",
+        "name": "Passeio pela Vila",
+        "genre": "Vila / Chiptune",
+        "src": "assets/music/modo-jogo-07-passeio-pela-vila.mp3",
+        "duration_seconds": 266.03,
+        "author": "Spring Spring",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/exploring-town",
+        "category": "modo-jogo"
+      },
+      {
+        "id": "modo-jogo-08-enigma-m-gico",
+        "name": "Enigma Mágico",
+        "genre": "Fantasia / Puzzle",
+        "src": "assets/music/modo-jogo-08-enigma-m-gico.mp3",
+        "duration_seconds": 122.23,
+        "author": "MintoDog",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/magic-puzzle-in-game-1",
+        "category": "modo-jogo"
+      },
+      {
+        "id": "modo-jogo-09-explora-o-em-rpg-exploration1-grasslands",
+        "name": "Exploração em RPG: Exploration1   Grasslands",
+        "genre": "Modo Jogo",
+        "src": "assets/music/modo-jogo-09-explora-o-em-rpg-exploration1-grasslands.mp3",
+        "duration_seconds": 71.52,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/jrpg-pack-1-exploration",
+        "category": "modo-jogo"
+      },
+      {
+        "id": "modo-jogo-10-explora-o-em-rpg-exploration2-military-base",
+        "name": "Exploração em RPG: Exploration2   Military Base",
+        "genre": "Modo Jogo",
+        "src": "assets/music/modo-jogo-10-explora-o-em-rpg-exploration2-military-base.mp3",
+        "duration_seconds": 88.66,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/jrpg-pack-1-exploration",
+        "category": "modo-jogo"
+      },
+      {
+        "id": "modo-jogo-11-explora-o-em-rpg-exploration3-tha-el-mines",
+        "name": "Exploração em RPG: Exploration3   Tha'El Mines",
+        "genre": "Modo Jogo",
+        "src": "assets/music/modo-jogo-11-explora-o-em-rpg-exploration3-tha-el-mines.mp3",
+        "duration_seconds": 60.03,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/jrpg-pack-1-exploration",
+        "category": "modo-jogo"
+      },
+      {
+        "id": "modo-jogo-12-explora-o-em-rpg-exploration4-prairie-nights",
+        "name": "Exploração em RPG: Exploration4   Prairie Nights",
+        "genre": "Modo Jogo",
+        "src": "assets/music/modo-jogo-12-explora-o-em-rpg-exploration4-prairie-nights.mp3",
+        "duration_seconds": 92.94,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/jrpg-pack-1-exploration",
+        "category": "modo-jogo"
+      },
+      {
+        "id": "modo-jogo-13-explora-o-em-rpg-exploration5-sneaking-around",
+        "name": "Exploração em RPG: Exploration5   Sneaking Around",
+        "genre": "Modo Jogo",
+        "src": "assets/music/modo-jogo-13-explora-o-em-rpg-exploration5-sneaking-around.mp3",
+        "duration_seconds": 92.03,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/jrpg-pack-1-exploration",
+        "category": "modo-jogo"
+      },
+      {
+        "id": "modo-jogo-14-explora-o-em-rpg-exploration6-tropical-island",
+        "name": "Exploração em RPG: Exploration6   Tropical Island",
+        "genre": "Modo Jogo",
+        "src": "assets/music/modo-jogo-14-explora-o-em-rpg-exploration6-tropical-island.mp3",
+        "duration_seconds": 53.37,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/jrpg-pack-1-exploration",
+        "category": "modo-jogo"
+      },
+      {
+        "id": "modo-jogo-15-rpg-calmo-e-contemplativo-calm1-a-place-i-call-home",
+        "name": "RPG calmo e contemplativo: Calm1   A Place I Call Home",
+        "genre": "Modo Jogo",
+        "src": "assets/music/modo-jogo-15-rpg-calmo-e-contemplativo-calm1-a-place-i-call-home.mp3",
+        "duration_seconds": 46.5,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/jrpg-pack-4-calm",
+        "category": "modo-jogo"
+      },
+      {
+        "id": "modo-jogo-16-rpg-calmo-e-contemplativo-calm2-childhood-friends",
+        "name": "RPG calmo e contemplativo: Calm2   Childhood Friends",
+        "genre": "Modo Jogo",
+        "src": "assets/music/modo-jogo-16-rpg-calmo-e-contemplativo-calm2-childhood-friends.mp3",
+        "duration_seconds": 102.9,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/jrpg-pack-4-calm",
+        "category": "modo-jogo"
+      },
+      {
+        "id": "modo-jogo-17-rpg-calmo-e-contemplativo-calm3-peaceful-days",
+        "name": "RPG calmo e contemplativo: Calm3   Peaceful Days",
+        "genre": "Modo Jogo",
+        "src": "assets/music/modo-jogo-17-rpg-calmo-e-contemplativo-calm3-peaceful-days.mp3",
+        "duration_seconds": 64.03,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/jrpg-pack-4-calm",
+        "category": "modo-jogo"
+      },
+      {
+        "id": "modo-jogo-18-rpg-calmo-e-contemplativo-calm4-sand-castles",
+        "name": "RPG calmo e contemplativo: Calm4   Sand Castles",
+        "genre": "Modo Jogo",
+        "src": "assets/music/modo-jogo-18-rpg-calmo-e-contemplativo-calm4-sand-castles.mp3",
+        "duration_seconds": 71.16,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/jrpg-pack-4-calm",
+        "category": "modo-jogo"
+      },
+      {
+        "id": "modo-jogo-19-rpg-calmo-e-contemplativo-calm5-summer-memories",
+        "name": "RPG calmo e contemplativo: Calm5   Summer Memories",
+        "genre": "Modo Jogo",
+        "src": "assets/music/modo-jogo-19-rpg-calmo-e-contemplativo-calm5-summer-memories.mp3",
+        "duration_seconds": 65.49,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/jrpg-pack-4-calm",
+        "category": "modo-jogo"
+      },
+      {
+        "id": "modo-jogo-20-rpg-calmo-e-contemplativo-calm6-innocence",
+        "name": "RPG calmo e contemplativo: Calm6   Innocence",
+        "genre": "Modo Jogo",
+        "src": "assets/music/modo-jogo-20-rpg-calmo-e-contemplativo-calm6-innocence.mp3",
+        "duration_seconds": 71.16,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/jrpg-pack-4-calm",
+        "category": "modo-jogo"
       }
     ],
     "torneio": [
@@ -264,6 +968,182 @@
         "author": "MintoDog",
         "license": "CC0 1.0",
         "source": "https://opengameart.org/content/strange-factory",
+        "category": "torneio"
+      },
+      {
+        "id": "torneio-05-tema-de-batalha-rpg",
+        "name": "Tema de Batalha RPG",
+        "genre": "Torneio / Orquestral",
+        "src": "assets/music/torneio-05-tema-de-batalha-rpg.mp3",
+        "duration_seconds": 171.52,
+        "author": "CleytonKauffman",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/boss-battle-theme",
+        "category": "torneio"
+      },
+      {
+        "id": "torneio-06-chefe-da-cidade",
+        "name": "Chefe da Cidade",
+        "genre": "Torneio / Brass",
+        "src": "assets/music/torneio-06-chefe-da-cidade.mp3",
+        "duration_seconds": 126.25,
+        "author": "MintoDog",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/urban-boss-battle",
+        "category": "torneio"
+      },
+      {
+        "id": "torneio-07-batalha-sint-tica",
+        "name": "Batalha Sintética",
+        "genre": "Torneio / Retrô",
+        "src": "assets/music/torneio-07-batalha-sint-tica.mp3",
+        "duration_seconds": 130.95,
+        "author": "Spring Spring",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/is-it-a-battle",
+        "category": "torneio"
+      },
+      {
+        "id": "torneio-08-chefe-pico",
+        "name": "Chefe Épico",
+        "genre": "Torneio / Orquestral",
+        "src": "assets/music/torneio-08-chefe-pico.mp3",
+        "duration_seconds": 123.48,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/boss-battle-music",
+        "category": "torneio"
+      },
+      {
+        "id": "torneio-09-perigo-chef-o-forte",
+        "name": "Perigo: Chefão Forte",
+        "genre": "Torneio / 8 Bits",
+        "src": "assets/music/torneio-09-perigo-chef-o-forte.mp3",
+        "duration_seconds": 133.75,
+        "author": "HydroGene",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/8-bit-danger-strong-boss",
+        "category": "torneio"
+      },
+      {
+        "id": "torneio-10-cinco-composi-es-de-a-o-em-chiptune-juhani-junkala-retro-g",
+        "name": "Cinco composições de ação em chiptune: Juhani Junkala [Retro Game Music Pack] Ending",
+        "genre": "Torneio",
+        "src": "assets/music/torneio-10-cinco-composi-es-de-a-o-em-chiptune-juhani-junkala-retro-g.mp3",
+        "duration_seconds": 44.7,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/5-chiptunes-action",
+        "category": "torneio"
+      },
+      {
+        "id": "torneio-11-cinco-composi-es-de-a-o-em-chiptune-juhani-junkala-retro-g",
+        "name": "Cinco composições de ação em chiptune: Juhani Junkala [Retro Game Music Pack] Level 1",
+        "genre": "Torneio",
+        "src": "assets/music/torneio-11-cinco-composi-es-de-a-o-em-chiptune-juhani-junkala-retro-g.mp3",
+        "duration_seconds": 74.29,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/5-chiptunes-action",
+        "category": "torneio"
+      },
+      {
+        "id": "torneio-12-cinco-composi-es-de-a-o-em-chiptune-juhani-junkala-retro-g",
+        "name": "Cinco composições de ação em chiptune: Juhani Junkala [Retro Game Music Pack] Level 2",
+        "genre": "Torneio",
+        "src": "assets/music/torneio-12-cinco-composi-es-de-a-o-em-chiptune-juhani-junkala-retro-g.mp3",
+        "duration_seconds": 72.83,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/5-chiptunes-action",
+        "category": "torneio"
+      },
+      {
+        "id": "torneio-13-cinco-composi-es-de-a-o-em-chiptune-juhani-junkala-retro-g",
+        "name": "Cinco composições de ação em chiptune: Juhani Junkala [Retro Game Music Pack] Level 3",
+        "genre": "Torneio",
+        "src": "assets/music/torneio-13-cinco-composi-es-de-a-o-em-chiptune-juhani-junkala-retro-g.mp3",
+        "duration_seconds": 81.95,
+        "author": "SubspaceAudio",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/5-chiptunes-action",
+        "category": "torneio"
+      },
+      {
+        "id": "torneio-14-m-sicas-orquestrais-rock-e-experimentais-alexander-ehlers-",
+        "name": "Músicas orquestrais, rock e experimentais: Alexander Ehlers   Doomed",
+        "genre": "Torneio",
+        "src": "assets/music/torneio-14-m-sicas-orquestrais-rock-e-experimentais-alexander-ehlers-.mp3",
+        "duration_seconds": 151.28,
+        "author": "Alexander Ehlers",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/free-music-pack",
+        "category": "torneio"
+      },
+      {
+        "id": "torneio-15-m-sicas-orquestrais-rock-e-experimentais-alexander-ehlers-",
+        "name": "Músicas orquestrais, rock e experimentais: Alexander Ehlers   Flags",
+        "genre": "Torneio",
+        "src": "assets/music/torneio-15-m-sicas-orquestrais-rock-e-experimentais-alexander-ehlers-.mp3",
+        "duration_seconds": 98.66,
+        "author": "Alexander Ehlers",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/free-music-pack",
+        "category": "torneio"
+      },
+      {
+        "id": "torneio-16-m-sicas-orquestrais-rock-e-experimentais-alexander-ehlers-",
+        "name": "Músicas orquestrais, rock e experimentais: Alexander Ehlers   Great Mission",
+        "genre": "Torneio",
+        "src": "assets/music/torneio-16-m-sicas-orquestrais-rock-e-experimentais-alexander-ehlers-.mp3",
+        "duration_seconds": 118.57,
+        "author": "Alexander Ehlers",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/free-music-pack",
+        "category": "torneio"
+      },
+      {
+        "id": "torneio-17-m-sicas-orquestrais-rock-e-experimentais-alexander-ehlers-",
+        "name": "Músicas orquestrais, rock e experimentais: Alexander Ehlers   Spacetime",
+        "genre": "Torneio",
+        "src": "assets/music/torneio-17-m-sicas-orquestrais-rock-e-experimentais-alexander-ehlers-.mp3",
+        "duration_seconds": 116.09,
+        "author": "Alexander Ehlers",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/free-music-pack",
+        "category": "torneio"
+      },
+      {
+        "id": "torneio-18-m-sicas-orquestrais-rock-e-experimentais-alexander-ehlers-",
+        "name": "Músicas orquestrais, rock e experimentais: Alexander Ehlers   Twists",
+        "genre": "Torneio",
+        "src": "assets/music/torneio-18-m-sicas-orquestrais-rock-e-experimentais-alexander-ehlers-.mp3",
+        "duration_seconds": 180.09,
+        "author": "Alexander Ehlers",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/free-music-pack",
+        "category": "torneio"
+      },
+      {
+        "id": "torneio-19-m-sicas-orquestrais-rock-e-experimentais-alexander-ehlers-",
+        "name": "Músicas orquestrais, rock e experimentais: Alexander Ehlers   Waking The Devil",
+        "genre": "Torneio",
+        "src": "assets/music/torneio-19-m-sicas-orquestrais-rock-e-experimentais-alexander-ehlers-.mp3",
+        "duration_seconds": 80.72,
+        "author": "Alexander Ehlers",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/free-music-pack",
+        "category": "torneio"
+      },
+      {
+        "id": "torneio-20-m-sicas-orquestrais-rock-e-experimentais-alexander-ehlers-",
+        "name": "Músicas orquestrais, rock e experimentais: Alexander Ehlers   Warped",
+        "genre": "Torneio",
+        "src": "assets/music/torneio-20-m-sicas-orquestrais-rock-e-experimentais-alexander-ehlers-.mp3",
+        "duration_seconds": 114.1,
+        "author": "Alexander Ehlers",
+        "license": "CC0 1.0",
+        "source": "https://opengameart.org/content/free-music-pack",
         "category": "torneio"
       }
     ]
