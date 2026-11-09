@@ -383,9 +383,9 @@ PLAYLIST_PROFILES = {
         elif variation == 2:
             transformed.append(max(0, min(14, degree + (3 if step % 4 in (1, 2) else -1))))
         elif variation == 3:
-            transformed.append(max(0, min(14, degree + (1 if step % 2 == 0 else 4)))
+            transformed.append(max(0, min(14, degree + (1 if step % 2 == 0 else 4))))
         else:
-            transformed.append(max(0, min(14, degree + (5 if step % 8 == 0 else 0)))
+            transformed.append(max(0, min(14, degree + (5 if step % 8 == 0 else 0))))
     low, high = profile["energy"]
     energy = low + (high - low) * ((index * 13 % 19) / 18)
     display_name = f"{profile['prefix']} {index + 1:02d} — {base_title}"
