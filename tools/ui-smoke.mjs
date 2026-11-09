@@ -59,14 +59,18 @@ for(const [effect,files] of Object.entries(sfxManifest.effects)){
  for(const file of files){
   const record=sfxManifest.files.find(item=>item.src===file);
   check(!!record&&record.license==="CC0 1.0"&&record.creator==="Kenney","Crédito/licença ausente: "+file);
-  check(!sfxPaths.has(file),"Arquivo de efeito repetido: "+file);sfxPaths.add(file);
+  const isVerifyAlias=effect==="verify"&&file==="assets/sfx/kenney/open_001.ogg";
+  if(sfxPaths.has(file))check(isVerifyAlias,"Arquivo de efeito repetido: "+file);
+  else sfxPaths.add(file);
   const bytes=fs.readFileSync(path.join(ROOT,file));
   check(bytes.length>1000&&bytes.subarray(0,4).toString("ascii")==="OggS","OGG inválido: "+file);
   const hash=crypto.createHash("sha256").update(bytes).digest("hex");
-  check(!sfxHashes.has(hash),"Áudio de efeito duplicado: "+file);sfxHashes.add(hash);
+  if(sfxHashes.has(hash))check(isVerifyAlias,"Áudio de efeito duplicado: "+file);
+  else sfxHashes.add(hash);
  }
 }
-check(sfxPaths.size===16&&sfxHashes.size===16,"Esperados 16 efeitos sonoros distintos.");
+check(sfxManifest.effects.verify?.[0]==="assets/sfx/kenney/open_001.ogg","O botão Verificar precisa de um som diferente do clique.");
+check(sfxPaths.size===16&&sfxHashes.size===16,"Esperados 16 arquivos sonoros CC0 distintos.");
 
 const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(match => match[1]);
@@ -80,20 +84,25 @@ new Function(inlineScripts[0]);
 const logoutStart=html.indexOf("async function logout(){");
 const logoutEnd=html.indexOf("\nfunction escapeHtml",logoutStart);
 const logoutCode=logoutStart>=0&&logoutEnd>logoutStart?html.slice(logoutStart,logoutEnd):"";
-check(html.includes("loadUiSfx();")&&html.includes("playUiSound('key')"),"Efeitos de clique/tecla não ligados.");
+check(html.includes("loadUiSfx();")&&html.includes("playUiSound('key')")&&html.includes("document.addEventListener('pointerdown'"),"Efeitos de clique/tecla não ligados no instante do toque.");
+check(html.includes('data-sfx="verify"')&&html.includes("button.dataset.sfx||'click'"),"O botão Verificar não usa seu efeito próprio.");
+check(html.includes("profileOptionsOpen||")&&html.includes("function showProfileOptions()")&&html.includes("function closeProfileOptions()"),"A música não é pausada e restaurada na tela Opções.");
+check(html.includes('id="openProfileStats"')&&html.includes('id="openProfileOptions"')&&html.includes('id="profileOptionsPanel"'),"Os atalhos de Estatísticas e Opções não estão no cartão de perfil.");
+check(!html.includes('id="resumeProfile"')&&!html.includes('id="addNumbers"')&&!html.includes('id="toggleProfileStats"'),"Os botões antigos continuam no perfil.");
+check(html.includes("SFX_OUTPUT_BOOST")&&html.includes("function previewSfxVolume()"),"O reforço e a prévia do volume dos efeitos estão ausentes.");
 check(html.includes("uiSfxBuffers.set(src,buffer)")&&html.includes("source.start(audioContext.currentTime+.002)"),
  "Efeitos sonoros não são decodificados e reproduzidos em memória.");
 check(html.includes('id="profileSfxVolume"')&&html.includes("SFX_VOLUME_CACHE_KEY"),
  "O perfil não oferece volume independente e persistente para os efeitos.");
 check(html.includes("playUiSound('select')")&&html.includes("playUiSound(value===null?'timeout':'select')"),
  "Sons de seleção e tempo esgotado não estão ligados às respostas.");
-check(!html.includes("'<small>@'+escapeHtml(user.username)+'</small>'+"),
+check(!html.includes("'<small>@'+escapeHtml(user.username)+'</small>'+")&&html.includes("community-rank-display-title"),
  "A comunidade continua exibindo o @usuário duplicado.");
 check(html.includes("community-rank-title-line")&&html.includes("community-challenge-details"),
  "A comunidade não apresenta títulos e desafios na nova posição.");
-check(html.includes(".community-rank-public-stats{color:#294967"),
+check(html.includes(".community-rank-public-stats{color:#102b49"),
  "O texto de estatísticas da comunidade continua com contraste baixo.");
-check(html.includes('<button id="navCommunity" type="button">🏆 Comunidade</button>'),
+check(html.includes('<button id="navCommunity" type="button">🌐 Comunidade</button>'),
  "O ícone anterior da comunidade não foi restaurado.");
 check(html.includes("const ACTIVE_TIME_SYNC_MS=30*60*1000;"), "O salvamento automático não está configurado para 30 minutos.");
 check(logoutCode.length>0&&!logoutCode.includes("flushCloudSave(true)"), "Sair da conta ainda força um salvamento antes dos 30 minutos.");
@@ -256,27 +265,16 @@ async function testViewport(name, viewport, mobile = false) {
     activeProfile = "perfil-smoke";
     profilesData[activeProfile] = { displayName: "Perfil de teste", sfxVolume: 0.82 };
     document.querySelector("#authScreen").classList.add("hidden");
+    document.querySelector("#setup").classList.remove("hidden");
     refreshProfileIdentity();
-    document.querySelector("#profileScreen").classList.remove("hidden");
   });
-  await page.locator("#toggleProfileStats").click();
-  check(!(await page.locator("#profileStatsPanel").evaluate(el => el.classList.contains("hidden"))), name + ": o painel de estatísticas não abriu.");
+  await page.locator("#openProfileStats").click();
+  check(!(await page.locator("#profileStatsPanel").evaluate(el => el.classList.contains("hidden"))), name + ": o botão Minhas estatísticas não abriu os gráficos.");
+  check(await page.locator("#profileMainPanel").evaluate(el => el.classList.contains("hidden")), name + ": a tela principal do perfil não foi substituída pelas estatísticas.");
   check(await page.locator("#profileStatsRadar svg").count() === 1, name + ": gráfico radar não foi renderizado.");
   check(await page.locator("#profileStatsLine svg").count() === 1, name + ": gráfico de evolução não foi renderizado.");
   check(await page.locator("#profileStatsPie .stats-pie").count() === 1, name + ": gráfico de acertos e erros não foi renderizado.");
   check(await page.locator("#profileStatsModes .stats-mode-row").count() >= 4, name + ": comparação por modalidade não foi renderizada.");
-  check(await page.locator("#profileSfxVolume").isVisible(), name + ": controle de volume dos efeitos não aparece no perfil.");
-  await page.locator("#profileSfxVolume").evaluate(element => {
-    element.value = "55";
-    element.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-  check((await page.locator("#profileSfxVolumeValue").textContent()).trim() === "55%",
-    name + ": ajuste de volume dos efeitos não atualizou.");
-  check(await page.evaluate(() => Math.abs(sfxVolumeLevel - .55) < .01),
-    name + ": o volume dos efeitos não foi aplicado.");
-  await page.waitForFunction(() => uiSfxGain && Math.abs(uiSfxGain.gain.value - .55) < .01, null, { timeout: 3000 });
-  check(await page.evaluate(() => uiSfxGain && Math.abs(uiSfxGain.gain.value - .55) < .01),
-    name + ": o volume separado não chegou ao ganho dos efeitos sonoros.");
 
   const chartOverflow = await page.evaluate(() => ({
     viewport: window.innerWidth,
@@ -287,6 +285,39 @@ async function testViewport(name, viewport, mobile = false) {
   check(chartOverflow.document <= chartOverflow.viewport + 1, name + ": os gráficos causam rolagem horizontal (" + JSON.stringify(chartOverflow) + ").");
   check(chartOverflow.radar <= chartOverflow.radarBox + 1, name + ": gráfico radar ultrapassa o cartão.");
   await page.screenshot({ path: "artifacts/" + name + "-graficos.png", fullPage: true });
+  await page.locator("#closeProfileStats").click();
+  check(!(await page.locator("#profileMainPanel").evaluate(el => el.classList.contains("hidden"))), name + ": voltar das estatísticas não restaurou o perfil.");
+  await page.locator("#backFromProfile").click();
+
+  const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && soundtrackAudio && !soundtrackAudio.paused));
+  await page.locator("#openProfileOptions").click();
+  check(!(await page.locator("#profileOptionsPanel").evaluate(el => el.classList.contains("hidden"))), name + ": a tela Opções não abriu.");
+  check(await page.locator("#siteMusicBox").evaluate(el => el.classList.contains("hidden")), name + ": o controle da música ficou acessível dentro de Opções.");
+  check(await page.locator("#soundtrackAudio").evaluate(el => el.paused), name + ": a música não pausou ao abrir Opções.");
+  check(await page.locator("#profileSfxVolume").isVisible(), name + ": o controle de volume dos efeitos não aparece em Opções.");
+  await page.evaluate(() => {
+    window.__previewCalls = 0;
+    window.__originalPlayUiSound = window.playUiSound;
+    window.playUiSound = function(name){ if(name==="click")window.__previewCalls++; return window.__originalPlayUiSound(name); };
+  });
+  await page.locator("#profileSfxVolume").evaluate(element => {
+    element.value = "55";
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  check((await page.locator("#profileSfxVolumeValue").textContent()).trim() === "55%",
+    name + ": ajuste de volume dos efeitos não atualizou.");
+  check(await page.evaluate(() => Math.abs(sfxVolumeLevel - .55) < .01),
+    name + ": o volume dos efeitos não foi aplicado.");
+  await page.waitForFunction(() => uiSfxGain && Math.abs(uiSfxGain.gain.value - .6875) < .02, null, { timeout: 3000 });
+  check(await page.evaluate(() => uiSfxGain && Math.abs(uiSfxGain.gain.value - .6875) < .02),
+    name + ": o volume separado não chegou ao ganho dos efeitos sonoros.");
+  await page.waitForFunction(() => window.__previewCalls > 0, null, { timeout: 3000 });
+  check(await page.evaluate(() => soundOn), name + ": ajustar efeitos desligou indevidamente o estado da música.");
+  await page.locator("#closeProfileOptions").click();
+  check(!(await page.locator("#profileOptionsPanel").evaluate(el => el.classList.contains("hidden"))), name + ": fechar Opções falhou.");
+  if(musicWasPlayingBeforeOptions){
+    await page.waitForFunction(() => !document.querySelector("#soundtrackAudio").paused, null, { timeout: 5000 });
+  }
 
   await page.evaluate(async () => {
     document.querySelector("#profileScreen").classList.add("hidden");

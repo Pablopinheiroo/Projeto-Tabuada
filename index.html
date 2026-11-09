@@ -893,6 +893,19 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  .profile-sfx-volume input{grid-column:1;grid-row:2}
  .profile-sfx-volume strong{grid-column:2;grid-row:2}
 }
+
+/* Ajustes finais: leitura da comunidade e telas independentes do perfil. */
+.community-rank-public-stats{color:#102b49!important;font-size:.82rem!important;font-weight:950!important;line-height:1.6!important;text-shadow:none!important;gap:7px 8px!important}
+.community-rank-public-stats span{display:inline-flex;align-items:center;white-space:normal!important;color:#102b49!important;background:#eaf3ff;border:1px solid #c5d8ee;border-radius:8px;padding:4px 7px}
+.community-rank-display-title{display:block;color:#102b49!important;font-size:1rem!important;font-weight:950!important;line-height:1.2;letter-spacing:-.025em;text-shadow:none}
+.profile-subscreen-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:0 0 14px}
+.profile-subscreen-heading>div{min-width:0}
+.profile-subscreen-heading .secondary{flex:0 0 auto;min-height:42px;padding:9px 12px}
+.profile-options-panel{display:grid;gap:12px}
+.profile-options-panel .profile-audio-settings{margin:0}
+.profile-options-panel .profile-sfx-volume input{min-width:0}
+@media(max-width:520px){.profile-subscreen-heading{align-items:stretch;flex-direction:column}.profile-subscreen-heading .secondary{width:100%}}
+
 </style>
 </head>
 <body>
@@ -948,6 +961,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 </section>
 
 <section id="profileScreen" class="panel hidden">
+ <div id="profileMainPanel">
  <h2>👤 Meu perfil</h2>
  <p class="hint">Personalize como você aparece no jogo.</p>
  <div class="profile-identity">
@@ -979,9 +993,28 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   <div id="featuredAwardsEditor" class="featured-awards-editor"></div>
   <div id="profileFeaturedDisplay" class="profile-featured-display"></div>
  </div>
- <div class="profile-stats-entry"><div><strong>📊 Suas estatísticas</strong><small>Veja seu desempenho, evolução e contas que merecem revisão.</small></div><button id="toggleProfileStats" class="primary" type="button" aria-expanded="false">Ver estatísticas</button></div>
- <section id="profileStatsPanel" class="profile-stats-panel hidden" aria-label="Estatísticas pessoais">
-  <div class="profile-stats-heading"><div><span class="music-kicker">PAINEL DE DESEMPENHO</span><h2>Seu mapa de aprendizagem</h2><p class="hint">Os gráficos usam seu histórico privado de treinamento, aventura, desafios e torneios.</p></div></div>
+ 
+ <form id="profileEditForm" class="auth-form">
+  <label>Nome que aparece no jogo<input id="profileDisplayName" maxlength="24" required placeholder="Seu nome de exibição"></label>
+  <div class="avatar-field">Loja de avatares <small class="shop-rules">Imagem: 100 moedas · GIF animado: 1.500 moedas. Seu avatar inicial é gratuito. Avatares comprados ficam na sua conta.</small><div id="profileAvatarGrid" class="avatar-grid" role="group" aria-label="Loja e seleção de avatares"></div></div>
+  <button class="primary" type="submit">Salvar perfil</button>
+  <p id="profileMessage" class="auth-message" role="status"></p>
+ </form>
+ 
+ <h2 class="profile-section-title">🔑 Alterar senha</h2>
+ <p class="hint">Digite a nova senha e confirme. Não é necessário informar a senha atual.</p>
+ <form id="changePasswordForm" class="auth-form">
+  <label>Nova senha<input id="newPassword" type="password" autocomplete="new-password" required placeholder="Digite a nova senha"></label>
+  <label>Confirmar nova senha<input id="confirmNewPassword" type="password" autocomplete="new-password" required placeholder="Repita a nova senha"></label>
+  <button class="primary" type="submit">Alterar senha</button>
+  <p id="passwordMessage" class="auth-message" role="status"></p>
+ </form>
+ <div class="profile-warning">A troca de senha só fica disponível enquanto você está conectado à conta. Não existe opção de recuperação ou “esqueci minha senha”. Guarde sua nova senha.</div>
+ <div class="report-actions"><button id="backFromProfile" class="secondary" type="button">← Voltar ao jogo</button></div>
+
+ </div>
+<section id="profileStatsPanel" class="profile-stats-panel hidden" aria-label="Estatísticas pessoais">
+  <div class="profile-subscreen-heading"><div><span class="music-kicker">PAINEL DE DESEMPENHO</span><h2>Seu mapa de aprendizagem</h2><p class="hint">Os gráficos usam seu histórico privado de treinamento, aventura, desafios e torneios.</p></div><button id="closeProfileStats" class="secondary" type="button">← Meu perfil</button></div>
   <div id="profileStatsOverview" class="profile-stats-overview"></div>
   <div class="profile-stats-chart-grid">
    <article class="stats-chart-card stats-radar-card"><h3>🕸️ Domínio das tabuadas · 1 a 20</h3><p>Quanto maior a área preenchida, maior seu domínio registrado em cada tabuada.</p><div id="profileStatsRadar" class="stats-radar"></div><small class="stats-chart-note">Tabuadas sem questões respondidas aparecem sem domínio medido.</small></article>
@@ -995,31 +1028,18 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   </div>
   <p class="stats-data-note">A análise considera erros, acertos e tempo médio por resposta. Os dados antigos continuam preservados; a separação por modo fica mais completa conforme você joga cada modalidade após esta atualização.</p>
  </section>
- <form id="profileEditForm" class="auth-form">
-  <label>Nome que aparece no jogo<input id="profileDisplayName" maxlength="24" required placeholder="Seu nome de exibição"></label>
-  <div class="avatar-field">Loja de avatares <small class="shop-rules">Imagem: 100 moedas · GIF animado: 1.500 moedas. Seu avatar inicial é gratuito. Avatares comprados ficam na sua conta.</small><div id="profileAvatarGrid" class="avatar-grid" role="group" aria-label="Loja e seleção de avatares"></div></div>
-  <button class="primary" type="submit">Salvar perfil</button>
-  <p id="profileMessage" class="auth-message" role="status"></p>
- </form>
- <section class="profile-audio-settings" aria-label="Preferências dos efeitos sonoros">
-  <h3>🔊 Volume dos efeitos sonoros</h3>
-  <p>Regule separadamente os cliques, teclas, acertos, erros e avisos do jogo. Isso não altera a música de fundo.</p>
+ <section id="profileOptionsPanel" class="profile-options-panel hidden" aria-label="Opções do jogo">
+  <div class="profile-subscreen-heading"><div><span class="music-kicker">PREFERÊNCIAS</span><h2>⚙️ Opções</h2><p class="hint">Ajuste os efeitos sonoros. A música de fundo fica pausada enquanto esta tela estiver aberta.</p></div><button id="closeProfileOptions" class="secondary" type="button">← Meu perfil</button></div>
+  <section class="profile-audio-settings" aria-label="Preferências dos efeitos sonoros">
+  <h3>🔊 Volume dos efeitos especiais</h3>
+  <p>Ajuste o volume dos cliques, teclas, acertos, erros e avisos. Ao mover o controle, um som de teste ajuda a comparar o volume.</p>
   <label class="profile-sfx-volume" for="profileSfxVolume">
    <span>Volume dos efeitos</span>
    <input id="profileSfxVolume" type="range" min="0" max="100" step="1" value="82">
    <strong id="profileSfxVolumeValue">82%</strong>
   </label>
  </section>
- <h2 class="profile-section-title">🔑 Alterar senha</h2>
- <p class="hint">Digite a nova senha e confirme. Não é necessário informar a senha atual.</p>
- <form id="changePasswordForm" class="auth-form">
-  <label>Nova senha<input id="newPassword" type="password" autocomplete="new-password" required placeholder="Digite a nova senha"></label>
-  <label>Confirmar nova senha<input id="confirmNewPassword" type="password" autocomplete="new-password" required placeholder="Repita a nova senha"></label>
-  <button class="primary" type="submit">Alterar senha</button>
-  <p id="passwordMessage" class="auth-message" role="status"></p>
- </form>
- <div class="profile-warning">A troca de senha só fica disponível enquanto você está conectado à conta. Não existe opção de recuperação ou “esqueci minha senha”. Guarde sua nova senha.</div>
- <div class="report-actions"><button id="backFromProfile" class="secondary" type="button">← Voltar ao jogo</button></div>
+ </section>
 </section>
 
 <section id="setup" class="panel hidden">
@@ -1031,8 +1051,8 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  <div class="profile-actions">
   <button id="openProfile" class="music-button" type="button">👤 Meu perfil</button>
   <button id="saveProfile" class="music-button" type="button">💾 Salvar dados</button>
-  <button id="resumeProfile" class="music-button" type="button" disabled>▶ Continuar de onde parei</button>
-  <button id="addNumbers" class="music-button" type="button" disabled>＋ Adicionar números à partida</button>
+  <button id="openProfileStats" class="music-button" type="button">📊 Minhas estatísticas</button>
+  <button id="openProfileOptions" class="music-button" type="button">⚙️ Opções</button>
   <button id="logout" class="music-button" type="button">Sair da conta</button>
  </div>
  <p id="profileStatus" class="small profile-status">Progresso salvo</p>
@@ -1045,7 +1065,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  <button id="navTraining" type="button">📘 Treinar</button>
  <button id="navChallenge" type="button">⚔️ Desafio</button>
  <button id="navTournament" type="button">🏁 Torneio</button>
- <button id="navCommunity" type="button">🏆 Comunidade</button>
+ <button id="navCommunity" type="button">🌐 Comunidade</button>
 </nav>
 
 <div id="modeHub" class="mode-hub">
@@ -1318,7 +1338,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 <div id="questionTime" class="question-time">Tempo nesta questão: 00:00</div>
 <div id="answer" class="answer" aria-live="assertive"></div>
 <div class="actions">
-<button id="verify" class="verify">Verificar</button>
+<button id="verify" class="verify" data-sfx="verify">Verificar</button>
 <div id="judge" class="judge hidden">
 <button id="right" class="yes">✓ Acertei</button>
 <button id="markDifficulty" class="difficulty-mark" type="button">⚑ Tive dificuldade</button>
@@ -1406,6 +1426,7 @@ let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed
 let trainingReviewMode=false,trainingReviewFacts=[],trainingRoundTarget=0,currentQuestionTimeMs=0,currentQuestionTimeStopped=false,currentDifficultyMarked=false;
 let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=1,sfxVolumeLevel=.82;
 let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueuePosition=0,musicStartPending=false,mainMusicTimer=null;
+let profileOptionsOpen=false,profileOptionsResumeMusic=false,sfxPreviewTimer=null;
 const LAST_TRACK_STORAGE_KEY='projetoTabuadaUltimaFaixaV2:';
 let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0;
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
@@ -2329,7 +2350,7 @@ async function renderCommunityRanking(){
       '<div class="community-rank-place">'+(place===1?'🥇':place===2?'🥈':place===3?'🥉':'#'+place)+'</div>'+
       '<img class="community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt="">'+
       '<div class="community-rank-identity">'+
-       '<div class="community-rank-name-row"><strong>'+escapeHtml(user.displayName)+'</strong><span class="community-wallet-pill"><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</span></div>'+
+       '<div class="community-rank-name-row"><strong class="community-rank-display-title">'+escapeHtml(user.displayName)+'</strong><span class="community-wallet-pill"><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</span></div>'+
        titleLine+
        '<div class="community-rank-public-stats"><span>✓ '+user.correct.toLocaleString('pt-BR')+' acertos</span><span>✕ '+user.wrong.toLocaleString('pt-BR')+' erros</span><span>⏱️ '+formatDuration(user.timeMs)+' estudado</span></div>'+
       '</div>'+
@@ -2632,11 +2653,6 @@ function finishSession(){
 function profileSnapshot(){
  return {selected,trainingGlobalMode:$('trainingGlobalMode')?.value||'individual',deck,position,round,hits,misses,sessionAnswers,sessionSkipped,sessionQuestionTimeMs,roundCorrect:[...roundCorrect],trainingReviewMode,trainingReviewFacts,currentQuestionTimeMs,currentQuestionTimeStopped,currentDifficultyMarked,savedAt:new Date().toISOString()};
 }
-function updateProfileButtons(){
- const name=$('profileName').value.trim(),profile=profilesData[name];
- $('resumeProfile').disabled=!(profile&&profile.checkpoint);
- $('addNumbers').disabled=!(profile&&profile.checkpoint);
-}
 function selectProfile(){
  const name=$('profileName').value.trim();activeProfile=name;
  const c=profilesData[name]?.checkpoint;
@@ -2644,14 +2660,14 @@ function selectProfile(){
   if($('trainingGlobalMode'))$('trainingGlobalMode').value=c.trainingGlobalMode||'individual';
   selected=c.selected||[];
   tablesEl.querySelectorAll('.table-row').forEach(row=>{const n=Number(row.querySelector('input').value),item=selected.find(t=>t.n===n);row.querySelector('input').checked=!!item;if(item)row.querySelector('select').value=item.mode;});
-  $('profileStatus').textContent='Progresso encontrado para “'+name+'”. Você pode continuar ou adicionar outras tabuadas.';
+  $('profileStatus').textContent='Progresso encontrado para “'+name+'”. Escolha as tabuadas e inicie um novo treino.';
  }else {
   if($('trainingGlobalMode'))$('trainingGlobalMode').value='individual';
   tablesEl.querySelectorAll('.table-row').forEach(row=>{row.querySelector('input').checked=false;row.querySelector('select').value='normal';});
   $('profileStatus').textContent='Perfil pronto. Escolha as tabuadas e inicie um novo treino.';
  }
  updateTrainingGlobalModeControls();
- updateProfileButtons();
+ 
 }
 function saveProfile(showMessage=true){
  const name=$('profileName').value.trim();
@@ -2660,7 +2676,7 @@ function saveProfile(showMessage=true){
  if(round>0&&!$('game').classList.contains('hidden'))profilesData[name].checkpoint=profileSnapshot();
  profilesData[name].updatedAt=new Date().toISOString();
  if(!persistProfiles()){$('profileStatus').textContent='Não foi possível salvar os dados neste navegador.';return false;}
- historyData=loadHistory();updateProfileButtons();
+ historyData=loadHistory();
  if(showMessage){flushCloudSave(true);$('profileStatus').textContent='Perfil “'+name+'” salvo. O progresso será sincronizado online.';}
  else scheduleCloudSave();
  return true;
@@ -2671,31 +2687,35 @@ function saveCheckpoint(){
  c.currentElapsedMs=questionStartedAt?questionElapsedBeforeStart+performance.now()-questionStartedAt:0;
  profilesData[activeProfile].checkpoint=c;profilesData[activeProfile].updatedAt=new Date().toISOString();persistProfiles();scheduleCloudSave();
 }
-function resumeProfile(){
- const name=$('profileName').value.trim(),c=profilesData[name]?.checkpoint;if(!name||!c)return;
- trainingReviewMode=!!c.trainingReviewMode;trainingReviewFacts=Array.isArray(c.trainingReviewFacts)?c.trainingReviewFacts:[];
- activeProfile=name;
- if($('trainingGlobalMode'))$('trainingGlobalMode').value=c.trainingGlobalMode||'individual';
- updateTrainingGlobalModeControls();
- historyData=loadHistory();selected=c.selected||[];deck=c.deck||[];position=c.position||0;round=c.round||1;
- hits=c.hits||0;misses=c.misses||0;sessionAnswers=c.sessionAnswers||[];sessionSkipped=c.sessionSkipped||0;sessionQuestionTimeMs=c.sessionQuestionTimeMs||0;roundCorrect=new Set(c.roundCorrect||[]);
- tablesEl.querySelectorAll('.table-row').forEach(row=>{const n=Number(row.querySelector('input').value),item=selected.find(t=>t.n===n);row.querySelector('input').checked=!!item;if(item)row.querySelector('select').value=item.mode;});
- $('setup').classList.add('hidden');$('report').classList.add('hidden');$('game').classList.remove('hidden');sessionStartedAt=performance.now();
- current=deck[position];revealed=false;$('equation').textContent=current.a+' × '+current.b;$('counter').textContent='Rodada '+round+' · Questão '+(position+1)+' de '+deck.length;
- $('answer').textContent='';$('answer').className='answer';$('verify').classList.remove('hidden');$('judge').classList.add('hidden');updateStats();
- currentQuestionTimeMs=0;currentQuestionTimeStopped=false;currentDifficultyMarked=false;
- $('markDifficulty').disabled=false;$('markDifficulty').classList.remove('marked');$('markDifficulty').textContent='⚑ Tive dificuldade';
- questionElapsedBeforeStart=c.currentElapsedMs||0;beginQuestionClock();$('profileStatus').textContent='Partida retomada. Bom estudo!';
+function showProfileOptions(){
+ profileOptionsResumeMusic=!!(soundOn&&soundtrackAudio&&!soundtrackAudio.paused&&!soundtrackAudio.ended&&!challengeMusicActive);
+ profileOptionsOpen=true;
+ clearMainMusicTimer();
+ musicWasPlayingBeforeHide=false;
+ if(soundtrackAudio)soundtrackAudio.pause();
+ $('siteMusicBox').classList.add('hidden');
+ $('profileMainPanel').classList.add('hidden');
+ $('profileStatsPanel').classList.add('hidden');
+ $('profileOptionsPanel').classList.remove('hidden');
+ restoreProfileSfxVolume();
 }
-function addNumbersToSavedGame(){
- const name=$('profileName').value.trim(),c=profilesData[name]?.checkpoint;if(!c)return;
- const additions=[...tablesEl.querySelectorAll('.table-row')].filter(r=>r.querySelector('input').checked).map(r=>({n:Number(r.querySelector('input').value),mode:r.querySelector('select').value})).filter(t=>!(c.selected||[]).some(old=>old.n===t.n));
- if(!additions.length){$('profileStatus').textContent='Marque uma tabuada que ainda não esteja nesta partida.';return;}
- c.selected=c.selected||[];c.selected.push(...additions);const extra=[];additions.forEach(t=>{for(let b=1;b<=10;b++)extra.push({a:t.n,b});});c.deck.splice(c.position||0,0,...extra);
- profilesData[name].checkpoint=c;persistProfiles();selectProfile();$('profileStatus').textContent='Novas tabuadas adicionadas. Continue a partida para praticá-las.';
+function closeProfileOptions(){
+ const resume=profileOptionsResumeMusic;
+ profileOptionsOpen=false;
+ profileOptionsResumeMusic=false;
+ $('profileOptionsPanel').classList.add('hidden');
+ $('profileMainPanel').classList.remove('hidden');
+ $('siteMusicBox').classList.remove('hidden');
+ if(resume&&soundOn){
+  if(document.hidden)musicWasPlayingBeforeHide=true;
+  else playCurrentTrack();
+ }
 }
-
-function openProfileScreen(){
+function closeProfileStats(){
+ $('profileStatsPanel').classList.add('hidden');
+ $('profileMainPanel').classList.remove('hidden');
+}
+function openProfileScreen(showStats=false){
  if(!$('game').classList.contains('hidden')){alert('Encerre a partida antes de editar o perfil.');return;}
  const profile=profilesData[activeProfile]||{};
  selectedProfileAvatar=normalizeAvatarKey(profile.avatar);
@@ -2706,11 +2726,15 @@ function openProfileScreen(){
  renderAvatarGrid('profileAvatarGrid',selectedProfileAvatar,index=>{selectedProfileAvatar=index;});
  renderAchievementShelf();refreshEconomyDisplay();renderChallengeProfileStats();
  renderFeaturedAwardsEditor();renderProfileLearningStats();
- if($('profileStatsPanel'))$('profileStatsPanel').classList.add('hidden');
- if($('toggleProfileStats')){$('toggleProfileStats').textContent='Ver estatísticas';$('toggleProfileStats').setAttribute('aria-expanded','false');}
+ profileOptionsOpen=false;profileOptionsResumeMusic=false;
+ $('siteMusicBox').classList.remove('hidden');
+ $('profileOptionsPanel').classList.add('hidden');
+ $('profileStatsPanel').classList.toggle('hidden',!showStats);
+ $('profileMainPanel').classList.toggle('hidden',!!showStats);
  refreshProfileIdentity();
  $('setup').classList.add('hidden');
  $('profileScreen').classList.remove('hidden');
+ if(showStats)renderProfileLearningStats();
 }
 async function saveProfileEdits(event){
  event.preventDefault();
@@ -2762,6 +2786,7 @@ async function changePassword(event){
  }
 }
 function closeProfileScreen(){
+ if(profileOptionsOpen)closeProfileOptions();
  setMusicCategory('principal',true);
  $('profileScreen').classList.add('hidden');
  $('setup').classList.remove('hidden');
@@ -4234,11 +4259,22 @@ function playNote(frequency,start,duration,wave,volume){
  oscillator.onended=()=>{activeSounds.delete(oscillator);oscillator.disconnect();envelope.disconnect()};
  oscillator.start(start);oscillator.stop(start+duration+.04);
 }
-let uiSfxLibrary={},uiSfxAudioPool=new Map(),uiSfxPoolCursor=new Map(),uiSfxBuffers=new Map(),uiSfxGain=null;
+let uiSfxLibrary={},uiSfxAudioPool=new Map(),uiSfxPoolCursor=new Map(),uiSfxBuffers=new Map(),uiSfxGain=null,uiSfxCompressor=null;
+const SFX_OUTPUT_BOOST=1.25;
 function updateUiSfxGain(){
  if(!audioContext)return;
- if(!uiSfxGain){uiSfxGain=audioContext.createGain();uiSfxGain.gain.value=sfxVolumeLevel;uiSfxGain.connect(audioContext.destination);}
- uiSfxGain.gain.setValueAtTime(sfxVolumeLevel,audioContext.currentTime);
+ if(!uiSfxGain){
+  uiSfxGain=audioContext.createGain();
+  uiSfxCompressor=audioContext.createDynamicsCompressor();
+  uiSfxCompressor.threshold.setValueAtTime(-8,audioContext.currentTime);
+  uiSfxCompressor.knee.setValueAtTime(5,audioContext.currentTime);
+  uiSfxCompressor.ratio.setValueAtTime(8,audioContext.currentTime);
+  uiSfxCompressor.attack.setValueAtTime(.003,audioContext.currentTime);
+  uiSfxCompressor.release.setValueAtTime(.09,audioContext.currentTime);
+  uiSfxGain.connect(uiSfxCompressor);
+  uiSfxCompressor.connect(audioContext.destination);
+ }
+ uiSfxGain.gain.setTargetAtTime(sfxVolumeLevel*SFX_OUTPUT_BOOST,audioContext.currentTime,.012);
 }
 function playUiSfxBuffer(buffer){
  if(!buffer||!ensureAudio())return false;
@@ -4252,8 +4288,9 @@ function playUiSfxBuffer(buffer){
 const SFX_VOLUME_CACHE_KEY='projetoTabuadaVolumeEfeitosV1';
 function applySfxVolumeToPlayers(){
  const value=Math.max(0,Math.min(1,sfxVolumeLevel));
- for(const pool of uiSfxAudioPool.values())for(const player of pool)player.volume=value;
- if(uiSfxGain&&audioContext)uiSfxGain.gain.setValueAtTime(value,audioContext.currentTime);
+ const outputValue=Math.min(1,value*SFX_OUTPUT_BOOST);
+ for(const pool of uiSfxAudioPool.values())for(const player of pool)player.volume=outputValue;
+ if(uiSfxGain&&audioContext)uiSfxGain.gain.setTargetAtTime(value*SFX_OUTPUT_BOOST,audioContext.currentTime,.012);
  if($('profileSfxVolume'))$('profileSfxVolume').value=String(Math.round(value*100));
  if($('profileSfxVolumeValue'))$('profileSfxVolumeValue').textContent=Math.round(value*100)+'%';
 }
@@ -4282,6 +4319,10 @@ function setProfileSfxVolume(value){
   }catch{}
  }
  applySfxVolumeToPlayers();
+}
+function previewSfxVolume(){
+ if(sfxPreviewTimer)clearTimeout(sfxPreviewTimer);
+ sfxPreviewTimer=setTimeout(()=>{sfxPreviewTimer=null;playUiSound('click');},90);
 }
 async function loadUiSfx(){
  try{
@@ -4325,7 +4366,7 @@ async function loadUiSfx(){
  }catch(error){console.warn('Efeitos sonoros indisponíveis:',error);}
 }
 function playUiSound(name){
- if(!soundOn||document.hidden)return;
+ if(document.hidden)return;
  const files=uiSfxLibrary[name]||[];
  if(files.length){
   const src=files[Math.floor(Math.random()*files.length)];
@@ -4388,13 +4429,13 @@ function clearMainMusicTimer(){
 }
 function scheduleMainMusicRotation(){
  clearMainMusicTimer();
- if(!soundOn||!soundtrackAudio||soundtrackAudio.paused||document.hidden||isGameScreenActive()||challengeMusicActive)return;
+ if(!soundOn||profileOptionsOpen||!soundtrackAudio||soundtrackAudio.paused||document.hidden||isGameScreenActive()||challengeMusicActive)return;
  const duration=Number.isFinite(soundtrackAudio.duration)?soundtrackAudio.duration:(musicalTracks[currentTrackIndex]?.duration_seconds||0);
  const remaining=Math.max(0,duration-(soundtrackAudio.currentTime||0));
  if(!remaining)return;
  mainMusicTimer=setTimeout(()=>{
   mainMusicTimer=null;
-  if(soundOn&&!document.hidden&&!isGameScreenActive()&&!challengeMusicActive&&!soundtrackAudio.paused)playNextTrack();
+  if(soundOn&&!profileOptionsOpen&&!document.hidden&&!isGameScreenActive()&&!challengeMusicActive&&!soundtrackAudio.paused)playNextTrack();
  },Math.max(1000,remaining*1000+250));
 }
 function watchGameScreenForMusic(){
@@ -4405,7 +4446,7 @@ function watchGameScreenForMusic(){
  observer.observe(game,{attributes:true,attributeFilter:['class']});
 }
 function playCurrentTrack(){
- if(!soundtrackAudio||currentTrackIndex<0||!soundOn||document.hidden)return Promise.resolve(false);
+ if(!soundtrackAudio||currentTrackIndex<0||!soundOn||profileOptionsOpen||document.hidden)return Promise.resolve(false);
  if(musicStartPending)return Promise.resolve(false);
  soundtrackAudio.volume=challengeMusicActive?challengeVolumeLimit/100:volumeLevel;
  musicStartPending=true;
@@ -4462,7 +4503,7 @@ function pauseAudioForBackground(){
  if(musicWasPlayingBeforeHide)$('musicTitle').textContent='⏸ Faixa pausada enquanto você está fora da página';
 }
 function resumeAudioWhenVisible(){
- if(!musicWasPlayingBeforeHide||!soundOn||document.hidden)return;
+ if(!musicWasPlayingBeforeHide||!soundOn||profileOptionsOpen||document.hidden)return;
  musicWasPlayingBeforeHide=false;
  if(audioContext&&audioContext.state==='suspended')audioContext.resume().catch(()=>{});
  playCurrentTrack().then(ok=>{if(!ok)musicWasPlayingBeforeHide=true;});
@@ -4491,7 +4532,7 @@ function initMusicPlayer(){
  soundtrackAudio=$('soundtrackAudio');soundtrackAudio.preload='auto';soundtrackAudio.autoplay=true;soundtrackAudio.volume=1;
  watchGameScreenForMusic();soundtrackAudio.setAttribute('autoplay','');soundtrackAudio.setAttribute('playsinline','');
  soundtrackAudio.addEventListener('canplay',()=>{
-  if(soundOn&&!document.hidden&&soundtrackAudio.paused&&!musicStartPending&&!challengeMusicActive)playCurrentTrack();
+  if(soundOn&&!profileOptionsOpen&&!document.hidden&&soundtrackAudio.paused&&!musicStartPending&&!challengeMusicActive)playCurrentTrack();
  });
  soundtrackAudio.addEventListener('playing',()=>{
   $('soundToggle').textContent='♫ Pausar música';$('soundToggle').setAttribute('aria-pressed','true');
@@ -4545,7 +4586,7 @@ function toggleSound(){
  if(soundOn)playCurrentTrack();else{clearMainMusicTimer();if(soundtrackAudio)soundtrackAudio.pause();}
 }
 function replayTune(){if(soundOn)playNextTrack()}
-function stop(){finishSession();if(activeProfile&&profilesData[activeProfile]){profilesData[activeProfile].checkpoint=null;persistProfiles();updateProfileButtons();}scheduleCloudSave();}
+function stop(){finishSession();if(activeProfile&&profilesData[activeProfile]){profilesData[activeProfile].checkpoint=null;persistProfiles();}scheduleCloudSave();}
 function backToMenu(){
  setMusicCategory('principal',true);
  $('report').classList.add('hidden');
@@ -4564,7 +4605,7 @@ loadMusicManifest().finally(initMusicPlayer);
 $('musicMenuToggle').addEventListener('click',toggleMusicMenu);
 $('trackSelect').addEventListener('change',e=>chooseTrack(e.target.value));
 $('globalVolume').addEventListener('input',e=>setVolume(e.target.value));
-$('profileSfxVolume').addEventListener('input',e=>setProfileSfxVolume(e.target.value));
+$('profileSfxVolume').addEventListener('input',e=>{setProfileSfxVolume(e.target.value);previewSfxVolume();});
 $('soundToggle').addEventListener('click',toggleSound);
 $('replayTune').addEventListener('click',replayTune);
 
@@ -4579,13 +4620,10 @@ $('openProfile').addEventListener('click',openProfileScreen);
 $('profileEditForm').addEventListener('submit',saveProfileEdits);
 $('changePasswordForm').addEventListener('submit',changePassword);
 $('backFromProfile').addEventListener('click',closeProfileScreen);
-$('toggleProfileStats').addEventListener('click',()=>{
- const panel=$('profileStatsPanel'),opening=panel.classList.contains('hidden');
- panel.classList.toggle('hidden',!opening);
- $('toggleProfileStats').textContent=opening?'Ocultar estatísticas':'Ver estatísticas';
- $('toggleProfileStats').setAttribute('aria-expanded',opening?'true':'false');
- if(opening)renderProfileLearningStats();
-});
+$('openProfileStats').addEventListener('click',()=>openProfileScreen(true));
+$('openProfileOptions').addEventListener('click',()=>{openProfileScreen();showProfileOptions();});
+$('closeProfileStats').addEventListener('click',closeProfileStats);
+$('closeProfileOptions').addEventListener('click',closeProfileOptions);
 $('featuredAwardsEditor').addEventListener('change',event=>{
  const target=event.target;if(!target.matches('input[name="featuredAward"]')||!target.checked)return;
  const checked=$('featuredAwardsEditor').querySelectorAll('input[name="featuredAward"]:checked');
@@ -4693,8 +4731,8 @@ $('adventureMap').addEventListener('click',event=>{
  if(button&&!button.disabled)showAdventureIntro(Number(button.dataset.adventureStage));
 });
 $('saveProfile').addEventListener('click',()=>saveProfile(true));
-$('resumeProfile').addEventListener('click',resumeProfile);
-$('addNumbers').addEventListener('click',addNumbersToSavedGame);
+
+
 $('trainingGlobalMode').addEventListener('change',updateTrainingGlobalModeControls);
 $('start').addEventListener('click',()=>{trainingReviewMode=false;trainingReviewFacts=[];if($('profileName').value.trim())saveProfile(false);start()});
 $('verify').addEventListener('click',verify);
@@ -4710,11 +4748,18 @@ for(let n=1;n<=20;n++){const option=document.createElement('option');option.valu
 setInterval(saveCheckpoint,5000);
 loadUiSfx();
 restoreCloudSession();
-document.addEventListener('click',e=>{
- const button=e.target.closest('button');
+document.addEventListener('pointerdown',event=>{
+ const button=event.target.closest('button');
  if(!button||button.disabled||['right','wrong','soundToggle','replayTune'].includes(button.id))return;
  if(button.hasAttribute('data-challenge-answer')||button.hasAttribute('data-tournament-answer')||button.hasAttribute('data-adventure-answer'))return;
- playUiClick();
+ playUiSound(button.dataset.sfx||'click');
+},true);
+document.addEventListener('click',event=>{
+ if(event.detail!==0)return;
+ const button=event.target.closest('button');
+ if(!button||button.disabled||['right','wrong','soundToggle','replayTune'].includes(button.id))return;
+ if(button.hasAttribute('data-challenge-answer')||button.hasAttribute('data-tournament-answer')||button.hasAttribute('data-adventure-answer'))return;
+ playUiSound(button.dataset.sfx||'click');
 },true);
 document.addEventListener('keydown',event=>{
  if(event.repeat||event.ctrlKey||event.metaKey||event.altKey)return;

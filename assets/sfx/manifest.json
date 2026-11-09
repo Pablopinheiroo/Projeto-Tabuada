@@ -1,11 +1,11 @@
 {
-  "version": 1,
+  "version": 2,
   "title": "Efeitos sonoros do Projeto Tabuada",
   "creator": "Kenney",
   "license": "CC0 1.0",
   "source": "https://kenney.nl/assets/interface-sounds",
   "sourceOpenGameArt": "https://opengameart.org/content/interface-sounds",
-  "notice": "Pacote original com 100 efeitos OGG individuais. Foram incorporados 16 arquivos originais distintos.",
+  "notice": "Pacote original com 100 efeitos OGG individuais. Foram incorporados 16 arquivos originais distintos. O botão Verificar usa um efeito separado dos cliques.",
   "effects": {
     "click": [
       "assets/sfx/kenney/click_001.ogg",
@@ -42,6 +42,9 @@
     ],
     "timeout": [
       "assets/sfx/kenney/question_001.ogg"
+    ],
+    "verify": [
+      "assets/sfx/kenney/open_001.ogg"
     ]
   },
   "files": [
