@@ -1771,7 +1771,7 @@ async function renderCommunityRanking(){
    const titles=user.titles.slice(0,3).map(title=>'<span class="community-rank-chip title">🏅 '+escapeHtml(title)+'</span>').join('');
    const medals=user.medals.map(medal=>'<span class="community-rank-chip medal">🏅 '+escapeHtml(medal.name||medal.id)+'</span>').join('');
    const extras=user.titles.length>3?'<span class="community-rank-chip">+'+(user.titles.length-3)+' títulos</span>':'';
-   const awards=user.awards.map(award=>'<span class="community-rank-chip medal">'+(Number(award.rank)===1?'🥇':Number(award.rank)===2?'🥈':Number(award.rank)===3?'🥉':'🏅')+' '+escapeHtml(award.difficulty)+' · '+escapeHtml(award.month)+' · '+Number(award.rank)+'º lugar · '+Number(award.score)+'/50</span>').join('');
+   const awards=user.awards.map(award=>'<span class="community-rank-chip medal">'+(Number(award.rank)===1?'🥇':Number(award.rank)===2?'🥈':Number(award.rank)===3?'🥉':'🏅')+' Torneio mensal · '+escapeHtml(award.month)+' · '+Number(award.rank)+'º lugar</span>').join('');
    const achievementChips=user.titles.map(title=>'<span class="community-rank-chip title">✨ '+escapeHtml(title)+'</span>').join('');
    return '<details class="community-rank-card '+rankClass+'">'+
     '<summary class="community-rank-summary">'+
