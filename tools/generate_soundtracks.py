@@ -392,7 +392,7 @@ def main():
     for category, profile in PLAYLIST_PROFILES.items():
         output_dir = root_dir / profile["folder"]
         playlist = []
-        print(f"\\n=== {profile['title']}: 20 faixas ===")
+        print(f"\n=== {profile['title']}: 20 faixas ===")
         for index, base_track in enumerate(TRACKS):
             track = build_playlist_track(base_track, category, index)
             print(f"[{index + 1:02d}/20] {track[1]}...")
@@ -402,7 +402,7 @@ def main():
             playlist.append(item)
         all_playlists[category] = playlist
         (output_dir / "manifest.json").write_text(
-            json.dumps(playlist, ensure_ascii=False, indent=2) + "\\n",
+            json.dumps(playlist, ensure_ascii=False, indent=2) + "\n",
             encoding="utf-8"
         )
     root_manifest = {
@@ -418,12 +418,12 @@ def main():
         "playlists": all_playlists,
     }
     (root_dir / "manifest.json").write_text(
-        json.dumps(root_manifest, ensure_ascii=False, indent=2) + "\\n",
+        json.dumps(root_manifest, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8"
     )
     track_count = sum(len(items) for items in all_playlists.values())
     total_bytes = sum(item["file_bytes"] for items in all_playlists.values() for item in items)
-    print(f"\\nGenerated {track_count} original MP3 tracks in {len(all_playlists)} collections.")
+    print(f"\nGenerated {track_count} original MP3 tracks in {len(all_playlists)} collections.")
     print(f"Total MP3 size: {total_bytes / 1024 / 1024:.1f} MiB")
     for key, items in all_playlists.items():
         print(f"{PLAYLIST_PROFILES[key]['title']}: {len(items)} tracks, "
