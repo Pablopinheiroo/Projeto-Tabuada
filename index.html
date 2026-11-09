@@ -2242,6 +2242,12 @@ async function refreshChallengeData(){
    profilesData[activeProfile].challengeStats=result.challengeStats;
    persistProfiles();
   }
+  if(result.economy){
+   gameEconomy=normalizeClientEconomy(result.economy,profilesData[activeProfile]?.avatar);
+   saveClientEconomyCache();
+   renderAchievementShelf();
+   refreshEconomyDisplay();
+  }
   renderChallengeList();
   renderChallengeProfileStats();
   updateChallengeBadge(result.pendingCount||0);
