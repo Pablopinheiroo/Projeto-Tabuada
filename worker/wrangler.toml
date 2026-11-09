@@ -3,9 +3,8 @@ main = "src/index.js"
 compatibility_date = "2026-11-08"
 workers_dev = true
 
-# Margem preventiva abaixo do limite Free de 50 subrequests por execução.
-[limits]
-subrequests = 45
+# O plano Free aplica automaticamente o limite de 50 subrequests por execução.
+# Não declarar [limits]: limites personalizados são exclusivos do modelo Standard.
 
 # Limites aproximados por localidade Cloudflare.
 [[ratelimits]]
