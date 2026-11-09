@@ -4963,7 +4963,7 @@ $('registerForm').addEventListener('submit',handleRegister);
 $('showRegister').addEventListener('click',()=>{$('loginForm').classList.add('hidden');$('registerForm').classList.remove('hidden');$('registerMessage').textContent='';});
 $('showLogin').addEventListener('click',showLoginScreen);
 $('logout').addEventListener('click',logout);
-$('openProfile').addEventListener('click',openProfileScreen);
+$('openProfile').addEventListener('click',()=>openProfileScreen());
 $('profileEditForm').addEventListener('submit',saveProfileEdits);
 $('changePasswordForm').addEventListener('submit',changePassword);
 $('backFromProfile').addEventListener('click',closeProfileScreen);
@@ -4989,7 +4989,7 @@ $('featuredTitlesEditor').addEventListener('change',event=>{
  }
  renderProfileFeaturedTitlesDisplay();
 });
-$('navProfile').addEventListener('click',openProfileScreen);
+$('navProfile').addEventListener('click',()=>openProfileScreen());
 $('navTraining').addEventListener('click',showTrainingMode);
 $('navAdventure').addEventListener('click',showAdventureMap);
 $('navChallenge').addEventListener('click',openChallengeMode);
