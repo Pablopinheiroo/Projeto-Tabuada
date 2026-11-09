@@ -10,10 +10,6 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  group: generate-game-soundtracks
-  cancel-in-progress: false
-
 jobs:
   generate:
     runs-on: ubuntu-latest
