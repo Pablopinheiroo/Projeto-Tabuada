@@ -342,7 +342,7 @@ async function testViewport(name, viewport, mobile = false) {
   await page.locator("#featuredTitlesEditor input[name='featuredTitle']").nth(0).check();
   await page.locator("#featuredTitlesEditor input[name='featuredTitle']").nth(1).check();
   await page.locator("#featuredTitlesEditor input[name='featuredTitle']").nth(2).check();
-  await page.locator("#featuredTitlesEditor input[name='featuredTitle']").nth(3).check();
+  await page.locator("#featuredTitlesEditor input[name='featuredTitle']").nth(3).click();
   check(await page.locator("#featuredTitlesEditor input[name='featuredTitle']:checked").count()===3,
     name+": o editor permitiu selecionar mais de três títulos.");
   check(await page.locator("#profileFeaturedTitlesDisplay .profile-featured-title-chip").count()===3,
