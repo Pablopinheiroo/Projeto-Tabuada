@@ -56,9 +56,9 @@ for (const [category, spec] of Object.entries(specs)) {
     totalBytes += bytes.length;
   }
   const unique = (key) => new Set(tracks.map(track => track[key])).size;
-  check(unique("lead_instrument") >= 3, category + ": pouca variedade de instrumentos.");
-  check(unique("rhythm_style") >= 3, category + ": pouca variedade de ritmos.");
-  check(unique("scale") >= 3, category + ": pouca variedade harmônica.");
+  check(unique("lead_instrument") === spec.leads.length, category + ": nem todos os instrumentos previstos estão sendo usados.");
+  check(unique("rhythm_style") === spec.grooves.length, category + ": nem todos os ritmos previstos estão sendo usados.");
+  check(unique("scale") === spec.scales.length, category + ": nem todas as escalas previstas estão sendo usadas.");
   check(unique("bpm") >= 10, category + ": pouca variedade de andamento.");
   musicSummary[category] = {
     tracks: tracks.length,
