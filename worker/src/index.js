@@ -566,7 +566,10 @@ async function createChallenge(body, username, env) {
     if (!Number.isSafeInteger(stake) || stake < 1) { const error = new Error("Informe uma aposta em moedas inteiras, sem vírgulas, de pelo menos 1 moeda."); error.status = 400; throw error; }
     const challengerRecord = await readUser(username, env);
     if (!challengerRecord) { const error = new Error("Sua conta não foi encontrada."); error.status = 404; throw error; }
-    const maxStake = Math.min(normalizeGameEconomy(challengerRecord.data).coins, normalizeGameEconomy(participantRecords[0].data).coins);
+    const challengerCoins = normalizeGameEconomy(challengerRecord.data).coins;
+    if (challengerCoins < 1) { const error = new Error("Você precisa ter pelo menos 1 moeda para criar um desafio com aposta."); error.status = 400; throw error; }
+    const recipientCoins = normalizeGameEconomy(participantRecords[0].data).coins;
+    const maxStake = Math.min(challengerCoins, recipientCoins);
     if (stake > maxStake) { const error = new Error("A aposta máxima permitida é de " + maxStake + " moedas, considerando o saldo dos dois participantes."); error.status = 400; throw error; }
   }
   const musicTrack = Number(body.musicTrack);
