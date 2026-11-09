@@ -653,6 +653,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 #challengeBetBox input{width:100%;max-width:260px;background:#0b1730;color:#f1f7ff;border:1px solid #46658e;border-radius:10px;padding:10px;font:inherit}
 @media(max-width:560px){.challenge-list-card{flex-direction:column}.challenge-list-actions{width:100%}.challenge-list-actions button{flex:1}}
 
+.challenge-bet-hint{min-height:0;margin:0 0 10px;color:#9bb7d4;font-size:.78rem;text-align:left}.challenge-bet-hint.low-coins{color:#f0b66d}
 </style>
 </head>
 <body>
@@ -811,7 +812,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 
  <div id="challengeBetChoicePanel" class="hidden">
   <div class="mode-view-heading"><div><span class="music-kicker">🪙 DESAFIO COM APOSTA</span><h2>Escolha o tipo de desafio</h2><p class="hint">A partida continua igual ao modo normal. A aposta é opcional e só é cobrada se a pessoa aceitar.</p></div><button id="challengeBetChoiceBack" class="secondary compact-back" type="button">← Voltar</button></div>
-  <p id="challengeBetChoiceMessage" class="auth-message" role="status"></p>
+  <p id="challengeBetChoiceMessage" class="hint challenge-bet-hint" role="status"></p>
   <div class="mode-cards challenge-mode-cards">
    <button id="chooseCustomBetChallenge" class="mode-card challenge-custom-card" type="button"><span class="mode-card-icon">🎛️</span><span class="mode-card-copy"><strong>Personalizado com aposta</strong><small>Escolha as tabuadas e aposte moedas em um adversário.</small><b>Continuar →</b></span></button>
    <button id="choosePresetBetChallenge" class="mode-card challenge-preset-card" type="button"><span class="mode-card-icon">🏅</span><span class="mode-card-copy"><strong>Pré-definido com aposta</strong><small>Escolha o nível e desafie uma pessoa valendo moedas.</small><b>Continuar →</b></span></button>
@@ -2277,6 +2278,7 @@ function openBetChallengeOptions(){
  showChallengeSubPanel('challengeBetChoicePanel');
  const allowed=(Number(gameEconomy.coins)||0)>=1;
  $('challengeBetChoiceMessage').textContent=allowed?'Você tem '+Number(gameEconomy.coins).toLocaleString('pt-BR')+' moedas disponíveis para apostar.':'Você precisa ter pelo menos 1 moeda para iniciar um desafio com aposta. Complete atividades e ganhe moedas primeiro.';
+ $('challengeBetChoiceMessage').classList.toggle('low-coins',!allowed);
  $('chooseCustomBetChallenge').disabled=!allowed;
  $('choosePresetBetChallenge').disabled=!allowed;
 }
