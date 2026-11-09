@@ -1878,7 +1878,7 @@ async function claimGameReward(type,payload){
  }
  const body=type==='training_cycle'
   ?{type,claimId:payload.claimId,learningFromErrors:payload.learningFromErrors===true}
-  :{type,stageId:payload.stageId,...(type==='adventure_stage'&&payload.adventureProgress?{adventureProgress:payload.adventureProgress}:{})};
+  :{type,stageId:payload.stageId,...(type==='adventure_stage'?{...(payload.adventureProgress?{adventureProgress:payload.adventureProgress}:{}),history:normalizeHistory(historyData)}:{})};
  const key=type==='training_cycle'?'training:'+payload.claimId:'stage:'+payload.stageId;
  const pending=readPendingGameRewards();
  if(!pending.some(item=>item.username===activeProfile&&item.key===key)){
