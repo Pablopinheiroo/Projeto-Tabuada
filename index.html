@@ -892,7 +892,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
    <button id="replayTune" class="music-button" type="button">⏭ Próxima faixa</button>
    <label class="volume-control" for="globalVolume">🔊 Volume <input id="globalVolume" type="range" min="0" max="100" value="100"><strong id="volumeValue">100%</strong></label>
   </div>
-  <p class="music-note">🎧 Biblioteca com 20 trilhas reais e gratuitas (CC0), recuperadas da coleção anterior. São 4 músicas diferentes por área, sem repetir a mesma faixa entre áreas. O estilo muda conforme o modo: menu divertido, treino tranquilo, desafio acelerado, aventura e torneio intenso.</p>
+  <p class="music-note">🎧 Biblioteca com 100 trilhas gratuitas (CC0): 20 músicas diferentes em cada área, sem arquivos repetidos nem versões alternativas da mesma composição. O estilo muda conforme o modo: menu divertido, treino tranquilo, desafio acelerado, aventura e torneio intenso.</p>
  </div>
  <audio id="soundtrackAudio" preload="auto" autoplay playsinline></audio>
 </div>
@@ -1475,16 +1475,16 @@ async function loadMusicManifest(){
   if(!response.ok)throw new Error('Não foi possível carregar as coleções musicais.');
   const data=await response.json();
   const ids=['principal','treinamento','desafio','modo-jogo','torneio'];
-  if(!data||!data.playlists||Number(data.minimum_tracks_per_category)<4||Number(data.minimum_total_tracks)<20||Number(data.minimum_duration_seconds)<30){
+  if(!data||!data.playlists||Number(data.minimum_tracks_per_category)<20||Number(data.minimum_total_tracks)<100||Number(data.minimum_duration_seconds)<30){
    throw new Error('O catálogo musical não possui os requisitos mínimos.');
   }
   const collections={};
   for(const id of ids){
    const tracks=data.playlists[id];
-   if(!Array.isArray(tracks)||tracks.length!==4||!tracks.every(track=>
+   if(!Array.isArray(tracks)||tracks.length!==20||!tracks.every(track=>
     track.name&&track.src&&track.src.startsWith('assets/music/')&&Number(track.duration_seconds)>=30&&
     track.license==='CC0 1.0'&&track.author&&track.source
-   ))throw new Error('A coleção '+id+' precisa ter 4 faixas CC0 com pelo menos 30 segundos.');
+   ))throw new Error('A coleção '+id+' precisa ter 20 faixas CC0 distintas com pelo menos 30 segundos.');
    collections[id]=tracks.map(track=>({
     id:track.id,name:track.name,genre:track.genre||'Trilha original',
     src:track.src,duration_seconds:Number(track.duration_seconds),
@@ -1508,7 +1508,7 @@ function populateMusicTrackSelect(){
 }
 function setMusicCategory(category,playRandom=true,force=false){
  const tracks=musicTrackCollections[category];
- if(!Array.isArray(tracks)||tracks.length<4)return false;
+ if(!Array.isArray(tracks)||tracks.length<20)return false;
  if(currentMusicCategory===category&&!force)return false;
  currentMusicCategory=category;musicalTracks=tracks;
  currentTrackIndex=-1;previousTrackIndex=-1;trackQueue=[];trackQueuePosition=0;
@@ -3283,6 +3283,7 @@ async function startChallengeGame(challenge,role){
 }
 function submitChallengeChoice(value){
  if(challengeQuestionLocked||!challengeCurrent)return;
+ playUiSound(value===null?'timeout':'select');
  challengeQuestionLocked=true;
  $('challengeQuestionTimeBar').style.width='0%';
  $('challengeQuestionTimeBar').parentElement.setAttribute('aria-valuenow','0');
@@ -3579,6 +3580,7 @@ function renderTournamentQuestion(previousText='Escolha uma alternativa antes do
 }
 function submitTournamentAnswer(value){
  if(tournamentQuestionLocked||!tournamentCurrent)return;
+ playUiSound(value===null?'timeout':'select');
  tournamentQuestionLocked=true;
  const elapsed=Math.max(0,performance.now()-tournamentQuestionStarted);
  const question=tournamentQuestions[tournamentIndex];
@@ -3955,6 +3957,7 @@ function answerAdventureQuestion(value,choiceButton){
   $('adventureAnswerInput').focus();
   return;
  }
+ playUiSound('select');
  adventureHasAnswered=true;
  const timeMs=adventureQuestionStartedAt?Math.max(0,performance.now()-adventureQuestionStartedAt):0;
  adventureQuestionStartedAt=0;adventureStageTimeMs+=timeMs;
@@ -4590,7 +4593,7 @@ document.addEventListener('keydown',event=>{
  const field=event.target;
  if(!(field instanceof HTMLElement)||!field.matches('input:not([type="password"]),textarea,[contenteditable="true"]'))return;
  if(field.matches('input[type="range"],input[type="checkbox"],input[type="radio"]'))return;
- if(['Enter','Tab','Shift','Escape','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key))return;
+ if(['Tab','Shift','Escape','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key))return;
  playUiSound('key');
 },true);
 </script>

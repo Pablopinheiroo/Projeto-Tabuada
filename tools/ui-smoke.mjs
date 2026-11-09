@@ -9,29 +9,23 @@ const fail = (message) => { throw new Error(message); };
 const check = (condition, message) => { if (!condition) fail(message); };
 
 const manifest = JSON.parse(fs.readFileSync(path.join(ROOT, "assets/music/manifest.json"), "utf8"));
-const specs = {
-  principal: ["menu-neon", "menu-electro-loop", "menu-sledding", "village-evening"],
-  treinamento: ["puzzle-loop", "into-depths", "crystal-caves", "stooges-story"],
-  desafio: ["battle-chiptune", "slay-the-evil", "hard-battle", "strange-factory-climax"],
-  "modo-jogo": ["soundtrack-song", "castle-theme", "great-labyrinth", "hard-dungeon"],
-  torneio: ["boss-theme-regular", "space-boss", "kind-of-boss", "strange-factory"]
-};
-check(manifest.version === 3, "Versão inesperada do catálogo musical.");
-check(manifest.minimum_tracks_per_category === 4, "Cada área deve ter quatro faixas.");
-check(manifest.minimum_total_tracks === 20, "O catálogo deve conter 20 faixas distintas.");
+const categories = ["principal", "treinamento", "desafio", "modo-jogo", "torneio"];
+check(manifest.version === 4, "Versão inesperada do catálogo musical.");
+check(manifest.minimum_tracks_per_category === 20, "Cada área deve ter 20 faixas.");
+check(manifest.minimum_total_tracks === 100, "O catálogo deve conter 100 faixas distintas.");
 check(manifest.minimum_duration_seconds >= 30, "A duração mínima declarada está abaixo de 30 segundos.");
 const hashes = new Set();
 const srcs = new Set();
 const allIds = new Set();
 const musicSummary = {};
 let totalBytes = 0;
-for (const [category, expectedIds] of Object.entries(specs)) {
+for (const category of categories) {
   const tracks = manifest.playlists && manifest.playlists[category];
-  check(Array.isArray(tracks) && tracks.length === 4, category + ": deveria ter exatamente quatro faixas.");
-  check(JSON.stringify(tracks.map(track=>track.id)) === JSON.stringify(expectedIds),
-    category + ": seleção musical inesperada para o perfil desta área.");
+  check(Array.isArray(tracks) && tracks.length === 20, category + ": deveria ter exatamente 20 faixas.");
   for (const track of tracks) {
     check(track.id && !allIds.has(track.id), track.name + ": faixa repetida entre áreas.");
+    check(!/(?:climax|variation|alternate|remix|version[\s_-]*2|\bv2\b)/i.test(track.id + " " + track.name),
+      track.name + ": versão alternativa não pode contar como música distinta.");
     allIds.add(track.id);
     check(track.duration_seconds >= 30, track.name + ": duração inferior a 30 segundos.");
     check(track.src.startsWith("assets/music/") && track.src.endsWith(".mp3"), track.name + ": caminho de áudio inválido.");
@@ -55,7 +49,7 @@ for (const [category, expectedIds] of Object.entries(specs)) {
   }
   musicSummary[category] = { tracks: tracks.length, titles: tracks.map(track=>track.name), license: "CC0 1.0" };
 }
-check(hashes.size === 20 && srcs.size === 20 && allIds.size === 20, "O catálogo não contém 20 faixas distintas.");
+check(hashes.size === 100 && srcs.size === 100 && allIds.size === 100, "O catálogo não contém 100 faixas distintas.");
 check(totalBytes > 10000000, "O tamanho total dos áudios parece inválido.");
 const sfxManifest=JSON.parse(fs.readFileSync(path.join(ROOT,"assets/sfx/manifest.json"),"utf8"));
 check(sfxManifest.license==="CC0 1.0","Efeitos não estão marcados como CC0.");
@@ -87,6 +81,8 @@ const logoutStart=html.indexOf("async function logout(){");
 const logoutEnd=html.indexOf("\nfunction escapeHtml",logoutStart);
 const logoutCode=logoutStart>=0&&logoutEnd>logoutStart?html.slice(logoutStart,logoutEnd):"";
 check(html.includes("loadUiSfx();")&&html.includes("playUiSound('key')"),"Efeitos de clique/tecla não ligados.");
+check(html.includes("playUiSound('select')")&&html.includes("playUiSound(value===null?'timeout':'select')"),
+ "Sons de seleção e tempo esgotado não estão ligados às respostas.");
 check(html.includes("const ACTIVE_TIME_SYNC_MS=30*60*1000;"), "O salvamento automático não está configurado para 30 minutos.");
 check(logoutCode.length>0&&!logoutCode.includes("flushCloudSave(true)"), "Sair da conta ainda força um salvamento antes dos 30 minutos.");
 check(html.includes("pendingActiveMs>0?loadHistory():remoteHistory"), "O login não preserva o histórico local que ainda não foi sincronizado.");
@@ -121,14 +117,14 @@ async function testViewport(name, viewport, mobile = false) {
   check(response && response.status() === 200, name + ": a página inicial não respondeu com HTTP 200.");
   await page.locator("#authScreen").waitFor({ state: "visible", timeout: 20000 });
   await page.waitForFunction(
-    () => document.querySelectorAll("#trackSelect option").length === 4,
+    () => document.querySelectorAll("#trackSelect option").length === 20,
     null,
     { timeout: 30000 }
   );
   check((await page.locator("#trackSelect").inputValue()) !== "0",
     name + ": a tela inicial repetiu a última faixa salva em vez de escolher outra.");
   const musicNote = (await page.locator(".music-note").textContent()) || "";
-  check(musicNote.includes("20 trilhas reais") && musicNote.includes("CC0") && musicNote.includes("4 músicas diferentes por área"),
+  check(musicNote.includes("100 trilhas gratuitas") && musicNote.includes("CC0") && musicNote.includes("20 músicas diferentes em cada área"),
     name + ": o site não explica a biblioteca de 20 trilhas CC0 distribuídas por área.");
 
   const homeOverflow = await page.evaluate(() => ({
@@ -213,8 +209,8 @@ async function testViewport(name, viewport, mobile = false) {
       setMusicCategory(value, true, true);
       return musicTrackCollections[value].map(track => track.src);
     }, category);
-    check(categorySources.length === 4, name + ": a coleção " + category + " não apresenta quatro opções.");
-    check(await page.locator("#trackSelect option").count() === 4, name + ": o seletor " + category + " não apresenta quatro faixas.");
+    check(categorySources.length === 20, name + ": a coleção " + category + " não apresenta quatro opções.");
+    check(await page.locator("#trackSelect option").count() === 20, name + ": o seletor " + category + " não apresenta quatro faixas.");
     await page.waitForFunction(
       sources => {
         const src = document.querySelector("#soundtrackAudio").src;
