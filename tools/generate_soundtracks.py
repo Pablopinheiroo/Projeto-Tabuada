@@ -297,13 +297,13 @@ PLAYLIST_PROFILES = {
     "principal": {
         "title": "Tela principal",
         "folder": "principal",
-        "style": "Abertura calma e acolhedora",
-        "bpm": (82, 100), "roots": [57, 60, 62, 64, 67],
-        "scales": ["major", "lydian", "mixolydian"],
-        "leads": ["keys", "flute", "bell", "strings", "pluck"],
-        "grooves": ["ambient", "cinematic", "adventure"],
-        "energy": (0.54, 0.76),
-        "progressions": [[0,4,5,3],[0,5,3,4],[0,3,4,0],[0,4,3,5],[0,5,4,3]],
+        "style": "Trilhas variadas de videogame",
+        "bpm": (110, 132), "roots": [53, 55, 57, 59, 60, 62, 64, 65, 69],
+        "scales": ["major", "lydian", "mixolydian", "minor", "dorian", "phrygian"],
+        "leads": ["square", "saw", "strings", "flute", "keys", "guitar", "pluck", "bell", "brass"],
+        "grooves": ["arcade", "dance", "cinematic", "funk", "battle", "adventure", "electro", "rock", "stealth", "ambient", "synthwave"],
+        "energy": (0.82, 1.12),
+        "progressions": [[0,4,5,3],[0,5,3,6],[0,3,4,0],[0,4,3,5],[0,5,4,3]],
         "prefix": "Boas-vindas",
     },
     "treinamento": {
@@ -349,16 +349,19 @@ PLAYLIST_PROFILES = {
         "bpm": (126, 156), "roots": [45, 48, 50, 53, 57],
         "scales": ["minor", "phrygian", "dorian"],
         "leads": ["brass", "strings", "saw", "square"],
-        "grooves": ["battle", "electro", "cinematic", "rock"],
-        "energy": (1.00, 1.22),
-        "progressions": [[0,5,3,6],[0,6,3,4],[0,1,5,4],[0,5,4,3],[0,3,5,4]],
-        "prefix": "Arena",
-    },
-}
-
-def build_playlist_track(base_track: tuple, category: str, index: int) -> tuple:
+        "grooves": ["battle", "electro", "cdef build_playlist_track(base_track: tuple, category: str, index: int) -> tuple:
     profile = PLAYLIST_PROFILES[category]
-    slug, base_title, _style, base_bpm, base_root, _scale, _progression, _lead, _groove, motif, _energy = base_track
+    slug, base_title, base_style, base_bpm, base_root, base_scale, base_progression, base_lead, base_groove, motif, base_energy = base_track
+
+    # A tela principal mantém as 20 composições originais, com seus estilos,
+    # melodias, instrumentos, harmonias e ritmos próprios. Elas eram a parte
+    # mais variada da trilha antiga e não devem ser comprimidas num único clima.
+    if category == "principal":
+        display_name = f"{profile['prefix']} {index + 1:02d} — {base_title}"
+        new_slug = f"{category}-{index + 1:02d}-{slug}"
+        return (new_slug, display_name, base_style, base_bpm, base_root, base_scale,
+                base_progression, base_lead, base_groove, list(motif), base_energy)
+
     rng = random.Random(f"{category}:{index}:{slug}")
     bpm_min, bpm_max = profile["bpm"]
     bpm = bpm_min + ((index * 7 + rng.randrange(0, 5)) % (bpm_max - bpm_min + 1))
@@ -380,9 +383,9 @@ def build_playlist_track(base_track: tuple, category: str, index: int) -> tuple:
         elif variation == 2:
             transformed.append(max(0, min(14, degree + (3 if step % 4 in (1, 2) else -1))))
         elif variation == 3:
-            transformed.append(max(0, min(14, degree + (1 if step % 2 == 0 else 4))))
+            transformed.append(max(0, min(14, degree + (1 if step % 2 == 0 else 4)))
         else:
-            transformed.append(max(0, min(14, degree + (5 if step % 8 == 0 else 0))))
+            transformed.append(max(0, min(14, degree + (5 if step % 8 == 0 else 0)))
     low, high = profile["energy"]
     energy = low + (high - low) * ((index * 13 % 19) / 18)
     display_name = f"{profile['prefix']} {index + 1:02d} — {base_title}"
