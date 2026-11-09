@@ -335,9 +335,14 @@ async function testViewport(name, viewport, mobile = false) {
   await page.locator("#closeProfileOptions").click();
   check(await page.locator("#profileOptionsPanel").evaluate(el=>el.classList.contains("hidden")),name+": fechar Opções falhou.");
   if(musicWasPlayingBeforeOptions)await page.waitForFunction(()=>!document.querySelector("#soundtrackAudio").paused,null,{timeout:5000});
-  await page.locator("#openProfileOptions").click();
-  check((await page.locator("#profileMusicVolume").inputValue())==="43",name+": o volume salvo não foi restaurado.");
-  await page.locator("#closeProfileOptions").click();
+  await page.evaluate(()=>{
+    setVolume(100);
+    sfxVolumeLevel=.82;
+    restoreProfileSfxVolume();
+    restoreProfileMusicVolume();
+  });
+  check((await page.locator("#globalVolume").inputValue())==="43",name+": o volume da música salvo não foi restaurado no retorno à conta.");
+  check(await page.evaluate(()=>Math.abs(sfxVolumeLevel-.55)<.01),name+": o volume de efeitos salvo não foi restaurado no retorno à conta.");
 
   await page.evaluate(async () => {
     document.querySelector("#profileScreen").classList.add("hidden");
