@@ -479,6 +479,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .challenge-countdown strong{display:block;margin-top:4px;color:#fcd34d;font-size:clamp(1.1rem,4vw,1.55rem);font-variant-numeric:tabular-nums}
 .challenge-progress{height:9px;overflow:hidden;border-radius:999px;background:#263b58;margin-bottom:14px}
 .challenge-progress span{display:block;width:0;height:100%;background:linear-gradient(90deg,#22d3ee,#a78bfa);transition:width .12s linear}
+.challenge-question-time{height:7px;overflow:hidden;margin:-5px 0 12px;border-radius:999px;background:#263b58}
+.challenge-question-time span{display:block;width:100%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#4ade80,#facc15 68%,#fb7185);transition:width .05s linear}
+.challenge-participant-profiles{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.challenge-participant-chip{display:flex;align-items:center;gap:7px;min-width:0;padding:6px 9px;border:1px solid #385b80;border-radius:999px;background:#0c1a31;color:#e6f2ff;font-size:.74rem;font-weight:800}
+.challenge-participant-chip img{width:30px;height:30px;flex:0 0 30px;object-fit:cover;border-radius:50%;border:2px solid #67e8f9}
+.challenge-participant-chip small{display:block;color:#9fb8d8;font-size:.62rem;font-weight:650}
 .challenge-question-card{padding:17px;border:1px solid #47618a;border-radius:17px;background:radial-gradient(ellipse at top,#1c3155,#111a32 78%);text-align:center}
 .challenge-equation{margin:10px 0;font-size:clamp(2.3rem,10vw,4rem);font-weight:950;color:white;text-shadow:0 0 22px #38bdf866;font-variant-numeric:tabular-nums}
 .challenge-feedback{min-height:22px;margin:0 0 12px;color:#a9c1e5;font-size:.82rem}
@@ -603,6 +609,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .training-global-mode select{width:100%;max-width:280px;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#26364d;font:inherit;font-size:.82rem}
 .training-global-mode p{margin:0;color:#718096;font-size:.7rem;line-height:1.4;max-width:230px}
 .table-row .mode:disabled{opacity:.45;background:#e8edf4;color:#8995a5;cursor:not-allowed}
+.table-row.global-order .mode{display:none!important}
 @media(max-width:560px){.training-global-mode{align-items:stretch;flex-direction:column}.training-global-mode select{max-width:none}.training-global-mode p{max-width:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
@@ -683,8 +690,6 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
    <div class="wallet-stat"><span>🗺️ FASES CONCLUÍDAS</span><strong id="profileCompletedStages">0/26</strong></div>
   </div>
   <p class="economy-rules">Recompensas: <b>+10 moedas</b> por ciclo completo no treinamento e <b>+50 moedas</b> na primeira conclusão de cada fase do desafio.</p>
-  <h3 class="achievement-title">🏆 Vitrine de conquistas <span id="achievementCount">0/13</span></h3>
-  <div id="achievementShelf" class="achievement-shelf"></div>
   <h3 class="achievement-title challenge-profile-title">⚔️ Histórico de desafios <span id="challengeMedalCount">0/11 medalhas</span></h3>
   <div class="wallet-grid challenge-profile-summary">
    <div class="wallet-stat"><span>🏆 VITÓRIAS</span><strong id="profileChallengeWins">0</strong></div>
@@ -693,6 +698,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   </div>
   <p class="economy-rules">Duelo personalizado conta nas vitórias e derrotas, mas não concede medalhas. Cada nível pré-definido tem uma medalha própria, conquistada ao atingir 10 vitórias naquele nível.</p>
   <div id="challengeMedalShelf" class="achievement-shelf"></div>
+  <h3 class="achievement-title">🏆 Vitrine de conquistas <span id="achievementCount">0/13</span></h3>
+  <div id="achievementShelf" class="achievement-shelf"></div>
   <h3 class="achievement-title">🏆 Premiações do torneio mensal</h3>
   <div id="tournamentAwardShelf" class="achievement-shelf"></div>
  </div>
@@ -803,12 +810,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 
  <div id="challengePlayPanel" class="hidden">
   <div class="challenge-play-top"><div><span class="music-kicker">DUELO EM ANDAMENTO</span><h2 id="challengeOpponentTitle">Desafio</h2><p id="challengePlayMeta" class="hint"></p></div><div class="challenge-live-badge">● AO VIVO</div></div>
+  <div id="challengeParticipantProfiles" class="challenge-participant-profiles" aria-label="Participantes do desafio"></div>
   <div class="challenge-countdown-grid">
    <div class="challenge-countdown"><span>TEMPO DESTA QUESTÃO</span><strong id="challengeRoundClock">5,0 s</strong></div>
    <div class="challenge-countdown"><span>TEMPO TOTAL</span><strong id="challengeTotalClock">50,0 s</strong></div>
    <div class="challenge-countdown"><span>SEUS PONTOS</span><strong id="challengeScore">0/10</strong></div>
   </div>
   <div class="challenge-progress"><span id="challengeProgressBar"></span></div>
+  <div class="challenge-question-time" role="progressbar" aria-label="Tempo restante para responder" aria-valuemin="0" aria-valuemax="5"><span id="challengeQuestionTimeBar"></span></div>
   <div class="challenge-question-card">
    <span id="challengeQuestionCounter" class="music-kicker">QUESTÃO 1 DE 10</span>
    <div id="challengeQuestionMath" class="challenge-equation">7 × 8 = ?</div>
@@ -1048,7 +1057,10 @@ const $=id=>document.getElementById(id);
 function updateTrainingGlobalModeControls(){
  const mode=$('trainingGlobalMode')?.value||'individual';
  const individual=mode==='individual';
- tablesEl.querySelectorAll('.table-row .mode').forEach(select=>{select.disabled=!individual;});
+ tablesEl.querySelectorAll('.table-row .mode').forEach(select=>{
+  select.disabled=!individual;
+  select.closest('.table-row')?.classList.toggle('global-order',!individual);
+ });
  const hint=$('trainingGlobalModeHint');
  if(hint)hint.textContent=individual
   ?'Modo individual: cada tabuada pode ter sua própria ordem.'
@@ -2450,6 +2462,8 @@ function updateChallengeClocks(){
  $('challengeRoundClock').textContent=(remaining/1000).toFixed(1).replace('.',',')+' s';
  $('challengeTotalClock').textContent=(totalRemaining/1000).toFixed(1).replace('.',',')+' s';
  $('challengeProgressBar').style.width=(challengeQuestionIndex/10*100)+'%';
+ $('challengeQuestionTimeBar').style.width=(remaining/5000*100)+'%';
+ $('challengeQuestionTimeBar').parentElement.setAttribute('aria-valuenow',String(Math.ceil(remaining/1000)));
  if(remaining<=0&&!challengeQuestionLocked)submitChallengeChoice(null);
 }
 function renderChallengeQuestion(previousText='Escolha uma alternativa antes do tempo acabar.'){
@@ -2460,10 +2474,24 @@ function renderChallengeQuestion(previousText='Escolha uma alternativa antes do 
  $('challengeQuestionMath').textContent=question.a+' × '+question.b+' = ?';
  $('challengeQuestionFeedback').textContent=previousText;
  $('challengeOptions').innerHTML=question.options.map(value=>'<button class="challenge-option" type="button" data-challenge-answer="'+value+'">'+value+'</button>').join('');
+ $('challengeQuestionTimeBar').style.width='100%';
+ $('challengeQuestionTimeBar').parentElement.setAttribute('aria-valuenow','5');
  challengeQuestionStarted=performance.now();
  if(challengeQuestionTimer!==null)clearInterval(challengeQuestionTimer);
  challengeQuestionTimer=setInterval(updateChallengeClocks,50);
  updateChallengeClocks();
+}
+function renderChallengeParticipantProfiles(challenge,profiles){
+ const box=$('challengeParticipantProfiles');if(!box)return;
+ const byUsername=new Map((Array.isArray(profiles)?profiles:[]).map(item=>[item.username,item]));
+ const participants=challengeParticipants(challenge);
+ box.innerHTML=participants.map(username=>{
+  const profile=byUsername.get(username)||{};
+  const displayName=String(profile.displayName||username);
+  const avatar=avatarImage(normalizeAvatarKey(profile.avatar||'imagem:0'));
+  const isMe=username===activeProfile;
+  return '<div class="challenge-participant-chip"><img src="'+avatar+'" alt="Avatar de '+escapeHtml(displayName)+'"><span>'+escapeHtml(displayName)+(isMe?'<small>Você</small>':'<small>@'+escapeHtml(username)+'</small>')+'</span></div>';
+ }).join('');
 }
 async function startChallengeGame(challenge,role){
  challengeCurrent=challenge;
@@ -2483,6 +2511,18 @@ async function startChallengeGame(challenge,role){
  const opponents=challengeParticipants(challenge).filter(name=>name!==activeProfile);
  $('challengeOpponentTitle').textContent='Você × '+opponents.map(name=>'@'+name).join(', ');
  $('challengePlayMeta').textContent=(challenge.mode==='custom'?'Personalizado':'Nível '+challenge.levelName)+' · Tabuadas '+challenge.tables.join(', ')+' · '+challenge.optionCount+' alternativas · '+challengeParticipants(challenge).length+' participantes';
+ const cachedProfiles=challengeParticipants(challenge).map(username=>{
+  const cached=challengePlayers.find(player=>player.username===username)||{};
+  const local=profilesData[username]||{};
+  return {username,displayName:cached.displayName||local.displayName||username,avatar:cached.avatar||local.avatar||'imagem:0'};
+ });
+ renderChallengeParticipantProfiles(challenge,cachedProfiles);
+ try{
+  const fresh=await apiRequest('/api/challenges/'+challenge.id+'/players');
+  if(Array.isArray(fresh.players))renderChallengeParticipantProfiles(challenge,fresh.players);
+ }catch(error){
+  if(error.sessionExpired)return;
+ }
  const track=CHALLENGE_MUSIC[challenge.musicTrack]||CHALLENGE_MUSIC[0];
  $('challengeMusicTitle').textContent='🎵 '+track.name;
  $('challengeMusicRule').textContent=role==='recipient'?'Música escolhida pelo desafiante. Ela está bloqueada para você.':'Você escolheu esta música. Todos os adversários ouvirão a mesma trilha.';
@@ -2500,6 +2540,8 @@ async function startChallengeGame(challenge,role){
 function submitChallengeChoice(value){
  if(challengeQuestionLocked||!challengeCurrent)return;
  challengeQuestionLocked=true;
+ $('challengeQuestionTimeBar').style.width='0%';
+ $('challengeQuestionTimeBar').parentElement.setAttribute('aria-valuenow','0');
  const elapsed=Math.max(0,performance.now()-challengeQuestionStarted);
  const withinTime=elapsed<=5000;
  const chosen=withinTime&&value!==null?Number(value):null;
@@ -3601,7 +3643,6 @@ $('adventureMap').addEventListener('click',event=>{
 $('saveProfile').addEventListener('click',()=>saveProfile(true));
 $('resumeProfile').addEventListener('click',resumeProfile);
 $('addNumbers').addEventListener('click',addNumbersToSavedGame);
-$('trainingGlobalMode').addEventListener('change',updateTrainingGlobalModeControls);
 $('trainingGlobalMode').addEventListener('change',updateTrainingGlobalModeControls);
 $('start').addEventListener('click',()=>{if($('profileName').value.trim())saveProfile(false);start()});
 $('verify').addEventListener('click',verify);
