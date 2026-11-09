@@ -1404,7 +1404,7 @@ async function claimGameReward(type,payload){
  }catch(error){
   showGameRewardToast('Recompensa pendente. Vamos tentar sincronizar novamente.');
   console.warn('Não foi possível entregar a recompensa agora:',error);
-  setTimeout(retryPendingGameRewards,4000);
+  setTimeout(retryPendingGameRewards,60_000);
   return null;
  }
 }
@@ -2022,7 +2022,10 @@ function saveCheckpoint(){
 }
 function resumeProfile(){
  const name=$('profileName').value.trim(),c=profilesData[name]?.checkpoint;if(!name||!c)return;
- activeProfile=name;historyData=loadHistory();selected=c.selected||[];deck=c.deck||[];position=c.position||0;round=c.round||1;
+ activeProfile=name;
+ if($('trainingGlobalMode'))$('trainingGlobalMode').value=c.trainingGlobalMode||'individual';
+ updateTrainingGlobalModeControls();
+ historyData=loadHistory();selected=c.selected||[];deck=c.deck||[];position=c.position||0;round=c.round||1;
  hits=c.hits||0;misses=c.misses||0;sessionAnswers=c.sessionAnswers||[];sessionSkipped=c.sessionSkipped||0;sessionQuestionTimeMs=c.sessionQuestionTimeMs||0;roundCorrect=new Set(c.roundCorrect||[]);
  tablesEl.querySelectorAll('.table-row').forEach(row=>{const n=Number(row.querySelector('input').value),item=selected.find(t=>t.n===n);row.querySelector('input').checked=!!item;if(item)row.querySelector('select').value=item.mode;});
  $('setup').classList.add('hidden');$('report').classList.add('hidden');$('game').classList.remove('hidden');sessionStartedAt=performance.now();
