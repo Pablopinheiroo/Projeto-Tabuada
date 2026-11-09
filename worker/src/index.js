@@ -14,6 +14,22 @@ const AVATAR_GIF_COUNT = 12;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 35;
 const COMMUNITY_CACHE_TTL_MS = 45_000;
+const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
+const CHALLENGE_DIRECTORY = "desafios/partidas";
+const CHALLENGE_MAX_HISTORY = 30;
+const CHALLENGE_PRESETS = {
+  recruta: { name: "Recruta", tables: [1, 2], options: 4 },
+  aprendiz: { name: "Aprendiz", tables: [1, 2, 3, 4], options: 4 },
+  praticante: { name: "Praticante", tables: [1, 2, 3, 4, 5, 6], options: 4 },
+  competidor: { name: "Competidor", tables: [1, 2, 3, 4, 5, 6, 7, 8], options: 4 },
+  veterano: { name: "Veterano", tables: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], options: 4 },
+  especialista: { name: "Especialista", tables: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], options: 4 },
+  elite: { name: "Elite", tables: Array.from({ length: 14 }, (_, i) => i + 1), options: 4 },
+  mestre: { name: "Mestre", tables: Array.from({ length: 16 }, (_, i) => i + 1), options: 6 },
+  grao_mestre: { name: "Grão-Mestre", tables: Array.from({ length: 18 }, (_, i) => i + 1), options: 6 },
+  lenda: { name: "Lenda", tables: Array.from({ length: 20 }, (_, i) => i + 1), options: 6 },
+  extremo: { name: "Extremo", tables: [3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19], options: 6 }
+};
 let communitySummaryCache = { expiresAt: 0, records: null, pending: null };
 
 function json(data, status = 200, origin = "", extraHeaders = {}) {
@@ -364,6 +380,304 @@ function safeHistory(value) {
   };
 }
 
+function challengeFilePath(id) {
+  return CHALLENGE_DIRECTORY + "/" + id + ".json";
+}
+function challengeIndexPath(username) {
+  return CHALLENGE_INDEX_DIRECTORY + "/" + encodeURIComponent(username) + ".json";
+}
+async function readJsonFile(path, env) {
+  try {
+    const file = await githubRequest(
+      "/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + path +
+      "?ref=" + encodeURIComponent(GH_BRANCH),
+      env
+    );
+    return { data: JSON.parse(decodeGithubContent(file.content)), sha: file.sha };
+  } catch (error) {
+    if (error.status === 404) return null;
+    throw error;
+  }
+}
+async function writeJsonFile(path, data, sha, env, message) {
+  const body = {
+    message: message || "Atualizar dados de desafio",
+    branch: GH_BRANCH,
+    content: encodeUtf8Base64(JSON.stringify(data, null, 2))
+  };
+  if (sha) body.sha = sha;
+  const result = await githubRequest(
+    "/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + path,
+    env,
+    { method: "PUT", body: JSON.stringify(body) }
+  );
+  return result.content.sha;
+}
+async function readChallengeIndex(username, env) {
+  const file = await readJsonFile(challengeIndexPath(username), env);
+  const ids = Array.isArray(file?.data?.ids)
+    ? file.data.ids.filter(id => typeof id === "string" && /^[a-f0-9]{32}$/.test(id))
+    : [];
+  return { ids, sha: file?.sha || null };
+}
+async function appendChallengeIndex(username, challengeId, env) {
+  const index = await readChallengeIndex(username, env);
+  if (!index.ids.includes(challengeId)) index.ids.push(challengeId);
+  index.ids = index.ids.slice(-200);
+  return writeJsonFile(
+    challengeIndexPath(username),
+    { username, ids: index.ids, updatedAt: new Date().toISOString() },
+    index.sha,
+    env,
+    "Atualizar lista de desafios de " + username
+  );
+}
+function challengeRandom(seed) {
+  let state = Number(seed) >>> 0;
+  return function random() {
+    state = (state + 0x6D2B79F5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function buildChallengeQuestions(seed, tables, optionCount) {
+  const random = challengeRandom(seed);
+  const pool = [];
+  for (const table of tables) {
+    for (let factor = 1; factor <= 10; factor++) pool.push({ a: table, b: factor });
+  }
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool.slice(0, 10).map(fact => {
+    const answer = fact.a * fact.b;
+    const values = new Set([answer]);
+    while (values.size < optionCount) {
+      const spread = Math.max(7, Math.ceil(answer * 0.28));
+      const offset = 1 + Math.floor(random() * spread);
+      const candidate = random() < 0.5 ? answer + offset : Math.max(0, answer - offset);
+      values.add(candidate);
+    }
+    const options = [...values];
+    for (let i = options.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [options[i], options[j]] = [options[j], options[i]];
+    }
+    return { ...fact, answer, options };
+  });
+}
+function safeChallengeSummary(challenge, username) {
+  const myResult = challenge.results?.[username] || null;
+  const opponent = challenge.challenger === username ? challenge.recipient : challenge.challenger;
+  const otherResult = challenge.results?.[opponent] || null;
+  return {
+    id: challenge.id,
+    challenger: challenge.challenger,
+    recipient: challenge.recipient,
+    mode: challenge.mode,
+    levelId: challenge.levelId,
+    levelName: challenge.levelName,
+    tables: challenge.tables,
+    optionCount: challenge.optionCount,
+    musicTrack: challenge.musicTrack,
+    seed: challenge.seed,
+    createdAt: challenge.createdAt,
+    results: challenge.results || {},
+    status: challenge.status || "open",
+    winner: challenge.winner ?? null,
+    completedAt: challenge.completedAt || null,
+    myResult,
+    otherResult
+  };
+}
+async function createChallenge(body, username, env) {
+  const recipient = String(body.recipient || "").trim().toLowerCase();
+  if (!usernameIsValid(recipient) || recipient === username) {
+    const error = new Error("Escolha outro participante cadastrado.");
+    error.status = 400;
+    throw error;
+  }
+  const recipientRecord = await readUser(recipient, env);
+  if (!recipientRecord) {
+    const error = new Error("O participante escolhido não foi encontrado.");
+    error.status = 404;
+    throw error;
+  }
+
+  const mode = body.mode === "custom" ? "custom" : "preset";
+  let levelId = "personalizado";
+  let levelName = "Personalizado";
+  let tables = [];
+  let optionCount = 4;
+
+  if (mode === "custom") {
+    const rawTables = Array.isArray(body.tables) ? body.tables : [];
+    tables = [...new Set(rawTables.map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= 20))].sort((a, b) => a - b);
+    if (!tables.length || tables.length !== rawTables.length || tables.length > 20) {
+      const error = new Error("Escolha de 1 a 20 tabuadas válidas para o desafio personalizado.");
+      error.status = 400;
+      throw error;
+    }
+  } else {
+    levelId = String(body.levelId || "");
+    const preset = CHALLENGE_PRESETS[levelId];
+    if (!preset) {
+      const error = new Error("Nível de desafio inválido.");
+      error.status = 400;
+      throw error;
+    }
+    levelName = preset.name;
+    tables = preset.tables;
+    optionCount = preset.options;
+  }
+
+  const musicTrack = Number(body.musicTrack);
+  if (!Number.isInteger(musicTrack) || musicTrack < 0 || musicTrack > 9) {
+    const error = new Error("Escolha uma das 10 trilhas sonoras.");
+    error.status = 400;
+    throw error;
+  }
+
+  const id = randomHex(16);
+  const seedBytes = crypto.getRandomValues(new Uint32Array(1));
+  const seed = seedBytes[0] || 1;
+  const challenge = {
+    id,
+    challenger: username,
+    recipient,
+    mode,
+    levelId,
+    levelName,
+    tables,
+    optionCount,
+    musicTrack,
+    seed,
+    createdAt: new Date().toISOString(),
+    results: {},
+    status: "open",
+    winner: null,
+    completedAt: null
+  };
+
+  const sha = await writeJsonFile(
+    challengeFilePath(id), challenge, null, env,
+    "Criar desafio de " + username + " para " + recipient
+  );
+  await appendChallengeIndex(username, id, env);
+  await appendChallengeIndex(recipient, id, env);
+  return { ...challenge, fileSha: sha };
+}
+async function listChallengesFor(username, env) {
+  const index = await readChallengeIndex(username, env);
+  const ids = index.ids.slice(-CHALLENGE_MAX_HISTORY).reverse();
+  const items = [];
+  for (let offset = 0; offset < ids.length; offset += 5) {
+    const batch = ids.slice(offset, offset + 5);
+    const loaded = await Promise.all(batch.map(async id => {
+      const file = await readJsonFile(challengeFilePath(id), env);
+      if (!file || !file.data ||
+          (file.data.challenger !== username && file.data.recipient !== username)) return null;
+      return safeChallengeSummary(file.data, username);
+    }));
+    items.push(...loaded.filter(Boolean));
+  }
+  items.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+  const pendingCount = items.filter(item => item.recipient === username && !item.myResult).length;
+  return { items, pendingCount };
+}
+async function submitChallengeResult(id, body, username, env) {
+  if (!/^[a-f0-9]{32}$/.test(id)) {
+    const error = new Error("Identificador do desafio inválido.");
+    error.status = 400;
+    throw error;
+  }
+  const file = await readJsonFile(challengeFilePath(id), env);
+  if (!file) {
+    const error = new Error("Este desafio não foi encontrado.");
+    error.status = 404;
+    throw error;
+  }
+  const challenge = file.data;
+  if (challenge.challenger !== username && challenge.recipient !== username) {
+    const error = new Error("Este desafio não pertence à sua conta.");
+    error.status = 403;
+    throw error;
+  }
+  if (challenge.results?.[username]) {
+    const error = new Error("Seu resultado neste desafio já foi registrado.");
+    error.status = 409;
+    throw error;
+  }
+  const answers = Array.isArray(body.answers) ? body.answers : [];
+  if (answers.length !== 10) {
+    const error = new Error("O desafio precisa ter exatamente 10 respostas registradas.");
+    error.status = 400;
+    throw error;
+  }
+
+  const questions = buildChallengeQuestions(challenge.seed, challenge.tables, challenge.optionCount);
+  let score = 0;
+  let totalMs = 0;
+  const answerLog = [];
+  for (let i = 0; i < questions.length; i++) {
+    const item = answers[i] || {};
+    const elapsed = Number(item.elapsedMs);
+    const value = item.value === null || item.value === undefined ? null : Number(item.value);
+    if (!Number.isFinite(elapsed) || elapsed < 0 || elapsed > 60_000 ||
+        (value !== null && !Number.isSafeInteger(value))) {
+      const error = new Error("Uma das respostas do desafio está inválida.");
+      error.status = 400;
+      throw error;
+    }
+    const inTime = elapsed <= 5_000;
+    const correct = inTime && value === questions[i].answer;
+    if (correct) score += 1;
+    totalMs += Math.min(5_000, elapsed);
+    answerLog.push({ correct, timedOut: !inTime || value === null, elapsedMs: Math.round(elapsed) });
+  }
+
+  challenge.results = challenge.results || {};
+  challenge.results[username] = {
+    score,
+    correct: score,
+    wrong: 10 - score,
+    totalMs: Math.round(totalMs),
+    answers: answerLog,
+    submittedAt: new Date().toISOString()
+  };
+
+  const bothSubmitted = !!challenge.results[challenge.challenger] && !!challenge.results[challenge.recipient];
+  if (bothSubmitted) {
+    const first = challenge.results[challenge.challenger];
+    const second = challenge.results[challenge.recipient];
+    if (first.score !== second.score) {
+      challenge.winner = first.score > second.score ? challenge.challenger : challenge.recipient;
+    } else if (first.totalMs !== second.totalMs) {
+      challenge.winner = first.totalMs < second.totalMs ? challenge.challenger : challenge.recipient;
+    } else {
+      challenge.winner = "empate";
+    }
+    challenge.status = "completed";
+    challenge.completedAt = new Date().toISOString();
+  } else {
+    challenge.status = username === challenge.challenger ? "waiting_recipient" : "waiting_challenger";
+  }
+
+  const sha = await writeJsonFile(
+    challengeFilePath(id), challenge, file.sha, env,
+    "Registrar resultado do desafio " + id + " - " + username
+  );
+  return {
+    challenge: safeChallengeSummary(challenge, username),
+    result: challenge.results[username],
+    completed: bothSubmitted,
+    sha
+  };
+}
+
 async function handleApi(request, env, origin) {
   const url = new URL(request.url);
   const route = url.pathname.replace(/\/+$/, "") || "/";
@@ -491,6 +805,41 @@ async function handleApi(request, env, origin) {
       const limited = await rateLimitResponse(env.PROFILE_WRITE_LIMITER, username + ":profile-write",
         "Muitos salvamentos em pouco tempo. Seus dados permanecem no dispositivo; aguarde um minuto para sincronizar novamente.", origin);
       if (limited) return limited;
+    }
+
+    if (route.startsWith("/api/challenges")) {
+      const limited = await rateLimitResponse(env.GAME_ACTION_LIMITER, username + ":challenges",
+        "Muitas ações de desafio em pouco tempo. Aguarde um minuto e tente novamente.", origin);
+      if (limited) return limited;
+    }
+
+    if (route === "/api/challenges/players" && request.method === "GET") {
+      const entries = await githubRequest(
+        "/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" +
+        GH_DIRECTORY + "?ref=" + encodeURIComponent(GH_BRANCH), env
+      );
+      if (!Array.isArray(entries)) throw new Error("A lista de participantes não retornou um diretório.");
+      const players = entries.filter(item => item.type === "dir" && usernameIsValid(item.name))
+        .map(item => item.name).filter(name => name !== username).sort((a, b) => a.localeCompare(b)).slice(0, 200);
+      return json({ players }, 200, origin);
+    }
+
+    if (route === "/api/challenges" && request.method === "GET") {
+      const result = await listChallengesFor(username, env);
+      return json(result, 200, origin);
+    }
+
+    if (route === "/api/challenges" && request.method === "POST") {
+      const body = await readJson(request);
+      const challenge = await createChallenge(body, username, env);
+      return json({ challenge }, 201, origin);
+    }
+
+    const challengeResultMatch = route.match(/^\/api\/challenges\/([a-f0-9]{32})\/result$/);
+    if (challengeResultMatch && request.method === "POST") {
+      const body = await readJson(request);
+      const result = await submitChallengeResult(challengeResultMatch[1], body, username, env);
+      return json(result, 200, origin);
     }
 
     if ((route === "/api/game/reward" || route === "/api/game/shop") && request.method === "POST") {
