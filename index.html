@@ -739,6 +739,31 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  .ranking-details>summary:after{align-self:flex-end}
 }
 @media(max-width:420px){.stats-mode-row{grid-template-columns:73px minmax(0,1fr) 34px}.stats-radar{min-height:210px}}
+
+.review-training-card{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:14px;margin:18px 0 8px;padding:15px;border:1px solid #3c7895;border-radius:16px;background:linear-gradient(120deg,#102a48,#202449);box-shadow:0 8px 20px #02061755}
+.review-training-card h3{margin:4px 0;color:#fff;font-size:1rem}
+.review-training-card .hint{margin:5px 0 0;text-align:left;font-size:.78rem;line-height:1.45}
+.review-training-button{min-height:48px;padding:11px 15px;border:1px solid #fdba74;border-radius:12px;background:linear-gradient(120deg,#ea580c,#c2410c);color:#fff;font-weight:900}
+.review-training-button:disabled{opacity:.6;cursor:not-allowed}
+.actions{gap:14px}
+.judge{grid-template-columns:1fr 1.15fr 1fr;gap:9px}
+.difficulty-mark{min-height:46px;padding:10px 8px;border:1px solid #fb923c;border-radius:12px;background:linear-gradient(120deg,#f59e0b,#ea580c);color:#fff;font-size:.86rem;font-weight:950;box-shadow:0 4px 0 #7c2d12}
+.difficulty-mark.marked{background:linear-gradient(120deg,#b45309,#9a3412);border-color:#fdba74}
+.bottom{margin-top:38px;padding-top:24px;border-top:1px solid #314765}
+.stop{min-width:min(100%,300px);min-height:49px}
+.training-celebration-overlay{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:18px;background:#030817d9;backdrop-filter:blur(6px);animation:celebrateFade .22s ease-out}
+.training-celebration-card{position:relative;z-index:2;width:min(100%,430px);padding:28px 22px;border:1px solid #fbbf24;border-radius:22px;background:linear-gradient(145deg,#152d4b,#242047);box-shadow:0 22px 70px #0009;text-align:center}
+.training-celebration-cup{font-size:3.2rem;animation:celebratePop .6s cubic-bezier(.2,1.5,.4,1)}
+.training-celebration-card h2{margin:8px 0;color:#fff;font-size:1.55rem}
+.training-celebration-card p{color:#c5d8f1;font-size:.9rem;line-height:1.5}
+.training-celebration-coins{display:flex;align-items:center;justify-content:center;gap:9px;margin:18px 0;padding:12px;border-radius:14px;background:#3b2b19;color:#ffe5a3;font-size:1rem}
+.training-celebration-coins .coin-symbol{width:27px;height:27px}
+.training-celebration-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.training-celebration-confetti i{position:absolute;left:calc((var(--n)*37)%100*1%);top:-16px;width:9px;height:14px;border-radius:2px;background:hsl(calc(var(--n)*37),90%,65%);animation:confettiFall 2.4s ease-in calc(var(--n)*.035s) forwards;transform:rotate(calc(var(--n)*31deg))}
+@keyframes confettiFall{to{top:110%;transform:translateX(calc((var(--n) - 15)*5px)) rotate(760deg);opacity:.2}}
+@keyframes celebrateFade{from{opacity:0}to{opacity:1}}
+@keyframes celebratePop{from{transform:scale(.5) rotate(-15deg)}to{transform:scale(1) rotate(0)}}
+@media(max-width:720px){.review-training-card{grid-template-columns:1fr}.review-training-button{width:100%}.judge{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -1064,7 +1089,8 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   <p id="trainingGlobalModeHint">No modo individual, cada tabuada pode ter sua própria ordem.</p>
  </div>
  <div id="tables" class="tables"></div>
- <button id="start" class="primary">▶ Iniciar treinamento</button>
+ <button id="start" class="primary">▶ Iniciar treinamento livre</button>
+ <div class="review-training-card"><div><span class="music-kicker">SEU TREINO INTELIGENTE</span><h3>🎯 Treinar minhas dificuldades</h3><p id="reviewTrainingSummary" class="hint">As contas que você mais erra, marcou como difíceis ou demora para resolver serão organizadas automaticamente.</p></div><button id="startReviewTraining" class="review-training-button" type="button">Carregar minhas dificuldades</button></div>
  <p class="small">No modo normal, a tabuada segue de 1 a 10. No aleatório, a ordem muda.</p>
 </div>
 
@@ -1155,6 +1181,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 <button id="verify" class="verify">Verificar</button>
 <div id="judge" class="judge hidden">
 <button id="right" class="yes">✓ Acertei</button>
+<button id="markDifficulty" class="difficulty-mark" type="button">⚑ Tive dificuldade</button>
 <button id="wrong" class="no">✕ Errei</button>
 </div>
 </div>
@@ -1236,6 +1263,7 @@ function updateTrainingGlobalModeControls(){
   :mode==='normal'?'Todas as tabuadas seguem a ordem padrão, de 1 a 10.':'Todas as tabuadas terão questões em ordem aleatória.';
 }
 let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
+let trainingReviewMode=false,trainingReviewFacts=[],trainingRoundTarget=0,currentQuestionTimeMs=0,currentQuestionTimeStopped=false,currentDifficultyMarked=false;
 let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=1;
 let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueuePosition=0,musicStartPending=false,mainMusicTimer=null;
 const LAST_TRACK_STORAGE_KEY='projetoTabuadaUltimaFaixaV2:';
@@ -1479,7 +1507,8 @@ const ACHIEVEMENT_DEFINITIONS=[
  {id:'tournament_medium_top10',icon:'🏅',title:'Top 10 Mensal — Médio',description:'Fique entre o quarto e o décimo lugar no torneio Médio.'},
  {id:'tournament_hard_top3',icon:'🥇',title:'Pódio Mensal — Difícil',description:'Fique entre os três primeiros no torneio Difícil.'},
  {id:'tournament_hard_top10',icon:'🏅',title:'Top 10 Mensal — Difícil',description:'Fique entre o quarto e o décimo lugar no torneio Difícil.'},
- {id:'tournament_perfect50',icon:'💯',title:'50 de 50',description:'Acerte as cinquenta questões de um torneio mensal.'}
+ {id:'tournament_perfect50',icon:'💯',title:'50 de 50',description:'Acerte as cinquenta questões de um torneio mensal.'},
+ {id:'learning_from_errors',icon:'🎓',title:'Aprendendo com os erros',description:'Conclua um ciclo de treino personalizado e transforme suas dificuldades em domínio.'}
 ];
 const ECONOMY_CACHE_KEY='projetoTabuadaEconomiaCacheV1';
 const PENDING_REWARDS_KEY='projetoTabuadaRecompensasPendentesV1';
@@ -2163,7 +2192,7 @@ function enterApp(username){
  if(profilesData[username].avatar===undefined||profilesData[username].avatar===null)profilesData[username].avatar='imagem:0';
  refreshProfileIdentity();
  $('authScreen').classList.add('hidden');$('game').classList.add('hidden');$('report').classList.add('hidden');$('setup').classList.remove('hidden');
- selectProfile();renderCommunityRanking();refreshEconomyDisplay();renderChallengeProfileStats();
+ selectProfile();renderCommunityRanking();refreshEconomyDisplay();renderChallengeProfileStats();updateReviewTrainingButton();
  startActiveTimeTracking();
  setTimeout(retryPendingGameRewards,800);
  refreshChallengeData();startChallengePolling();refreshTournamentDashboard();
@@ -2369,11 +2398,11 @@ function showReport(){
  renderRanking();
 }
 function finishSession(){
- const now=performance.now();
  if(questionStartedAt){
-  const unfinishedTime=endQuestionClock();
-  sessionQuestionTimeMs+=unfinishedTime;
-  sessionSkipped++;
+  const unfinishedTime=endQuestionClock();sessionQuestionTimeMs+=unfinishedTime;sessionSkipped++;
+ }else if(revealed&&currentQuestionTimeStopped){
+  sessionQuestionTimeMs+=currentQuestionTimeMs;sessionSkipped++;
+  currentQuestionTimeMs=0;currentQuestionTimeStopped=false;
  }
  if(sessionStartedAt){
   const summary={date:new Date().toISOString(),mode:'training',answered:sessionAnswers.length,hits,misses,skipped:sessionSkipped,timeMs:sessionQuestionTimeMs};
@@ -2385,7 +2414,7 @@ function finishSession(){
 }
 
 function profileSnapshot(){
- return {selected,trainingGlobalMode:$('trainingGlobalMode')?.value||'individual',deck,position,round,hits,misses,sessionAnswers,sessionSkipped,sessionQuestionTimeMs,roundCorrect:[...roundCorrect],savedAt:new Date().toISOString()};
+ return {selected,trainingGlobalMode:$('trainingGlobalMode')?.value||'individual',deck,position,round,hits,misses,sessionAnswers,sessionSkipped,sessionQuestionTimeMs,roundCorrect:[...roundCorrect],trainingReviewMode,trainingReviewFacts,currentQuestionTimeMs,currentQuestionTimeStopped,currentDifficultyMarked,savedAt:new Date().toISOString()};
 }
 function updateProfileButtons(){
  const name=$('profileName').value.trim(),profile=profilesData[name];
@@ -2428,6 +2457,7 @@ function saveCheckpoint(){
 }
 function resumeProfile(){
  const name=$('profileName').value.trim(),c=profilesData[name]?.checkpoint;if(!name||!c)return;
+ trainingReviewMode=!!c.trainingReviewMode;trainingReviewFacts=Array.isArray(c.trainingReviewFacts)?c.trainingReviewFacts:[];
  activeProfile=name;
  if($('trainingGlobalMode'))$('trainingGlobalMode').value=c.trainingGlobalMode||'individual';
  updateTrainingGlobalModeControls();
@@ -2437,6 +2467,8 @@ function resumeProfile(){
  $('setup').classList.add('hidden');$('report').classList.add('hidden');$('game').classList.remove('hidden');sessionStartedAt=performance.now();
  current=deck[position];revealed=false;$('equation').textContent=current.a+' × '+current.b;$('counter').textContent='Rodada '+round+' · Questão '+(position+1)+' de '+deck.length;
  $('answer').textContent='';$('answer').className='answer';$('verify').classList.remove('hidden');$('judge').classList.add('hidden');updateStats();
+ currentQuestionTimeMs=0;currentQuestionTimeStopped=false;currentDifficultyMarked=false;
+ $('markDifficulty').disabled=false;$('markDifficulty').classList.remove('marked');$('markDifficulty').textContent='⚑ Tive dificuldade';
  questionElapsedBeforeStart=c.currentElapsedMs||0;beginQuestionClock();$('profileStatus').textContent='Partida retomada. Bom estudo!';
 }
 function addNumbersToSavedGame(){
@@ -3383,9 +3415,9 @@ function handleTournamentQuestionClick(event){
 function startRound(){
  round++;
  roundCorrect=new Set();
- deck=makeRound();
+ deck=trainingReviewMode?shuffle(trainingReviewFacts.map(item=>({a:item.a,b:item.b}))):makeRound();
+ trainingRoundTarget=new Set(deck.map(item=>item.a+'x'+item.b)).size;
  position=0;
-
 }
 function updateStats(){
  $('hits').textContent=hits;
@@ -3395,59 +3427,69 @@ function updateStats(){
 }
 function next(){
  if(position>=deck.length){
-  if(round>0&&selected.length&&roundCorrect.size===selected.length*10){
+  const completed=round>0&&trainingRoundTarget>0&&roundCorrect.size>=trainingRoundTarget;
+  if(completed){
+   const isReview=trainingReviewMode;
    const claimId=crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);
-   claimGameReward('training_cycle',{claimId});
+   claimGameReward('training_cycle',{claimId,learningFromErrors:isReview}).then(result=>{
+    const remaining=isReview?getMistakeTrainingFacts():[];
+    showTrainingCycleCelebration(result,isReview,isReview&&remaining.length===0);
+   });
+   if(trainingReviewMode){
+    const remaining=getMistakeTrainingFacts();
+    trainingReviewFacts=expandMistakeTrainingFacts(remaining);
+    if(!trainingReviewFacts.length){
+     $('profileStatus').textContent='Parabéns! As dificuldades deste ciclo alcançaram pelo menos 90% de acertos.';
+     return;
+    }
+   }
   }
   startRound();
  }
  current=deck[position];
- revealed=false;
+ revealed=false;currentQuestionTimeMs=0;currentQuestionTimeStopped=false;currentDifficultyMarked=false;
  $('equation').textContent=current.a+' × '+current.b;
- $('counter').textContent='Rodada '+round+' · Questão '+(position+1)+' de '+deck.length;
- $('answer').textContent='';
- $('answer').className='answer';
- $('verify').classList.remove('hidden');
- $('judge').classList.add('hidden');
- updateStats();
- beginQuestionClock();
+ $('counter').textContent=(trainingReviewMode?'TREINO PERSONALIZADO':'Rodada '+round)+' · Questão '+(position+1)+' de '+deck.length;
+ $('answer').textContent='';$('answer').className='answer';
+ $('verify').classList.remove('hidden');$('judge').classList.add('hidden');
+ $('markDifficulty').disabled=false;$('markDifficulty').classList.remove('marked');$('markDifficulty').textContent='⚑ Tive dificuldade';
+ updateStats();beginQuestionClock();
 }
 function start(){
  setMusicCategory('treinamento',true);
  const globalMode=$('trainingGlobalMode')?.value||'individual';
- selected=[...tablesEl.querySelectorAll('.table-row')]
-  .filter(r=>r.querySelector('input').checked)
-  .map(r=>({n:Number(r.querySelector('input').value),mode:globalMode==='individual'?r.querySelector('select').value:globalMode}));
- if(!selected.length){alert('Selecione pelo menos uma tabuada para começar.');return}
- hits=0;misses=0;round=0;position=0;deck=[];roundCorrect=new Set();
+ if(trainingReviewMode){
+  selected=[...new Set(trainingReviewFacts.map(item=>item.a))].sort((a,b)=>a-b).map(n=>({n,mode:'normal'}));
+ }else{
+  selected=[...tablesEl.querySelectorAll('.table-row')].filter(r=>r.querySelector('input').checked)
+   .map(r=>({n:Number(r.querySelector('input').value),mode:globalMode==='individual'?r.querySelector('select').value:globalMode}));
+ }
+ if(!selected.length){alert(trainingReviewMode?'Não há contas pendentes para revisar.':'Selecione pelo menos uma tabuada para começar.');return;}
+ hits=0;misses=0;round=0;position=0;deck=[];roundCorrect=new Set();trainingRoundTarget=0;
+ currentQuestionTimeMs=0;currentQuestionTimeStopped=false;currentDifficultyMarked=false;
  sessionAnswers=[];sessionSkipped=0;sessionQuestionTimeMs=0;sessionStartedAt=performance.now();
- $('report').classList.add('hidden');
- $('setup').classList.add('hidden');
- $('game').classList.remove('hidden');
+ $('report').classList.add('hidden');$('setup').classList.add('hidden');$('game').classList.remove('hidden');
  if(soundOn)ensureAudio();
  if(!$('profileName').value.trim())activeProfile='';
- else {activeProfile=$('profileName').value.trim();profilesData[activeProfile]=profilesData[activeProfile]||{};}
+ else{activeProfile=$('profileName').value.trim();profilesData[activeProfile]=profilesData[activeProfile]||{};}
  next();saveCheckpoint();
 }
 function verify(){
  if(revealed)return;
  revealed=true;
+ currentQuestionTimeMs=endQuestionClock();currentQuestionTimeStopped=true;
  $('answer').textContent=current.a+' × '+current.b+' = '+(current.a*current.b);
- $('verify').classList.add('hidden');
- $('judge').classList.remove('hidden');
+ $('verify').classList.add('hidden');$('judge').classList.remove('hidden');
 }
 function judge(ok){
  if(!revealed)return;
- const timeMs=endQuestionClock();
- const entry={a:current.a,b:current.b,correct:!!ok,timeMs};
- sessionAnswers.push(entry);
- sessionQuestionTimeMs+=timeMs;
- addAnswerToHistory(entry);
- renderCommunityRanking();
- if(ok){hits++;roundCorrect.add(current.a+'x'+current.b);$('answer').classList.add('correct');playFeedback(true)}
- else{misses++;deck.push({...current});$('answer').classList.add('wrong');playFeedback(false)}
- position++;
- next();saveCheckpoint();
+ const timeMs=currentQuestionTimeStopped?currentQuestionTimeMs:endQuestionClock();
+ const entry={a:current.a,b:current.b,correct:!!ok,timeMs,mode:'training'};
+ sessionAnswers.push(entry);sessionQuestionTimeMs+=timeMs;addAnswerToHistory(entry);
+ if(ok){hits++;roundCorrect.add(current.a+'x'+current.b);$('answer').classList.add('correct');playFeedback(true);}
+ else{misses++;deck.push({...current});$('answer').classList.add('wrong');playFeedback(false);}
+ position++;currentQuestionTimeMs=0;currentQuestionTimeStopped=false;currentDifficultyMarked=false;
+ updateReviewTrainingButton();renderCommunityRanking();next();saveCheckpoint();
 }
 
 const ADVENTURE_WORLDS=[
@@ -3794,6 +3836,71 @@ function advanceAdventureQuestion(){
  renderAdventureQuestion();
 }
 
+
+
+function expandMistakeTrainingFacts(rows){
+ return rows.flatMap(item=>{
+  const weight=Math.max(1,Math.min(3,1+Math.ceil((item.wrong+item.flags)/2)));
+  return Array.from({length:weight},()=>({a:item.a,b:item.b}));
+ });
+}
+function getMistakeTrainingFacts(){
+ return Object.values(historyData.questions||{}).filter(item=>item&&typeof item==='object').map(item=>{
+  const attempts=Math.max(0,Number(item.attempts)||0),correct=Math.max(0,Number(item.correct)||0),wrong=Math.max(0,Number(item.wrong)||0);
+  const flags=Math.max(0,Number(item.difficultyFlags)||0),totalTimeMs=Math.max(0,Number(item.totalTimeMs)||0);
+  return {a:Number(item.a),b:Number(item.b),attempts,correct,wrong,flags,totalTimeMs,
+   avgTime:attempts?totalTimeMs/attempts:0,accuracy:attempts?correct/attempts:0,
+   errorRate:attempts?wrong/attempts:0};
+ }).filter(item=>Number.isInteger(item.a)&&item.a>=1&&item.a<=20&&Number.isInteger(item.b)&&item.b>=1&&item.b<=10&&item.attempts>0)
+ .filter(item=>{
+  if(item.accuracy>=.90&&item.attempts>=5)return false;
+  return item.wrong>0||item.flags>0||item.avgTime>=5000;
+ }).sort((a,b)=>{
+  const score=item=>item.errorRate*.65+Math.min(1,item.avgTime/9000)*.20+Math.min(1,item.flags/3)*.15;
+  return score(b)-score(a)||b.wrong-a.wrong||b.avgTime-a.avgTime;
+ }).slice(0,60);
+}
+function updateReviewTrainingButton(){
+ const facts=getMistakeTrainingFacts(),button=$('startReviewTraining'),note=$('reviewTrainingSummary');
+ if(button){button.disabled=!facts.length;button.textContent=facts.length?'🎯 Treinar minhas dificuldades · '+facts.length+' contas':'🎯 Nenhuma conta pendente';}
+ if(note)note.textContent=facts.length
+  ?'Treino personalizado com contas que você erra, marcou como difíceis ou demora mais. Cada conta sai da lista quando atingir 90% de acertos (com pelo menos 5 tentativas).'
+  :'Seu histórico não aponta dificuldades pendentes. Quando houver contas abaixo de 90%, elas aparecem aqui automaticamente.';
+}
+function startMistakeTraining(){
+ const facts=getMistakeTrainingFacts();
+ if(!facts.length){updateReviewTrainingButton();return;}
+ trainingReviewMode=true;trainingReviewFacts=expandMistakeTrainingFacts(facts);
+ start();
+}
+function markCurrentQuestionDifficulty(){
+ if(!current||!revealed||currentDifficultyMarked)return;
+ const key=current.a+'x'+current.b;
+ if(!historyData.questions[key])historyData.questions[key]={a:current.a,b:current.b,attempts:0,correct:0,wrong:0,totalTimeMs:0,bestTimeMs:null};
+ const item=historyData.questions[key];
+ item.difficultyFlags=Math.min(100000,(Number(item.difficultyFlags)||0)+1);
+ item.lastDifficultyAt=new Date().toISOString();
+ currentDifficultyMarked=true;saveHistory();
+ $('markDifficulty').disabled=true;$('markDifficulty').classList.add('marked');$('markDifficulty').textContent='✓ Marcada para revisão';
+ updateReviewTrainingButton();
+}
+function showTrainingCycleCelebration(result,isReview,reviewComplete=false){
+ document.querySelector('.training-celebration-overlay')?.remove();
+ const coins=Math.max(0,Number(result?.coinsAdded)||0);
+ const rewardText=coins?'+'+coins+' moedas':(result?.alreadyClaimed?'Recompensa já recebida':'Recompensa em sincronização');
+ const overlay=document.createElement('div');overlay.className='training-celebration-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-label','Ciclo de estudos concluído');
+ overlay.innerHTML='<div class="training-celebration-confetti">'+Array.from({length:32},(_,i)=>'<i style="--n:'+i+'"></i>').join('')+'</div>'+
+  '<div class="training-celebration-card"><div class="training-celebration-cup">🎉</div><span class="music-kicker">CONQUISTA DESBLOQUEADA</span>'+
+  '<h2>Parabéns! Ciclo completo!</h2><p>'+(isReview?'Você está aprendendo com seus erros e fortalecendo suas contas difíceis.':'Você concluiu mais um ciclo de estudos!')+'</p>'+
+  '<div class="training-celebration-coins"><i class="coin-symbol" aria-hidden="true"></i><strong>'+escapeHtml(rewardText)+'</strong></div>'+
+  '<button type="button" class="primary" data-dismiss-celebration>'+(reviewComplete?'Ver meu resultado':'Continuar estudando')+'</button></div>';
+ document.body.appendChild(overlay);
+ overlay.querySelector('[data-dismiss-celebration]').addEventListener('click',()=>{
+  overlay.remove();
+  if(reviewComplete){trainingReviewMode=false;finishSession();}
+ });
+ if(!reviewComplete)setTimeout(()=>overlay.remove(),5200);
+}
 
 function makeRound(){
  const allRandom=selected.every(t=>t.mode==='random');
@@ -4176,6 +4283,8 @@ $('addNumbers').addEventListener('click',addNumbersToSavedGame);
 $('trainingGlobalMode').addEventListener('change',updateTrainingGlobalModeControls);
 $('start').addEventListener('click',()=>{if($('profileName').value.trim())saveProfile(false);start()});
 $('verify').addEventListener('click',verify);
+$('markDifficulty').addEventListener('click',markCurrentQuestionDifficulty);
+$('startReviewTraining').addEventListener('click',startMistakeTraining);
 $('right').addEventListener('click',()=>judge(true));
 $('wrong').addEventListener('click',()=>judge(false));
 $('stop').addEventListener('click',stop);
