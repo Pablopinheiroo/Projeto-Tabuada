@@ -996,22 +996,21 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 <header class="brand"><h1>📚 Projeto Tabuada</h1><p>Pratique no seu ritmo, uma questão de cada vez.</p></header>
 <div id="gameRewardToast" class="game-reward-toast hidden" role="status" aria-live="polite"></div>
 <div class="music-box" id="siteMusicBox">
- <button class="music-menu-toggle" id="musicMenuToggle" type="button" aria-expanded="true" aria-controls="musicControls">
+ <button class="music-menu-toggle" id="musicMenuToggle" type="button" aria-expanded="false" aria-controls="musicControls">
   <span class="music-menu-icon" aria-hidden="true">♫</span>
   <span class="music-menu-copy">
    <span id="musicCategoryKicker" class="music-kicker">MENU · LEVE E DIVERTIDO · 4 FAIXAS</span>
    <strong id="musicTitle" class="music-title">Escolhendo uma trilha...</strong>
   </span>
-  <span class="music-menu-action"><span id="musicMenuLabel">Fechar controles</span><span class="music-menu-chevron" id="musicMenuChevron" aria-hidden="true">⌃</span></span>
+  <span class="music-menu-action"><span id="musicMenuLabel">Alterar música</span><span class="music-menu-chevron" id="musicMenuChevron" aria-hidden="true">⌄</span></span>
  </button>
- <div class="music-controls" id="musicControls">
+ <div class="music-controls hidden" id="musicControls">
   <select id="trackSelect" class="music-select" aria-label="Escolher música"></select>
   <div class="music-buttons">
    <button id="soundToggle" class="music-button" type="button" aria-pressed="true">♫ Pausar música</button>
    <button id="replayTune" class="music-button" type="button">⏭ Próxima faixa</button>
    <label class="volume-control" for="globalVolume">🔊 Volume <input id="globalVolume" type="range" min="0" max="100" value="100"><strong id="volumeValue">100%</strong></label>
   </div>
-  <p class="music-note">🎧 Biblioteca com 100 trilhas gratuitas (CC0): 20 músicas diferentes em cada área, sem arquivos repetidos nem versões alternativas da mesma composição. O estilo muda conforme o modo: menu divertido, treino tranquilo, desafio acelerado, aventura e torneio intenso.</p>
  </div>
  <audio id="soundtrackAudio" preload="auto" autoplay playsinline></audio>
 </div>
@@ -2820,7 +2819,7 @@ function selectProfile(){
  }else {
   if($('trainingGlobalMode'))$('trainingGlobalMode').value='individual';
   tablesEl.querySelectorAll('.table-row').forEach(row=>{row.querySelector('input').checked=false;row.querySelector('select').value='normal';});
-  $('profileStatus').textContent='Perfil pronto. Escolha as tabuadas e inicie um novo treino.';
+  $('profileStatus').textContent='';
  }
  updateTrainingGlobalModeControls();
  
@@ -4718,7 +4717,7 @@ function playCurrentTrack(){
   return result.then(()=>{
    musicStartPending=false;
    $('soundToggle').textContent='♫ Pausar música';$('soundToggle').setAttribute('aria-pressed','true');
-   $('musicMenuLabel').textContent='Alterar música';showTrack();scheduleMainMusicRotation();return true;
+   showTrack();scheduleMainMusicRotation();return true;
   }).catch(()=>{
    musicStartPending=false;clearMainMusicTimer();showAutoplayHint();return false;
   });
@@ -4728,7 +4727,7 @@ function playCurrentTrack(){
 function showAutoplayHint(){
  const track=musicalTracks[currentTrackIndex];if(!track)return;
  $('musicTitle').textContent='🔇 O navegador bloqueou o início automático · '+track.name;
- $('musicMenuLabel').textContent='Ativar música';$('soundToggle').textContent='▶ Ativar música';
+ $('soundToggle').textContent='▶ Ativar música';
  $('soundToggle').setAttribute('aria-pressed','false');
 }
 function playTrack(index,resetQueue=true){
@@ -4782,6 +4781,7 @@ function readLastTrackIndex(){
  }catch(e){return -1}
 }
 function initMusicPlayer(){
+ setMusicMenuExpanded(false);
  if(!musicalTracks.length){
   $('musicTitle').textContent='Biblioteca musical indisponível.';
   $('soundToggle').disabled=true;$('replayTune').disabled=true;return;
@@ -4798,7 +4798,7 @@ function initMusicPlayer(){
  });
  soundtrackAudio.addEventListener('playing',()=>{
   $('soundToggle').textContent='♫ Pausar música';$('soundToggle').setAttribute('aria-pressed','true');
-  $('musicMenuLabel').textContent='Alterar música';showTrack();scheduleMainMusicRotation();
+  showTrack();scheduleMainMusicRotation();
  });
  soundtrackAudio.addEventListener('ended',()=>{
   if(!soundOn||document.hidden)return;
@@ -4829,16 +4829,17 @@ function initMusicPlayer(){
  });
  playTrack(currentTrackIndex,true);
 }
-function toggleMusicMenu(){
- const button=$('musicMenuToggle');
- const panel=$('musicControls');
- const expanded=button.getAttribute('aria-expanded')==='true';
- const nextExpanded=!expanded;
- button.setAttribute('aria-expanded',String(nextExpanded));
- panel.classList.toggle('hidden',!nextExpanded);
+function setMusicMenuExpanded(expanded){
+ const nextExpanded=!!expanded;
+ $('musicMenuToggle').setAttribute('aria-expanded',String(nextExpanded));
+ $('musicControls').classList.toggle('hidden',!nextExpanded);
  $('siteMusicBox').classList.toggle('expanded',nextExpanded);
  $('musicMenuLabel').textContent=nextExpanded?'Fechar':'Alterar música';
  $('musicMenuChevron').textContent=nextExpanded?'⌃':'⌄';
+}
+function toggleMusicMenu(){
+ const expanded=$('musicMenuToggle').getAttribute('aria-expanded')==='true';
+ setMusicMenuExpanded(!expanded);
 }
 function toggleSound(){
  soundOn=!soundOn;

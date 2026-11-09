@@ -106,6 +106,12 @@ check(html.includes("uiSfxBuffers.set(src,buffer)")&&html.includes("source.start
  "Efeitos sonoros não são decodificados e reproduzidos em memória.");
 check(html.includes('id="profileSfxVolume"')&&html.includes("SFX_VOLUME_CACHE_KEY"),
  "O perfil não oferece volume independente e persistente para os efeitos.");
+check(!html.includes("Biblioteca com 100 trilhas gratuitas")&&!html.includes('class="music-note"'),
+ "A descrição longa da biblioteca musical ainda aparece.");
+check(html.includes('id="musicMenuToggle" type="button" aria-expanded="false"')&&html.includes('class="music-controls hidden" id="musicControls"')&&html.includes("setMusicMenuExpanded(false)"),
+ "O player musical não inicia minimizado ou não volta minimizado ao atualizar a página.");
+check(!html.includes("Perfil pronto. Escolha as tabuadas e inicie um novo treino.")&&html.includes("$('profileStatus').textContent='';"),
+ "A descrição de perfil pronto ainda aparece para um perfil sem progresso.");
 check(html.includes("playUiSound('select')")&&html.includes("playUiSound(value===null?'timeout':'select')"),
  "Sons de seleção e tempo esgotado não estão ligados às respostas.");
 check(!html.includes("'<small>@'+escapeHtml(user.username)+'</small>'+")&&html.includes("community-rank-display-title"),
@@ -196,10 +202,6 @@ async function testViewport(name, viewport, mobile = false) {
   );
   check((await page.locator("#trackSelect").inputValue()) !== "0",
     name + ": a tela inicial repetiu a última faixa salva em vez de escolher outra.");
-  const musicNote = (await page.locator(".music-note").textContent()) || "";
-  check(musicNote.includes("100 trilhas gratuitas") && musicNote.includes("CC0") && musicNote.includes("20 músicas diferentes em cada área"),
-    name + ": o site não explica a biblioteca de 20 trilhas CC0 distribuídas por área.");
-
   const homeOverflow = await page.evaluate(() => ({
     viewport: window.innerWidth,
     document: document.documentElement.scrollWidth,
@@ -229,11 +231,25 @@ async function testViewport(name, viewport, mobile = false) {
   check(!(await page.locator("#loginForm").evaluate(el => el.classList.contains("hidden"))), name + ": botão Voltar ao login não funcionou.");
 
   const musicMenu = page.locator("#musicMenuToggle");
+  check(await musicMenu.getAttribute("aria-expanded") === "false",
+    name + ": o player musical não iniciou minimizado.");
+  check(await page.locator("#musicControls").evaluate(el => el.classList.contains("hidden")),
+    name + ": os controles musicais aparecem abertos na entrada.");
   await musicMenu.click();
-  check(await musicMenu.getAttribute("aria-expanded") === "false", name + ": menu musical não recolheu.");
-  check(await page.locator("#musicControls").evaluate(el => el.classList.contains("hidden")), name + ": controles musicais continuam abertos.");
-  await musicMenu.click();
-  check(await musicMenu.getAttribute("aria-expanded") === "true", name + ": menu musical não expandiu.");
+  check(await musicMenu.getAttribute("aria-expanded") === "true",
+    name + ": o menu musical não expandiu ao tocar nele.");
+  check(await page.locator("#musicControls").isVisible(),
+    name + ": os controles não apareceram após expandir.");
+  await page.reload({waitUntil:"domcontentloaded",timeout:60000});
+  await page.locator("#authScreen").waitFor({state:"visible",timeout:20000});
+  await page.waitForFunction(() => document.querySelectorAll("#trackSelect option").length === 20,null,{timeout:30000});
+  check(await page.locator("#musicMenuToggle").getAttribute("aria-expanded") === "false",
+    name + ": após atualizar a página, o player musical não voltou minimizado.");
+  check(await page.locator("#musicControls").evaluate(el => el.classList.contains("hidden")),
+    name + ": após atualizar, os controles musicais continuam abertos.");
+  await page.locator("#musicMenuToggle").click();
+  check(await page.locator("#musicControls").isVisible(),
+    name + ": o player não voltou a expandir após a atualização.");
 
   await page.locator("#trackSelect").selectOption("0");
   await page.waitForFunction(
