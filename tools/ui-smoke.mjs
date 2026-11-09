@@ -368,6 +368,8 @@ async function testViewport(name, viewport, mobile = false) {
   check(chartOverflow.document <= chartOverflow.viewport + 1, name + ": os gráficos causam rolagem horizontal (" + JSON.stringify(chartOverflow) + ").");
   check(chartOverflow.radar <= chartOverflow.radarBox + 1, name + ": gráfico radar ultrapassa o cartão.");
   await page.screenshot({ path: "artifacts/" + name + "-graficos.png", fullPage: true });
+  check((await page.locator("#closeProfileStats").textContent()).includes("Menu principal"),
+    name + ": o botão das estatísticas não indica retorno ao menu principal.");
   await page.locator("#closeProfileStats").click();
   check(!(await page.locator("#setup").evaluate(el => el.classList.contains("hidden"))) &&
     await page.locator("#profileScreen").evaluate(el => el.classList.contains("hidden")),
@@ -467,6 +469,8 @@ async function testViewport(name, viewport, mobile = false) {
   check(Math.abs(savedAudioProfile.sfx-.55)<.01&&Math.abs(savedAudioProfile.game-.45)<.01&&Math.abs(savedAudioProfile.music-.43)<.01,name+": os três volumes não foram salvos no perfil local.");
   check(Math.abs(savedAudioProfile.remoteSfx-.55)<.01&&Math.abs(savedAudioProfile.remoteGame-.45)<.01&&Math.abs(savedAudioProfile.remoteMusic-.43)<.01,name+": os três volumes não foram enviados à nuvem.");
   check((await page.locator("#profileAudioSaveStatus").textContent()).includes("Padrão salvo na sua conta"),name+": confirmação do salvamento não apareceu.");
+  check((await page.locator("#closeProfileOptions").textContent()).includes("Menu principal"),
+    name+": o botão de Opções não indica retorno ao menu principal.");
   await page.locator("#closeProfileOptions").click();
   check(await page.locator("#profileOptionsPanel").evaluate(el=>el.classList.contains("hidden"))&&
     await page.locator("#profileScreen").evaluate(el=>el.classList.contains("hidden"))&&
@@ -518,7 +522,7 @@ async function testViewport(name, viewport, mobile = false) {
   check(communityStatsColor === "rgb(16, 43, 73)",
     name + ": estatísticas da comunidade continuam com pouco contraste (" + communityStatsColor + ").");
   await page.evaluate(async()=>{
-    communityCache[0].profile.featuredTitles=[];
+    communityCache[0].featuredTitles=[];
     await renderCommunityRanking();
   });
   const automaticTitles=await page.locator(".community-rank-title-chip").allTextContents();
