@@ -1,3 +1,5 @@
+# IMPLEMENTAÇÃO LEGADA — NÃO USAR PARA DEPLOY.
+# A configuração ativa está em ../worker/wrangler.toml (root directory: worker).
 name = "projeto-tabuada-dados"
 main = "worker.js"
 compatibility_date = "2026-11-08"
