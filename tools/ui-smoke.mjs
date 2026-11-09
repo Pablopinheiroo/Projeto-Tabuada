@@ -274,6 +274,7 @@ async function testViewport(name, viewport, mobile = false) {
     name + ": ajuste de volume dos efeitos não atualizou.");
   check(await page.evaluate(() => Math.abs(sfxVolumeLevel - .55) < .01),
     name + ": o volume dos efeitos não foi aplicado.");
+  await page.waitForFunction(() => uiSfxGain && Math.abs(uiSfxGain.gain.value - .55) < .01, null, { timeout: 3000 });
   check(await page.evaluate(() => uiSfxGain && Math.abs(uiSfxGain.gain.value - .55) < .01),
     name + ": o volume separado não chegou ao ganho dos efeitos sonoros.");
 
