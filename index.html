@@ -1486,6 +1486,7 @@ function expireActiveSession(){
  $('report').classList.add('hidden');
  $('tournamentModeView')?.classList.add('hidden');
  $('challengeModeView')?.classList.add('hidden');
+ $('siteMusicBox').classList.remove('hidden');
  $('authScreen').classList.remove('hidden');
  showLoginScreen();
  $('loginMessage').textContent='Sua sessão terminou. Entre novamente para continuar.';
@@ -1711,7 +1712,7 @@ async function renderCommunityRanking(){
      '<img class="community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt="">'+
      '<div class="community-rank-identity"><strong>'+escapeHtml(user.displayName)+'</strong><small>@'+escapeHtml(user.username)+'</small></div>'+
     '</div>'+
-    '<div class="community-rank-trophy">🏆 '+user.challengeWins+' vitórias</div>'+
+    '<div class="community-rank-trophy">🏆 '+user.challengeWins+' vitórias · 🤝 '+user.challengeDraws+' empates · '+user.challengeLosses+' derrotas</div>'+
     '<div class="community-rank-chips">'+(titles||'<span class="community-rank-chip">🌱 Novo participante</span>')+medals+extras+'</div>'+
     '<div class="community-rank-metrics">'+
      '<div class="community-rank-metric"><strong>'+user.correct.toLocaleString('pt-BR')+'</strong><small>acertos</small></div>'+
@@ -3597,6 +3598,7 @@ $('adventureMap').addEventListener('click',event=>{
 $('saveProfile').addEventListener('click',()=>saveProfile(true));
 $('resumeProfile').addEventListener('click',resumeProfile);
 $('addNumbers').addEventListener('click',addNumbersToSavedGame);
+$('trainingGlobalMode').addEventListener('change',updateTrainingGlobalModeControls);
 $('trainingGlobalMode').addEventListener('change',updateTrainingGlobalModeControls);
 $('start').addEventListener('click',()=>{if($('profileName').value.trim())saveProfile(false);start()});
 $('verify').addEventListener('click',verify);
