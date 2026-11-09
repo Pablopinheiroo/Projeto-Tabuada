@@ -90,6 +90,10 @@ check(html.includes("profileOptionsOpen||")&&html.includes("function showProfile
 check(html.includes('id="openProfileStats"')&&html.includes('id="openProfileOptions"')&&html.includes('id="profileOptionsPanel"'),"Os atalhos de Estatísticas e Opções não estão no cartão de perfil.");
 check(!html.includes('id="resumeProfile"')&&!html.includes('id="addNumbers"')&&!html.includes('id="toggleProfileStats"'),"Os botões antigos continuam no perfil.");
 check(html.includes("SFX_OUTPUT_BOOST")&&html.includes("function previewSfxVolume()"),"O reforço e a prévia do volume dos efeitos estão ausentes.");
+check(html.includes('id="profileMusicVolume"')&&html.includes("MUSIC_VOLUME_CACHE_KEY")&&html.includes("function restoreProfileMusicVolume()"),"O volume da música não é configurável nem restaurado por conta.");
+check(html.includes('id="saveProfileAudioPreferences"')&&html.includes("async function saveProfileAudioPreferences()")&&html.includes("Padrão salvo na sua conta"),"O salvamento do padrão de áudio da conta está ausente.");
+check(html.includes("profile.musicVolume=volumeLevel")&&html.includes("profile.sfxVolume=sfxVolumeLevel"),"O salvamento não inclui os dois volumes no perfil remoto.");
+check(html.includes("challengeVolumeLimit/100*volumeLevel"),"A música dos desafios não respeita o volume global salvo.");
 check(html.includes("uiSfxBuffers.set(src,buffer)")&&html.includes("source.start(audioContext.currentTime+.002)"),
  "Efeitos sonoros não são decodificados e reproduzidos em memória.");
 check(html.includes('id="profileSfxVolume"')&&html.includes("SFX_VOLUME_CACHE_KEY"),
@@ -292,32 +296,48 @@ async function testViewport(name, viewport, mobile = false) {
   const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && soundtrackAudio && !soundtrackAudio.paused));
   await page.locator("#openProfileOptions").click();
   check(!(await page.locator("#profileOptionsPanel").evaluate(el => el.classList.contains("hidden"))), name + ": a tela Opções não abriu.");
-  check(await page.locator("#siteMusicBox").evaluate(el => el.classList.contains("hidden")), name + ": o controle da música ficou acessível dentro de Opções.");
+  check(await page.locator("#siteMusicBox").evaluate(el => el.classList.contains("hidden")), name + ": o player musical ficou visível em Opções.");
   check(await page.locator("#soundtrackAudio").evaluate(el => el.paused), name + ": a música não pausou ao abrir Opções.");
-  check(await page.locator("#profileSfxVolume").isVisible(), name + ": o controle de volume dos efeitos não aparece em Opções.");
+  check(await page.locator("#profileSfxVolume").isVisible(), name + ": o controle de efeitos não aparece.");
+  check(await page.locator("#profileMusicVolume").isVisible(), name + ": o controle de música não aparece.");
   await page.evaluate(() => {
-    window.__previewCalls = 0;
-    window.__originalPlayUiSound = window.playUiSound;
-    window.playUiSound = function(name){ if(name==="click")window.__previewCalls++; return window.__originalPlayUiSound(name); };
+    window.__previewCalls=0;window.__audioPreferenceWrites=0;window.__audioPreferencePayload=null;
+    window.cloudTokenReady=()=>true;
+    window.writeRemoteUser=async(username,payload)=>{
+      window.__audioPreferenceWrites++;
+      window.__audioPreferencePayload=JSON.parse(JSON.stringify(payload));
+      return "smoke-audio-sha";
+    };
+    remoteUserData={version:1,username:activeProfile,profile:{},history:{questions:{},sessions:[]}};
+    remoteUserSha="smoke-audio-sha";
+    window.__originalPlayUiSound=window.playUiSound;
+    window.playUiSound=function(name){if(name==="click")window.__previewCalls++;return window.__originalPlayUiSound(name);};
   });
-  await page.locator("#profileSfxVolume").evaluate(element => {
-    element.value = "55";
-    element.dispatchEvent(new Event("input", { bubbles: true }));
-  });
-  check((await page.locator("#profileSfxVolumeValue").textContent()).trim() === "55%",
-    name + ": ajuste de volume dos efeitos não atualizou.");
-  check(await page.evaluate(() => Math.abs(sfxVolumeLevel - .55) < .01),
-    name + ": o volume dos efeitos não foi aplicado.");
-  await page.waitForFunction(() => uiSfxGain && Math.abs(uiSfxGain.gain.value - .825) < .02, null, { timeout: 3000 });
-  check(await page.evaluate(() => uiSfxGain && Math.abs(uiSfxGain.gain.value - .825) < .02),
-    name + ": o volume separado não chegou ao ganho dos efeitos sonoros.");
-  await page.waitForFunction(() => window.__previewCalls > 0, null, { timeout: 3000 });
-  check(await page.evaluate(() => soundOn), name + ": ajustar efeitos desligou indevidamente o estado da música.");
+  await page.locator("#profileSfxVolume").evaluate(element=>{element.value="55";element.dispatchEvent(new Event("input",{bubbles:true}));});
+  await page.locator("#profileMusicVolume").evaluate(element=>{element.value="43";element.dispatchEvent(new Event("input",{bubbles:true}));});
+  check((await page.locator("#profileSfxVolumeValue").textContent()).trim()==="55%",name+": o volume dos efeitos não atualizou.");
+  check((await page.locator("#profileMusicVolumeValue").textContent()).trim()==="43%",name+": o volume da música não atualizou.");
+  check((await page.locator("#volumeValue").textContent()).trim()==="43%",name+": o volume musical geral não sincronizou.");
+  check(await page.evaluate(()=>Math.abs(sfxVolumeLevel-.55)<.01),name+": o volume dos efeitos não foi aplicado.");
+  check(await page.evaluate(()=>Math.abs(volumeLevel-.43)<.01),name+": o volume da música não foi aplicado.");
+  await page.waitForFunction(()=>uiSfxGain&&Math.abs(uiSfxGain.gain.value-.825)<.02,null,{timeout:3000});
+  await page.waitForFunction(()=>window.__previewCalls>0,null,{timeout:3000});
+  await page.locator("#saveProfileAudioPreferences").click();
+  await page.waitForFunction(()=>window.__audioPreferenceWrites===1,null,{timeout:5000});
+  const savedAudioProfile=await page.evaluate(()=>({
+    sfx:profilesData[activeProfile]?.sfxVolume,music:profilesData[activeProfile]?.musicVolume,
+    remoteSfx:window.__audioPreferencePayload?.profile?.sfxVolume,
+    remoteMusic:window.__audioPreferencePayload?.profile?.musicVolume
+  }));
+  check(Math.abs(savedAudioProfile.sfx-.55)<.01&&Math.abs(savedAudioProfile.music-.43)<.01,name+": volumes não foram salvos no perfil local.");
+  check(Math.abs(savedAudioProfile.remoteSfx-.55)<.01&&Math.abs(savedAudioProfile.remoteMusic-.43)<.01,name+": volumes não foram enviados à nuvem.");
+  check((await page.locator("#profileAudioSaveStatus").textContent()).includes("Padrão salvo na sua conta"),name+": confirmação do salvamento não apareceu.");
   await page.locator("#closeProfileOptions").click();
-  check(await page.locator("#profileOptionsPanel").evaluate(el => el.classList.contains("hidden")), name + ": fechar Opções falhou.");
-  if(musicWasPlayingBeforeOptions){
-    await page.waitForFunction(() => !document.querySelector("#soundtrackAudio").paused, null, { timeout: 5000 });
-  }
+  check(await page.locator("#profileOptionsPanel").evaluate(el=>el.classList.contains("hidden")),name+": fechar Opções falhou.");
+  if(musicWasPlayingBeforeOptions)await page.waitForFunction(()=>!document.querySelector("#soundtrackAudio").paused,null,{timeout:5000});
+  await page.locator("#openProfileOptions").click();
+  check((await page.locator("#profileMusicVolume").inputValue())==="43",name+": o volume salvo não foi restaurado.");
+  await page.locator("#closeProfileOptions").click();
 
   await page.evaluate(async () => {
     document.querySelector("#profileScreen").classList.add("hidden");

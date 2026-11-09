@@ -906,6 +906,12 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .profile-options-panel .profile-sfx-volume input{min-width:0}
 @media(max-width:520px){.profile-subscreen-heading{align-items:stretch;flex-direction:column}.profile-subscreen-heading .secondary{width:100%}}
 
+
+.profile-audio-save{display:grid;gap:8px;margin:14px 0 4px;padding:13px;border:1px solid #3c6e8f;border-radius:13px;background:linear-gradient(145deg,#112b45,#1b2341)}
+.profile-audio-save .primary{width:100%;min-height:48px}
+.profile-audio-save p{margin:0;color:#c6d9ed;font-size:.78rem;line-height:1.5}
+.profile-audio-save button:disabled{opacity:.65;cursor:wait}
+
 </style>
 </head>
 <body>
@@ -1029,7 +1035,16 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   <p class="stats-data-note">A análise considera erros, acertos e tempo médio por resposta. Os dados antigos continuam preservados; a separação por modo fica mais completa conforme você joga cada modalidade após esta atualização.</p>
  </section>
  <section id="profileOptionsPanel" class="profile-options-panel hidden" aria-label="Opções do jogo">
-  <div class="profile-subscreen-heading"><div><span class="music-kicker">PREFERÊNCIAS</span><h2>⚙️ Opções</h2><p class="hint">Ajuste os efeitos sonoros. A música de fundo fica pausada enquanto esta tela estiver aberta.</p></div><button id="closeProfileOptions" class="secondary" type="button">← Meu perfil</button></div>
+  <div class="profile-subscreen-heading"><div><span class="music-kicker">PREFERÊNCIAS</span><h2>⚙️ Opções</h2><p class="hint">Ajuste os volumes. A música fica pausada nesta tela; o volume escolhido entra em vigor ao sair.</p></div><button id="closeProfileOptions" class="secondary" type="button">← Meu perfil</button></div>
+  <section class="profile-audio-settings" aria-label="Volume da música">
+   <h3>🎵 Volume da música</h3>
+   <p>Controla as trilhas de fundo e também o volume máximo da música dos desafios.</p>
+   <label class="profile-sfx-volume" for="profileMusicVolume">
+    <span>Volume da música</span>
+    <input id="profileMusicVolume" type="range" min="0" max="100" step="1" value="100">
+    <strong id="profileMusicVolumeValue">100%</strong>
+   </label>
+  </section>
   <section class="profile-audio-settings" aria-label="Preferências dos efeitos sonoros">
   <h3>🔊 Volume dos efeitos especiais</h3>
   <p>Ajuste o volume dos cliques, teclas, acertos, erros e avisos. Ao mover o controle, um som de teste ajuda a comparar o volume.</p>
@@ -1039,6 +1054,10 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
    <strong id="profileSfxVolumeValue">82%</strong>
   </label>
  </section>
+  <div class="profile-audio-save">
+   <button id="saveProfileAudioPreferences" class="primary" type="button">💾 Salvar como padrão da conta</button>
+   <p id="profileAudioSaveStatus" role="status" aria-live="polite">Depois de ajustar os volumes, salve para usar essas escolhas nos próximos acessos à sua conta.</p>
+  </div>
  </section>
 </section>
 
@@ -1628,6 +1647,7 @@ function renderAvatarGrid(containerId,selectedKey,onSelect){
 function refreshProfileIdentity(){
  const profile=profilesData[activeProfile]||{};
  restoreProfileSfxVolume();
+ restoreProfileMusicVolume();
  const displayName=profile.displayName||activeProfile;
  const avatarKey=normalizeAvatarKey(profile.avatar);
  const avatar=avatarImage(avatarKey);
@@ -2698,6 +2718,7 @@ function showProfileOptions(){
  $('profileStatsPanel').classList.add('hidden');
  $('profileOptionsPanel').classList.remove('hidden');
  restoreProfileSfxVolume();
+ syncAudioPreferenceControls();
 }
 function closeProfileOptions(){
  const resume=profileOptionsResumeMusic;
@@ -3244,8 +3265,9 @@ function applyChallengeVolume(value){
  challengeVolumeLimit=actual;
  if($('challengeVolume'))$('challengeVolume').value=String(actual);
  if($('challengeVolumeValue'))$('challengeVolumeValue').textContent=actual+'%';
- if(soundtrackAudio&&challengeMusicActive)soundtrackAudio.volume=actual/100;
- if(masterGain&&audioContext)masterGain.gain.setTargetAtTime(actual/100,audioContext.currentTime,.04);
+ const outputLevel=actual/100*volumeLevel;
+ if(soundtrackAudio&&challengeMusicActive)soundtrackAudio.volume=outputLevel;
+ if(masterGain&&audioContext)masterGain.gain.setTargetAtTime(outputLevel,audioContext.currentTime,.04);
 }
 function stopChallengeTimers(){
  if(challengeQuestionTimer!==null){clearInterval(challengeQuestionTimer);challengeQuestionTimer=null;}
@@ -4286,6 +4308,7 @@ function playUiSfxBuffer(buffer){
  return true;
 }
 const SFX_VOLUME_CACHE_KEY='projetoTabuadaVolumeEfeitosV1';
+const MUSIC_VOLUME_CACHE_KEY='projetoTabuadaVolumeMusicaV1';
 function applySfxVolumeToPlayers(){
  const value=Math.max(0,Math.min(1,sfxVolumeLevel));
  const outputValue=Math.min(1,value*SFX_OUTPUT_BOOST);
@@ -4297,32 +4320,75 @@ function applySfxVolumeToPlayers(){
 function restoreProfileSfxVolume(){
  const profile=profilesData[activeProfile]||{};
  let saved=null;
- try{
-  const prefs=JSON.parse(localStorage.getItem(SFX_VOLUME_CACHE_KEY)||'{}');
-  const cached=prefs?prefs[activeProfile]:null;
-  if(cached!==null&&cached!==undefined&&Number.isFinite(Number(cached)))saved=Number(cached);
- }catch{}
- if(saved===null&&profile.sfxVolume!==undefined&&Number.isFinite(Number(profile.sfxVolume)))saved=Number(profile.sfxVolume);
+ if(profile.sfxVolume!==undefined&&Number.isFinite(Number(profile.sfxVolume)))saved=Number(profile.sfxVolume);
+ if(saved===null){
+  try{
+   const prefs=JSON.parse(localStorage.getItem(SFX_VOLUME_CACHE_KEY)||'{}');
+   const cached=prefs?prefs[activeProfile]:null;
+   if(cached!==null&&cached!==undefined&&Number.isFinite(Number(cached)))saved=Number(cached);
+  }catch{}
+ }
  sfxVolumeLevel=saved===null?.82:Math.max(0,Math.min(1,saved));
  applySfxVolumeToPlayers();
 }
-function setProfileSfxVolume(value){
- sfxVolumeLevel=Math.max(0,Math.min(1,Number(value)/100));
- if(activeProfile){
-  profilesData[activeProfile]=profilesData[activeProfile]||{};
-  profilesData[activeProfile].sfxVolume=sfxVolumeLevel;
-  persistProfiles();
+function restoreProfileMusicVolume(){
+ const profile=profilesData[activeProfile]||{};
+ let saved=null;
+ if(profile.musicVolume!==undefined&&Number.isFinite(Number(profile.musicVolume)))saved=Number(profile.musicVolume);
+ if(saved===null){
   try{
-   const prefs=JSON.parse(localStorage.getItem(SFX_VOLUME_CACHE_KEY)||'{}');
-   prefs[activeProfile]=sfxVolumeLevel;
-   localStorage.setItem(SFX_VOLUME_CACHE_KEY,JSON.stringify(prefs));
+   const prefs=JSON.parse(localStorage.getItem(MUSIC_VOLUME_CACHE_KEY)||'{}');
+   const cached=prefs?prefs[activeProfile]:null;
+   if(cached!==null&&cached!==undefined&&Number.isFinite(Number(cached)))saved=Number(cached);
   }catch{}
  }
+ setVolume((saved===null?1:Math.max(0,Math.min(1,saved)))*100);
+}
+function syncAudioPreferenceControls(){
+ if($('profileSfxVolume'))$('profileSfxVolume').value=String(Math.round(sfxVolumeLevel*100));
+ if($('profileSfxVolumeValue'))$('profileSfxVolumeValue').textContent=Math.round(sfxVolumeLevel*100)+'%';
+ if($('profileMusicVolume'))$('profileMusicVolume').value=String(Math.round(volumeLevel*100));
+ if($('profileMusicVolumeValue'))$('profileMusicVolumeValue').textContent=Math.round(volumeLevel*100)+'%';
+}
+function setProfileSfxVolume(value){
+ sfxVolumeLevel=Math.max(0,Math.min(1,Number(value)/100));
  applySfxVolumeToPlayers();
 }
 function previewSfxVolume(){
  if(sfxPreviewTimer)clearTimeout(sfxPreviewTimer);
  sfxPreviewTimer=setTimeout(()=>{sfxPreviewTimer=null;playUiSound('click');},90);
+}
+async function saveProfileAudioPreferences(){
+ const username=activeProfile;
+ const status=$('profileAudioSaveStatus');
+ const button=$('saveProfileAudioPreferences');
+ if(!username){status.textContent='Entre na sua conta para salvar um padrão de áudio.';return;}
+ button.disabled=true;
+ status.textContent='Salvando suas preferências...';
+ const profile=profilesData[username]||(profilesData[username]={});
+ profile.sfxVolume=sfxVolumeLevel;
+ profile.musicVolume=volumeLevel;
+ profile.audioPreferencesSavedAt=new Date().toISOString();
+ persistProfiles();
+ try{
+  const effectPrefs=JSON.parse(localStorage.getItem(SFX_VOLUME_CACHE_KEY)||'{}');
+  effectPrefs[username]=sfxVolumeLevel;
+  localStorage.setItem(SFX_VOLUME_CACHE_KEY,JSON.stringify(effectPrefs));
+  const musicPrefs=JSON.parse(localStorage.getItem(MUSIC_VOLUME_CACHE_KEY)||'{}');
+  musicPrefs[username]=volumeLevel;
+  localStorage.setItem(MUSIC_VOLUME_CACHE_KEY,JSON.stringify(musicPrefs));
+ }catch{}
+ try{
+  if(!remoteUserData||!cloudTokenReady())throw new Error('Não foi possível acessar a sessão da nuvem.');
+  const payload=buildRemoteUserData();
+  const newSha=await writeRemoteUser(username,payload,remoteUserSha);
+  if(activeProfile!==username)return;
+  remoteUserSha=newSha;remoteUserData=payload;lastCloudSaveAt=Date.now();
+  updateProfileLastSavedAt();
+  status.textContent='✅ Padrão salvo na sua conta. Será aplicado automaticamente nos próximos acessos.';
+ }catch(error){
+  status.textContent='⚠️ Salvo neste aparelho, mas não foi sincronizado com a conta: '+siteErrorMessage(error);
+ }finally{button.disabled=false;}
 }
 async function loadUiSfx(){
  try{
@@ -4405,10 +4471,13 @@ function playUiClick(){playUiSound('click')}
 function playFeedback(correct){playUiSound(correct?'correct':'wrong')}
 function setVolume(value){
  volumeLevel=Math.max(0,Math.min(1,Number(value)/100));
- if(masterGain&&audioContext)masterGain.gain.setTargetAtTime(volumeLevel,audioContext.currentTime,.04);
- if(soundtrackAudio)soundtrackAudio.volume=volumeLevel;
- $('globalVolume').value=String(Math.round(volumeLevel*100));
+ const outputLevel=challengeMusicActive?challengeVolumeLimit/100*volumeLevel:volumeLevel;
+ if(masterGain&&audioContext)masterGain.gain.setTargetAtTime(outputLevel,audioContext.currentTime,.04);
+ if(soundtrackAudio)soundtrackAudio.volume=outputLevel;
+ if($('globalVolume'))$('globalVolume').value=String(Math.round(volumeLevel*100));
  if($('volumeValue'))$('volumeValue').textContent=Math.round(volumeLevel*100)+'%';
+ if($('profileMusicVolume'))$('profileMusicVolume').value=String(Math.round(volumeLevel*100));
+ if($('profileMusicVolumeValue'))$('profileMusicVolumeValue').textContent=Math.round(volumeLevel*100)+'%';
 }
 function showTrack(){
  const track=musicalTracks[currentTrackIndex];if(!track)return;
@@ -4448,7 +4517,7 @@ function watchGameScreenForMusic(){
 function playCurrentTrack(){
  if(!soundtrackAudio||currentTrackIndex<0||!soundOn||profileOptionsOpen||document.hidden)return Promise.resolve(false);
  if(musicStartPending)return Promise.resolve(false);
- soundtrackAudio.volume=challengeMusicActive?challengeVolumeLimit/100:volumeLevel;
+ soundtrackAudio.volume=challengeMusicActive?challengeVolumeLimit/100*volumeLevel:volumeLevel;
  musicStartPending=true;
  let result;
  try{result=soundtrackAudio.play()}catch(error){musicStartPending=false;showAutoplayHint();return Promise.resolve(false)}
@@ -4478,7 +4547,7 @@ function playTrack(index,resetQueue=true){
  if(!soundtrackAudio)return Promise.resolve(false);
  soundtrackAudio.pause();musicStartPending=false;
  soundtrackAudio.src=new URL(musicalTracks[index].src,document.baseURI).href;
- soundtrackAudio.load();soundtrackAudio.volume=challengeMusicActive?challengeVolumeLimit/100:volumeLevel;
+ soundtrackAudio.load();soundtrackAudio.volume=challengeMusicActive?challengeVolumeLimit/100*volumeLevel:volumeLevel;
  return soundOn&&!document.hidden?playCurrentTrack():Promise.resolve(false);
 }
 function playNextTrack(){
@@ -4606,6 +4675,8 @@ $('musicMenuToggle').addEventListener('click',toggleMusicMenu);
 $('trackSelect').addEventListener('change',e=>chooseTrack(e.target.value));
 $('globalVolume').addEventListener('input',e=>setVolume(e.target.value));
 $('profileSfxVolume').addEventListener('input',e=>{setProfileSfxVolume(e.target.value);previewSfxVolume();});
+$('profileMusicVolume').addEventListener('input',e=>setVolume(e.target.value));
+$('saveProfileAudioPreferences').addEventListener('click',saveProfileAudioPreferences);
 $('soundToggle').addEventListener('click',toggleSound);
 $('replayTune').addEventListener('click',replayTune);
 
