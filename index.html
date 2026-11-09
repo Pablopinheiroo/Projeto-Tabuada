@@ -948,6 +948,34 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  .community-profile-detail-title{font-size:.65rem}
 }
 
+
+/* Comunidade: perfil público organizado em blocos claros */
+.community-rank-summary{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.community-rank-main{display:flex;align-items:center;gap:10px;min-width:0}
+.community-rank-identity{flex:1;min-width:0;display:grid;gap:0}
+.community-rank-name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}
+.community-rank-display-title{min-width:0;overflow-wrap:anywhere}
+.community-rank-public-stats{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:0!important;color:#294967;font-size:.76rem;font-weight:850;line-height:1.2;text-shadow:none}
+.community-rank-public-stats>span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;padding:8px 4px;border:1px solid #dce7f3;border-radius:10px;background:#fff;white-space:normal;text-align:center}
+.community-rank-public-stats>span strong{display:block;color:#183b5e;font-size:clamp(.7rem,3vw,.86rem);font-weight:950;line-height:1.2;white-space:nowrap}
+.community-rank-public-stats>span small{display:block;color:#647b93;font-size:.64rem;font-weight:800;line-height:1.2}
+.community-rank-title-section{display:grid;gap:6px;min-width:0}
+.community-rank-title-section .community-title-label{display:block;color:#80621e;font-size:.68rem;font-weight:950;letter-spacing:.08em}
+.community-rank-titles{display:flex;flex-wrap:wrap;align-items:center;gap:6px;min-width:0}
+.community-rank-titles .community-rank-title-chip{display:inline-flex;align-items:center;gap:5px}
+.community-rank-no-titles{color:#647b93;font-size:.73rem;font-weight:650}
+.community-rank-public-honors{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+.community-rank-expand{color:#607b98;font-size:.7rem;font-weight:850}
+@media(max-width:380px){
+ .community-rank-main{gap:8px}
+ .community-rank-place{flex-basis:30px;width:30px;height:30px}
+ .community-rank-avatar{width:44px;height:44px;flex-basis:44px}
+ .community-rank-public-stats{gap:5px}
+ .community-rank-public-stats>span{padding:7px 2px}
+ .community-rank-public-stats>span strong{font-size:.68rem}
+ .community-rank-public-stats>span small{font-size:.59rem}
+}
+
 </style>
 </head>
 <body>
@@ -2441,8 +2469,7 @@ async function renderCommunityRanking(){
    const titleBadges=displayedTitleItems.map(item=>
     '<span class="community-rank-chip title community-title-chip community-rank-title-chip '+(selectedTitleItems.length?'is-selected':'is-automatic')+'">'+renderBadgeIcon('achievement:'+item.id)+' '+escapeHtml(item.title)+'</span>'
    ).join('');
-   const titleLine=titleBadges
-    ?'<div class="community-rank-title-line"><span class="community-title-label">TÍTULOS</span>'+titleBadges+'</div>':'';
+   const titleSection='<div class="community-rank-title-section"><span class="community-title-label">TÍTULOS</span><div class="community-rank-titles">'+(titleBadges||'<span class="community-rank-no-titles">Ainda não conquistou títulos.</span>')+'</div></div>';
    const communityTitles=Array.isArray(user.titles)?user.titles:[];
    const achievementBadges=communityTitles.map(title=>{
     const item=ACHIEVEMENT_DEFINITIONS.find(entry=>entry.title===title||entry.id===title);
@@ -2460,10 +2487,10 @@ async function renderCommunityRanking(){
       '<img class="community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt="">'+
       '<div class="community-rank-identity">'+
        '<div class="community-rank-name-row"><strong class="community-rank-display-title">'+escapeHtml(user.displayName)+'</strong><span class="community-wallet-pill"><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</span></div>'+
-       '<div class="community-rank-public-stats"><span>✓ '+user.correct.toLocaleString('pt-BR')+' acertos</span><span>✕ '+user.wrong.toLocaleString('pt-BR')+' erros</span><span>⏱️ '+formatDuration(user.timeMs)+' estudado</span></div>'+
-       titleLine+
       '</div>'+
      '</div>'+
+     '<div class="community-rank-public-stats"><span><strong>✓ '+user.correct.toLocaleString('pt-BR')+'</strong><small>Acertos</small></span><span><strong>✕ '+user.wrong.toLocaleString('pt-BR')+'</strong><small>Erros</small></span><span><strong>⏱️ '+formatStudyTimeCompact(user.timeMs)+'</strong><small>Tempo estudado</small></span></div>'+
+     titleSection+
      '<div class="community-rank-public-honors">'+publicHonors+'</div>'+
      '<span class="community-rank-expand">Clique para ver mais informações ▾</span>'+
     '</summary>'+
@@ -2476,7 +2503,7 @@ async function renderCommunityRanking(){
       '<div class="community-rank-metric"><strong>'+user.completedStages.toLocaleString('pt-BR')+'</strong><small>fases concluídas</small></div>'+
       '<div class="community-rank-metric"><strong>'+user.correct.toLocaleString('pt-BR')+'</strong><small>acertos</small></div>'+
       '<div class="community-rank-metric"><strong>'+user.wrong.toLocaleString('pt-BR')+'</strong><small>erros</small></div>'+
-      '<div class="community-rank-metric"><strong>'+formatDuration(user.timeMs)+'</strong><small>tempo estudado</small></div>'+
+      '<div class="community-rank-metric"><strong>'+formatStudyTimeCompact(user.timeMs)+'</strong><small>tempo estudado</small></div>'+
       '<div class="community-rank-metric"><strong>'+user.achievementCount.toLocaleString('pt-BR')+'</strong><small>conquistas</small></div>'+
      '</div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">⭐ DESTAQUES ESCOLHIDOS</span><div class="community-profile-detail-chips">'+(featured||'<span class="community-profile-empty">Nenhum destaque selecionado.</span>')+'</div></div>'+
@@ -2619,6 +2646,15 @@ function loadHistory(){
 function saveHistory(){
  try{localStorage.setItem(profileHistoryKey(),JSON.stringify(historyData));scheduleCloudSave();return true}
  catch(error){return false}
+}
+function formatStudyTimeCompact(milliseconds){
+ const value=Math.max(0,Number(milliseconds)||0);
+ const totalMinutes=value>0?Math.max(1,Math.floor(value/60000)):0;
+ const hours=Math.floor(totalMinutes/60);
+ const minutes=totalMinutes%60;
+ if(hours&&minutes)return hours+'h'+minutes+'m';
+ if(hours)return hours+'h';
+ return totalMinutes+'m';
 }
 function formatDuration(milliseconds){
  const tenths=Math.max(0,Math.round((Number(milliseconds)||0)/100));
