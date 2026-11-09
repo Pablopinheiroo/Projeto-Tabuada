@@ -571,7 +571,7 @@ async function createChallenge(body, username, env) {
   return { ...challenge, fileSha: sha };
 }
 async function listChallengesFor(username, env) {
-  const index = await readChallengeIndex(username, env);
+  const [index, userFile] = await Promise.all([readChallengeIndex(username, env), readUser(username, env)]);
   const ids = index.ids.slice(-CHALLENGE_MAX_HISTORY).reverse();
   const items = [];
   for (let offset = 0; offset < ids.length; offset += 5) {
@@ -586,7 +586,8 @@ async function listChallengesFor(username, env) {
   }
   items.sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   const pendingCount = items.filter(item => item.recipient === username && !item.myResult).length;
-  return { items, pendingCount };
+  const challengeStats = userFile?.data?.profile?.challengeStats || null;
+  return { items, pendingCount, challengeStats };
 }
 async function submitChallengeResult(id, body, username, env) {
   if (!/^[a-f0-9]{32}$/.test(id)) {
@@ -670,6 +671,15 @@ async function submitChallengeResult(id, body, username, env) {
     challengeFilePath(id), challenge, file.sha, env,
     "Registrar resultado do desafio " + id + " - " + username
   );
+  if (bothSubmitted) {
+    await Promise.all([challenge.challenger, challenge.recipient].map(async participant => {
+      try {
+        await applyChallengeStats(participant, challenge, env);
+      } catch (error) {
+        console.error("Não foi possível atualizar o histórico de desafios de " + participant + ":", error);
+      }
+    }));
+  }
   return {
     challenge: safeChallengeSummary(challenge, username),
     result: challenge.results[username],
@@ -965,7 +975,8 @@ async function handleApi(request, env, origin) {
       const updated = {
         ...record.data,
         profile: body.profile && typeof body.profile === "object"
-          ? body.profile : record.data.profile,
+          ? { ...record.data.profile, ...body.profile, challengeStats: record.data.profile?.challengeStats || body.profile.challengeStats }
+          : record.data.profile,
         history: body.history && typeof body.history === "object"
           ? safeHistory(body.history) : record.data.history,
         updatedAt: new Date().toISOString()
