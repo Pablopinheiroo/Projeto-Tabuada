@@ -548,6 +548,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .community-rank-identity{min-width:0;display:grid;gap:3px}
 .community-rank-identity strong{color:#102b49;font-size:.92rem;overflow-wrap:anywhere}
 .community-rank-identity small{color:#60758f;font-size:.72rem}
+.community-title-chip{font-size:.68rem;padding:5px 8px;border-radius:999px;box-shadow:inset 0 1px #ffffff80}
 .community-rank-trophy{justify-self:end;align-self:start;color:#8a5a0a;font-size:.74rem;font-weight:900}
 .community-rank-chips{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:5px}
 .community-rank-chip{padding:4px 7px;border:1px solid #d5e3f2;border-radius:999px;background:#edf5ff;color:#34516e;font-size:.65rem;font-weight:850}
@@ -639,6 +640,12 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .community-profile-detail-section{display:grid;gap:7px}
 .community-profile-detail-title{display:block;color:#67e8f9;font-size:.72rem;font-weight:900;letter-spacing:.06em}
 .community-profile-detail-chips{display:flex;flex-wrap:wrap;gap:6px}
+.profile-audio-settings{margin:16px 0;padding:15px;border:1px solid #46658c;border-radius:14px;background:linear-gradient(145deg,#10243e,#171d3b)}
+.profile-audio-settings h3{margin:0 0 5px;color:#f1f7ff;font-size:.98rem}
+.profile-audio-settings p{margin:0 0 12px;color:#b7c9e2;font-size:.78rem;line-height:1.45}
+.profile-sfx-volume{display:grid;grid-template-columns:minmax(0,1fr) minmax(110px,1.4fr) 45px;gap:10px;align-items:center;color:#eaf4ff;font-size:.84rem;font-weight:850}
+.profile-sfx-volume input{width:100%;accent-color:#22d3ee}
+.profile-sfx-volume strong{color:#67e8f9;text-align:right;font-variant-numeric:tabular-nums}
 .community-profile-empty{color:#a8bdd8;font-size:.76rem}
 .community-profile-detail-grid .community-rank-metric{background:#0e1a30;border-color:#304969}
 .community-profile-detail-grid .community-rank-metric strong{color:#67e8f9}
@@ -726,8 +733,14 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .profile-featured-badge,.community-featured-badge{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border:1px solid #b88b3e;border-radius:999px;background:linear-gradient(120deg,#473418,#33234a);color:#ffe7a7;font-size:.72rem;font-weight:900}
 .community-rank-name-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .community-wallet-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border:1px solid #8d702e;border-radius:999px;background:#342b19;color:#ffe29a;font-size:.7rem;font-weight:950}
-.community-rank-public-stats{display:flex;flex-wrap:wrap;gap:5px 10px;margin-top:5px;color:#a9c2de;font-size:.68rem;font-weight:700}
-.community-rank-public-stats span{white-space:nowrap}
+.community-rank-public-stats{display:flex;flex-wrap:wrap;gap:5px 10px;margin-top:6px;color:#294967;font-size:.76rem;font-weight:850;line-height:1.5;text-shadow:0 1px #ffffff80}
+.community-rank-public-stats span{white-space:nowrap;color:#294967}
+.community-rank-title-line{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:3px 0 1px}
+.community-title-label{color:#80621e;font-size:.61rem;font-weight:950;letter-spacing:.08em}
+.community-rank-title-chip{background:#f2eefe!important;border-color:#cbbaf3!important;color:#4d367e!important}
+.community-profile-details .community-challenge-details{margin:0 0 2px;padding:10px 11px;border:1px solid #8063b2;border-radius:12px;background:linear-gradient(115deg,#251d43,#14243e)}
+.community-challenge-details .community-profile-detail-title{color:#f0d7ff}
+.community-challenge-details .community-rank-chip{background:#25365a;border-color:#586c94;color:#f0f6ff}
 .community-rank-public-honors{display:flex;flex-wrap:wrap;gap:6px;margin:9px 0 2px}
 .community-rank-public-honors .community-rank-chip{margin:0}
 @media(max-width:680px){
@@ -978,6 +991,15 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   <button class="primary" type="submit">Salvar perfil</button>
   <p id="profileMessage" class="auth-message" role="status"></p>
  </form>
+ <section class="profile-audio-settings" aria-label="Preferências dos efeitos sonoros">
+  <h3>🔊 Volume dos efeitos sonoros</h3>
+  <p>Regule separadamente os cliques, teclas, acertos, erros e avisos do jogo. Isso não altera a música de fundo.</p>
+  <label class="profile-sfx-volume" for="profileSfxVolume">
+   <span>Volume dos efeitos</span>
+   <input id="profileSfxVolume" type="range" min="0" max="100" step="1" value="82">
+   <strong id="profileSfxVolumeValue">82%</strong>
+  </label>
+ </section>
  <h2 class="profile-section-title">🔑 Alterar senha</h2>
  <p class="hint">Digite a nova senha e confirme. Não é necessário informar a senha atual.</p>
  <form id="changePasswordForm" class="auth-form">
@@ -1013,7 +1035,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  <button id="navTraining" type="button">📘 Treinar</button>
  <button id="navChallenge" type="button">⚔️ Desafio</button>
  <button id="navTournament" type="button">🏁 Torneio</button>
- <button id="navCommunity" type="button">🌐 Comunidade</button>
+ <button id="navCommunity" type="button">🏆 Comunidade</button>
 </nav>
 
 <div id="modeHub" class="mode-hub">
@@ -1372,7 +1394,7 @@ function updateTrainingGlobalModeControls(){
 }
 let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
 let trainingReviewMode=false,trainingReviewFacts=[],trainingRoundTarget=0,currentQuestionTimeMs=0,currentQuestionTimeStopped=false,currentDifficultyMarked=false;
-let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=1;
+let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=1,sfxVolumeLevel=.82;
 let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueuePosition=0,musicStartPending=false,mainMusicTimer=null;
 const LAST_TRACK_STORAGE_KEY='projetoTabuadaUltimaFaixaV2:';
 let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0;
@@ -1574,6 +1596,7 @@ function renderAvatarGrid(containerId,selectedKey,onSelect){
 }
 function refreshProfileIdentity(){
  const profile=profilesData[activeProfile]||{};
+ restoreProfileSfxVolume();
  const displayName=profile.displayName||activeProfile;
  const avatarKey=normalizeAvatarKey(profile.avatar);
  const avatar=avatarImage(avatarKey);
@@ -2281,13 +2304,15 @@ async function renderCommunityRanking(){
     const awards=user.awards.map(award=>'<span class="community-rank-chip medal">'+renderTournamentAwardIcon(award.rank)+' Torneio mensal · '+escapeHtml(award.month)+' · '+Number(award.rank)+'º lugar</span>').join('');
    const achievements=user.titles.map(title=>{
     const item=ACHIEVEMENT_DEFINITIONS.find(entry=>entry.title===title);
-     return '<span class="community-rank-chip title">'+(item?renderBadgeIcon('achievement:'+item.id):'✨')+' '+escapeHtml(title)+'</span>';
+    return '<span class="community-rank-chip title community-title-chip">'+(item?renderBadgeIcon('achievement:'+item.id):'✨')+' '+escapeHtml(title)+'</span>';
    }).join('');
+   const titleLine=achievements
+    ?'<div class="community-rank-title-line"><span class="community-title-label">TÍTULOS</span>'+achievements+'</div>':'';
    const featured=(user.featuredAwards||[]).map(id=>{
     const info=featuredAwardInfo(id,{awards:user.awards});
     return info?'<span class="community-featured-badge">'+info.icon+' '+escapeHtml(info.label)+'</span>':'';
    }).join('');
-   const publicHonors=featured||(achievements+medals+awards)||'<span class="community-rank-chip">🌱 Novo participante</span>';
+   const publicHonors=featured||(medals+awards)||'<span class="community-rank-chip">🌱 Novo participante</span>';
    return '<details class="community-rank-card '+rankClass+'">'+
     '<summary class="community-rank-summary">'+
      '<div class="community-rank-main">'+
@@ -2295,7 +2320,7 @@ async function renderCommunityRanking(){
       '<img class="community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt="">'+
       '<div class="community-rank-identity">'+
        '<div class="community-rank-name-row"><strong>'+escapeHtml(user.displayName)+'</strong><span class="community-wallet-pill"><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</span></div>'+
-       '<small>@'+escapeHtml(user.username)+'</small>'+
+       titleLine+
        '<div class="community-rank-public-stats"><span>✓ '+user.correct.toLocaleString('pt-BR')+' acertos</span><span>✕ '+user.wrong.toLocaleString('pt-BR')+' erros</span><span>⏱️ '+formatDuration(user.timeMs)+' estudado</span></div>'+
       '</div>'+
      '</div>'+
@@ -2303,6 +2328,7 @@ async function renderCommunityRanking(){
      '<span class="community-rank-expand">Clique para ver mais informações ▾</span>'+
     '</summary>'+
     '<div class="community-profile-details">'+
+     '<div class="community-profile-detail-section community-challenge-details"><span class="community-profile-detail-title">⚔️ DESAFIOS</span><div class="community-profile-detail-chips"><span class="community-rank-chip">'+user.challengeTotal+' partidas</span><span class="community-rank-chip">🏆 '+user.challengeWins+' vitórias</span><span class="community-rank-chip">🛡️ '+user.challengeLosses+' derrotas</span><span class="community-rank-chip">🤝 '+user.challengeDraws+' empates</span></div></div>'+
      '<div class="community-profile-detail-grid">'+
       '<div class="community-rank-metric"><strong><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</strong><small>moedas disponíveis</small></div>'+
       '<div class="community-rank-metric"><strong>'+user.totalEarned.toLocaleString('pt-BR')+'</strong><small>moedas ganhas</small></div>'+
@@ -2313,7 +2339,6 @@ async function renderCommunityRanking(){
       '<div class="community-rank-metric"><strong>'+formatDuration(user.timeMs)+'</strong><small>tempo estudado</small></div>'+
       '<div class="community-rank-metric"><strong>'+user.achievementCount.toLocaleString('pt-BR')+'</strong><small>conquistas</small></div>'+
      '</div>'+
-     '<div class="community-profile-detail-section"><span class="community-profile-detail-title">⚔️ DESAFIOS</span><div class="community-profile-detail-chips"><span class="community-rank-chip">'+user.challengeTotal+' partidas</span><span class="community-rank-chip">🏆 '+user.challengeWins+' vitórias</span><span class="community-rank-chip">🛡️ '+user.challengeLosses+' derrotas</span><span class="community-rank-chip">🤝 '+user.challengeDraws+' empates</span></div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">⭐ DESTAQUES ESCOLHIDOS</span><div class="community-profile-detail-chips">'+(featured||'<span class="community-profile-empty">Nenhum destaque selecionado.</span>')+'</div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏅 MEDALHAS DE NÍVEL</span><div class="community-profile-detail-chips">'+(medals||'<span class="community-profile-empty">Ainda não conquistou medalhas de nível.</span>')+'</div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏆 PREMIAÇÕES MENSAIS</span><div class="community-profile-detail-chips">'+(awards||'<span class="community-profile-empty">Nenhuma premiação mensal registrada.</span>')+'</div></div>'+
@@ -4199,10 +4224,42 @@ function playNote(frequency,start,duration,wave,volume){
  oscillator.onended=()=>{activeSounds.delete(oscillator);oscillator.disconnect();envelope.disconnect()};
  oscillator.start(start);oscillator.stop(start+duration+.04);
 }
-let uiSfxLibrary={},uiSfxAudioCache=new Map();
+let uiSfxLibrary={},uiSfxAudioPool=new Map(),uiSfxPoolCursor=new Map();
+const SFX_VOLUME_CACHE_KEY='projetoTabuadaVolumeEfeitosV1';
+function applySfxVolumeToPlayers(){
+ const value=Math.max(0,Math.min(1,sfxVolumeLevel));
+ for(const pool of uiSfxAudioPool.values())for(const player of pool)player.volume=value;
+ if($('profileSfxVolume'))$('profileSfxVolume').value=String(Math.round(value*100));
+ if($('profileSfxVolumeValue'))$('profileSfxVolumeValue').textContent=Math.round(value*100)+'%';
+}
+function restoreProfileSfxVolume(){
+ const profile=profilesData[activeProfile]||{};
+ let saved=null;
+ try{
+  const prefs=JSON.parse(localStorage.getItem(SFX_VOLUME_CACHE_KEY)||'{}');
+  if(prefs&&Number.isFinite(Number(prefs[activeProfile])))saved=Number(prefs[activeProfile]);
+ }catch{}
+ if(saved===null&&Number.isFinite(Number(profile.sfxVolume)))saved=Number(profile.sfxVolume);
+ sfxVolumeLevel=saved===null?.82:Math.max(0,Math.min(1,saved));
+ applySfxVolumeToPlayers();
+}
+function setProfileSfxVolume(value){
+ sfxVolumeLevel=Math.max(0,Math.min(1,Number(value)/100));
+ if(activeProfile){
+  profilesData[activeProfile]=profilesData[activeProfile]||{};
+  profilesData[activeProfile].sfxVolume=sfxVolumeLevel;
+  persistProfiles();
+  try{
+   const prefs=JSON.parse(localStorage.getItem(SFX_VOLUME_CACHE_KEY)||'{}');
+   prefs[activeProfile]=sfxVolumeLevel;
+   localStorage.setItem(SFX_VOLUME_CACHE_KEY,JSON.stringify(prefs));
+  }catch{}
+ }
+ applySfxVolumeToPlayers();
+}
 async function loadUiSfx(){
  try{
-  const response=await fetch('assets/sfx/manifest.json?rev=kenney-cc0-1',{cache:'force-cache'});
+  const response=await fetch('assets/sfx/manifest.json?rev=kenney-cc0-2',{cache:'force-cache'});
   if(!response.ok)throw new Error('Não foi possível carregar os efeitos sonoros.');
   const data=await response.json();
   if(data.license!=='CC0 1.0'||!data.effects||!Array.isArray(data.files))throw new Error('Manifesto de efeitos sonoros inválido.');
@@ -4213,6 +4270,22 @@ async function loadUiSfx(){
   uiSfxLibrary=Object.fromEntries(Object.entries(data.effects).map(([name,files])=>[
    name,files.map(file=>new URL(file,document.baseURI).href)
   ]));
+  const sources=[...new Set(Object.values(uiSfxLibrary).flat())];
+  // Carrega os pequenos efeitos antes do primeiro clique. Cada arquivo fica
+  // com dois players prontos para permitir sons rápidos sem reinicialização tardia.
+  await Promise.all(sources.map(async src=>{
+   const pool=[0,1].map(()=>{
+    const player=new Audio();
+    player.preload='auto';
+    player.src=src;
+    player.volume=sfxVolumeLevel;
+    player.load();
+    return player;
+   });
+   uiSfxAudioPool.set(src,pool);
+   uiSfxPoolCursor.set(src,0);
+  }));
+  applySfxVolumeToPlayers();
  }catch(error){console.warn('Efeitos sonoros indisponíveis:',error);}
 }
 function playUiSound(name){
@@ -4220,12 +4293,17 @@ function playUiSound(name){
  const files=uiSfxLibrary[name]||[];
  if(files.length){
   const src=files[Math.floor(Math.random()*files.length)];
-  let base=uiSfxAudioCache.get(src);
-  if(!base){base=new Audio(src);base.preload='auto';uiSfxAudioCache.set(src,base);}
-  const player=base.cloneNode(true);
-  player.volume=Math.max(0,Math.min(1,volumeLevel*.42));
-  player.play().catch(()=>{});
-  return;
+  const pool=uiSfxAudioPool.get(src)||[];
+  if(pool.length){
+   const index=uiSfxPoolCursor.get(src)||0;
+   const player=pool[index%pool.length];
+   uiSfxPoolCursor.set(src,(index+1)%pool.length);
+   try{player.pause();player.currentTime=0;}catch{}
+   player.volume=sfxVolumeLevel;
+   const playback=player.play();
+   if(playback&&typeof playback.catch==='function')playback.catch(()=>{});
+   return;
+  }
  }
  if(!ensureAudio())return;
  const when=audioContext.currentTime+.01;
@@ -4437,6 +4515,7 @@ loadMusicManifest().finally(initMusicPlayer);
 $('musicMenuToggle').addEventListener('click',toggleMusicMenu);
 $('trackSelect').addEventListener('change',e=>chooseTrack(e.target.value));
 $('globalVolume').addEventListener('input',e=>setVolume(e.target.value));
+$('profileSfxVolume').addEventListener('input',e=>setProfileSfxVolume(e.target.value));
 $('soundToggle').addEventListener('click',toggleSound);
 $('replayTune').addEventListener('click',replayTune);
 
