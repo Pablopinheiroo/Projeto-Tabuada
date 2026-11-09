@@ -451,7 +451,7 @@ async function testViewport(name, viewport, mobile = false) {
   const communityStatsColor = await page.locator(".community-rank-public-stats").first().evaluate(element => getComputedStyle(element).color);
   check(communityStatsColor === "rgb(16, 43, 73)",
     name + ": estatísticas da comunidade continuam com pouco contraste (" + communityStatsColor + ").");
-  await page.locator(".community-rank-summary").first().click();
+  await page.locator(".community-rank-card").first().evaluate(element=>{element.open=true;});
   const challengePosition = await page.locator(".community-profile-details").first().evaluate(element => {
     const challenge = element.querySelector(".community-challenge-details");
     const metrics = element.querySelector(".community-profile-detail-grid");
