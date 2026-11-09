@@ -110,7 +110,7 @@ check(html.includes("playUiSound('select')")&&html.includes("playUiSound(value==
  "Sons de seleção e tempo esgotado não estão ligados às respostas.");
 check(!html.includes("'<small>@'+escapeHtml(user.username)+'</small>'+")&&html.includes("community-rank-display-title"),
  "A comunidade continua exibindo o @usuário duplicado.");
-check(html.includes("community-rank-title-line")&&html.includes("community-challenge-details"),
+check(html.includes("community-rank-title-section")&&html.includes("community-rank-titles")&&html.includes("community-challenge-details"),
  "A comunidade não apresenta títulos e desafios na nova posição.");
 check(html.includes("featuredTitlesEditor")&&html.includes("profilesData[activeProfile].featuredTitles=selectedTitles")&&html.includes("function renderProfileFeaturedTitlesEditor()"),
  "O perfil não permite escolher e salvar até três títulos públicos.");
@@ -430,12 +430,12 @@ async function testViewport(name, viewport, mobile = false) {
   const communityIdentity = page.locator(".community-rank-identity").first();
   check(!(await communityIdentity.textContent()).includes("@maria_27"),
     name + ": a comunidade ainda exibe o @usuário duplicado.");
-  const selectedCommunityTitles = await communityIdentity.locator(".community-rank-title-chip").allTextContents();
+  const selectedCommunityTitles = await page.locator(".community-rank-title-section .community-rank-title-chip").allTextContents();
   check(selectedCommunityTitles.length===2&&selectedCommunityTitles.some(value=>value.includes("Explorador"))&&selectedCommunityTitles.some(value=>value.includes("A Jornada Começa")),
     name + ": a comunidade não exibiu somente os títulos selecionados pelo dono do perfil.");
-  const publicOrder = await communityIdentity.evaluate(element=>{
+  const publicOrder = await page.locator(".community-rank-summary").first().evaluate(element=>{
     const stats=element.querySelector(".community-rank-public-stats");
-    const titles=element.querySelector(".community-rank-title-line");
+    const titles=element.querySelector(".community-rank-title-section");
     return !!stats&&!!titles&&(stats.compareDocumentPosition(titles)&Node.DOCUMENT_POSITION_FOLLOWING)!==0;
   });
   check(publicOrder,name+": acertos, erros e tempo não aparecem antes dos títulos.");
