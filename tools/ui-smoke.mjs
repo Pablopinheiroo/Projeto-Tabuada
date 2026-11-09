@@ -128,6 +128,9 @@ async function testViewport(name, viewport, mobile = false) {
   const response = await page.goto(SITE_URL, { waitUntil: "domcontentloaded", timeout: 60000 });
   check(response && response.status() === 200, name + ": a página inicial não respondeu com HTTP 200.");
   await page.locator("#authScreen").waitFor({ state: "visible", timeout: 20000 });
+  await page.waitForFunction(() => uiSfxBuffers.size === 16, null, { timeout: 30000 });
+  check(await page.evaluate(() => uiSfxBuffers.size) === 16,
+    name + ": os 16 efeitos sonoros não foram pré-carregados e decodificados.");
   await page.waitForFunction(
     () => document.querySelectorAll("#trackSelect option").length === 20,
     null,
@@ -162,7 +165,8 @@ async function testViewport(name, viewport, mobile = false) {
   await page.screenshot({ path: "artifacts/" + name + "-inicio.png", fullPage: true });
 
   await page.locator("#showRegister").click();
-  check(!(await page.locator("#registerForm").evaluate(el => el.classList.contains("hidden"))), name + ": botão Cadastrar não abriu o formulário.");
+  await page.waitForFunction(() => audioContext && audioContext.state === "running", null, { timeout: 5000 });
+  check(await page.locator("#registerForm").isVisible(), name + ": botão Cadastrar não abriu o formulário.");
   await page.locator("#showLogin").click();
   check(!(await page.locator("#loginForm").evaluate(el => el.classList.contains("hidden"))), name + ": botão Voltar ao login não funcionou.");
 
@@ -270,6 +274,8 @@ async function testViewport(name, viewport, mobile = false) {
     name + ": ajuste de volume dos efeitos não atualizou.");
   check(await page.evaluate(() => Math.abs(sfxVolumeLevel - .55) < .01),
     name + ": o volume dos efeitos não foi aplicado.");
+  check(await page.evaluate(() => uiSfxGain && Math.abs(uiSfxGain.gain.value - .55) < .01),
+    name + ": o volume separado não chegou ao ganho dos efeitos sonoros.");
 
   const chartOverflow = await page.evaluate(() => ({
     viewport: window.innerWidth,
