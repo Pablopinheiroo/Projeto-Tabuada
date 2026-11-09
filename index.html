@@ -444,6 +444,80 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 @keyframes rewardPop{from{opacity:0;transform:translateY(-7px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:620px){.wallet-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.achievement-shelf{grid-template-columns:1fr}.wallet-inline{align-items:flex-start}}
 @media(prefers-reduced-motion:reduce){.game-reward-toast{animation:none}}
+
+/* Modo Desafio: duelos rápidos entre participantes */
+.challenge-card{grid-column:1/-1;background:linear-gradient(120deg,#3a1b35,#251c4b 55%,#172a4c);border-color:#a64c76}
+.challenge-card .mode-card-icon{background:#4a1b43;border-color:#d16d9d}
+.challenge-card .mode-card-copy b{color:#f9a8d4}
+.challenge-badge{display:inline-grid;place-items:center;min-width:22px;height:22px;margin-left:6px;padding:0 6px;border-radius:999px;background:#ef4444;color:white;font-size:.72rem;font-style:normal;box-shadow:0 0 0 3px #ef444422}
+.challenge-rules{margin:0 0 14px;padding:13px;border:1px solid #a54c74;border-radius:13px;background:linear-gradient(110deg,#351c3b,#1a2545);color:#f3d8ea;font-size:.84rem;line-height:1.55}
+.challenge-section-title{margin:20px 0 9px;padding-top:13px;border-top:1px solid #385477;color:#f1f7ff;font-size:1rem}
+.challenge-mode-cards{margin-bottom:18px}
+.challenge-custom-card{background:linear-gradient(145deg,#143c4b,#172044);border-color:#32829b}
+.challenge-preset-card{background:linear-gradient(145deg,#3a2d1d,#252044);border-color:#a27a3f}
+.challenge-config-card{margin:12px 0;padding:15px;border:1px solid #38577e;border-radius:14px;background:linear-gradient(145deg,#11223d,#191d3b)}
+.challenge-field{display:grid;gap:8px;color:#d8eaff;font-weight:800;font-size:.9rem}
+.challenge-table-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.challenge-table-option{display:flex;align-items:center;gap:6px;padding:10px 8px;border:1px solid #3d5c80;border-radius:10px;background:#0c1a31;color:#e7f2ff;font-size:.82rem;font-weight:750}
+.challenge-table-option input{width:17px;height:17px;accent-color:#22d3ee}
+.challenge-search{width:100%;padding:12px;border:1px solid #43638b;border-radius:11px;background:#0b1730;color:#eff7ff;font:inherit}
+.challenge-player-list,.challenge-list{display:grid;gap:9px;margin-top:12px}
+.challenge-player-card,.challenge-list-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px;border:1px solid #385b80;border-radius:13px;background:linear-gradient(110deg,#112642,#181d3c);color:#e8f2ff}
+.challenge-player-name{min-width:0;overflow-wrap:anywhere;font-weight:850}
+.challenge-player-card button,.challenge-list-card button{padding:9px 12px;background:#17466a;color:#e4faff;border:1px solid #398cb0;white-space:nowrap}
+.challenge-player-card button:disabled,.challenge-list-card button:disabled{opacity:.45}
+.challenge-list-card{align-items:flex-start}
+.challenge-list-meta{min-width:0;display:grid;gap:4px}
+.challenge-list-meta strong{color:#fff;font-size:.9rem}
+.challenge-list-meta small{color:#a8bdd8;font-size:.75rem;line-height:1.4}
+.challenge-status-pill{display:inline-block;width:max-content;padding:4px 8px;border:1px solid #4e6a8d;border-radius:999px;color:#cfe5ff;font-size:.67rem;font-weight:850}
+.challenge-play-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:13px}
+.challenge-live-badge{padding:7px 10px;border:1px solid #9f355b;border-radius:999px;background:#451b37;color:#fda4af;font-size:.68rem;font-weight:950;letter-spacing:.08em}
+.challenge-countdown-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.challenge-countdown{padding:12px 7px;text-align:center;border:1px solid #385b80;border-radius:12px;background:#0c1a31}
+.challenge-countdown span{display:block;color:#9fb8d8;font-size:.61rem;font-weight:900;letter-spacing:.06em}
+.challenge-countdown strong{display:block;margin-top:4px;color:#fcd34d;font-size:clamp(1.1rem,4vw,1.55rem);font-variant-numeric:tabular-nums}
+.challenge-progress{height:9px;overflow:hidden;border-radius:999px;background:#263b58;margin-bottom:14px}
+.challenge-progress span{display:block;width:0;height:100%;background:linear-gradient(90deg,#22d3ee,#a78bfa);transition:width .12s linear}
+.challenge-question-card{padding:17px;border:1px solid #47618a;border-radius:17px;background:radial-gradient(ellipse at top,#1c3155,#111a32 78%);text-align:center}
+.challenge-equation{margin:10px 0;font-size:clamp(2.3rem,10vw,4rem);font-weight:950;color:white;text-shadow:0 0 22px #38bdf866;font-variant-numeric:tabular-nums}
+.challenge-feedback{min-height:22px;margin:0 0 12px;color:#a9c1e5;font-size:.82rem}
+.challenge-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.challenge-option{padding:14px 8px;border:1px solid #45709b;border-radius:12px;background:linear-gradient(145deg,#174167,#20214d);color:white;font-size:1.25rem;font-weight:950;box-shadow:0 4px 0 #091629}
+.challenge-option:active{transform:translateY(2px);box-shadow:0 2px 0 #091629}
+.challenge-option.selected-correct{border-color:#4ade80;background:#14532d}
+.challenge-option.selected-wrong{border-color:#fb7185;background:#7f1d1d}
+.challenge-music-lock{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:13px;padding:12px;border:1px solid #6c5893;border-radius:12px;background:#211b3e}
+.challenge-music-lock>div{display:grid;gap:4px;min-width:0}
+.challenge-music-lock b{color:#e9d5ff;font-size:.85rem}
+.challenge-music-lock small{color:#b8add4;font-size:.7rem}
+.challenge-volume-field{display:grid;grid-template-columns:auto minmax(65px,100px) auto;align-items:center;gap:6px;color:#d9d4ed;font-size:.72rem;font-weight:800;white-space:nowrap}
+.challenge-volume-field input{width:100%;accent-color:#c084fc}
+.challenge-volume-field strong{min-width:34px;color:#e9d5ff}
+.challenge-result-card{border-color:#785da8}
+.challenge-result-scores{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:14px 0}
+.challenge-score-box{min-width:115px;padding:13px;border:1px solid #45618a;border-radius:13px;background:#101e39}
+.challenge-score-box strong{display:block;color:#67e8f9;font-size:1.6rem}
+.challenge-score-box small{display:block;color:#b3c5df;font-size:.72rem}
+.challenge-profile-title{margin-top:18px}
+.challenge-profile-summary{margin-bottom:12px}
+.challenge-medal{border-color:#9a7c40;background:linear-gradient(120deg,#382d1b,#241d3e)}
+.challenge-medal.unlocked{border-color:#fbbf24;box-shadow:inset 0 0 20px #fbbf2422}
+.challenge-medal .achievement-icon{background:linear-gradient(135deg,#77531a,#382d56)}
+.challenge-medal.locked{opacity:.58;filter:saturate(.4)}
+@media(max-width:560px){
+ .challenge-table-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+ .challenge-table-option{justify-content:center;padding:9px 4px;font-size:.74rem}
+ .challenge-countdown-grid{gap:5px}
+ .challenge-countdown{padding:10px 3px}
+ .challenge-music-lock{align-items:flex-start;flex-direction:column}
+ .challenge-volume-field{width:100%;grid-template-columns:auto 1fr auto}
+ .challenge-player-card,.challenge-list-card{padding:10px;gap:8px}
+ .challenge-player-card button,.challenge-list-card button{padding:8px;font-size:.78rem}
+ .challenge-result-scores{gap:6px}
+ .challenge-score-box{min-width:95px}
+}
+
 </style>
 </head>
 <body>
@@ -514,6 +588,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <p class="economy-rules">Recompensas: <b>+10 moedas</b> por ciclo completo no treinamento e <b>+50 moedas</b> na primeira conclusão de cada fase do desafio.</p>
   <h3 class="achievement-title">🏆 Vitrine de conquistas <span id="achievementCount">0/13</span></h3>
   <div id="achievementShelf" class="achievement-shelf"></div>
+  <h3 class="achievement-title challenge-profile-title">⚔️ Histórico de desafios <span id="challengeMedalCount">0/11 medalhas</span></h3>
+  <div class="wallet-grid challenge-profile-summary">
+   <div class="wallet-stat"><span>🏆 VITÓRIAS</span><strong id="profileChallengeWins">0</strong></div>
+   <div class="wallet-stat"><span>🛡️ DERROTAS</span><strong id="profileChallengeLosses">0</strong></div>
+   <div class="wallet-stat"><span>🤝 EMPATES</span><strong id="profileChallengeDraws">0</strong></div>
+  </div>
+  <p class="economy-rules">Duelo personalizado conta nas vitórias e derrotas, mas não concede medalhas. Cada nível pré-definido tem uma medalha própria, conquistada ao atingir 10 vitórias naquele nível.</p>
+  <div id="challengeMedalShelf" class="achievement-shelf"></div>
  </div>
  <form id="profileEditForm" class="auth-form">
   <label>Nome que aparece no jogo<input id="profileDisplayName" maxlength="24" required placeholder="Seu nome de exibição"></label>
@@ -565,6 +647,85 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <button id="openAdventureMode" class="mode-card adventure-card" type="button">
    <span class="mode-card-icon">🗺️</span><span class="mode-card-copy"><strong>Modo Jogo</strong><small>Explore mundos, vença desafios, desbloqueie fases e avance até a tabuada do 20.</small><b>Entrar na aventura →</b></span>
   </button>
+  <button id="openChallengeMode" class="mode-card challenge-card" type="button">
+   <span class="mode-card-icon">⚔️</span><span class="mode-card-copy"><strong>Modo Desafio <em id="challengeBadge" class="challenge-badge hidden">0</em></strong><small>Convide outro participante para um duelo de 10 questões e descubra quem consegue mais pontos.</small><b>Desafiar um participante →</b></span>
+  </button>
+ </div>
+</div>
+
+<div id="challengeModeView" class="mode-view hidden">
+ <div id="challengeHomePanel">
+  <div class="mode-view-heading"><div><span class="music-kicker">⚔️ DUELO ENTRE PARTICIPANTES</span><h2>Modo Desafio</h2><p class="hint" style="margin:5px 0 0">Escolha o tipo de duelo e desafie alguém cadastrado.</p></div><button id="backFromChallenge" class="secondary compact-back" type="button">← Modos</button></div>
+  <div class="challenge-rules"><b>Como funciona:</b> 10 questões sorteadas · 5 segundos por questão · 1 ponto por acerto · máximo de 50 segundos. Se o tempo acabar, a questão vale zero.</div>
+  <div class="mode-cards challenge-mode-cards">
+   <button id="chooseCustomChallenge" class="mode-card challenge-custom-card" type="button"><span class="mode-card-icon">🎛️</span><span class="mode-card-copy"><strong>Personalizado</strong><small>Escolha de 1 a 20 tabuadas. São 4 alternativas e não há medalhas por nível.</small><b>Montar meu duelo →</b></span></button>
+   <button id="choosePresetChallenge" class="mode-card challenge-preset-card" type="button"><span class="mode-card-icon">🏅</span><span class="mode-card-copy"><strong>Pré-definido</strong><small>Suba de Recruta até Lenda ou encare o nível Extremo. Os níveis difíceis têm 6 alternativas.</small><b>Escolher nível →</b></span></button>
+  </div>
+  <h3 class="challenge-section-title">📬 Desafios recebidos e enviados</h3>
+  <p id="challengeListStatus" class="small" style="text-align:left;margin:0 0 10px">Buscando seus desafios...</p>
+  <div id="challengeList" class="challenge-list"></div>
+ </div>
+
+ <div id="challengeConfigPanel" class="hidden">
+  <div class="mode-view-heading"><div><span class="music-kicker">CONFIGURAR DUELO</span><h2 id="challengeConfigTitle">Personalizado</h2></div><button id="challengeConfigBack" class="secondary compact-back" type="button">← Voltar</button></div>
+  <div id="challengeCustomConfig" class="challenge-config-card hidden">
+   <p class="hint">Marque as tabuadas que poderão aparecer. O jogo sorteará 10 contas diferentes entre elas.</p>
+   <div id="challengeTables" class="challenge-table-grid"></div>
+   <p id="challengeCustomMessage" class="auth-message" role="status"></p>
+  </div>
+  <div id="challengePresetConfig" class="challenge-config-card hidden">
+   <label class="challenge-field">Escolha o nível
+    <select id="challengePresetSelect" class="music-select"></select>
+   </label>
+   <p id="challengePresetDescription" class="hint"></p>
+  </div>
+  <div class="challenge-config-card">
+   <label class="challenge-field">🎵 Trilha sonora escolhida por você
+    <select id="challengeMusicSelect" class="music-select" aria-label="Escolher trilha do duelo"></select>
+   </label>
+   <p class="hint">A mesma trilha tocará para os dois participantes. O adversário não poderá trocar a música e terá volume limitado a 30%.</p>
+  </div>
+  <button id="challengeChoosePlayer" class="primary" type="button">Escolher participante →</button>
+ </div>
+
+ <div id="challengePlayersPanel" class="hidden">
+  <div class="mode-view-heading"><div><span class="music-kicker">ESCOLHER OPONENTE</span><h2>Quem você vai desafiar?</h2></div><button id="challengePlayersBack" class="secondary compact-back" type="button">← Voltar</button></div>
+  <input id="challengePlayerSearch" class="challenge-search" type="search" placeholder="Pesquisar participante pelo usuário..." autocomplete="off">
+  <p id="challengePlayersStatus" class="small" style="text-align:left"></p>
+  <div id="challengePlayersList" class="challenge-player-list"></div>
+ </div>
+
+ <div id="challengePlayPanel" class="hidden">
+  <div class="challenge-play-top"><div><span class="music-kicker">DUELO EM ANDAMENTO</span><h2 id="challengeOpponentTitle">Desafio</h2><p id="challengePlayMeta" class="hint"></p></div><div class="challenge-live-badge">● AO VIVO</div></div>
+  <div class="challenge-countdown-grid">
+   <div class="challenge-countdown"><span>TEMPO DESTA QUESTÃO</span><strong id="challengeRoundClock">5,0 s</strong></div>
+   <div class="challenge-countdown"><span>TEMPO TOTAL</span><strong id="challengeTotalClock">50,0 s</strong></div>
+   <div class="challenge-countdown"><span>SEUS PONTOS</span><strong id="challengeScore">0/10</strong></div>
+  </div>
+  <div class="challenge-progress"><span id="challengeProgressBar"></span></div>
+  <div class="challenge-question-card">
+   <span id="challengeQuestionCounter" class="music-kicker">QUESTÃO 1 DE 10</span>
+   <div id="challengeQuestionMath" class="challenge-equation">7 × 8 = ?</div>
+   <p id="challengeQuestionFeedback" class="challenge-feedback">Escolha uma alternativa antes do tempo acabar.</p>
+   <div id="challengeOptions" class="challenge-options"></div>
+  </div>
+  <div class="challenge-music-lock"><div><b id="challengeMusicTitle">🎵 Trilha selecionada</b><small id="challengeMusicRule">O adversário escolheu a música.</small></div>
+   <label class="challenge-volume-field">🔊 Volume <input id="challengeVolume" type="range" min="0" max="100" value="100"><strong id="challengeVolumeValue">100%</strong></label>
+  </div>
+  <p id="challengePlayStatus" class="small"></p>
+ </div>
+
+ <div id="challengeResultPanel" class="hidden">
+  <div class="adventure-result-card challenge-result-card">
+   <div id="challengeResultIcon" class="adventure-result-icon">🏆</div>
+   <span class="music-kicker">RESULTADO DO DUELO</span>
+   <h2 id="challengeResultTitle">Resultado</h2>
+   <p id="challengeResultText"></p>
+   <div id="challengeResultScores" class="challenge-result-scores"></div>
+   <strong id="challengeResultTime" class="adventure-result-reward"></strong>
+   <p id="challengeResultStatus" class="hint"></p>
+   <div class="adventure-result-actions"><button id="challengeResultBack" class="primary" type="button">Voltar aos desafios</button></div>
+  </div>
  </div>
 </div>
 
