@@ -499,6 +499,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .challenge-music-lock>div{display:grid;gap:4px;min-width:0}
 .challenge-music-lock b{color:#e9d5ff;font-size:.85rem}
 .challenge-music-lock small{color:#b8add4;font-size:.7rem}
+.challenge-music-toggle{flex:0 0 auto;min-height:38px;padding:8px 11px;border-color:#8b78b7;background:#30244b;color:#f0e8ff;font-size:.74rem;font-weight:850}
 .challenge-volume-field{display:grid;grid-template-columns:auto minmax(65px,100px) auto;align-items:center;gap:6px;color:#d9d4ed;font-size:.72rem;font-weight:800;white-space:nowrap}
 .challenge-volume-field input{width:100%;accent-color:#c084fc}
 .challenge-volume-field strong{min-width:34px;color:#e9d5ff}
@@ -1110,6 +1111,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
    <div id="challengeOptions" class="challenge-options"></div>
   </div>
   <div class="challenge-music-lock"><div><b id="challengeMusicTitle">🎵 Trilha selecionada</b><small id="challengeMusicRule">O adversário escolheu a música.</small></div>
+   <button id="challengeMusicToggle" class="secondary challenge-music-toggle" type="button" aria-pressed="false">▶ Ativar música</button>
    <label class="challenge-volume-field">🔊 Volume <input id="challengeVolume" type="range" min="0" max="100" value="100"><strong id="challengeVolumeValue">100%</strong></label>
   </div>
   <p id="challengePlayStatus" class="small"></p>
@@ -3007,8 +3009,8 @@ function renderChallengeList(){
   const side=item.challenger===activeProfile?'Você desafiou':'Desafio recebido',names=others.map(name=>'@'+name).join(', ');
   const level=item.mode==='custom'?'Personalizado · '+item.tables.map(n=>'Tabuada '+n).join(', '):'Patente · '+item.levelName;
   const done=participants.filter(name=>!!results[name]).length,played=done+'/'+participants.length+' participantes já jogaram';
-  const provisional=participants.map(username=>{const result=results[username];return {username,played:!!result,score:Math.max(0,Number(result?.score)||0),totalMs:Math.max(0,Number(result?.totalMs)||0)};})
-   .sort((a,b)=>{if(a.played!==b.played)return a.played?-1:1;return b.score-a.score||a.totalMs-b.totalMs||a.username.localeCompare(b.username);});
+  const provisional=participants.map(username=>{const result=results[username];return {username,played:!!result,score:Math.max(0,Number(result?.score)||0),totalMs:Math.max(0,Number(result?.totalMs)||0),submittedAt:result?.submittedAt||''};})
+   .sort((a,b)=>{if(a.played!==b.played)return a.played?-1:1;return b.score-a.score||a.totalMs-b.totalMs||String(a.submittedAt).localeCompare(String(b.submittedAt))||a.username.localeCompare(b.username);});
   const rows=provisional.map((entry,index)=>'<div class="challenge-provisional-row '+(entry.played?'played':'pending')+'"><strong>'+(entry.played?'#'+(index+1):'—')+'</strong><span>@'+escapeHtml(entry.username)+'</span><b>'+(entry.played?entry.score+'/10':'Aguardando')+'</b><small>'+(entry.played?formatDuration(entry.totalMs):'')+'</small></div>').join('');
   let action='Jogar desafio',disabled=!!mine&&!completed,actions='';
   if(item.betMode&&item.status==='pending_acceptance'){
@@ -3094,6 +3096,22 @@ async function startChallengeMusic(trackIndex,isPreview=false){
  if(!playing){stopChallengeMusic();return false;}
  return true;
 }
+function updateChallengeMusicToggle(playing){
+ const button=$('challengeMusicToggle');if(!button)return;
+ button.textContent=playing?'♫ Pausar música':'▶ Ativar música';
+ button.setAttribute('aria-pressed',String(!!playing));
+}
+async function toggleChallengeMusic(){
+ if(!challengeCurrent)return;
+ if(challengeMusicActive&&soundtrackAudio&&!soundtrackAudio.paused){
+  stopChallengeMusic();updateChallengeMusicToggle(false);
+  $('challengePlayStatus').textContent='Música pausada. Toque em “Ativar música” para ouvir novamente.';
+  return;
+ }
+ const playing=await startChallengeMusic(challengeCurrent.musicTrack);
+ updateChallengeMusicToggle(playing);
+ $('challengePlayStatus').textContent=playing?'Trilha do duelo ativada.':'O navegador ainda bloqueou o áudio. Toque novamente em “Ativar música”.';
+}
 function stopChallengeMusic(){
  challengeMusicRequest++;
  if(challengeMusicTimer!==null){clearTimeout(challengeMusicTimer);challengeMusicTimer=null;}
@@ -3101,7 +3119,7 @@ function stopChallengeMusic(){
   soundtrackAudio.pause();
   try{soundtrackAudio.currentTime=0}catch{}
  }
- challengeMusicActive=false;clearMainMusicTimer();
+  challengeMusicActive=false;clearMainMusicTimer();updateChallengeMusicToggle(false);
  if(masterGain&&audioContext)masterGain.gain.setTargetAtTime(volumeLevel,audioContext.currentTime,.05);
 }
 function applyChallengeVolume(value){
@@ -3179,7 +3197,7 @@ async function startChallengeGame(challenge,role){
   return {username,displayName:cached.displayName||local.displayName||username,avatar:cached.avatar||local.avatar||'imagem:0'};
  });
  $('challengeParticipantProfiles').innerHTML='<small class="hint">Sincronizando as fotos de perfil...</small>';
- const track=CHALLENGE_MUSIC[challenge.musicTrack]||CHALLENGE_MUSIC[0];
+  const track=(musicTrackCollections.desafio||[])[challenge.musicTrack]||CHALLENGE_MUSIC[challenge.musicTrack]||CHALLENGE_MUSIC[0];
  $('challengeMusicTitle').textContent='🎵 '+track.name;
  $('challengeMusicRule').textContent=role==='recipient'?'Música escolhida pelo desafiante. Ela está bloqueada para você.':'Você escolheu esta música. Todos os adversários ouvirão a mesma trilha.';
  $('siteMusicBox').classList.add('hidden');
@@ -3189,7 +3207,12 @@ async function startChallengeGame(challenge,role){
  $('challengeVolume').min='0';
  applyChallengeVolume(role==='recipient'?30:100);
  $('challengePlayStatus').textContent=role==='recipient'?'Você recebeu este duelo. Boa sorte!':'Você enviou o desafio. Agora faça sua partida!';
- startChallengeMusic(challenge.musicTrack);
+  updateChallengeMusicToggle(false);
+  startChallengeMusic(challenge.musicTrack).then(playing=>{
+   if(challengeCurrent?.id!==challenge.id)return;
+   updateChallengeMusicToggle(playing);
+   if(!playing)$('challengePlayStatus').textContent='O navegador bloqueou a música. Toque em “Ativar música” para começar a trilha do duelo.';
+  });
  challengeOverallTimer=setInterval(updateChallengeClocks,100);
  renderChallengeQuestion();
  try{
@@ -4420,6 +4443,7 @@ $('challengeOptions').addEventListener('click',event=>{
  if(button&&!button.disabled)submitChallengeChoice(Number(button.dataset.challengeAnswer));
 });
 $('challengeVolume').addEventListener('input',event=>applyChallengeVolume(event.target.value));
+ $('challengeMusicToggle').addEventListener('click',toggleChallengeMusic);
 $('challengeResultBack').addEventListener('click',async()=>{
  showChallengeSubPanel('challengeHomePanel');
  await refreshChallengeData();
