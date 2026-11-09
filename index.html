@@ -801,8 +801,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <div class="mode-view-heading"><div><span class="music-kicker">⚔️ DUELO ENTRE PARTICIPANTES</span><h2>Modo Desafio</h2><p class="hint" style="margin:5px 0 0">Escolha o tipo de duelo e desafie alguém cadastrado.</p></div><button id="backFromChallenge" class="secondary compact-back" type="button">← Modos</button></div>
   <div class="challenge-rules"><b>Como funciona:</b> 10 questões sorteadas · 5 segundos por questão · 1 ponto por acerto · máximo de 50 segundos. Se o tempo acabar, a questão vale zero.</div>
   <div class="mode-cards challenge-mode-cards">
-   <button id="chooseCustomChallenge" class="mode-card challenge-custom-card" type="button"><span class="mode-card-icon">🎛️</span><span class="mode-card-copy"><strong>Personalizado</strong><small>Escolha de 1 a 20 tabuadas. São 4 alternativas e não há medalhas por nível.</small><b>Montar meu duelo →</b></span></button>
-   <button id="choosePresetChallenge" class="mode-card challenge-preset-card" type="button"><span class="mode-card-icon">🏅</span><span class="mode-card-copy"><strong>Pré-definido</strong><small>Suba de Recruta até Lenda ou encare o nível Extremo. Os níveis difíceis têm 6 alternativas.</small><b>Escolher nível →</b></span></button>
+   <button id="chooseCustomChallenge" class="mode-card challenge-custom-card" type="button"><span class="mode-card-icon">🎛️</span><span class="mode-card-copy"><strong>Personalizado</strong><small>Escolha as tabuadas que poderão aparecer. Não há medalhas por nível.</small><b>Montar meu duelo →</b></span></button>
+   <button id="choosePresetChallenge" class="mode-card challenge-preset-card" type="button"><span class="mode-card-icon">🏅</span><span class="mode-card-copy"><strong>Pré-definido</strong><small>Escolha um nível, de Recruta a Lenda, ou encare o Extremo.</small><b>Escolher nível →</b></span></button>
    <button id="chooseBetChallenge" class="mode-card challenge-bet-card" type="button"><span class="mode-card-icon">🪙</span><span class="mode-card-copy"><strong>Desafio com aposta</strong><small>Aposte moedas contra uma pessoa. Ela precisa aceitar; quem vencer recebe o total apostado.</small><b>Desafiar valendo moedas →</b></span></button>
   </div>
   <h3 class="challenge-section-title">📬 Desafios recebidos e enviados</h3>
@@ -2689,7 +2689,7 @@ async function startChallengeGame(challenge,role){
  $('challengePlayPanel').classList.remove('hidden');
  const opponents=challengeParticipants(challenge).filter(name=>name!==activeProfile);
  $('challengeOpponentTitle').textContent='Você × '+opponents.map(name=>'@'+name).join(', ');
- $('challengePlayMeta').textContent=(challenge.mode==='custom'?'Personalizado':'Nível '+challenge.levelName)+' · Tabuadas '+challenge.tables.join(', ')+' · '+challenge.optionCount+' alternativas · '+challengeParticipants(challenge).length+' participantes'+(challenge.betMode?' · 🪙 aposta '+Number(challenge.stake||0).toLocaleString('pt-BR')+' moedas':'');
+ $('challengePlayMeta').textContent=(challenge.mode==='custom'?'Personalizado':'Nível '+challenge.levelName)+' · Tabuadas '+challenge.tables.join(', ')+' · '+challengeParticipants(challenge).length+' participantes'+(challenge.betMode?' · 🪙 aposta '+Number(challenge.stake||0).toLocaleString('pt-BR')+' moedas':'');
  const cachedProfiles=challengeParticipants(challenge).map(username=>{
   const cached=challengePlayers.find(player=>player.username===username)||{};
   const local=profilesData[username]||{};
