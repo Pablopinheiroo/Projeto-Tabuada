@@ -624,6 +624,29 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .list-pagination{display:flex;align-items:center;justify-content:center;gap:10px;margin:10px 0 2px;color:#a9bdd8;font-size:.74rem}
 .list-pagination button{padding:7px 10px;font-size:.72rem}
 
+
+.community-rank-card{display:block}
+.community-rank-summary{display:grid;grid-template-columns:minmax(0,1fr);gap:9px;cursor:pointer;list-style:none}
+.community-rank-summary::-webkit-details-marker{display:none}
+.community-rank-summary::marker{content:""}
+.community-rank-main{grid-column:1;grid-row:1}
+.community-rank-trophy{grid-column:1;grid-row:2;justify-self:start;align-self:auto;margin-left:45px;line-height:1.5}
+.community-rank-chips{grid-column:1;grid-row:3}
+.community-rank-expand{grid-column:1;grid-row:4;color:#90a7c2;font-size:.69rem;font-weight:800}
+.community-profile-details{display:grid;gap:12px;margin-top:13px;padding-top:13px;border-top:1px solid #2b4264;color:#e7f0ff}
+.community-profile-detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:7px}
+.community-profile-detail-section{display:grid;gap:7px}
+.community-profile-detail-title{display:block;color:#67e8f9;font-size:.72rem;font-weight:900;letter-spacing:.06em}
+.community-profile-detail-chips{display:flex;flex-wrap:wrap;gap:6px}
+.community-profile-empty{color:#a8bdd8;font-size:.76rem}
+.community-profile-detail-grid .community-rank-metric{background:#0e1a30;border-color:#304969}
+.community-profile-detail-grid .community-rank-metric strong{color:#67e8f9}
+.community-profile-detail-grid .community-rank-metric small{color:#a8bdd8}
+.community-profile-detail-chips .community-rank-chip{background:#172a48;border-color:#38577e;color:#dcecff}
+.community-profile-detail-chips .community-rank-chip.title{background:#292145;border-color:#514078;color:#e5d7ff}
+.community-profile-detail-chips .community-rank-chip.medal{background:#3a301b;border-color:#80652d;color:#ffe6a3}
+@media(max-width:560px){.community-rank-trophy{margin-left:0}}
+
 </style>
 </head>
 <body>
@@ -697,9 +720,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <div class="wallet-grid challenge-profile-summary">
    <div class="wallet-stat"><span>🏆 VITÓRIAS</span><strong id="profileChallengeWins">0</strong></div>
    <div class="wallet-stat"><span>🛡️ DERROTAS</span><strong id="profileChallengeLosses">0</strong></div>
-   <div class="wallet-stat"><span>🤝 EMPATES</span><strong id="profileChallengeDraws">0</strong></div>
-  </div>
-  <p class="economy-rules">Duelo personalizado conta nas vitórias e derrotas, mas não concede medalhas. Cada nível pré-definido tem uma medalha própria, conquistada ao atingir 10 vitórias naquele nível.</p>
+     </div>
+  <p class="economy-rules">Duelo personalizado conta nas vitórias e derrotas, mas não concede medalhas. Cada nível pré-definido tem uma medalha própria, conquistada ao atingir 10 vitórias naquele nível. Em caso de pontuação igual, vence quem terminar mais rápido.</p>
   <div id="challengeMedalShelf" class="achievement-shelf"></div>
   <h3 class="achievement-title">🏆 Vitrine de conquistas <span id="achievementCount">0/13</span></h3>
   <div id="achievementShelf" class="achievement-shelf"></div>
@@ -1344,7 +1366,6 @@ function renderChallengeProfileStats(){
  }).join('');
  if($('profileChallengeWins'))$('profileChallengeWins').textContent=String(Number(total.wins)||0);
  if($('profileChallengeLosses'))$('profileChallengeLosses').textContent=String(Number(total.losses)||0);
- if($('profileChallengeDraws'))$('profileChallengeDraws').textContent=String(Number(total.draws)||0);
  if($('challengeMedalShelf'))$('challengeMedalShelf').innerHTML=medals;
  const earned=CHALLENGE_PRESETS_UI.filter(level=>(Number(levels[level.id]?.wins)||0)>=10).length;
  if($('challengeMedalCount'))$('challengeMedalCount').textContent=earned+'/'+CHALLENGE_PRESETS_UI.length+' medalhas';
@@ -1698,10 +1719,14 @@ function communityStatsFromRecord(record){
   titles,medals,
   challengeWins:Number(record.challengeWins??total.wins)||0,
   challengeLosses:Number(record.challengeLosses??total.losses)||0,
-  challengeDraws:Number(record.challengeDraws??total.draws)||0,
-  challengeTotal:(Number(record.challengeWins??total.wins)||0)+(Number(record.challengeLosses??total.losses)||0)+(Number(record.challengeDraws??total.draws)||0),
+  challengeTotal:(Number(record.challengeTotal??((Number(record.challengeWins??total.wins)||0)+(Number(record.challengeLosses??total.losses)||0)))||0),
   tournamentFrame:record.tournamentFrame||profile.tournamentFrame||null,
-  coins:Number(record.coins??economy.coins)||0
+  coins:Number(record.coins??economy.coins)||0,
+  totalEarned:Number(record.totalEarned??economy.totalEarned)||0,
+  trainingCycles:Number(record.trainingCycles??economy.trainingCycles)||0,
+  completedStages:Number(record.completedStages??economy.completedStages?.length)||0,
+  achievementCount:Number(record.achievementCount??Object.keys(economy.achievements||{}).length)||0,
+  awards:Array.isArray(record.awards)?record.awards:[]
  };
 }
 async function renderCommunityRanking(){
@@ -1722,25 +1747,45 @@ async function renderCommunityRanking(){
    const rankClass=index===0?'rank-gold':index===1?'rank-silver':index===2?'rank-bronze':'';
    const frame=user.tournamentFrame?' tournament-frame-'+user.tournamentFrame:'';
    const titles=user.titles.slice(0,3).map(title=>'<span class="community-rank-chip title">🏅 '+escapeHtml(title)+'</span>').join('');
-   const medals=user.medals.slice(0,3).map(medal=>'<span class="community-rank-chip medal">🥇 '+escapeHtml(medal.name||medal.id)+'</span>').join('');
+   const medals=user.medals.map(medal=>'<span class="community-rank-chip medal">🏅 '+escapeHtml(medal.name||medal.id)+'</span>').join('');
    const extras=user.titles.length>3?'<span class="community-rank-chip">+'+(user.titles.length-3)+' títulos</span>':'';
-   return '<article class="community-rank-card '+rankClass+'">'+
-    '<div class="community-rank-main">'+
-     '<div class="community-rank-place">'+(index===0?'🥇':index===1?'🥈':index===2?'🥉':'#'+(index+1))+'</div>'+
-     '<img class="community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt="">'+
-     '<div class="community-rank-identity"><strong>'+escapeHtml(user.displayName)+'</strong><small>@'+escapeHtml(user.username)+'</small></div>'+
+   const awards=user.awards.map(award=>'<span class="community-rank-chip medal">'+(Number(award.rank)===1?'🥇':Number(award.rank)===2?'🥈':Number(award.rank)===3?'🥉':'🏅')+' '+escapeHtml(award.difficulty)+' · '+escapeHtml(award.month)+' · '+Number(award.rank)+'º lugar · '+Number(award.score)+'/50</span>').join('');
+   const achievementChips=user.titles.map(title=>'<span class="community-rank-chip title">✨ '+escapeHtml(title)+'</span>').join('');
+   return '<details class="community-rank-card '+rankClass+'">'+
+    '<summary class="community-rank-summary">'+
+     '<div class="community-rank-main">'+
+      '<div class="community-rank-place">'+(index===0?'🥇':index===1?'🥈':index===2?'🥉':'#'+(index+1))+'</div>'+
+      '<img class="community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt="">'+
+      '<div class="community-rank-identity"><strong>'+escapeHtml(user.displayName)+'</strong><small>@'+escapeHtml(user.username)+'</small></div>'+
+     '</div>'+
+     '<div class="community-rank-trophy">⚔️ '+user.challengeTotal+' desafios · 🏆 '+user.challengeWins+' vitórias · 🛡️ '+user.challengeLosses+' derrotas</div>'+
+     '<div class="community-rank-chips">'+(titles||'<span class="community-rank-chip">🌱 Novo participante</span>')+medals+extras+'</div>'+
+     '<span class="community-rank-expand">Clique para ver estatísticas, moedas e premiações ▾</span>'+
+    '</summary>'+
+    '<div class="community-profile-details">'+
+     '<div class="community-profile-detail-grid">'+
+      '<div class="community-rank-metric"><strong>🪙 '+user.coins.toLocaleString('pt-BR')+'</strong><small>moedas disponíveis</small></div>'+
+      '<div class="community-rank-metric"><strong>'+user.totalEarned.toLocaleString('pt-BR')+'</strong><small>moedas ganhas</small></div>'+
+      '<div class="community-rank-metric"><strong>'+user.trainingCycles.toLocaleString('pt-BR')+'</strong><small>ciclos de treino</small></div>'+
+      '<div class="community-rank-metric"><strong>'+user.completedStages.toLocaleString('pt-BR')+'</strong><small>fases concluídas</small></div>'+
+      '<div class="community-rank-metric"><strong>'+user.correct.toLocaleString('pt-BR')+'</strong><small>acertos</small></div>'+
+      '<div class="community-rank-metric"><strong>'+user.wrong.toLocaleString('pt-BR')+'</strong><small>erros</small></div>'+
+      '<div class="community-rank-metric"><strong>'+formatDuration(user.timeMs)+'</strong><small>tempo estudado</small></div>'+
+      '<div class="community-rank-metric"><strong>'+user.achievementCount.toLocaleString('pt-BR')+'</strong><small>conquistas</small></div>'+
+     '</div>'+
+     '<div class="community-profile-detail-section"><span class="community-profile-detail-title">⚔️ DESAFIOS</span><div class="community-profile-detail-chips"><span class="community-rank-chip">'+user.challengeTotal+' partidas</span><span class="community-rank-chip">🏆 '+user.challengeWins+' vitórias</span><span class="community-rank-chip">🛡️ '+user.challengeLosses+' derrotas</span></div></div>'+
+     '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏅 MEDALHAS DE NÍVEL</span><div class="community-profile-detail-chips">'+(medals||'<span class="community-profile-empty">Ainda não conquistou medalhas de nível.</span>')+'</div></div>'+
+     '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏆 PREMIAÇÕES MENSAIS</span><div class="community-profile-detail-chips">'+(awards||'<span class="community-profile-empty">Nenhuma premiação mensal registrada.</span>')+'</div></div>'+
+     '<div class="community-profile-detail-section"><span class="community-profile-detail-title">✨ CONQUISTAS</span><div class="community-profile-detail-chips">'+(achievementChips||'<span class="community-profile-empty">Ainda não desbloqueou conquistas.</span>')+'</div></div>'+
     '</div>'+
-    '<div class="community-rank-trophy">⚔️ '+user.challengeTotal+' desafios · 🏆 '+user.challengeWins+' vitórias · 🛡️ '+user.challengeLosses+' derrotas'+(user.challengeDraws?' · 🤝 '+user.challengeDraws+' empates':'')+'</div>'+
-    '<div class="community-rank-chips">'+(titles||'<span class="community-rank-chip">🌱 Novo participante</span>')+medals+extras+'</div>'+
-    '<div class="community-rank-metrics">'+
-     '<div class="community-rank-metric"><strong>'+user.correct.toLocaleString('pt-BR')+'</strong><small>acertos</small></div>'+
-     '<div class="community-rank-metric"><strong>'+user.wrong.toLocaleString('pt-BR')+'</strong><small>erros</small></div>'+
-     '<div class="community-rank-metric"><strong>'+formatDuration(user.timeMs)+'</strong><small>tempo estudado</small></div>'+
-    '</div>'+
-   '</article>';
+   '</details>';
   }).join('');
+  box.querySelectorAll('.community-rank-card').forEach(card=>card.addEventListener('toggle',()=>{
+   const indicator=card.querySelector('.community-rank-expand');
+   if(indicator)indicator.textContent=card.open?'Fechar detalhes ▴':'Clique para ver estatísticas, moedas e premiações ▾';
+  }));
   const note=document.querySelector('.community-list-note');
-  if(note)note.textContent='Mostrando '+Math.min(users.length,40)+' participantes. Role a lista para conhecer os demais.';
+  if(note)note.textContent='Mostrando '+Math.min(users.length,40)+' participantes. Clique em um perfil para expandir os detalhes.';
  }catch(error){
   box.innerHTML='<div class="community-empty">'+escapeHtml(siteErrorMessage(error))+'</div>';
   console.error('Falha ao carregar a comunidade:',error);
