@@ -712,8 +712,8 @@ async function applyChallengeStats(username, challenge, env) {
       ? challenge.participants : [challenge.challenger, challenge.recipient].filter(Boolean);
     const own = challenge.results?.[username];
     if (!own || !participants.includes(username)) return;
-    const isDraw = challenge.winner === "empate" ||
-      (Array.isArray(challenge.winners) && challenge.winners.length > 1 && challenge.winners.includes(username));
+    const isDraw = Array.isArray(challenge.winners) && challenge.winners.length > 1
+      ? challenge.winners.includes(username) : challenge.winner === "empate";
     const outcome = isDraw ? "draw" : challenge.winner === username ? "win" : "loss";
     const bucket = outcome === "win" ? "wins" : outcome === "draw" ? "draws" : "losses";
     stats.total[bucket] = (Number(stats.total[bucket]) || 0) + 1;
