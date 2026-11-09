@@ -2017,7 +2017,8 @@ function communityStatsFromRecord(record){
   trainingCycles:Number(record.trainingCycles??economy.trainingCycles)||0,
   completedStages:Number(record.completedStages??economy.completedStages?.length)||0,
   achievementCount:Number(record.achievementCount??Object.keys(economy.achievements||{}).length)||0,
-  awards:Array.isArray(record.awards)?record.awards:[]
+  awards:Array.isArray(record.awards)?record.awards:[],
+  featuredAwards:Array.isArray(record.featuredAwards)?record.featuredAwards.filter(id=>typeof id==='string').slice(0,3):[]
  };
 }
 async function renderCommunityRanking(){
@@ -2027,44 +2028,43 @@ async function renderCommunityRanking(){
   const records=await loadCommunityRecords();
   const users=records.map(communityStatsFromRecord);
   const mode=$('communitySort')?.value||'time';
-  const sorters={
-   time:(a,b)=>b.timeMs-a.timeMs||b.correct-a.correct,
-   correct:(a,b)=>b.correct-a.correct||b.timeMs-a.timeMs,
-   wrong:(a,b)=>b.wrong-a.wrong||b.timeMs-a.timeMs
-  };
+  const sorters={time:(a,b)=>b.timeMs-a.timeMs||b.correct-a.correct,correct:(a,b)=>b.correct-a.correct||b.timeMs-a.timeMs,wrong:(a,b)=>b.wrong-a.wrong||b.timeMs-a.timeMs};
   users.sort(sorters[mode]||sorters.time);
   const pages=Math.max(1,Math.ceil(users.length/COMMUNITY_PAGE_SIZE));
   communityPage=Math.max(0,Math.min(pages-1,communityPage));
-  const first=communityPage*COMMUNITY_PAGE_SIZE;
-  const pageUsers=users.slice(first,first+COMMUNITY_PAGE_SIZE);
-  if(!users.length){
-   box.innerHTML='<div class="community-empty">Ainda não há participantes. Seja o primeiro a criar um perfil!</div>';
-   $('communityPagination').innerHTML='';
-   return;
-  }
+  const first=communityPage*COMMUNITY_PAGE_SIZE,pageUsers=users.slice(first,first+COMMUNITY_PAGE_SIZE);
+  if(!users.length){box.innerHTML='<div class="community-empty">Ainda não há participantes. Seja o primeiro a criar um perfil!</div>'; $('communityPagination').innerHTML='';return;}
   box.innerHTML=pageUsers.map((user,index)=>{
-   const place=first+index+1;
-   const rankClass=place===1?'rank-gold':place===2?'rank-silver':place===3?'rank-bronze':'';
+   const place=first+index+1,rankClass=place===1?'rank-gold':place===2?'rank-silver':place===3?'rank-bronze':'';
    const frame=user.tournamentFrame?' tournament-frame-'+user.tournamentFrame:'';
-   const titles=user.titles.slice(0,3).map(title=>'<span class="community-rank-chip title">🏅 '+escapeHtml(title)+'</span>').join('');
-   const medals=user.medals.map(medal=>'<span class="community-rank-chip medal">🏅 '+escapeHtml(medal.name||medal.id)+'</span>').join('');
-   const extras=user.titles.length>3?'<span class="community-rank-chip">+'+(user.titles.length-3)+' títulos</span>':'';
-   const awards=user.awards.map(award=>'<span class="community-rank-chip medal">'+(Number(award.rank)===1?'🥇':Number(award.rank)===2?'🥈':Number(award.rank)===3?'🥉':'🏅')+' Torneio mensal · '+escapeHtml(award.month)+' · '+Number(award.rank)+'º lugar</span>').join('');
-   const achievementChips=user.titles.map(title=>'<span class="community-rank-chip title">✨ '+escapeHtml(title)+'</span>').join('');
+   const medals=user.medals.map(medal=>'<span class="community-rank-chip medal">'+challengeMedalIcon(medal.id)+' '+escapeHtml(medal.name||medal.id)+'</span>').join('');
+   const awards=user.awards.map(award=>'<span class="community-rank-chip medal">'+(Number(award.rank)===1?'🥇':Number(award.rank)===2?'🥈':Number(award.rank)===3?'🥉':'🏆')+' Torneio mensal · '+escapeHtml(award.month)+' · '+Number(award.rank)+'º lugar</span>').join('');
+   const achievements=user.titles.map(title=>{
+    const item=ACHIEVEMENT_DEFINITIONS.find(entry=>entry.title===title);
+    return '<span class="community-rank-chip title">'+(item?.icon||'✨')+' '+escapeHtml(title)+'</span>';
+   }).join('');
+   const featured=(user.featuredAwards||[]).map(id=>{
+    const info=featuredAwardInfo(id,{awards:user.awards});
+    return info?'<span class="community-featured-badge">'+info.icon+' '+escapeHtml(info.label)+'</span>':'';
+   }).join('');
+   const publicHonors=featured||(achievements+medals+awards)||'<span class="community-rank-chip">🌱 Novo participante</span>';
    return '<details class="community-rank-card '+rankClass+'">'+
     '<summary class="community-rank-summary">'+
      '<div class="community-rank-main">'+
       '<div class="community-rank-place">'+(place===1?'🥇':place===2?'🥈':place===3?'🥉':'#'+place)+'</div>'+
       '<img class="community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt="">'+
-      '<div class="community-rank-identity"><strong>'+escapeHtml(user.displayName)+'</strong><small>@'+escapeHtml(user.username)+'</small></div>'+
+      '<div class="community-rank-identity">'+
+       '<div class="community-rank-name-row"><strong>'+escapeHtml(user.displayName)+'</strong><span class="community-wallet-pill"><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</span></div>'+
+       '<small>@'+escapeHtml(user.username)+'</small>'+
+       '<div class="community-rank-public-stats"><span>✓ '+user.correct.toLocaleString('pt-BR')+' acertos</span><span>✕ '+user.wrong.toLocaleString('pt-BR')+' erros</span><span>⏱️ '+formatDuration(user.timeMs)+' estudado</span></div>'+
+      '</div>'+
      '</div>'+
-     '<div class="community-rank-trophy">⚔️ '+user.challengeTotal+' desafios · 🏆 '+user.challengeWins+' vitórias · 🛡️ '+user.challengeLosses+' derrotas</div>'+
-     '<div class="community-rank-chips">'+(titles||'<span class="community-rank-chip">🌱 Novo participante</span>')+medals+extras+'</div>'+
-     '<span class="community-rank-expand">Clique para ver estatísticas, moedas e premiações ▾</span>'+
+     '<div class="community-rank-public-honors">'+publicHonors+'</div>'+
+     '<span class="community-rank-expand">Clique para ver mais informações ▾</span>'+
     '</summary>'+
     '<div class="community-profile-details">'+
      '<div class="community-profile-detail-grid">'+
-      '<div class="community-rank-metric"><strong>🪙 '+user.coins.toLocaleString('pt-BR')+'</strong><small>moedas disponíveis</small></div>'+
+      '<div class="community-rank-metric"><strong><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</strong><small>moedas disponíveis</small></div>'+
       '<div class="community-rank-metric"><strong>'+user.totalEarned.toLocaleString('pt-BR')+'</strong><small>moedas ganhas</small></div>'+
       '<div class="community-rank-metric"><strong>'+user.trainingCycles.toLocaleString('pt-BR')+'</strong><small>ciclos de treino</small></div>'+
       '<div class="community-rank-metric"><strong>'+user.completedStages.toLocaleString('pt-BR')+'</strong><small>fases concluídas</small></div>'+
@@ -2074,24 +2074,21 @@ async function renderCommunityRanking(){
       '<div class="community-rank-metric"><strong>'+user.achievementCount.toLocaleString('pt-BR')+'</strong><small>conquistas</small></div>'+
      '</div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">⚔️ DESAFIOS</span><div class="community-profile-detail-chips"><span class="community-rank-chip">'+user.challengeTotal+' partidas</span><span class="community-rank-chip">🏆 '+user.challengeWins+' vitórias</span><span class="community-rank-chip">🛡️ '+user.challengeLosses+' derrotas</span></div></div>'+
+     '<div class="community-profile-detail-section"><span class="community-profile-detail-title">⭐ DESTAQUES ESCOLHIDOS</span><div class="community-profile-detail-chips">'+(featured||'<span class="community-profile-empty">Nenhum destaque selecionado.</span>')+'</div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏅 MEDALHAS DE NÍVEL</span><div class="community-profile-detail-chips">'+(medals||'<span class="community-profile-empty">Ainda não conquistou medalhas de nível.</span>')+'</div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏆 PREMIAÇÕES MENSAIS</span><div class="community-profile-detail-chips">'+(awards||'<span class="community-profile-empty">Nenhuma premiação mensal registrada.</span>')+'</div></div>'+
-     '<div class="community-profile-detail-section"><span class="community-profile-detail-title">✨ CONQUISTAS</span><div class="community-profile-detail-chips">'+(achievementChips||'<span class="community-profile-empty">Ainda não desbloqueou conquistas.</span>')+'</div></div>'+
+     '<div class="community-profile-detail-section"><span class="community-profile-detail-title">✨ CONQUISTAS</span><div class="community-profile-detail-chips">'+(achievements||'<span class="community-profile-empty">Ainda não desbloqueou conquistas.</span>')+'</div></div>'+
     '</div>'+
    '</details>';
   }).join('');
   box.querySelectorAll('.community-rank-card').forEach(card=>card.addEventListener('toggle',()=>{
    const indicator=card.querySelector('.community-rank-expand');
-   if(indicator)indicator.textContent=card.open?'Fechar detalhes ▴':'Clique para ver estatísticas, moedas e premiações ▾';
+   if(indicator)indicator.textContent=card.open?'Fechar detalhes ▴':'Clique para ver mais informações ▾';
   }));
   const pager=$('communityPagination');
-  pager.innerHTML=pages>1
-   ?'<button type="button" class="secondary" data-community-page="prev" '+(communityPage===0?'disabled':'')+'>← Anterior</button>'+
-    '<span>Página '+(communityPage+1)+' de '+pages+' · '+users.length+' participantes</span>'+
-    '<button type="button" class="secondary" data-community-page="next" '+(communityPage>=pages-1?'disabled':'')+'>Próxima →</button>'
-   :'';
+  pager.innerHTML=pages>1?'<button type="button" class="secondary" data-community-page="prev" '+(communityPage===0?'disabled':'')+'>← Anterior</button><span>Página '+(communityPage+1)+' de '+pages+' · '+users.length+' participantes</span><button type="button" class="secondary" data-community-page="next" '+(communityPage>=pages-1?'disabled':'')+'>Próxima →</button>':'';
   const note=document.querySelector('.community-list-note');
-  if(note)note.textContent='Mostrando '+(first+1)+'–'+Math.min(first+pageUsers.length,users.length)+' de '+users.length+' participantes. Clique em um perfil para expandir os detalhes.';
+  if(note)note.textContent='Mostrando '+(first+1)+'–'+Math.min(first+pageUsers.length,users.length)+' de '+users.length+' participantes. As moedas aparecem ao lado do nome; clique no perfil para abrir mais informações.';
  }catch(error){
   box.innerHTML='<div class="community-empty">'+escapeHtml(siteErrorMessage(error))+'</div>';
   $('communityPagination').innerHTML='';
@@ -3029,6 +3026,7 @@ function submitChallengeChoice(value){
 }
 async function finishChallengeMatch(){
  stopChallengeTimers();
+ communityCacheAt=0;
  historyData.sessions.unshift({date:new Date().toISOString(),mode:'challenge',answered:challengeAnswerLog.length,hits:challengeLocalScore,misses:challengeAnswerLog.length-challengeLocalScore,skipped:0,timeMs:Math.max(0,performance.now()-challengeMatchStarted)});
  historyData.sessions=historyData.sessions.slice(0,300);saveHistory();
  stopChallengeMusic();
@@ -3308,6 +3306,7 @@ function submitTournamentAnswer(value){
 }
 async function finishMonthlyTournament(){
  stopTournamentClock();
+ communityCacheAt=0;
  historyData.sessions.unshift({date:new Date().toISOString(),mode:'tournament',answered:tournamentQuestions.length,hits:tournamentScore,misses:tournamentQuestions.length-tournamentScore,skipped:0,timeMs:Math.max(0,performance.now()-tournamentMatchStarted)});
  historyData.sessions=historyData.sessions.slice(0,300);saveHistory();
  if(tournamentBusy)return;
@@ -3949,6 +3948,7 @@ async function finishAdventureStage(){
  }
  progress.stages[key]=entry;
  progress.lastStageId=stage.id;
+ communityCacheAt=0;
  historyData.sessions.unshift({date:new Date().toISOString(),mode:'adventure',stage:stage.id,answered:total,hits:adventureFirstTryCorrect,misses:total-adventureFirstTryCorrect,skipped:0,timeMs:adventureSessionTimeMs});
  historyData.sessions=historyData.sessions.slice(0,300);saveHistory();
  adventureLastResultPassed=passed;
@@ -4067,6 +4067,23 @@ $('openProfile').addEventListener('click',openProfileScreen);
 $('profileEditForm').addEventListener('submit',saveProfileEdits);
 $('changePasswordForm').addEventListener('submit',changePassword);
 $('backFromProfile').addEventListener('click',closeProfileScreen);
+$('toggleProfileStats').addEventListener('click',()=>{
+ const panel=$('profileStatsPanel'),opening=panel.classList.contains('hidden');
+ panel.classList.toggle('hidden',!opening);
+ $('toggleProfileStats').textContent=opening?'Ocultar estatísticas':'Ver estatísticas';
+ $('toggleProfileStats').setAttribute('aria-expanded',opening?'true':'false');
+ if(opening)renderProfileLearningStats();
+});
+$('featuredAwardsEditor').addEventListener('change',event=>{
+ const target=event.target;if(!target.matches('input[name="featuredAward"]')||!target.checked)return;
+ const checked=$('featuredAwardsEditor').querySelectorAll('input[name="featuredAward"]:checked');
+ if(checked.length>3){target.checked=false;$('profileMessage').textContent='Escolha no máximo 3 destaques para o seu perfil.';}
+ else $('profileMessage').textContent='Lembre-se de salvar o perfil para publicar seus destaques.';
+});
+$('navProfile').addEventListener('click',openProfileScreen);
+$('navTraining').addEventListener('click',showTrainingMode);
+$('navAdventure').addEventListener('click',showAdventureMap);
+$('navCommunity').addEventListener('click',()=>$('communityRanking').scrollIntoView({behavior:'smooth',block:'start'}));
 $('communitySort').addEventListener('change',()=>{communityPage=0;renderCommunityRanking();});
 $('communityPagination').addEventListener('click',event=>{
  const button=event.target.closest('[data-community-page]');if(!button||button.disabled)return;
