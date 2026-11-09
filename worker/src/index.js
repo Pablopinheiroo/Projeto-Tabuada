@@ -88,6 +88,7 @@ async function githubRequest(path, env, options = {}) {
     ...options,
     headers: {
       Accept: "application/vnd.github+json",
+      "User-Agent": "Projeto-Tabuada-API",
       Authorization: "Bearer " + env.GITHUB_TOKEN,
       "X-GitHub-Api-Version": "2022-11-28",
       ...(options.body ? { "Content-Type": "application/json" } : {}),
