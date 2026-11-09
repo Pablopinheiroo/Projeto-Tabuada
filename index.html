@@ -2978,7 +2978,7 @@ function challengeResultLabel(challenge){
    return 'Sua vez de jogar · '+done+'/'+total+' resultados enviados';
   }
   const winners=Array.isArray(challenge.winners)?challenge.winners:[];
-  if(challenge.winner==='empate'||winners.length>1)return winners.includes(activeProfile)?'🤝 Você empatou':'Desafio empatado';
+  if(challenge.winner==='empate'||winners.length>1)return winners.includes(activeProfile)?'🤝 Você empatou':'🛡️ Você perdeu · empate no topo';
   return challenge.winner===activeProfile?'🏆 Você venceu':'🛡️ Você perdeu';
 }
 
@@ -3326,9 +3326,9 @@ function showChallengeResult(challenge){
     challenge.winner==='empate'?tiedAtTop:challenge.winner?[challenge.winner]:[];
    const draw=winners.length>1||challenge.winner==='empate';
    const winner=winners.includes(activeProfile);
-   $('challengeResultIcon').textContent=draw?'🤝':winner?'🏆':'🛡️';
-   $('challengeResultTitle').textContent=draw?(winner?'Você empatou no desafio!':'O desafio terminou empatado!'):(winner?'Você venceu o desafio!':'Desta vez, outro participante venceu.');
-   $('challengeResultText').textContent=draw?(winner?'Sua pontuação e seu tempo foram iguais aos de outro participante.':'Mais de um participante terminou com a mesma pontuação e o mesmo tempo.'):(winner?'Parabéns! Você ficou em primeiro lugar.':'Veja a classificação final do grupo.');
+   $('challengeResultIcon').textContent=draw&&winner?'🤝':winner?'🏆':'🛡️';
+   $('challengeResultTitle').textContent=draw&&winner?'Você empatou no desafio!':draw?'Houve empate no primeiro lugar; você ficou atrás.':winner?'Você venceu o desafio!':'Desta vez, outro participante venceu.';
+   $('challengeResultText').textContent=draw&&winner?'Sua pontuação e seu tempo foram iguais aos de outro participante.':draw?'Dois ou mais participantes ficaram em primeiro lugar, mas sua pontuação foi menor.':winner?'Parabéns! Você ficou em primeiro lugar.':'Veja a classificação final do grupo.';
    let place=0,previous=null;
    $('challengeResultScores').innerHTML=standings.map((item,index)=>{
     if(!previous||item.score!==previous.score||item.totalMs!==previous.totalMs)place=index+1;
