@@ -647,6 +647,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .community-profile-detail-chips .community-rank-chip.medal{background:#3a301b;border-color:#80652d;color:#ffe6a3}
 @media(max-width:560px){.community-rank-trophy{margin-left:0}}
 
+
+.challenge-bet-card{background:linear-gradient(145deg,#44351a,#292044);border-color:#bd9645}
+.challenge-list-actions{display:flex;gap:7px;flex-wrap:wrap}
+.challenge-list-actions .challenge-reject{background:#4b1c35;color:#fecdd3;border:1px solid #be4569}
+#challengeBetBox input{width:100%;max-width:260px;background:#0b1730;color:#f1f7ff;border:1px solid #46658e;border-radius:10px;padding:10px;font:inherit}
+@media(max-width:560px){.challenge-list-card{flex-direction:column}.challenge-list-actions{width:100%}.challenge-list-actions button{flex:1}}
+
 </style>
 </head>
 <body>
@@ -795,10 +802,19 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
   <div class="mode-cards challenge-mode-cards">
    <button id="chooseCustomChallenge" class="mode-card challenge-custom-card" type="button"><span class="mode-card-icon">🎛️</span><span class="mode-card-copy"><strong>Personalizado</strong><small>Escolha de 1 a 20 tabuadas. São 4 alternativas e não há medalhas por nível.</small><b>Montar meu duelo →</b></span></button>
    <button id="choosePresetChallenge" class="mode-card challenge-preset-card" type="button"><span class="mode-card-icon">🏅</span><span class="mode-card-copy"><strong>Pré-definido</strong><small>Suba de Recruta até Lenda ou encare o nível Extremo. Os níveis difíceis têm 6 alternativas.</small><b>Escolher nível →</b></span></button>
+   <button id="chooseBetChallenge" class="mode-card challenge-bet-card" type="button"><span class="mode-card-icon">🪙</span><span class="mode-card-copy"><strong>Desafio com aposta</strong><small>Aposte moedas contra uma pessoa. Ela precisa aceitar; quem vencer recebe o total apostado.</small><b>Desafiar valendo moedas →</b></span></button>
   </div>
   <h3 class="challenge-section-title">📬 Desafios recebidos e enviados</h3>
   <p id="challengeListStatus" class="small" style="text-align:left;margin:0 0 10px">Buscando seus desafios...</p>
   <div id="challengeList" class="challenge-list"></div>
+ </div>
+
+ <div id="challengeBetChoicePanel" class="hidden">
+  <div class="mode-view-heading"><div><span class="music-kicker">🪙 DESAFIO COM APOSTA</span><h2>Escolha o tipo de desafio</h2><p class="hint">A partida continua igual ao modo normal. A aposta é opcional e só é cobrada se a pessoa aceitar.</p></div><button id="challengeBetChoiceBack" class="secondary compact-back" type="button">← Voltar</button></div>
+  <div class="mode-cards challenge-mode-cards">
+   <button id="chooseCustomBetChallenge" class="mode-card challenge-custom-card" type="button"><span class="mode-card-icon">🎛️</span><span class="mode-card-copy"><strong>Personalizado com aposta</strong><small>Escolha as tabuadas e aposte moedas em um adversário.</small><b>Continuar →</b></span></button>
+   <button id="choosePresetBetChallenge" class="mode-card challenge-preset-card" type="button"><span class="mode-card-icon">🏅</span><span class="mode-card-copy"><strong>Pré-definido com aposta</strong><small>Escolha o nível e desafie uma pessoa valendo moedas.</small><b>Continuar →</b></span></button>
+  </div>
  </div>
 
  <div id="challengeConfigPanel" class="hidden">
@@ -826,6 +842,13 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 
  <div id="challengePlayersPanel" class="hidden">
   <div class="mode-view-heading"><div><span class="music-kicker">ESCOLHER OPONENTE</span><h2>Quem você vai desafiar?</h2></div><button id="challengePlayersBack" class="secondary compact-back" type="button">← Voltar</button></div>
+  <div id="challengeBetBox" class="challenge-config-card hidden">
+   <label class="challenge-field">🪙 Quanto deseja apostar?
+    <input id="challengeBetAmount" class="challenge-search" type="number" min="1" step="1" inputmode="numeric" placeholder="Digite moedas inteiras">
+   </label>
+   <p id="challengeBetLimit" class="hint" style="margin:8px 0 0">Selecione uma pessoa para consultar o limite da aposta.</p>
+   <small class="hint" style="display:block;margin:6px 0 0">O limite é o menor saldo entre você e o adversário. Se a pessoa rejeitar, nenhuma moeda será retirada.</small>
+  </div>
   <input id="challengePlayerSearch" class="challenge-search" type="search" placeholder="Pesquisar participante pelo usuário..." autocomplete="off">
   <p id="challengePlayersStatus" class="small" style="text-align:left"></p>
   <div id="challengePlayersList" class="challenge-player-list"></div>
@@ -1135,7 +1158,7 @@ const CHALLENGE_MUSIC=[
  {name:"Duelo Decisivo",bpm:148,root:46,pattern:[0,7,12,17,15,12,10,7],wave:"sawtooth"}
 ];
 const CHALLENGE_SEEN_KEY="projetoTabuadaDesafiosVistosV1";
-let challengeItems=[],challengePlayers=[],challengeSetupMode="custom",challengeCurrent=null,challengeRole="",challengeQuestions=[],challengeAnswerLog=[],challengeQuestionIndex=0,challengeQuestionStarted=0,challengeQuestionTimer=null,challengeOverallTimer=null,challengeMusicTimer=null,challengeMatchStarted=0,challengeMatchDeadline=0,challengeQuestionLocked=false,challengeLocalScore=0,challengeVolumeLimit=100,challengePollTimer=null,challengeMusicActive=false;
+let challengeItems=[],challengePlayers=[],challengeSetupMode="custom",challengeCurrent=null,challengeRole="",challengeQuestions=[],challengeAnswerLog=[],challengeQuestionIndex=0,challengeQuestionStarted=0,challengeQuestionTimer=null,challengeOverallTimer=null,challengeMusicTimer=null,challengeMatchStarted=0,challengeMatchDeadline=0,challengeQuestionLocked=false,challengeLocalScore=0,challengeVolumeLimit=100,challengePollTimer=null,challengeMusicActive=false,challengeBetMode=false;
 const AUTH_USERS_KEY='projetoTabuadaUsuariosV1';
 const AUTH_SESSION_KEY='projetoTabuadaSessaoV1';
 let authUsers={};
@@ -2204,9 +2227,10 @@ function previewSelectedChallengeMusic(){
  startChallengeMusic(index,true);
 }
 function showChallengeSubPanel(name){
- ['challengeHomePanel','challengeConfigPanel','challengePlayersPanel','challengePlayPanel','challengeResultPanel'].forEach(id=>$(id).classList.toggle('hidden',id!==name));
+ ['challengeHomePanel','challengeBetChoicePanel','challengeConfigPanel','challengePlayersPanel','challengePlayPanel','challengeResultPanel'].forEach(id=>$(id).classList.toggle('hidden',id!==name));
 }
 function openChallengeMode(){
+ challengeBetMode=false;
  ['trainingModePanel','adventureMapView','adventureIntroView','adventurePlayView','adventureResultView'].forEach(id=>$(id).classList.add('hidden'));
  $('modeHub').classList.add('hidden');
  $('challengeModeView').classList.remove('hidden');
@@ -2217,6 +2241,7 @@ function openChallengeMode(){
  refreshChallengeData();
 }
 function backToModeHubFromChallenge(){
+ challengeBetMode=false;
  stopChallengeTimers();
  stopChallengeMusic();
  $('challengeModeView').classList.add('hidden');
@@ -2224,12 +2249,16 @@ function backToModeHubFromChallenge(){
  $('modeHub').classList.remove('hidden');
  if(soundOn&&soundtrackAudio&&soundtrackAudio.paused)playCurrentTrack();
 }
+function openBetChallengeOptions(){
+ challengeBetMode=true;
+ showChallengeSubPanel('challengeBetChoicePanel');
+}
 function configureChallengeMode(mode){
  challengeSetupMode=mode;
  showChallengeSubPanel('challengeConfigPanel');
  $('challengeCustomConfig').classList.toggle('hidden',mode!=='custom');
  $('challengePresetConfig').classList.toggle('hidden',mode!=='preset');
- $('challengeConfigTitle').textContent=mode==='custom'?'Desafio personalizado':'Desafio pré-definido';
+ $('challengeConfigTitle').textContent=(challengeBetMode?'Desafio com aposta · ':'')+(mode==='custom'?'Personalizado':'Pré-definido');
  $('challengeCustomMessage').textContent='';
  if(!$('challengeMusicSelect').value)$('challengeMusicSelect').value='0';
  if(mode==='custom')$('challengeTables').querySelectorAll('input').forEach(input=>input.checked=false);
@@ -2249,6 +2278,8 @@ function getChallengeConfig(){
 }
 async function loadChallengePlayers(){
  showChallengeSubPanel('challengePlayersPanel');
+ $('challengeBetBox').classList.toggle('hidden',!challengeBetMode);
+ if(challengeBetMode)$('challengeBetAmount').value='';
  challengePlayerPage=0;
  selectedChallengePlayers.clear();
  $('challengePlayersStatus').textContent='Carregando participantes cadastrados...';
@@ -2268,8 +2299,20 @@ async function loadChallengePlayers(){
 }
 function updateChallengeSelectedCount(){
  const count=selectedChallengePlayers.size;
- if($('challengeSelectedCount'))$('challengeSelectedCount').textContent=count+' de 4 selecionados';
- if($('challengeStartSelected'))$('challengeStartSelected').disabled=count<1||count>4;
+ const limit=challengeBetMode?1:4;
+ if($('challengeSelectedCount'))$('challengeSelectedCount').textContent=count+' de '+limit+' selecionado(s)';
+ let validBet=true;
+ if(challengeBetMode){
+  const player=challengePlayers.find(item=>selectedChallengePlayers.has(item.username));
+  const maxStake=player?Math.min(Number(gameEconomy.coins)||0,Number(player.coins)||0):0;
+  const input=$('challengeBetAmount');
+  if(input)input.max=String(maxStake);
+  if($('challengeBetLimit'))$('challengeBetLimit').textContent=player?'Limite permitido: 1 a '+maxStake.toLocaleString('pt-BR')+' moedas. Seu saldo: '+(Number(gameEconomy.coins)||0).toLocaleString('pt-BR')+' · saldo do adversário: '+(Number(player.coins)||0).toLocaleString('pt-BR')+'.':'Selecione uma pessoa. Seu saldo atual é '+(Number(gameEconomy.coins)||0).toLocaleString('pt-BR')+' moedas.';
+  const raw=String(input?.value||'').trim();
+  const stake=/^\\d+$/.test(raw)?Number(raw):0;
+  validBet=!!player&&Number.isSafeInteger(stake)&&stake>=1&&stake<=maxStake;
+ }
+ if($('challengeStartSelected'))$('challengeStartSelected').disabled=count<1||count>limit||!validBet;
 }
 function renderChallengePlayers(){
  const box=$('challengePlayersList');if(!box)return;
@@ -2286,12 +2329,12 @@ function renderChallengePlayers(){
   box.innerHTML=pageItems.map(player=>{
    const username=String(player.username||'');
    const checked=selectedChallengePlayers.has(username);
-   const disabled=!checked&&selectedChallengePlayers.size>=4;
+   const disabled=!checked&&selectedChallengePlayers.size>=(challengeBetMode?1:4);
    const avatar=avatarImage(normalizeAvatarKey(player.avatar));
    return '<label class="challenge-player-card challenge-player-check">'+
     '<input type="checkbox" data-challenge-player="'+escapeHtml(username)+'" '+(checked?'checked ':'')+(disabled?'disabled':'')+'>'+
     '<img class="challenge-player-avatar" src="'+avatar+'" alt="">'+
-    '<span class="challenge-player-name">'+escapeHtml(player.displayName||username)+'<small style="display:block;color:#9fb8d8;font-size:.7rem;font-weight:500">@'+escapeHtml(username)+'</small></span>'+
+    '<span class="challenge-player-name">'+escapeHtml(player.displayName||username)+'<small style="display:block;color:#9fb8d8;font-size:.7rem;font-weight:500">@'+escapeHtml(username)+'</small>'+(challengeBetMode?'<small style="display:block;color:#fcd34d;font-size:.7rem">🪙 '+(Number(player.coins)||0).toLocaleString('pt-BR')+' moedas</small>':'')+'</span>'+
     (checked?'<b style="color:#67e8f9">✓</b>':'')+
    '</label>';
   }).join('');
@@ -2305,6 +2348,29 @@ function renderChallengePlayers(){
    :items.length?'<span>'+items.length+' participante(s)</span>':'';
  }
  updateChallengeSelectedCount();
+}
+async function createBetChallengeForPlayer(recipients){
+ const config=getChallengeConfig();if(!config)return;
+ const players=[...new Set(recipients)].filter(name=>name!==activeProfile);
+ const raw=String($('challengeBetAmount').value||'').trim();
+ const stake=/^\d+$/.test(raw)?Number(raw):0;
+ const player=players.length===1?challengePlayers.find(item=>item.username===players[0]):null;
+ const maxStake=player?Math.min(Number(gameEconomy.coins)||0,Number(player.coins)||0):0;
+ if(players.length!==1){$('challengePlayersStatus').textContent='Escolha apenas uma pessoa para desafiar valendo moedas.';return;}
+ if(!Number.isSafeInteger(stake)||stake<1||stake>maxStake){$('challengePlayersStatus').textContent='Digite um valor inteiro entre 1 e '+maxStake+' moedas. Não use vírgulas.';return;}
+ $('challengePlayersStatus').textContent='Enviando convite com aposta de '+stake+' moedas...';
+ $('challengeStartSelected').disabled=true;
+ try{
+  const result=await apiRequest('/api/challenges',{method:'POST',body:{...config,recipients:players,betMode:true,stake}});
+  challengeCurrent=result.challenge;
+  challengeItems=[challengeCurrent,...challengeItems.filter(item=>item.id!==challengeCurrent.id)];
+  showChallengeSubPanel('challengeHomePanel');
+  await refreshChallengeData();
+  $('challengeListStatus').textContent='Convite enviado. A pessoa precisa aceitar antes de qualquer moeda ser retirada.';
+ }catch(error){
+  $('challengePlayersStatus').textContent='Não foi possível enviar a aposta: '+siteErrorMessage(error);
+  updateChallengeSelectedCount();
+ }
 }
 async function createChallengeForPlayers(recipients){
  const config=getChallengeConfig();
@@ -2366,14 +2432,15 @@ function challengeOtherPlayer(challenge){
  return challengeParticipants(challenge).filter(name=>name!==activeProfile);
 }
 function challengeResultLabel(challenge){
+ if(challenge.status==='pending_acceptance')return challenge.recipient===activeProfile?'🪙 Convite recebido · aguardando sua resposta':'🪙 Aguardando resposta do adversário';
+ if(challenge.status==='accepting')return '🪙 Confirmando a aposta...';
+ if(challenge.status==='rejected')return 'Aposta rejeitada · nenhuma moeda retirada';
  if(challenge.status!=='completed'){
   const total=challengeParticipants(challenge).length;
   const done=Object.keys(challenge.results||{}).length;
   if(challenge.myResult)return 'Sua partida concluída · '+done+'/'+total+' participantes';
   return 'Sua vez de jogar · '+done+'/'+total+' resultados enviados';
  }
- const winners=Array.isArray(challenge.winners)&&challenge.winners.length?challenge.winners:(challenge.winner&&challenge.winner!=='empate'?[challenge.winner]:[]);
- if(winners.length>1)return winners.includes(activeProfile)?'🤝 Empate em primeiro lugar':'🏅 Empate na liderança';
  return challenge.winner===activeProfile?'🏆 Você venceu':'🛡️ Você perdeu';
 }
 function getSeenChallengeResults(){
@@ -2409,15 +2476,41 @@ function renderChallengeList(){
   const others=participants.filter(name=>name!==activeProfile);
   const mine=item.myResult;
   const completed=item.status==='completed';
-  const action=completed?'Ver resultado':(mine?'Aguardando participantes':'Jogar desafio');
-  const disabled=!!mine&&!completed;
   const scores=mine?(mine.score+'/10 pontos'):'Sua partida ainda não foi realizada';
   const side=item.challenger===activeProfile?'Você desafiou':'Desafio recebido';
   const names=others.map(name=>'@'+name).join(', ');
   const level=item.mode==='custom'?'Personalizado · tabuadas '+item.tables.join(', '):'Pré-definido · '+item.levelName;
   const played=Object.keys(item.results||{}).length+'/'+participants.length+' participantes já jogaram';
-  return '<article class="challenge-list-card"><div class="challenge-list-meta"><strong>⚔️ '+escapeHtml(side)+' · '+escapeHtml(names)+'</strong><small>'+escapeHtml(level)+' · '+scores+'</small><small>'+escapeHtml(played)+'</small><span class="challenge-status-pill">'+escapeHtml(challengeResultLabel(item))+'</span></div><button type="button" data-challenge-play="'+item.id+'" '+(disabled?'disabled':'')+'>'+action+'</button></article>';
+  let action='Jogar desafio',disabled=!!mine&&!completed,actions='';
+  if(item.betMode&&item.status==='pending_acceptance'){
+   if(item.recipient===activeProfile){
+    actions='<span class="challenge-list-actions"><button type="button" data-challenge-accept="'+item.id+'">Aceitar</button><button type="button" data-challenge-reject="'+item.id+'" class="challenge-reject">Rejeitar</button></span>';
+   }else{action='Aguardando resposta';disabled=true;}
+  }else if(item.betMode&&item.status==='accepting'){action='Confirmando aposta';disabled=true;}
+  else if(item.status==='rejected'){action='Convite recusado';disabled=true;}
+  else if(completed){action='Ver resultado';disabled=false;}
+  else if(mine){action='Aguardando participantes';disabled=true;}
+  const betInfo=item.betMode?'<small>🪙 Aposta: '+Number(item.stake||0).toLocaleString('pt-BR')+' moedas de cada pessoa · prêmio: '+(Number(item.stake||0)*2).toLocaleString('pt-BR')+' moedas</small>':'';
+  const playButton=actions||(item.status==='rejected'?'<button type="button" disabled>Convite recusado</button>':'<button type="button" data-challenge-play="'+item.id+'" '+(disabled?'disabled':'')+'>'+action+'</button>');
+  return '<article class="challenge-list-card"><div class="challenge-list-meta"><strong>⚔️ '+escapeHtml(side)+' · '+escapeHtml(names)+'</strong><small>'+escapeHtml(level)+' · '+scores+'</small>'+betInfo+'<small>'+escapeHtml(played)+'</small><span class="challenge-status-pill">'+escapeHtml(challengeResultLabel(item))+'</span></div>'+playButton+'</article>';
  }).join('');
+}
+
+async function handleBetChallengeResponse(id,decision){
+ const buttons=$('challengeList').querySelectorAll('[data-challenge-accept="'+id+'"],[data-challenge-reject="'+id+'"]');
+ buttons.forEach(button=>button.disabled=true);
+ $('challengeListStatus').textContent=decision==='accept'?'Confirmando a aposta e verificando os dois saldos...':'Registrando a rejeição do convite...';
+ try{
+  await apiRequest('/api/challenges/'+id+'/respond',{method:'POST',body:{decision}});
+  await refreshChallengeData();
+  if(decision==='accept'){
+   const accepted=challengeItems.find(item=>item.id===id);
+   if(accepted&&accepted.status==='accepted')await startChallengeGame(accepted,'recipient');
+  }else $('challengeListStatus').textContent='Convite rejeitado. Nenhuma moeda foi retirada.';
+ }catch(error){
+  $('challengeListStatus').textContent='Não foi possível responder ao convite: '+siteErrorMessage(error);
+  buttons.forEach(button=>button.disabled=false);
+ }
 }
 async function refreshChallengeData(){
  if(!activeProfile||!cloudTokenReady())return;
@@ -2561,7 +2654,7 @@ async function startChallengeGame(challenge,role){
  $('challengePlayPanel').classList.remove('hidden');
  const opponents=challengeParticipants(challenge).filter(name=>name!==activeProfile);
  $('challengeOpponentTitle').textContent='Você × '+opponents.map(name=>'@'+name).join(', ');
- $('challengePlayMeta').textContent=(challenge.mode==='custom'?'Personalizado':'Nível '+challenge.levelName)+' · Tabuadas '+challenge.tables.join(', ')+' · '+challenge.optionCount+' alternativas · '+challengeParticipants(challenge).length+' participantes';
+ $('challengePlayMeta').textContent=(challenge.mode==='custom'?'Personalizado':'Nível '+challenge.levelName)+' · Tabuadas '+challenge.tables.join(', ')+' · '+challenge.optionCount+' alternativas · '+challengeParticipants(challenge).length+' participantes'+(challenge.betMode?' · 🪙 aposta '+Number(challenge.stake||0).toLocaleString('pt-BR')+' moedas':'');
  const cachedProfiles=challengeParticipants(challenge).map(username=>{
   const cached=challengePlayers.find(player=>player.username===username)||{};
   const local=profilesData[username]||{};
@@ -2650,12 +2743,10 @@ function showChallengeResult(challenge){
  const participants=challengeParticipants(challenge);
  const results=challenge.results||{};
  if(challenge.status==='completed'){
-  const winners=Array.isArray(challenge.winners)&&challenge.winners.length?challenge.winners:(challenge.winner&&challenge.winner!=='empate'?[challenge.winner]:[]);
-  const winner=winners.includes(activeProfile);
-  const draw=winners.length>1;
-  $('challengeResultIcon').textContent=draw?'🤝':(winner?'🏆':'🛡️');
-  $('challengeResultTitle').textContent=draw?(winner?'Você empatou em primeiro lugar!':'Houve empate na liderança.'): (winner?'Você venceu o desafio coletivo!':'Desta vez, outro participante venceu.');
-  $('challengeResultText').textContent=draw?(winner?'Você terminou empatado na liderança.':'Os primeiros colocados empataram; confira a classificação.'):(winner?'Parabéns! Você ficou em primeiro lugar.':'Veja a classificação final do grupo.');
+  const winner=challenge.winner===activeProfile;
+  $('challengeResultIcon').textContent=winner?'🏆':'🛡️';
+  $('challengeResultTitle').textContent=winner?'Você venceu o desafio!':'Desta vez, outro participante venceu.';
+  $('challengeResultText').textContent=winner?'Parabéns! Você ficou em primeiro lugar.':'Veja a classificação final do grupo.';
   const standings=Array.isArray(challenge.standings)?challenge.standings:participants.map(username=>({
    username,score:Number(results[username]?.score)||0,totalMs:Number(results[username]?.totalMs)||0
   })).sort((a,b)=>b.score-a.score||a.totalMs-b.totalMs||a.username.localeCompare(b.username));
@@ -2663,7 +2754,7 @@ function showChallengeResult(challenge){
    '<div class="challenge-score-box '+(item.username===challenge.winner?'winner':'')+'"><strong>#'+(index+1)+' · '+item.score+'/10</strong><small>@'+escapeHtml(item.username)+' · '+formatDuration(item.totalMs)+'</small></div>'
   ).join('');
   $('challengeResultTime').textContent='Sua duração: '+formatDuration(mine?.totalMs||0);
-  $('challengeResultStatus').textContent='O resultado e o histórico foram salvos nos perfis dos participantes.';
+  $('challengeResultStatus').textContent=challenge.betMode?(winner?'Você recebeu '+(Number(challenge.stake||0)*2).toLocaleString('pt-BR')+' moedas, o total da aposta.':'Você perdeu a aposta de '+Number(challenge.stake||0).toLocaleString('pt-BR')+' moedas.'):'O resultado e o histórico foram salvos nos perfis dos participantes.';
  }else if(mine){
   const pending=participants.filter(name=>!results[name]);
   $('challengeResultIcon').textContent='⏳';
@@ -2690,7 +2781,7 @@ function showChallengeResult(challenge){
 }
 async function openChallengeFromList(id){
  const item=challengeItems.find(challenge=>challenge.id===id);
- if(!item)return;
+ if(!item||['pending_acceptance','accepting','rejected'].includes(item.status))return;
  if(item.myResult||item.status==='completed'){
   showChallengeSubPanel('challengeResultPanel');
   showChallengeResult(item);
@@ -3669,9 +3760,13 @@ $('tournamentResultBack').addEventListener('click',()=>{
  showTournamentSubPanel('tournamentHomePanel');
  refreshTournamentDashboard();
 });
-$('chooseCustomChallenge').addEventListener('click',()=>configureChallengeMode('custom'));
-$('choosePresetChallenge').addEventListener('click',()=>configureChallengeMode('preset'));
-$('challengeConfigBack').addEventListener('click',()=>showChallengeSubPanel('challengeHomePanel'));
+$('chooseCustomChallenge').addEventListener('click',()=>{challengeBetMode=false;configureChallengeMode('custom');});
+$('choosePresetChallenge').addEventListener('click',()=>{challengeBetMode=false;configureChallengeMode('preset');});
+$('chooseBetChallenge').addEventListener('click',openBetChallengeOptions);
+$('challengeBetChoiceBack').addEventListener('click',()=>{challengeBetMode=false;showChallengeSubPanel('challengeHomePanel');});
+$('chooseCustomBetChallenge').addEventListener('click',()=>configureChallengeMode('custom'));
+$('choosePresetBetChallenge').addEventListener('click',()=>configureChallengeMode('preset'));
+$('challengeConfigBack').addEventListener('click',()=>showChallengeSubPanel(challengeBetMode?'challengeBetChoicePanel':'challengeHomePanel'));
 $('challengeChoosePlayer').addEventListener('click',loadChallengePlayers);
 $('challengePlayersBack').addEventListener('click',()=>showChallengeSubPanel('challengeConfigPanel'));
 $('challengePlayerSearch').addEventListener('input',()=>{challengePlayerPage=0;renderChallengePlayers();});
@@ -3687,13 +3782,18 @@ $('challengePlayersList').addEventListener('change',event=>{
  if(!input)return;
  const username=input.dataset.challengePlayer;
  if(input.checked){
-  if(selectedChallengePlayers.size>=4){input.checked=false;return;}
+  if(selectedChallengePlayers.size>=(challengeBetMode?1:4)){input.checked=false;return;}
   selectedChallengePlayers.add(username);
  }else selectedChallengePlayers.delete(username);
  renderChallengePlayers();
 });
-$('challengeStartSelected').addEventListener('click',()=>createChallengeForPlayers([...selectedChallengePlayers]));
+$('challengeStartSelected').addEventListener('click',()=>challengeBetMode?createBetChallengeForPlayer([...selectedChallengePlayers]):createChallengeForPlayers([...selectedChallengePlayers]));
+$('challengeBetAmount').addEventListener('input',updateChallengeSelectedCount);
 $('challengeList').addEventListener('click',event=>{
+ const accept=event.target.closest('[data-challenge-accept]');
+ if(accept&&!accept.disabled){handleBetChallengeResponse(accept.dataset.challengeAccept,'accept');return;}
+ const reject=event.target.closest('[data-challenge-reject]');
+ if(reject&&!reject.disabled){handleBetChallengeResponse(reject.dataset.challengeReject,'reject');return;}
  const button=event.target.closest('[data-challenge-play]');
  if(button&&!button.disabled)openChallengeFromList(button.dataset.challengePlay);
 });
