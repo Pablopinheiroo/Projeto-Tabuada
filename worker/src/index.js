@@ -14,7 +14,7 @@ const AVATAR_GIF_COUNT = 12;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
 const CHALLENGE_PLAYER_METADATA_MAX = 45;
-const WORKER_BUILD_ID = "2026-11-09-free-group-ties-monthly-tournament-atomic-rewards";
+const WORKER_BUILD_ID = "2026-11-09-challenge-profile-avatars-live-question-timer";
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
 const CHALLENGE_DIRECTORY = "desafios/partidas";
@@ -1207,6 +1207,36 @@ async function handleApi(request, env, origin) {
     if (route === "/api/challenges" && request.method === "GET") {
       const result = await listChallengesFor(username, env);
       return json(result, 200, origin);
+    }
+
+    const challengePlayersMatch = route.match(/^\/api\/challenges\/([a-f0-9]{32})\/players$/);
+    if (challengePlayersMatch && request.method === "GET") {
+      const file = await readJsonFile(challengeFilePath(challengePlayersMatch[1]), env);
+      const challenge = file?.data;
+      const participants = Array.isArray(challenge?.participants) && challenge.participants.length
+        ? challenge.participants : [challenge?.challenger, challenge?.recipient].filter(Boolean);
+      if (!challenge || !participants.includes(username)) {
+        const error = new Error("Desafio não encontrado para esta conta.");
+        error.status = 404;
+        throw error;
+      }
+      // Lê somente os dados públicos atuais dos participantes: nome e avatar.
+      // São no máximo 1 leitura do desafio + 5 leituras de perfil por chamada.
+      const players = await Promise.all(participants.map(async participant => {
+        try {
+          const record = await readUser(participant, env);
+          const profile = record?.data?.profile && typeof record.data.profile === "object"
+            ? record.data.profile : {};
+          return {
+            username: participant,
+            displayName: String(profile.displayName || participant).slice(0, 24),
+            avatar: validAvatarKey(profile.avatar) ? profile.avatar : "imagem:0"
+          };
+        } catch {
+          return { username: participant, displayName: participant, avatar: "imagem:0" };
+        }
+      }));
+      return json({ players }, 200, origin);
     }
 
     if (route === "/api/challenges" && request.method === "POST") {
