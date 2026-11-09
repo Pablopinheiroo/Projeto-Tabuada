@@ -606,59 +606,67 @@ function finalizeChallengeRecord(challenge) {
 }
 
 async function applyChallengeStats(username, challenge, env) {
-  const file = await readUser(username, env);
-  if (!file) return;
-  const data = file.data;
-  data.profile = data.profile && typeof data.profile === "object" ? data.profile : {};
-  const stats = data.profile.challengeStats && typeof data.profile.challengeStats === "object"
-    ? data.profile.challengeStats : {
-      total: { wins: 0, losses: 0, draws: 0 },
-      custom: { wins: 0, losses: 0, draws: 0 }, levels: {}, processedIds: [], recent: []
-    };
-  stats.total = stats.total || { wins: 0, losses: 0, draws: 0 };
-  stats.custom = stats.custom || { wins: 0, losses: 0, draws: 0 };
-  stats.levels = stats.levels && typeof stats.levels === "object" ? stats.levels : {};
-  stats.processedIds = Array.isArray(stats.processedIds) ? stats.processedIds : [];
-  stats.recent = Array.isArray(stats.recent) ? stats.recent : [];
-  if (stats.processedIds.includes(challenge.id)) return;
-  const participants = Array.isArray(challenge.participants) && challenge.participants.length
-    ? challenge.participants : [challenge.challenger, challenge.recipient].filter(Boolean);
-  const own = challenge.results?.[username];
-  if (!own || !participants.includes(username)) return;
-  const winners = Array.isArray(challenge.winners) && challenge.winners.length
-    ? challenge.winners : (challenge.winner && challenge.winner !== "empate" ? [challenge.winner] : []);
-  const outcome = winners.length > 1
-    ? (winners.includes(username) ? "draw" : "loss")
-    : (challenge.winner === username ? "win" : "loss");
-  const bucket = outcome === "win" ? "wins" : outcome === "loss" ? "losses" : "draws";
-  stats.total[bucket] = (Number(stats.total[bucket]) || 0) + 1;
-  if (challenge.mode === "custom") {
-    stats.custom[bucket] = (Number(stats.custom[bucket]) || 0) + 1;
-  } else {
-    const level = stats.levels[challenge.levelId] || { wins: 0, losses: 0, draws: 0 };
-    level[bucket] = (Number(level[bucket]) || 0) + 1;
-    level.name = challenge.levelName;
-    level.medalEarned = (Number(level.wins) || 0) >= 10;
-    stats.levels[challenge.levelId] = level;
-  }
-  stats.processedIds.push(challenge.id);
-  stats.processedIds = stats.processedIds.slice(-500);
-  stats.recent.unshift({
-    id: challenge.id,
-    opponents: participants.filter(name => name !== username),
-    mode: challenge.mode, levelId: challenge.levelId, levelName: challenge.levelName,
-    outcome, score: own.score, winner: challenge.winner, completedAt: challenge.completedAt
-  });
-  stats.recent = stats.recent.slice(0, 30);
-  data.profile.challengeStats = stats;
-  if (participants.length === 5 && challenge.winner === username) {
-    data.economy = normalizeGameEconomy(data);
-    if (!data.economy.achievements.challenge_four) {
-      data.economy.achievements.challenge_four = new Date().toISOString();
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const file = await readUser(username, env);
+    if (!file) return;
+    const data = file.data;
+    data.profile = data.profile && typeof data.profile === "object" ? data.profile : {};
+    const stats = data.profile.challengeStats && typeof data.profile.challengeStats === "object"
+      ? data.profile.challengeStats : {
+        total: { wins: 0, losses: 0, draws: 0 },
+        custom: { wins: 0, losses: 0, draws: 0 }, levels: {}, processedIds: [], recent: []
+      };
+    stats.total = stats.total || { wins: 0, losses: 0, draws: 0 };
+    stats.custom = stats.custom || { wins: 0, losses: 0, draws: 0 };
+    stats.levels = stats.levels && typeof stats.levels === "object" ? stats.levels : {};
+    stats.processedIds = Array.isArray(stats.processedIds) ? stats.processedIds : [];
+    stats.recent = Array.isArray(stats.recent) ? stats.recent : [];
+    if (stats.processedIds.includes(challenge.id)) return;
+
+    const participants = Array.isArray(challenge.participants) && challenge.participants.length
+      ? challenge.participants : [challenge.challenger, challenge.recipient].filter(Boolean);
+    const own = challenge.results?.[username];
+    if (!own || !participants.includes(username)) return;
+    const winners = Array.isArray(challenge.winners) && challenge.winners.length
+      ? challenge.winners : (challenge.winner && challenge.winner !== "empate" ? [challenge.winner] : []);
+    const outcome = winners.length > 1
+      ? (winners.includes(username) ? "draw" : "loss")
+      : (challenge.winner === username ? "win" : "loss");
+    const bucket = outcome === "win" ? "wins" : outcome === "loss" ? "losses" : "draws";
+    stats.total[bucket] = (Number(stats.total[bucket]) || 0) + 1;
+    if (challenge.mode === "custom") {
+      stats.custom[bucket] = (Number(stats.custom[bucket]) || 0) + 1;
+    } else {
+      const level = stats.levels[challenge.levelId] || { wins: 0, losses: 0, draws: 0 };
+      level[bucket] = (Number(level[bucket]) || 0) + 1;
+      level.name = challenge.levelName;
+      level.medalEarned = (Number(level.wins) || 0) >= 10;
+      stats.levels[challenge.levelId] = level;
+    }
+    stats.processedIds.push(challenge.id);
+    stats.processedIds = stats.processedIds.slice(-500);
+    stats.recent.unshift({
+      id: challenge.id,
+      opponents: participants.filter(name => name !== username),
+      mode: challenge.mode, levelId: challenge.levelId, levelName: challenge.levelName,
+      outcome, score: own.score, winner: challenge.winner, completedAt: challenge.completedAt
+    });
+    stats.recent = stats.recent.slice(0, 30);
+    data.profile.challengeStats = stats;
+    if (participants.length === 5 && challenge.winner === username) {
+      data.economy = normalizeGameEconomy(data);
+      if (!data.economy.achievements.challenge_four) {
+        data.economy.achievements.challenge_four = new Date().toISOString();
+      }
+    }
+    data.updatedAt = new Date().toISOString();
+    try {
+      await writeUser(username, data, file.sha, env);
+      return;
+    } catch (error) {
+      if ((error.status !== 409 && error.status !== 422) || attempt === 3) throw error;
     }
   }
-  data.updatedAt = new Date().toISOString();
-  await writeUser(username, data, file.sha, env);
 }
 
 async function submitChallengeResult(id, body, username, env) {
@@ -714,8 +722,7 @@ async function submitChallengeResult(id, body, username, env) {
     answerLog.push({ correct, timedOut: !inTime || value === null, elapsedMs: Math.round(elapsed) });
   }
 
-  challenge.results = challenge.results || {};
-  challenge.results[username] = {
+  const proposedResult = {
     score,
     correct: score,
     wrong: 10 - score,
@@ -724,31 +731,40 @@ async function submitChallengeResult(id, body, username, env) {
     submittedAt: new Date().toISOString()
   };
 
-  const bothSubmitted = finalizeChallengeRecord(challenge);
-  let persistedChallenge = challenge;
-  let sha;
-  try {
-    sha = await writeJsonFile(
-      challengeFilePath(id), persistedChallenge, file.sha, env,
-      "Registrar resultado do desafio " + id + " - " + username
-    );
-  } catch (error) {
-    // Se os dois participantes terminarem quase juntos, relê o arquivo para não perder um resultado.
-    if (error.status !== 409) throw error;
-    const latest = await readJsonFile(challengeFilePath(id), env);
-    if (!latest) throw error;
+  let persistedChallenge = null;
+  let sha = null;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const latest = attempt === 0 ? file : await readJsonFile(challengeFilePath(id), env);
+    if (!latest) {
+      const error = new Error("Este desafio não foi encontrado.");
+      error.status = 404;
+      throw error;
+    }
+    if (latest.data.results?.[username]) {
+      persistedChallenge = latest.data;
+      sha = latest.sha;
+      break;
+    }
+
     persistedChallenge = latest.data;
-    if (!persistedChallenge.results?.[username]) {
-      persistedChallenge.results = persistedChallenge.results || {};
-      persistedChallenge.results[username] = challenge.results[username];
-      finalizeChallengeRecord(persistedChallenge);
+    persistedChallenge.results = persistedChallenge.results || {};
+    persistedChallenge.results[username] = proposedResult;
+    finalizeChallengeRecord(persistedChallenge);
+    try {
       sha = await writeJsonFile(
         challengeFilePath(id), persistedChallenge, latest.sha, env,
-        "Conciliar resultados simultâneos do desafio " + id
+        "Registrar resultado do desafio " + id + " - " + username
       );
-    } else {
-      sha = latest.sha;
+      break;
+    } catch (error) {
+      if ((error.status !== 409 && error.status !== 422) || attempt === 4) throw error;
+      persistedChallenge = null;
     }
+  }
+  if (!persistedChallenge) {
+    const error = new Error("Não foi possível salvar seu resultado. Atualize a lista e tente novamente.");
+    error.status = 409;
+    throw error;
   }
   const isCompleted = persistedChallenge.status === "completed";
   if (isCompleted) {
@@ -946,7 +962,7 @@ async function updateTournamentBoard(month, difficulty, username, result, env) {
       const sha = await writeJsonFile(path, data, current.sha, env, "Registrar resultado mensal de " + username);
       return { board: data, sha, alreadySubmitted: false };
     } catch (error) {
-      if (error.status !== 409 || attempt === 2) throw error;
+      if ((error.status !== 409 && error.status !== 422) || attempt === 2) throw error;
     }
   }
   throw new Error("Não foi possível registrar o resultado do torneio.");
