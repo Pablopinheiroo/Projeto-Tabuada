@@ -609,6 +609,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .training-global-mode select{width:100%;max-width:280px;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#26364d;font:inherit;font-size:.82rem}
 .training-global-mode p{margin:0;color:#718096;font-size:.7rem;line-height:1.4;max-width:230px}
 .table-row .mode:disabled{opacity:.45;background:#e8edf4;color:#8995a5;cursor:not-allowed}
+.table-row.global-order{grid-template-columns:minmax(0,1fr)}
 .table-row.global-order .mode{display:none!important}
 @media(max-width:560px){.training-global-mode{align-items:stretch;flex-direction:column}.training-global-mode select{max-width:none}.training-global-mode p{max-width:none}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
@@ -2516,13 +2517,7 @@ async function startChallengeGame(challenge,role){
   const local=profilesData[username]||{};
   return {username,displayName:cached.displayName||local.displayName||username,avatar:cached.avatar||local.avatar||'imagem:0'};
  });
- renderChallengeParticipantProfiles(challenge,cachedProfiles);
- try{
-  const fresh=await apiRequest('/api/challenges/'+challenge.id+'/players');
-  if(Array.isArray(fresh.players))renderChallengeParticipantProfiles(challenge,fresh.players);
- }catch(error){
-  if(error.sessionExpired)return;
- }
+ $('challengeParticipantProfiles').innerHTML='<small class="hint">Sincronizando as fotos de perfil...</small>';
  const track=CHALLENGE_MUSIC[challenge.musicTrack]||CHALLENGE_MUSIC[0];
  $('challengeMusicTitle').textContent='🎵 '+track.name;
  $('challengeMusicRule').textContent=role==='recipient'?'Música escolhida pelo desafiante. Ela está bloqueada para você.':'Você escolheu esta música. Todos os adversários ouvirão a mesma trilha.';
@@ -2536,6 +2531,14 @@ async function startChallengeGame(challenge,role){
  startChallengeMusic(challenge.musicTrack);
  challengeOverallTimer=setInterval(updateChallengeClocks,100);
  renderChallengeQuestion();
+ try{
+  const fresh=await apiRequest('/api/challenges/'+challenge.id+'/players');
+  if(Array.isArray(fresh.players))renderChallengeParticipantProfiles(challenge,fresh.players);
+  else renderChallengeParticipantProfiles(challenge,cachedProfiles);
+ }catch(error){
+  if(error.sessionExpired)return;
+  renderChallengeParticipantProfiles(challenge,cachedProfiles);
+ }
 }
 function submitChallengeChoice(value){
  if(challengeQuestionLocked||!challengeCurrent)return;
