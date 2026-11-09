@@ -448,8 +448,9 @@ async function testViewport(name, viewport, mobile = false) {
     name+": o botão de redefinir não retornou o volume do modo jogo a 75%.");
   check(await page.evaluate(()=>Math.abs(gameSfxVolumeLevel-.75)<.01),
     name+": a redefinição não aplicou 75% ao áudio do modo jogo.");
+  const gamePreviewCallsBeforeSecondAdjust=await page.evaluate(()=>window.__gamePreviewCalls);
   await page.locator("#profileGameSfxVolume").evaluate(element=>{element.value="45";element.dispatchEvent(new Event("input",{bubbles:true}));});
-  await page.waitForFunction(()=>window.__gamePreviewCalls>=8,null,{timeout:4000});
+  await page.waitForFunction(previous=>window.__gamePreviewCalls>previous,gamePreviewCallsBeforeSecondAdjust,{timeout:4000});
   await page.locator("#saveProfileAudioPreferences").click();
   await page.waitForFunction(()=>window.__audioPreferenceWrites===1,null,{timeout:5000});
   const savedAudioProfile=await page.evaluate(()=>({
