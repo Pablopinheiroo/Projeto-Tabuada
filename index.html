@@ -942,8 +942,9 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   <div class="wallet-grid challenge-profile-summary">
    <div class="wallet-stat"><span>🏆 VITÓRIAS</span><strong id="profileChallengeWins">0</strong></div>
    <div class="wallet-stat"><span>🛡️ DERROTAS</span><strong id="profileChallengeLosses">0</strong></div>
+   <div class="wallet-stat"><span>🤝 EMPATES</span><strong id="profileChallengeDraws">0</strong></div>
      </div>
-  <p class="economy-rules">Duelo personalizado conta nas vitórias e derrotas, mas não concede medalhas. Cada nível pré-definido tem uma medalha própria, conquistada ao atingir 10 vitórias naquele nível. Em caso de pontuação igual, vence quem terminar mais rápido.</p>
+  <p class="economy-rules">Duelo personalizado conta nas vitórias, derrotas e empates, mas não concede medalhas. Cada nível pré-definido tem uma medalha própria, conquistada ao atingir 10 vitórias naquele nível. Com a mesma pontuação, vence quem terminar mais rápido; se a pontuação e o tempo forem iguais, o resultado é empate.</p>
   <div id="challengeMedalShelf" class="achievement-shelf"></div>
   <h3 class="achievement-title">🏆 Vitrine de conquistas <span id="achievementCount">0/21</span></h3>
   <div id="achievementShelf" class="achievement-shelf"></div>
@@ -1719,6 +1720,7 @@ function renderChallengeProfileStats(){
  }).join('');
  if($('profileChallengeWins'))$('profileChallengeWins').textContent=String(Number(total.wins)||0);
  if($('profileChallengeLosses'))$('profileChallengeLosses').textContent=String(Number(total.losses)||0);
+  if($('profileChallengeDraws'))$('profileChallengeDraws').textContent=String(Number(total.draws)||0);
  if($('challengeMedalShelf'))$('challengeMedalShelf').innerHTML=medals;
  const earned=CHALLENGE_PRESETS_UI.filter(level=>(Number(levels[level.id]?.wins)||0)>=10).length;
  if($('challengeMedalCount'))$('challengeMedalCount').textContent=earned+'/'+CHALLENGE_PRESETS_UI.length+' medalhas';
@@ -1735,7 +1737,6 @@ function renderChallengeProfileStats(){
 
 
 function challengeMedalIcon(id){return renderBadgeIcon('medal:'+id);}
-function challengeMedalIcon(id){return CHALLENGE_MEDAL_EMBLEMS[id]||'🏆';}
 function featuredAwardInfo(id,source={}){
  if(typeof id!=='string')return null;
  const [kind,key]=id.split(':');
@@ -2225,7 +2226,8 @@ function communityStatsFromRecord(record){
   titles,medals,
   challengeWins:Number(record.challengeWins??total.wins)||0,
   challengeLosses:Number(record.challengeLosses??total.losses)||0,
-  challengeTotal:(Number(record.challengeTotal??((Number(record.challengeWins??total.wins)||0)+(Number(record.challengeLosses??total.losses)||0)))||0),
+  challengeDraws:Number(record.challengeDraws??total.draws)||0,
+  challengeTotal:(Number(record.challengeTotal??((Number(record.challengeWins??total.wins)||0)+(Number(record.challengeLosses??total.losses)||0)+(Number(record.challengeDraws??total.draws)||0)))||0),
   tournamentFrame:record.tournamentFrame||profile.tournamentFrame||null,
   coins:Number(record.coins??economy.coins)||0,
   totalEarned:Number(record.totalEarned??economy.totalEarned)||0,
@@ -2288,7 +2290,7 @@ async function renderCommunityRanking(){
       '<div class="community-rank-metric"><strong>'+formatDuration(user.timeMs)+'</strong><small>tempo estudado</small></div>'+
       '<div class="community-rank-metric"><strong>'+user.achievementCount.toLocaleString('pt-BR')+'</strong><small>conquistas</small></div>'+
      '</div>'+
-     '<div class="community-profile-detail-section"><span class="community-profile-detail-title">⚔️ DESAFIOS</span><div class="community-profile-detail-chips"><span class="community-rank-chip">'+user.challengeTotal+' partidas</span><span class="community-rank-chip">🏆 '+user.challengeWins+' vitórias</span><span class="community-rank-chip">🛡️ '+user.challengeLosses+' derrotas</span></div></div>'+
+     '<div class="community-profile-detail-section"><span class="community-profile-detail-title">⚔️ DESAFIOS</span><div class="community-profile-detail-chips"><span class="community-rank-chip">'+user.challengeTotal+' partidas</span><span class="community-rank-chip">🏆 '+user.challengeWins+' vitórias</span><span class="community-rank-chip">🛡️ '+user.challengeLosses+' derrotas</span><span class="community-rank-chip">🤝 '+user.challengeDraws+' empates</span></div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">⭐ DESTAQUES ESCOLHIDOS</span><div class="community-profile-detail-chips">'+(featured||'<span class="community-profile-empty">Nenhum destaque selecionado.</span>')+'</div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏅 MEDALHAS DE NÍVEL</span><div class="community-profile-detail-chips">'+(medals||'<span class="community-profile-empty">Ainda não conquistou medalhas de nível.</span>')+'</div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏆 PREMIAÇÕES MENSAIS</span><div class="community-profile-detail-chips">'+(awards||'<span class="community-profile-empty">Nenhuma premiação mensal registrada.</span>')+'</div></div>'+
@@ -2966,17 +2968,21 @@ function challengeOtherPlayer(challenge){
  return challengeParticipants(challenge).filter(name=>name!==activeProfile);
 }
 function challengeResultLabel(challenge){
- if(challenge.status==='pending_acceptance')return challenge.recipient===activeProfile?'🪙 Convite recebido · aguardando sua resposta':'🪙 Aguardando resposta do adversário';
- if(challenge.status==='accepting')return '🪙 Confirmando a aposta...';
- if(challenge.status==='rejected')return 'Aposta rejeitada · nenhuma moeda retirada';
- if(challenge.status!=='completed'){
-  const total=challengeParticipants(challenge).length;
-  const done=Object.keys(challenge.results||{}).length;
-  if(challenge.myResult)return 'Sua partida concluída · '+done+'/'+total+' participantes';
-  return 'Sua vez de jogar · '+done+'/'+total+' resultados enviados';
- }
- return challenge.winner===activeProfile?'🏆 Você venceu':'🛡️ Você perdeu';
+  if(challenge.status==='pending_acceptance')return challenge.recipient===activeProfile?'🪙 Convite recebido · aguardando sua resposta':'🪙 Aguardando resposta do adversário';
+  if(challenge.status==='accepting')return '🪙 Confirmando a aposta...';
+  if(challenge.status==='rejected')return 'Aposta rejeitada · nenhuma moeda retirada';
+  if(challenge.status!=='completed'){
+   const total=challengeParticipants(challenge).length;
+   const done=Object.keys(challenge.results||{}).length;
+   if(challenge.myResult)return 'Sua partida concluída · '+done+'/'+total+' participantes';
+   return 'Sua vez de jogar · '+done+'/'+total+' resultados enviados';
+  }
+  const winners=Array.isArray(challenge.winners)?challenge.winners:[];
+  if(challenge.winner==='empate'||winners.length>1)return winners.includes(activeProfile)?'🤝 Você empatou':'Desafio empatado';
+  return challenge.winner===activeProfile?'🏆 Você venceu':'🛡️ Você perdeu';
 }
+
+
 function getSeenChallengeResults(){
  try{
   const data=JSON.parse(localStorage.getItem(CHALLENGE_SEEN_KEY)||'{}');
@@ -3011,7 +3017,7 @@ function renderChallengeList(){
   const done=participants.filter(name=>!!results[name]).length,played=done+'/'+participants.length+' participantes já jogaram';
   const provisional=participants.map(username=>{const result=results[username];return {username,played:!!result,score:Math.max(0,Number(result?.score)||0),totalMs:Math.max(0,Number(result?.totalMs)||0),submittedAt:result?.submittedAt||''};})
    .sort((a,b)=>{if(a.played!==b.played)return a.played?-1:1;return b.score-a.score||a.totalMs-b.totalMs||String(a.submittedAt).localeCompare(String(b.submittedAt))||a.username.localeCompare(b.username);});
-  const rows=provisional.map((entry,index)=>'<div class="challenge-provisional-row '+(entry.played?'played':'pending')+'"><strong>'+(entry.played?'#'+(index+1):'—')+'</strong><span>@'+escapeHtml(entry.username)+'</span><b>'+(entry.played?entry.score+'/10':'Aguardando')+'</b><small>'+(entry.played?formatDuration(entry.totalMs):'')+'</small></div>').join('');
+  const rows=provisional.map((entry,index)=>{const previous=provisional[index-1];const position=entry.played&&previous?.played&&entry.score===previous.score&&entry.totalMs===previous.totalMs?previous.position:index+1;entry.position=position;return '<div class="challenge-provisional-row '+(entry.played?'played':'pending')+'"><strong>'+(entry.played?'#'+position:'—')+'</strong><span>@'+escapeHtml(entry.username)+'</span><b>'+(entry.played?entry.score+'/10':'Aguardando')+'</b><small>'+(entry.played?formatDuration(entry.totalMs):'')+'</small></div>';}).join('');
   let action='Jogar desafio',disabled=!!mine&&!completed,actions='';
   if(item.betMode&&item.status==='pending_acceptance'){
    if(item.recipient===activeProfile)actions='<span class="challenge-list-actions"><button type="button" data-challenge-accept="'+item.id+'">Aceitar</button><button type="button" data-challenge-reject="'+item.id+'" class="challenge-reject">Rejeitar</button></span>';
@@ -3281,49 +3287,60 @@ async function finishChallengeMatch(){
  }
 }
 function showChallengeResult(challenge){
- if(!challenge)return;
- challengeCurrent=challenge;
- if(challenge.status==='completed'&&challenge.myResult)markChallengeResultSeen(challenge.id);
- const mine=challenge.myResult;
- const participants=challengeParticipants(challenge);
- const results=challenge.results||{};
- if(challenge.status==='completed'){
-  const winner=challenge.winner===activeProfile;
-  $('challengeResultIcon').textContent=winner?'🏆':'🛡️';
-  $('challengeResultTitle').textContent=winner?'Você venceu o desafio!':'Desta vez, outro participante venceu.';
-  $('challengeResultText').textContent=winner?'Parabéns! Você ficou em primeiro lugar.':'Veja a classificação final do grupo.';
-  const standings=Array.isArray(challenge.standings)?challenge.standings:participants.map(username=>({
-   username,score:Number(results[username]?.score)||0,totalMs:Number(results[username]?.totalMs)||0
-  })).sort((a,b)=>b.score-a.score||a.totalMs-b.totalMs||a.username.localeCompare(b.username));
-  $('challengeResultScores').innerHTML=standings.map((item,index)=>
-   '<div class="challenge-score-box '+(item.username===challenge.winner?'winner':'')+'"><strong>#'+(index+1)+' · '+item.score+'/10</strong><small>@'+escapeHtml(item.username)+' · '+formatDuration(item.totalMs)+'</small></div>'
-  ).join('');
-  $('challengeResultTime').textContent='Sua duração: '+formatDuration(mine?.totalMs||0);
-  $('challengeResultStatus').textContent=challenge.betMode?(challenge.betPaid?(winner?'Você recebeu '+(Number(challenge.stake||0)*2).toLocaleString('pt-BR')+' moedas, o total da aposta.':'Você perdeu a aposta de '+Number(challenge.stake||0).toLocaleString('pt-BR')+' moedas.'):'Resultado salvo. O sistema está confirmando o pagamento da aposta; volte à lista para atualizar.'):'O resultado e o histórico foram salvos nos perfis dos participantes.';
- }else if(mine){
-  const pending=participants.filter(name=>!results[name]);
-  $('challengeResultIcon').textContent='⏳';
-  $('challengeResultTitle').textContent='Pontuação registrada!';
-  $('challengeResultText').textContent='Você fez '+mine.score+' ponto(s). Ainda falta(m) '+pending.length+' participante(s): '+pending.map(name=>'@'+name).join(', ')+'.';
-  $('challengeResultScores').innerHTML=participants.map(name=>{
-   const result=results[name];
-   return '<div class="challenge-score-box"><strong>'+(result?result.score+'/10':'—')+'</strong><small>@'+escapeHtml(name)+(result?' · concluído':' · aguardando')+'</small></div>';
-  }).join('');
-  $('challengeResultTime').textContent='Seu tempo: '+formatDuration(mine.totalMs);
-  $('challengeResultStatus').textContent='A vitória e as medalhas só serão contabilizadas depois que todos jogarem.';
- }else{
-  $('challengeResultIcon').textContent='⚔️';
-  $('challengeResultTitle').textContent='Desafio disponível';
-  $('challengeResultText').textContent='Sua vez de jogar contra '+participants.filter(name=>name!==activeProfile).map(name=>'@'+name).join(', ')+'.';
-  $('challengeResultScores').innerHTML='';
-  $('challengeResultTime').textContent='10 questões · 5 segundos por questão';
-  $('challengeResultStatus').textContent='Volte à lista e escolha Jogar desafio.';
- }
- $('challengeResultPanel').classList.remove('hidden');
- $('challengePlayPanel').classList.add('hidden');
- renderChallengeList();
- updateChallengeBadge();
+  if(!challenge)return;
+  challengeCurrent=challenge;
+  if(challenge.status==='completed'&&challenge.myResult)markChallengeResultSeen(challenge.id);
+  const mine=challenge.myResult;
+  const participants=challengeParticipants(challenge);
+  const results=challenge.results||{};
+  if(challenge.status==='completed'){
+   const standings=Array.isArray(challenge.standings)?challenge.standings:participants.map(username=>({
+    username,score:Number(results[username]?.score)||0,totalMs:Number(results[username]?.totalMs)||0,submittedAt:results[username]?.submittedAt||''
+   })).sort((a,b)=>b.score-a.score||a.totalMs-b.totalMs||String(a.submittedAt).localeCompare(String(b.submittedAt))||a.username.localeCompare(b.username));
+   const first=standings[0];
+   const tiedAtTop=first?standings.filter(item=>item.score===first.score&&item.totalMs===first.totalMs).map(item=>item.username):[];
+   const winners=Array.isArray(challenge.winners)&&challenge.winners.length?challenge.winners:
+    challenge.winner==='empate'?tiedAtTop:challenge.winner?[challenge.winner]:[];
+   const draw=winners.length>1||challenge.winner==='empate';
+   const winner=winners.includes(activeProfile);
+   $('challengeResultIcon').textContent=draw?'🤝':winner?'🏆':'🛡️';
+   $('challengeResultTitle').textContent=draw?(winner?'Você empatou no desafio!':'O desafio terminou empatado!'):(winner?'Você venceu o desafio!':'Desta vez, outro participante venceu.');
+   $('challengeResultText').textContent=draw?(winner?'Sua pontuação e seu tempo foram iguais aos de outro participante.':'Mais de um participante terminou com a mesma pontuação e o mesmo tempo.'):(winner?'Parabéns! Você ficou em primeiro lugar.':'Veja a classificação final do grupo.');
+   let place=0,previous=null;
+   $('challengeResultScores').innerHTML=standings.map((item,index)=>{
+    if(!previous||item.score!==previous.score||item.totalMs!==previous.totalMs)place=index+1;
+    previous=item;
+    const isWinner=winners.includes(item.username);
+    return '<div class="challenge-score-box '+(isWinner?'winner':'')+'"><strong>#'+place+' · '+item.score+'/10</strong><small>@'+escapeHtml(item.username)+' · '+formatDuration(item.totalMs)+(isWinner&&draw?' · Empate':'')+'</small></div>';
+   }).join('');
+   $('challengeResultTime').textContent='Sua duração: '+formatDuration(mine?.totalMs||0);
+   $('challengeResultStatus').textContent=challenge.betMode?(challenge.betPaid?(draw?'Houve empate. As moedas apostadas foram devolvidas aos dois participantes.':winner?'Você recebeu '+(Number(challenge.stake||0)*2).toLocaleString('pt-BR')+' moedas, o total da aposta.':'Você perdeu a aposta de '+Number(challenge.stake||0).toLocaleString('pt-BR')+' moedas.'):'Resultado salvo. O sistema está confirmando o pagamento ou a devolução da aposta; volte à lista para atualizar.'):'O resultado e o histórico foram salvos nos perfis dos participantes.';
+  }else if(mine){
+   const pending=participants.filter(name=>!results[name]);
+   $('challengeResultIcon').textContent='⏳';
+   $('challengeResultTitle').textContent='Pontuação registrada!';
+   $('challengeResultText').textContent='Você fez '+mine.score+' ponto(s). Ainda falta(m) '+pending.length+' participante(s): '+pending.map(name=>'@'+name).join(', ')+'.';
+   $('challengeResultScores').innerHTML=participants.map(name=>{
+    const result=results[name];
+    return '<div class="challenge-score-box"><strong>'+(result?result.score+'/10':'—')+'</strong><small>@'+escapeHtml(name)+(result?' · concluído':' · aguardando')+'</small></div>';
+   }).join('');
+   $('challengeResultTime').textContent='Seu tempo: '+formatDuration(mine.totalMs);
+   $('challengeResultStatus').textContent='A vitória, os empates e as medalhas só serão contabilizados depois que todos jogarem.';
+  }else{
+   $('challengeResultIcon').textContent='⚔️';
+   $('challengeResultTitle').textContent='Desafio disponível';
+   $('challengeResultText').textContent='Sua vez de jogar contra '+participants.filter(name=>name!==activeProfile).map(name=>'@'+name).join(', ')+'.';
+   $('challengeResultScores').innerHTML='';
+   $('challengeResultTime').textContent='10 questões · 5 segundos por questão';
+   $('challengeResultStatus').textContent='Volte à lista e escolha Jogar desafio.';
+  }
+  $('challengeResultPanel').classList.remove('hidden');
+  $('challengePlayPanel').classList.add('hidden');
+  renderChallengeList();
+  updateChallengeBadge();
 }
+
+
 async function openChallengeFromList(id){
  const item=challengeItems.find(challenge=>challenge.id===id);
  if(!item||['pending_acceptance','accepting','rejected'].includes(item.status))return;
