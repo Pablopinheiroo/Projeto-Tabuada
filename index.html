@@ -860,6 +860,14 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 @keyframes celebratePop{from{transform:scale(.5) rotate(-15deg)}to{transform:scale(1) rotate(0)}}
 @media(max-width:720px){.review-training-card{grid-template-columns:1fr}.review-training-button{width:100%}.judge{grid-template-columns:1fr}}
 
+.badge-art{display:block;width:100%;height:100%;max-width:46px;max-height:46px;overflow:visible;filter:drop-shadow(0 2px 5px #0007)}
+.achievement-card .achievement-icon{padding:2px}
+.achievement-card .achievement-icon .badge-art{width:100%;height:100%;max-width:42px;max-height:42px}
+.featured-award-option .featured-award-icon{display:grid;place-items:center;flex:0 0 30px;width:30px;height:34px}
+.featured-award-option .featured-award-icon .badge-art{width:30px;height:30px}
+.profile-featured-badge .badge-art,.community-featured-badge .badge-art{width:22px;height:22px;flex:0 0 22px}
+.community-rank-chip .badge-art{display:inline-block;vertical-align:middle;width:20px;height:20px;margin-right:3px}
+
 </style>
 </head>
 <body>
@@ -936,7 +944,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
      </div>
   <p class="economy-rules">Duelo personalizado conta nas vitórias e derrotas, mas não concede medalhas. Cada nível pré-definido tem uma medalha própria, conquistada ao atingir 10 vitórias naquele nível. Em caso de pontuação igual, vence quem terminar mais rápido.</p>
   <div id="challengeMedalShelf" class="achievement-shelf"></div>
-  <h3 class="achievement-title">🏆 Vitrine de conquistas <span id="achievementCount">0/13</span></h3>
+  <h3 class="achievement-title">🏆 Vitrine de conquistas <span id="achievementCount">0/21</span></h3>
   <div id="achievementShelf" class="achievement-shelf"></div>
   <h3 class="achievement-title">🏆 Premiações do torneio mensal</h3>
   <div id="tournamentAwardShelf" class="achievement-shelf"></div>
@@ -983,7 +991,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 <div class="profile-box">
  <div class="profile-box-heading"><span>👤 SEU PERFIL</span><span class="profile-box-badge">PROGRESSO SALVO</span></div>
  <div class="profile-identity"><img id="currentAvatar" alt="Avatar do perfil"><div class="profile-name-wrap"><strong id="currentDisplayName"></strong><small>Conta: <span id="currentUsername"></span></small></div></div>
- <div class="wallet-inline"><span><i class="coin-symbol" aria-hidden="true"></i> Moedas: <strong id="currentCoins">0</strong></span><span>🏆 Conquistas: <strong id="currentAchievementCount">0/13</strong></span></div>
+ <div class="wallet-inline"><span><i class="coin-symbol" aria-hidden="true"></i> Moedas: <strong id="currentCoins">0</strong></span><span>🏆 Conquistas: <strong id="currentAchievementCount">0/21</strong></span></div>
  <input id="profileName" type="hidden">
  <div class="profile-actions">
   <button id="openProfile" class="music-button" type="button">👤 Meu perfil</button>
@@ -1251,7 +1259,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  </div>
 </div>
 <div class="community-ranking">
- <div class="community-heading"><div><span class="music-kicker">🏆 Comunidade</span><h2>Ranking dos participantes</h2><p class="hint" style="margin:5px 0 0">Veja o tempo de estudo e as contas que mais exigem prática.</p></div>
+ <div class="community-heading"><div><span class="music-kicker">👥 Comunidade</span><h2>Ranking dos participantes</h2><p class="hint" style="margin:5px 0 0">Veja o tempo de estudo e as contas que mais exigem prática.</p></div>
   <label class="ranking-sort">Ordenar por<select id="communitySort"><option value="time">Mais tempo estudado</option><option value="correct">Mais acertos</option><option value="wrong">Mais erros</option></select></label>
  </div>
  <div id="communityRanking" class="community-list"></div>
@@ -1606,6 +1614,54 @@ const ACHIEVEMENT_DEFINITIONS=[
  {id:'tournament_perfect50',icon:'💯',title:'50 de 50',description:'Acerte as cinquenta questões de um torneio mensal.'},
  {id:'learning_from_errors',icon:'🎓',title:'Aprendendo com os erros',description:'Conclua um ciclo de treino personalizado e transforme suas dificuldades em domínio.'}
 ];
+
+const BADGE_ART={
+ 'achievement:training_first':['#14532d','#86efac','<path d="M32 46V22m0 12c-10 0-15-5-15-13 9 0 15 4 15 13Zm0-6c0-9 5-14 14-15 0 9-4 15-14 15Z" fill="#86efac" stroke="#ecfdf5" stroke-width="2.4"/>'],
+ 'achievement:training_5':['#7c2d12','#fdba74','<path d="M34 10c3 9-2 11 4 18 2-5 5-7 7-9 8 15 4 30-7 34-12 5-24-3-22-17 1-7 6-12 11-17 0 8 2 11 5 13 4-7 3-13 2-22Z" fill="#fb923c" stroke="#ffedd5" stroke-width="2.2"/><path d="M32 33c5 6 7 10 4 15-3 4-10 2-10-3 0-4 3-8 6-12Z" fill="#fff7ed"/>'],
+ 'achievement:training_25':['#1e3a8a','#93c5fd','<path d="M15 26h34M20 18v16m-5-12v8m29-12v16m5-12v8" stroke="#dbeafe" stroke-width="4" stroke-linecap="round"/><circle cx="32" cy="26" r="6" fill="#60a5fa" stroke="#eff6ff" stroke-width="2"/>'],
+ 'achievement:adventure_first':['#164e63','#67e8f9','<circle cx="32" cy="30" r="17" fill="none" stroke="#cffafe" stroke-width="2.5"/><path d="m39 19-5 14-14 7 5-14 14-7Z" fill="#67e8f9" stroke="#ecfeff" stroke-width="2"/>'],
+ 'achievement:adventure_5':['#1d4ed8','#93c5fd','<path d="m13 19 13-5 12 5 13-5v31l-13 5-12-5-13 5V19Z" fill="#2563eb" stroke="#dbeafe" stroke-width="2.2"/><path d="M26 14v31m12-26v31M18 25l5 4m18-2 6-5" stroke="#dbeafe" stroke-width="2.2"/>'],
+ 'achievement:adventure_13':['#713f12','#fcd34d','<path d="m10 45 15-23 8 11 7-17 14 29H10Z" fill="#d97706" stroke="#fef3c7" stroke-width="2.3"/><path d="m20 31 5 7 4-3 4 8m7-20 3 8 4-2" fill="none" stroke="#fff7ed" stroke-width="2"/>'],
+ 'achievement:adventure_26':['#6b21a8','#e9d5ff','<path d="m13 20 12 9 7-16 7 16 12-9-4 26H17l-4-26Z" fill="#c084fc" stroke="#f3e8ff" stroke-width="2.4"/><path d="M17 50h30" stroke="#f3e8ff" stroke-width="3"/><circle cx="13" cy="18" r="3" fill="#fde68a"/><circle cx="32" cy="11" r="3" fill="#fde68a"/><circle cx="51" cy="18" r="3" fill="#fde68a"/>'],
+ 'achievement:perfect_first':['#854d0e','#fde68a','<circle cx="32" cy="30" r="18" fill="none" stroke="#fef3c7" stroke-width="3"/><circle cx="32" cy="30" r="10" fill="none" stroke="#fbbf24" stroke-width="3"/><circle cx="32" cy="30" r="3.5" fill="#fff7ed"/><path d="m45 17 7-7m-7 7 1 7" stroke="#fff7ed" stroke-width="2.6"/>'],
+ 'achievement:perfect_5':['#075985','#bae6fd','<path d="m32 10 19 17-19 27-19-27 19-17Z" fill="#38bdf8" stroke="#e0f2fe" stroke-width="2.5"/><path d="m32 10 0 44m-19-27h38M32 10l-8 17 8 27 8-27-8-17Z" fill="none" stroke="#e0f2fe" stroke-width="1.8"/>'],
+ 'achievement:combo_5':['#581c87','#d8b4fe','<path d="m36 8-20 27h13l-3 21 22-30H34l2-18Z" fill="#c084fc" stroke="#f5d0fe" stroke-width="2.5"/>'],
+ 'achievement:coins_100':['#854d0e','#fde68a','<circle cx="27" cy="29" r="15" fill="#fbbf24" stroke="#fff7cc" stroke-width="2.5"/><circle cx="27" cy="29" r="10" fill="none" stroke="#a16207" stroke-width="2"/><path d="M27 21v16m-4-12h6m-6 8h7" stroke="#713f12" stroke-width="2"/>'],
+ 'achievement:coins_500':['#78350f','#fcd34d','<path d="M14 25h36v23H14z" fill="#b45309" stroke="#fef3c7" stroke-width="2.3"/><path d="M12 25 19 15h26l7 10" fill="#f59e0b" stroke="#fef3c7" stroke-width="2.3"/><path d="M27 25v23m10-23v23" stroke="#fef3c7" stroke-width="2"/><circle cx="32" cy="36" r="5" fill="#fde68a"/>'],
+ 'achievement:collector_5':['#9d174d','#fbcfe8','<path d="M31 13c-12-9-23 3-13 15l13 19 16-19c10-12-2-24-16-15Z" fill="#ec4899" stroke="#fce7f3" stroke-width="2.5"/><circle cx="23" cy="27" r="3" fill="#fff"/><circle cx="36" cy="23" r="3" fill="#fef08a"/><circle cx="40" cy="34" r="3" fill="#bfdbfe"/>'],
+ 'achievement:challenge_four':['#334155','#cbd5e1','<path d="M32 13c-4-7-13-5-15 2l-7 1 5 9-3 14 10 11 10-5 10 5 10-11-3-14 5-9-7-1c-2-7-11-9-15-2Z" fill="#94a3b8" stroke="#f1f5f9" stroke-width="2.2"/><path d="M20 29h8m8 0h8M25 38l7 4 7-4" stroke="#1e293b" stroke-width="3"/>'],
+ 'achievement:learning_from_errors':['#155e75','#a5f3fc','<path d="M10 19c8-4 15-3 22 2 7-5 14-6 22-2v28c-8-4-15-3-22 2-7-5-14-6-22-2V19Z" fill="#0e7490" stroke="#cffafe" stroke-width="2.4"/><path d="M32 21v28m-16-22 10 3m-10 5 10 3m22-11-10 3m10 5-10 3" stroke="#cffafe" stroke-width="2"/><path d="m43 9 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" fill="#fde68a"/>'],
+ 'achievement:tournament_easy_top3':['#854d0e','#fde68a','<circle cx="32" cy="29" r="15" fill="#fbbf24" stroke="#fff7cc" stroke-width="2"/><path d="m32 16 4 8 9 1-7 6 2 9-8-5-8 5 2-9-7-6 9-1 4-8Z" fill="#fff7cc"/>'],
+ 'achievement:tournament_easy_top10':['#475569','#e2e8f0','<circle cx="32" cy="29" r="15" fill="#94a3b8" stroke="#f8fafc" stroke-width="2"/><path d="M22 30h20m-10-10v20" stroke="#f8fafc" stroke-width="3"/>'],
+ 'achievement:tournament_medium_top3':['#854d0e','#fde68a','<path d="m32 12 17 8v13c0 9-7 14-17 19-10-5-17-10-17-19V20l17-8Z" fill="#f59e0b" stroke="#fff7cc" stroke-width="2"/><path d="m32 20 4 8 9 1-7 6 2 8-8-4-8 4 2-8-7-6 9-1 4-8Z" fill="#fff7cc"/>'],
+ 'achievement:tournament_medium_top10':['#475569','#e2e8f0','<path d="M32 12 49 21v15L32 51 15 36V21l17-9Z" fill="#94a3b8" stroke="#f8fafc" stroke-width="2"/><path d="m21 31 7 7 15-17" fill="none" stroke="#fff" stroke-width="3.5"/>'],
+ 'achievement:tournament_hard_top3':['#7c2d12','#fdba74','<path d="M32 9 50 19v19L32 53 14 38V19L32 9Z" fill="#ea580c" stroke="#ffedd5" stroke-width="2"/><path d="m32 17 4 9 10 1-8 7 2 10-8-5-8 5 2-10-8-7 10-1 4-9Z" fill="#ffedd5"/>'],
+ 'achievement:tournament_hard_top10':['#1e40af','#bfdbfe','<path d="M32 10 51 21v20L32 53 13 41V21L32 10Z" fill="#3b82f6" stroke="#dbeafe" stroke-width="2"/><path d="M22 32h20m-10-10v20" stroke="#eff6ff" stroke-width="3"/>'],
+ 'achievement:tournament_perfect50':['#6b21a8','#e9d5ff','<circle cx="32" cy="30" r="18" fill="#a855f7" stroke="#f3e8ff" stroke-width="2.5"/><text x="32" y="36" text-anchor="middle" font-size="16" font-weight="950" fill="#fff">50</text>'],
+ 'medal:recruta':['#334155','#cbd5e1','<path d="m21 12 11 8 11-8-4 16H25l-4-16Z" fill="#94a3b8" stroke="#f8fafc" stroke-width="2"/><path d="m32 25 4 5 6 1-4 5 1 6-7-3-7 3 1-6-4-5 6-1 4-5Z" fill="#e2e8f0"/>'],
+ 'medal:aprendiz':['#166534','#bbf7d0','<path d="M13 19c8-4 14-3 19 2 5-5 11-6 19-2v27c-8-3-14-2-19 3-5-5-11-6-19-3V19Z" fill="#22c55e" stroke="#f0fdf4" stroke-width="2.2"/><path d="M32 21v27m-13-20 8 3m15-3-8 3" stroke="#f0fdf4" stroke-width="2"/>'],
+ 'medal:praticante':['#92400e','#fcd34d','<path d="m18 17 8 8-5 5 7 7-5 5-7-7 5-5-8-8 5-5Zm28 0-8 8 5 5-7 7 5 5 7-7-5-5 8-8-5-5Z" fill="#f59e0b" stroke="#fffbeb" stroke-width="2"/>'],
+ 'medal:competidor':['#7f1d1d','#fecaca','<path d="m19 14 11 15-5 4-11-15 5-4Zm26 0L34 29l5 4 11-15-5-4Z" fill="#f87171" stroke="#fff1f2" stroke-width="2"/><path d="m19 49 11-15-5-4-11 15 5 4Zm26 0L34 34l5-4 11 15-5 4Z" fill="#fca5a5" stroke="#fff1f2" stroke-width="2"/>'],
+ 'medal:veterano':['#854d0e','#fde68a','<path d="M17 14c15 3 24 15 29 35M47 13c-15 3-24 15-29 36" fill="none" stroke="#fde68a" stroke-width="3"/><path d="m22 17 20 29m0-29L22 46" stroke="#fef3c7" stroke-width="2"/>'],
+ 'medal:especialista':['#4c1d95','#ddd6fe','<path d="m32 10 7 13 14 6-14 7-7 15-7-15-14-7 14-6 7-13Z" fill="#a78bfa" stroke="#f5f3ff" stroke-width="2.2"/><circle cx="32" cy="30" r="5" fill="#fff"/>'],
+ 'medal:elite':['#075985','#bae6fd','<path d="m32 10 20 18-20 27-20-27 20-18Z" fill="#38bdf8" stroke="#e0f2fe" stroke-width="2.5"/><path d="m32 10-8 18 8 27 8-27-8-18Zm-20 18h40" fill="none" stroke="#e0f2fe" stroke-width="2"/>'],
+ 'medal:mestre':['#854d0e','#fde68a','<path d="m13 21 12 9 7-17 7 17 12-9-4 27H17l-4-27Z" fill="#fbbf24" stroke="#fffbeb" stroke-width="2.3"/><path d="M19 51h26" stroke="#fff7ed" stroke-width="3"/>'],
+ 'medal:grao_mestre':['#164e63','#a5f3fc','<path d="M31 31C18 12 9 16 12 31c5-2 9 1 11 7-7-1-10 3-10 9 9 0 15-4 19-12 4 8 10 12 19 12 0-6-3-10-10-9 2-6 6-9 11-7 3-15-6-19-19 0" fill="#22d3ee" stroke="#ecfeff" stroke-width="2.2"/>'],
+ 'medal:lenda':['#6b21a8','#e9d5ff','<path d="m32 9 6 15 16 1-12 10 4 16-14-9-14 9 4-16-12-10 16-1 6-15Z" fill="#c084fc" stroke="#faf5ff" stroke-width="2.3"/>'],
+ 'medal:extremo':['#9f1239','#fecdd3','<path d="M33 8c4 12-3 14 5 23 2-5 5-7 8-10 8 17 2 29-10 33-13 4-25-5-21-19 2-8 8-13 12-18 0 8 3 11 5 13 4-7 2-15 1-22Z" fill="#fb7185" stroke="#fff1f2" stroke-width="2.3"/>']
+};
+function renderBadgeIcon(key,locked=false){
+ if(locked)return '<svg class="badge-art badge-art-locked" viewBox="0 0 64 64" aria-hidden="true"><path d="M18 28v-7a14 14 0 0 1 28 0v7" fill="none" stroke="#cbd5e1" stroke-width="5" stroke-linecap="round"/><rect x="13" y="27" width="38" height="29" rx="7" fill="#64748b" stroke="#e2e8f0" stroke-width="2"/><circle cx="32" cy="40" r="4" fill="#f8fafc"/><path d="M32 43v6" stroke="#f8fafc" stroke-width="3"/></svg>';
+ const art=BADGE_ART[key]||BADGE_ART['achievement:training_first'];
+ return '<svg class="badge-art" viewBox="0 0 64 64" role="img" aria-label="Emblema"><path d="M32 3 55 12V30c0 15-9 25-23 31C18 55 9 45 9 30V12L32 3Z" fill="'+art[0]+'" stroke="'+art[1]+'" stroke-width="2.5"/><path d="M32 9 49 16V30c0 11-6 19-17 25C21 49 15 41 15 30V16L32 9Z" fill="#071326" opacity=".26"/>'+art[2]+'</svg>';
+}
+function renderTournamentAwardIcon(rank){
+ const place=Math.max(1,Math.min(99,Math.floor(Number(rank)||1)));
+ const palettes=place===1?['#854d0e','#fde68a']:place===2?['#475569','#e2e8f0']:place===3?['#7c2d12','#fdba74']:['#1e40af','#bfdbfe'];
+ return '<svg class="badge-art tournament-award-art" viewBox="0 0 64 64" role="img" aria-label="'+place+'º lugar"><path d="M32 4 54 13V30c0 15-9 25-22 31C19 55 10 45 10 30V13L32 4Z" fill="'+palettes[0]+'" stroke="'+palettes[1]+'" stroke-width="2.5"/><circle cx="32" cy="28" r="15" fill="#071326" opacity=".32" stroke="'+palettes[1]+'" stroke-width="2"/><path d="m32 15 4 8 9 1-7 6 2 9-8-5-8 5 2-9-7-6 9-1 4-8Z" fill="'+palettes[1]+'"/><text x="32" y="51" text-anchor="middle" font-size="10" font-weight="900" fill="#fff">'+(place<=10?place:'★')+'</text></svg>';
+}
+
+
 const ECONOMY_CACHE_KEY='projetoTabuadaEconomiaCacheV1';
 const PENDING_REWARDS_KEY='projetoTabuadaRecompensasPendentesV1';
 function normalizeClientEconomy(value,currentAvatar='imagem:0'){
@@ -1644,7 +1700,7 @@ function renderAchievementShelf(){
  shelf.innerHTML=visibleDefinitions.map(item=>{
   const date=earned[item.id],unlocked=!!date;
   const dateText=unlocked&&date!==true?new Date(date).toLocaleDateString('pt-BR'):'Conquista desbloqueada';
-  return '<article class="achievement-card '+(unlocked?'unlocked':'locked')+'"><span class="achievement-icon">'+(unlocked?item.icon:'🔒')+'</span><div><strong>'+item.title+'</strong><p>'+item.description+'</p><small>'+(unlocked?dateText:'Ainda não conquistada')+'</small></div></article>';
+  return '<article class="achievement-card '+(unlocked?'unlocked':'locked')+'"><span class="achievement-icon">'+(unlocked?renderBadgeIcon('achievement:'+item.id):renderBadgeIcon('locked',true))+'</span><div><strong>'+item.title+'</strong><p>'+item.description+'</p><small>'+(unlocked?dateText:'Ainda não conquistada')+'</small></div></article>';
  }).join('');
  refreshEconomyDisplay();
 }
@@ -1657,7 +1713,7 @@ function renderChallengeProfileStats(){
  const medals=CHALLENGE_PRESETS_UI.map(level=>{
   const wins=Math.max(0,Number(levels[level.id]?.wins)||0);
   const unlocked=wins>=10;
-  return '<article class="achievement-card challenge-medal '+(unlocked?'unlocked':'locked')+'"><span class="achievement-icon">'+(unlocked?challengeMedalIcon(level.id):'🔒')+'</span><div><strong>'+escapeHtml(level.name)+'</strong><p>'+(unlocked?'Medalha conquistada · 10 vitórias ou mais':'Vitórias: '+Math.min(wins,10)+'/10')+'</p><small>'+(unlocked?'Medalha desbloqueada':'Continue vencendo neste nível')+'</small></div></article>';
+  return '<article class="achievement-card challenge-medal '+(unlocked?'unlocked':'locked')+'"><span class="achievement-icon">'+(unlocked?challengeMedalIcon(level.id):renderBadgeIcon('locked',true))+'</span><div><strong>'+escapeHtml(level.name)+'</strong><p>'+(unlocked?'Medalha conquistada · 10 vitórias ou mais':'Vitórias: '+Math.min(wins,10)+'/10')+'</p><small>'+(unlocked?'Medalha desbloqueada':'Continue vencendo neste nível')+'</small></div></article>';
  }).join('');
  if($('profileChallengeWins'))$('profileChallengeWins').textContent=String(Number(total.wins)||0);
  if($('profileChallengeLosses'))$('profileChallengeLosses').textContent=String(Number(total.losses)||0);
@@ -1669,21 +1725,21 @@ function renderChallengeProfileStats(){
  if($('tournamentAwardShelf')){
   $('tournamentAwardShelf').innerHTML=awardItems.length?awardItems.map(([month,award])=>{
    const place=Number(award.rank)||0;
-   const symbol=place===1?'🥇':place===2?'🥈':place===3?'🥉':place<=10?'🏅':'🏆';
+   const symbol=renderTournamentAwardIcon(place);
    return '<article class="achievement-card challenge-medal unlocked"><span class="achievement-icon">'+symbol+'</span><div><strong>'+escapeHtml(award.difficulty||'Torneio')+' · '+month+'</strong><p>'+place+'º lugar · '+award.score+'/50 pontos</p><small>'+escapeHtml(award.frame||'Participação')+'</small></div></article>';
   }).join(''):'<div class="tournament-empty">Suas premiações mensais aparecerão aqui.</div>';
  }
 }
 
 
-const CHALLENGE_MEDAL_EMBLEMS={recruta:'🛡️',aprendiz:'📗',praticante:'⚒️',competidor:'⚔️',veterano:'🏹',especialista:'🔮',elite:'💠',mestre:'👑',grao_mestre:'🦅',lenda:'🌟',extremo:'🔥'};
+function challengeMedalIcon(id){return renderBadgeIcon('medal:'+id);}
 function challengeMedalIcon(id){return CHALLENGE_MEDAL_EMBLEMS[id]||'🏆';}
 function featuredAwardInfo(id,source={}){
  if(typeof id!=='string')return null;
  const [kind,key]=id.split(':');
  if(kind==='achievement'){
   const item=ACHIEVEMENT_DEFINITIONS.find(entry=>entry.id===key);
-  return item?{id,icon:item.icon,label:item.title,kind:'Conquista'}:null;
+   return item?{id,icon:renderBadgeIcon('achievement:'+item.id),label:item.title,kind:'Conquista'}:null;
  }
  if(kind==='medal'){
   const item=CHALLENGE_PRESETS_UI.find(entry=>entry.id===key);
@@ -1693,21 +1749,21 @@ function featuredAwardInfo(id,source={}){
   const award=(source.awards||[]).find(item=>item.month===key)||(source.profile?.tournamentAwards?.[key]?{month:key,...source.profile.tournamentAwards[key]}:null);
   if(!award)return null;
   const rank=Number(award.rank)||0;
-  return {id,icon:rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'🏆',label:'Torneio '+key+' · '+rank+'º lugar',kind:'Premiação'};
+  return {id,icon:renderTournamentAwardIcon(rank),label:'Torneio '+key+' · '+rank+'º lugar',kind:'Premiação'};
  }
  return null;
 }
 function profileFeaturedOptions(){
  const profile=profilesData[activeProfile]||{},options=[];
  for(const item of ACHIEVEMENT_DEFINITIONS){
-  if(gameEconomy.achievements?.[item.id]&&!item.hidden)options.push({id:'achievement:'+item.id,icon:item.icon,label:item.title,kind:'Conquista'});
+  if(gameEconomy.achievements?.[item.id]&&!item.hidden)options.push({id:'achievement:'+item.id,icon:renderBadgeIcon('achievement:'+item.id),label:item.title,kind:'Conquista'});
  }
  const levels=profile.challengeStats?.levels||{};
  for(const item of CHALLENGE_PRESETS_UI){
   if((Number(levels[item.id]?.wins)||0)>=10)options.push({id:'medal:'+item.id,icon:challengeMedalIcon(item.id),label:'Medalha '+item.name,kind:'Medalha'});
  }
  for(const [month,award] of Object.entries(profile.tournamentAwards||{})){
-  const rank=Number(award?.rank)||0,icon=rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':'🏆';
+  const rank=Number(award?.rank)||0,icon=renderTournamentAwardIcon(rank);
   if(rank>0)options.push({id:'award:'+month,icon,label:'Torneio '+month+' · '+rank+'º lugar',kind:'Premiação'});
  }
  return options;
@@ -2195,10 +2251,10 @@ async function renderCommunityRanking(){
    const place=first+index+1,rankClass=place===1?'rank-gold':place===2?'rank-silver':place===3?'rank-bronze':'';
    const frame=user.tournamentFrame?' tournament-frame-'+user.tournamentFrame:'';
    const medals=user.medals.map(medal=>'<span class="community-rank-chip medal">'+challengeMedalIcon(medal.id)+' '+escapeHtml(medal.name||medal.id)+'</span>').join('');
-   const awards=user.awards.map(award=>'<span class="community-rank-chip medal">'+(Number(award.rank)===1?'🥇':Number(award.rank)===2?'🥈':Number(award.rank)===3?'🥉':'🏆')+' Torneio mensal · '+escapeHtml(award.month)+' · '+Number(award.rank)+'º lugar</span>').join('');
+    const awards=user.awards.map(award=>'<span class="community-rank-chip medal">'+renderTournamentAwardIcon(award.rank)+' Torneio mensal · '+escapeHtml(award.month)+' · '+Number(award.rank)+'º lugar</span>').join('');
    const achievements=user.titles.map(title=>{
     const item=ACHIEVEMENT_DEFINITIONS.find(entry=>entry.title===title);
-    return '<span class="community-rank-chip title">'+(item?.icon||'✨')+' '+escapeHtml(title)+'</span>';
+     return '<span class="community-rank-chip title">'+(item?renderBadgeIcon('achievement:'+item.id):'✨')+' '+escapeHtml(title)+'</span>';
    }).join('');
    const featured=(user.featuredAwards||[]).map(id=>{
     const info=featuredAwardInfo(id,{awards:user.awards});
