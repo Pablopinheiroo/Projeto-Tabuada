@@ -118,6 +118,8 @@ async function testViewport(name, viewport, mobile = false) {
   check(homeOverflow.document <= homeOverflow.viewport + 1, name + ": há rolagem horizontal na tela inicial (" + JSON.stringify(homeOverflow) + ").");
   check(await page.locator("#loginUsername").isVisible(), name + ": campo de usuário não está visível.");
   check(await page.locator("#loginPassword").isVisible(), name + ": campo de senha não está visível.");
+  const rememberColor = await page.locator(".remember-session").evaluate(element => getComputedStyle(element).color);
+  check(rememberColor === "rgb(66, 83, 107)", name + ": texto da opção manter conectado está com contraste incorreto (" + rememberColor + ").");
 
   await page.screenshot({ path: "artifacts/" + name + "-inicio.png", fullPage: true });
 
@@ -233,6 +235,19 @@ async function testViewport(name, viewport, mobile = false) {
   await page.locator("#openAdventureMode").click();
   check(!(await page.locator("#adventureMapView").evaluate(el => el.classList.contains("hidden"))), name + ": botão Modo Jogo não abriu o mapa da aventura.");
   check((await page.locator("#musicCategoryKicker").textContent()).includes("MODO JOGO"), name + ": música não mudou para Modo Jogo.");
+  await page.locator("#backToModeHubMap").click();
+
+  await page.locator("#openChallengeMode").click();
+  check(!(await page.locator("#challengeModeView").evaluate(el => el.classList.contains("hidden"))), name + ": botão Desafio não abriu a modalidade.");
+  check(!(await page.locator("#challengeHomePanel").evaluate(el => el.classList.contains("hidden"))), name + ": menu inicial do Desafio não apareceu.");
+  check((await page.locator("#musicCategoryKicker").textContent()).includes("DESAFIO"), name + ": música não mudou para Desafio.");
+  await page.locator("#backFromChallenge").click();
+
+  await page.locator("#openTournamentMode").click();
+  check(!(await page.locator("#tournamentModeView").evaluate(el => el.classList.contains("hidden"))), name + ": botão Torneio não abriu a modalidade.");
+  check(!(await page.locator("#tournamentHomePanel").evaluate(el => el.classList.contains("hidden"))), name + ": menu inicial do Torneio não apareceu.");
+  check((await page.locator("#musicCategoryKicker").textContent()).includes("TORNEIO"), name + ": música não mudou para Torneio.");
+  await page.locator("#backFromTournament").click();
 
   const finalOverflow = await page.evaluate(() => ({
     viewport: window.innerWidth,
