@@ -883,6 +883,16 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .profile-featured-badge .badge-art,.community-featured-badge .badge-art{width:22px;height:22px;flex:0 0 22px}
 .community-rank-chip .badge-art{display:inline-block;vertical-align:middle;width:20px;height:20px;margin-right:3px}
 
+
+/* Ajustes de leitura e controle dos efeitos sonoros */
+.community-rank-public-stats{color:#294967;font-size:.76rem;font-weight:850;line-height:1.5;text-shadow:0 1px #ffffff80}
+.community-rank-public-stats span{color:#294967}
+.profile-sfx-volume{grid-template-columns:minmax(0,1fr) minmax(100px,1.4fr) 45px}
+@media(max-width:520px){
+ .profile-sfx-volume{grid-template-columns:minmax(0,1fr) 45px;gap:8px}
+ .profile-sfx-volume input{grid-column:1;grid-row:2}
+ .profile-sfx-volume strong{grid-column:2;grid-row:2}
+}
 </style>
 </head>
 <body>
@@ -4197,7 +4207,7 @@ function makeRound(){
  return allRandom?shuffle(questions):questions;
 }
 
-function ensureAudio(){
+function ensureAudio(resume=true){
  if(!audioContext){
   const AudioCtx=window.AudioContext||window.webkitAudioContext;
   if(!AudioCtx)return false;
@@ -4206,7 +4216,7 @@ function ensureAudio(){
   masterGain.gain.value=volumeLevel;
   masterGain.connect(audioContext.destination);
  }
- if(audioContext.state==='suspended')audioContext.resume().catch(()=>{});
+ if(resume&&audioContext.state==='suspended')audioContext.resume().catch(()=>{});
  return true;
 }
 function midiToHz(note){return 440*Math.pow(2,(note-69)/12)}
@@ -4224,11 +4234,26 @@ function playNote(frequency,start,duration,wave,volume){
  oscillator.onended=()=>{activeSounds.delete(oscillator);oscillator.disconnect();envelope.disconnect()};
  oscillator.start(start);oscillator.stop(start+duration+.04);
 }
-let uiSfxLibrary={},uiSfxAudioPool=new Map(),uiSfxPoolCursor=new Map();
+let uiSfxLibrary={},uiSfxAudioPool=new Map(),uiSfxPoolCursor=new Map(),uiSfxBuffers=new Map(),uiSfxGain=null;
+function updateUiSfxGain(){
+ if(!audioContext)return;
+ if(!uiSfxGain){uiSfxGain=audioContext.createGain();uiSfxGain.gain.value=sfxVolumeLevel;uiSfxGain.connect(audioContext.destination);}
+ uiSfxGain.gain.setTargetAtTime(sfxVolumeLevel,audioContext.currentTime,.012);
+}
+function playUiSfxBuffer(buffer){
+ if(!buffer||!ensureAudio())return false;
+ updateUiSfxGain();
+ const source=audioContext.createBufferSource();
+ source.buffer=buffer;
+ source.connect(uiSfxGain);
+ source.start(audioContext.currentTime+.002);
+ return true;
+}
 const SFX_VOLUME_CACHE_KEY='projetoTabuadaVolumeEfeitosV1';
 function applySfxVolumeToPlayers(){
  const value=Math.max(0,Math.min(1,sfxVolumeLevel));
  for(const pool of uiSfxAudioPool.values())for(const player of pool)player.volume=value;
+ if(uiSfxGain&&audioContext)uiSfxGain.gain.setTargetAtTime(value,audioContext.currentTime,.012);
  if($('profileSfxVolume'))$('profileSfxVolume').value=String(Math.round(value*100));
  if($('profileSfxVolumeValue'))$('profileSfxVolumeValue').textContent=Math.round(value*100)+'%';
 }
@@ -4237,9 +4262,10 @@ function restoreProfileSfxVolume(){
  let saved=null;
  try{
   const prefs=JSON.parse(localStorage.getItem(SFX_VOLUME_CACHE_KEY)||'{}');
-  if(prefs&&Number.isFinite(Number(prefs[activeProfile])))saved=Number(prefs[activeProfile]);
+  const cached=prefs?prefs[activeProfile]:null;
+  if(cached!==null&&cached!==undefined&&Number.isFinite(Number(cached)))saved=Number(cached);
  }catch{}
- if(saved===null&&Number.isFinite(Number(profile.sfxVolume)))saved=Number(profile.sfxVolume);
+ if(saved===null&&profile.sfxVolume!==undefined&&Number.isFinite(Number(profile.sfxVolume)))saved=Number(profile.sfxVolume);
  sfxVolumeLevel=saved===null?.82:Math.max(0,Math.min(1,saved));
  applySfxVolumeToPlayers();
 }
@@ -4271,20 +4297,29 @@ async function loadUiSfx(){
    name,files.map(file=>new URL(file,document.baseURI).href)
   ]));
   const sources=[...new Set(Object.values(uiSfxLibrary).flat())];
-  // Carrega os pequenos efeitos antes do primeiro clique. Cada arquivo fica
-  // com dois players prontos para permitir sons rápidos sem reinicialização tardia.
+  // Baixa e decodifica os sons durante a abertura do site. Depois do primeiro
+  // toque do usuário, as respostas são reproduzidas direto da memória, sem
+  // aguardar criação de Audio nem decodificação no momento do clique.
+  const canDecode=ensureAudio(false)&&typeof audioContext.decodeAudioData==='function';
   await Promise.all(sources.map(async src=>{
-   const pool=[0,1].map(()=>{
-    const player=new Audio();
-    player.preload='auto';
-    player.src=src;
-    player.volume=sfxVolumeLevel;
-    player.load();
-    return player;
-   });
-   uiSfxAudioPool.set(src,pool);
-   uiSfxPoolCursor.set(src,0);
+   try{
+    const response=await fetch(src,{cache:'force-cache'});
+    if(!response.ok)throw new Error('Efeito sonoro indisponível.');
+    const bytes=await response.arrayBuffer();
+    if(canDecode){
+     const buffer=await audioContext.decodeAudioData(bytes.slice(0));
+     uiSfxBuffers.set(src,buffer);
+    }else throw new Error('Web Audio indisponível; usando player pré-carregado.');
+   }catch(error){
+    const pool=[0,1].map(()=>{
+     const player=new Audio();
+     player.preload='auto';player.src=src;player.volume=sfxVolumeLevel;player.load();
+     return player;
+    });
+    uiSfxAudioPool.set(src,pool);uiSfxPoolCursor.set(src,0);
+   }
   }));
+  updateUiSfxGain();
   applySfxVolumeToPlayers();
  }catch(error){console.warn('Efeitos sonoros indisponíveis:',error);}
 }
@@ -4293,6 +4328,14 @@ function playUiSound(name){
  const files=uiSfxLibrary[name]||[];
  if(files.length){
   const src=files[Math.floor(Math.random()*files.length)];
+  const buffer=uiSfxBuffers.get(src);
+  if(buffer){
+   if(audioContext&&audioContext.state==='suspended'){
+    audioContext.resume().then(()=>playUiSfxBuffer(buffer)).catch(()=>{});
+    return;
+   }
+   if(playUiSfxBuffer(buffer))return;
+  }
   const pool=uiSfxAudioPool.get(src)||[];
   if(pool.length){
    const index=uiSfxPoolCursor.get(src)||0;
@@ -4311,6 +4354,11 @@ function playUiSound(name){
  else if(name==='wrong') [62,58].forEach((note,i)=>playNote(midiToHz(note),when+i*.105,.16,'sine',.011));
  else playNote(name==='key'?740:660,when,.055,'sine',.0045);
 }
+function unlockUiAudio(){
+ if(audioContext&&audioContext.state==='suspended')audioContext.resume().catch(()=>{});
+}
+document.addEventListener('pointerdown',unlockUiAudio,true);
+document.addEventListener('keydown',unlockUiAudio,true);
 function playUiClick(){playUiSound('click')}
 function playFeedback(correct){playUiSound(correct?'correct':'wrong')}
 function setVolume(value){
