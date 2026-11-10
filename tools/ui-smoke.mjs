@@ -149,7 +149,7 @@ check(html.includes('id="profileMusicVolume"')&&html.includes("MUSIC_VOLUME_CACH
  "O volume da música não é configurável nem restaurável.");
 check(html.includes("function resetProfileMusicVolume()")&&html.includes("function syncAudioResetButtons()"),
  "O reset da música ou o ocultamento automático dos botões de reset está ausente.");
-check(html.includes('id="saveProfileAudioPreferences"')&&html.includes("💾 Salvar como preferência da conta")&&html.includes("async function saveProfileAudioPreferences()")&&html.includes("Padrão salvo na sua conta"),"O salvamento como preferência da conta está ausente.");
+check(html.includes('id="saveProfileAudioPreferences"')&&html.includes("💾 Salvar como preferência da conta")&&html.includes("async function saveProfileAudioPreferences()")&&html.includes("Preferências salvas na sua conta"),"O salvamento como preferência da conta está ausente.");
 check(html.includes("profile.musicVolume=volumeLevel")&&html.includes("profile.sfxVolume=sfxVolumeLevel"),"O salvamento não inclui os dois volumes no perfil remoto.");
 check(html.includes("challengeVolumeLimit/100*volumeLevel"),"A música dos desafios não respeita o volume global salvo.");
 check(html.includes("uiSfxBuffers.set(src,buffer)")&&html.includes("source.start(audioContext.currentTime+.002)")&&html.includes("createSoftUiClickBuffer(variant)"),
