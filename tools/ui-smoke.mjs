@@ -357,6 +357,17 @@ check(html.includes('id="saveTrainingDefinition"')&&html.includes('id="trainingD
   html.includes("markTrainingDefinitionDirty();")&&html.includes("appearance:none")&&
   html.includes("training-order-select-wrap:after"),
   "A definição da ordem do treinamento precisa ter seletor visível, botão de salvar e restauração por perfil.");
+check(html.includes('<div class="training-setup-card"')&&
+  html.includes('<div class="training-global-mode"')&&
+  html.includes('<div class="training-tables-section"')&&
+  html.includes('<div class="training-tables-section" aria-labelledby="trainingTablesTitle">')&&
+  html.includes('id="tables" class="tables"')&&
+  html.indexOf('class="training-setup-card"')<html.indexOf('class="training-global-mode"')&&
+  html.indexOf('class="training-global-mode"')<html.indexOf('class="training-tables-section"')&&
+  html.includes(".training-setup-card{display:grid;gap:11px")&&
+  html.includes("min-height:40px")&&html.includes(".training-tables-section .tables{margin-top:0"),
+  "A ordem e a seleção das tabuadas devem ficar compactas e dentro de um único painel visual.");
+
 check(html.includes("challenge-standing-card")&&html.includes("challenge-standing-place")&&
   html.includes("challenge-standing-name")&&html.includes("data-position")&&
   html.includes("rankIcon=place===1"),
