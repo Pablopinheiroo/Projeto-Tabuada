@@ -1443,7 +1443,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   </div>
  </div>
 </div>
-<div class="community-ranking">
+<div id="communitySection" class="community-ranking">
  <div class="community-heading"><div><span class="music-kicker">👥 Comunidade</span><h2>Ranking dos participantes</h2><p class="hint" style="margin:5px 0 0">Veja o tempo de estudo e as contas que mais exigem prática.</p></div>
   <label class="ranking-sort">Ordenar por<select id="communitySort"><option value="time">Mais tempo estudado</option><option value="correct">Mais acertos</option><option value="wrong">Mais erros</option></select></label>
  </div>
@@ -3158,9 +3158,7 @@ function showChallengeSubPanel(name){
 function openChallengeMode(){
  challengeBetMode=false;
  setMusicCategory('desafio',true);
- ['trainingModePanel','adventureMapView','adventureIntroView','adventurePlayView','adventureResultView'].forEach(id=>$(id).classList.add('hidden'));
- $('modeHub').classList.add('hidden');
- $('challengeModeView').classList.remove('hidden');
+ setMainContentSections({challenge:true,community:true});
  $('siteMusicBox').classList.add('hidden');
  if(soundtrackAudio)soundtrackAudio.pause();
  clearMainMusicTimer();
@@ -3171,10 +3169,8 @@ function backToModeHubFromChallenge(){
  challengeBetMode=false;
  stopChallengeTimers();
  stopChallengeMusic();
- $('challengeModeView').classList.add('hidden');
  $('siteMusicBox').classList.remove('hidden');
- $('modeHub').classList.remove('hidden');
- setMusicCategory('principal',true);
+ showModeHub();
 }
 function openBetChallengeOptions(){
  challengeBetMode=true;
@@ -3788,22 +3784,14 @@ function showTournamentSubPanel(id){
 }
 function openTournamentMode(){
  setMusicCategory('torneio',true);
- $('modeHub').classList.add('hidden');
- $('trainingModePanel').classList.add('hidden');
- $('adventureMapView').classList.add('hidden');
- $('adventureIntroView').classList.add('hidden');
- $('adventurePlayView').classList.add('hidden');
- $('adventureResultView').classList.add('hidden');
- $('challengeModeView').classList.add('hidden');
- $('tournamentModeView').classList.remove('hidden');
+ setMainContentSections({tournament:true,community:true});
  showTournamentSubPanel('tournamentHomePanel');
  refreshTournamentDashboard();
 }
 function backFromTournament(){
  stopTournamentClock();
  setMusicCategory('principal',true);
- $('tournamentModeView').classList.add('hidden');
- $('modeHub').classList.remove('hidden');
+ showModeHub();
 }
 function tournamentMonthName(month){
  const [year,number]=month.split('-').map(Number);
@@ -4193,22 +4181,44 @@ async function saveAdventureProgress(){
  if(status)status.textContent=saved?'✓ Progresso sincronizado no seu perfil.':'Progresso guardado neste aparelho; a sincronização será tentada novamente.';
  return saved;
 }
+function setMainContentSections({hub=false,training=false,adventure=false,challenge=false,tournament=false,community=false,shop=false}={}){
+ const visibility={
+  modeHub:hub,
+  trainingModePanel:training,
+  adventureMapView:adventure,
+  adventureIntroView:adventure,
+  adventurePlayView:adventure,
+  adventureResultView:adventure,
+  challengeModeView:challenge,
+  tournamentModeView:tournament,
+  communitySection:community,
+  shopScreen:shop
+ };
+ for(const [id,visible] of Object.entries(visibility)){
+  const element=$(id);
+  if(element)element.classList.toggle('hidden',!visible);
+ }
+}
+function showCommunityOnly(){
+ setMainContentSections({community:true});
+ $('communitySection').scrollIntoView({behavior:'smooth',block:'start'});
+}
+function showShopOnly(){
+ setMainContentSections({shop:true});
+ renderAvatarShop();
+ $('shopScreen').scrollIntoView({behavior:'smooth',block:'start'});
+}
 function showModeHub(){
  setMusicCategory('principal',true);
- ['trainingModePanel','adventureMapView','adventureIntroView','adventurePlayView','adventureResultView','challengeModeView'].forEach(id=>$(id).classList.add('hidden'));
- $('modeHub').classList.remove('hidden');
+ setMainContentSections({hub:true,community:true});
 }
 function showTrainingMode(){
  setMusicCategory('treinamento',true);
- $('modeHub').classList.add('hidden');$('challengeModeView').classList.add('hidden');
- ['adventureMapView','adventureIntroView','adventurePlayView','adventureResultView'].forEach(id=>$(id).classList.add('hidden'));
- $('trainingModePanel').classList.remove('hidden');
+ setMainContentSections({training:true});
 }
 function showAdventureMap(){
  setMusicCategory('modo-jogo',true);
- $('modeHub').classList.add('hidden');$('challengeModeView').classList.add('hidden');
- ['trainingModePanel','adventureIntroView','adventurePlayView','adventureResultView'].forEach(id=>$(id).classList.add('hidden'));
- $('adventureMapView').classList.remove('hidden');
+ setMainContentSections({adventure:true});
  renderAdventureMap();
 }
 function showAdventureIntro(index){
@@ -5199,10 +5209,10 @@ $('navTraining').addEventListener('click',showTrainingMode);
 $('navAdventure').addEventListener('click',showAdventureMap);
 $('navChallenge').addEventListener('click',openChallengeMode);
 $('navTournament').addEventListener('click',openTournamentMode);
-$('navCommunity').addEventListener('click',()=>{$('shopScreen').classList.add('hidden');$('communityRanking').scrollIntoView({behavior:'smooth',block:'start'});});
-$('navShop').addEventListener('click',()=>{$('shopScreen').classList.remove('hidden');renderAvatarShop();$('shopScreen').scrollIntoView({behavior:'smooth',block:'start'});});
+$('navCommunity').addEventListener('click',showCommunityOnly);
+$('navShop').addEventListener('click',showShopOnly);
 $('shopBackToGame').addEventListener('click',()=>{$('shopScreen').classList.add('hidden');returnToGameHome();});
-function returnToGameHome(){$('shopScreen').classList.add('hidden');showModeHub();$('modeHub').scrollIntoView({behavior:'smooth',block:'start'});}
+function returnToGameHome(){showModeHub();$('modeHub').scrollIntoView({behavior:'smooth',block:'start'});}
 $('topReturnToGame').addEventListener('click',returnToGameHome);
 $('bottomReturnToGame').addEventListener('click',returnToGameHome);
 $('communitySort').addEventListener('change',()=>{communityPage=0;renderCommunityRanking();});
