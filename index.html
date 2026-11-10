@@ -2885,7 +2885,11 @@ function startPresenceTracking(){
  if(presenceTimer!==null)clearInterval(presenceTimer);
  lastPresencePingAt=0;
  sendPresencePing(true);
- presenceTimer=setInterval(()=>sendPresencePing(false),120_000);
+ presenceTimer=setInterval(()=>{
+  sendPresencePing(false);
+  const community=$('communitySection');
+  if(community&&!community.classList.contains('hidden')&&!document.hidden)renderCommunityRanking();
+ },120_000);
 }
 function stopPresenceTracking(){
  if(presenceTimer!==null){clearInterval(presenceTimer);presenceTimer=null;}
@@ -4089,7 +4093,7 @@ async function refreshChallengeData(){
   const recentWins=challengeItems.filter(item=>{
    if(item.status!=='completed'||!item.myResult||seenChallengeIds.has(item.id))return false;
    const winners=Array.isArray(item.winners)?item.winners:[];
-   const won=item.winner===activeProfile||winners.includes(activeProfile);
+   const won=item.winner!=='empate'&&(item.winner===activeProfile||winners.includes(activeProfile));
    const completedAt=Date.parse(item.completedAt||'');
    return won&&Number.isFinite(completedAt)&&Date.now()-completedAt<10*60_000;
   });
@@ -4521,8 +4525,8 @@ function renderTournamentFinalNotice(notice){
     description:'Sua colocação no torneio mensal foi reconhecida.',
     items:[(awardRank?awardRank+'º lugar · ':'')+name+' · '+place,...(notice.award?.frame?['Moldura conquistada: '+notice.award.frame]:[]),...newAchievements.map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||String(id))]
    });
+   localStorage.setItem(seenKey,'1');
   }
-  localStorage.setItem(seenKey,'1');
  }
  if(notice.award){
   profilesData[activeProfile]=profilesData[activeProfile]||{};
