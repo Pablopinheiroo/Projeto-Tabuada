@@ -104,16 +104,19 @@ check(html.includes("$('openProfile').addEventListener('click',()=>openProfileSc
 check(html.includes('id="openProfileStats"')&&html.includes('id="openProfileOptions"')&&html.includes('id="profileOptionsPanel"'),"Os atalhos de Estatísticas e Opções não estão no cartão de perfil.");
 check(!html.includes('id="resumeProfile"')&&!html.includes('id="addNumbers"')&&!html.includes('id="toggleProfileStats"'),"Os botões antigos continuam no perfil.");
 check(html.includes("SFX_OUTPUT_BOOST")&&html.includes("function previewSfxVolume()"),"O controle e a prévia do volume dos efeitos estão ausentes.");
-check(html.includes('id="profileMusicVolume"')&&html.includes("MUSIC_VOLUME_CACHE_KEY")&&html.includes("function restoreProfileMusicVolume()"),"O volume da música não é configurável nem restaurado por conta.");
-check(html.includes('id="saveProfileAudioPreferences"')&&html.includes("async function saveProfileAudioPreferences()")&&html.includes("Padrão salvo na sua conta"),"O salvamento do padrão de áudio da conta está ausente.");
+check(html.includes('id="profileMusicVolume"')&&html.includes("MUSIC_VOLUME_CACHE_KEY")&&html.includes("function restoreProfileMusicVolume()")&&html.includes('id="resetProfileMusicVolume"'),
+ "O volume da música não é configurável nem restaurável.");
+check(html.includes("function resetProfileMusicVolume()")&&html.includes("function syncAudioResetButtons()"),
+ "O reset da música ou o ocultamento automático dos botões de reset está ausente.");
+check(html.includes('id="saveProfileAudioPreferences"')&&html.includes("💾 Salvar como preferência da conta")&&html.includes("async function saveProfileAudioPreferences()")&&html.includes("Padrão salvo na sua conta"),"O salvamento como preferência da conta está ausente.");
 check(html.includes("profile.musicVolume=volumeLevel")&&html.includes("profile.sfxVolume=sfxVolumeLevel"),"O salvamento não inclui os dois volumes no perfil remoto.");
 check(html.includes("challengeVolumeLimit/100*volumeLevel"),"A música dos desafios não respeita o volume global salvo.");
 check(html.includes("uiSfxBuffers.set(src,buffer)")&&html.includes("source.start(audioContext.currentTime+.002)")&&html.includes("createSoftUiClickBuffer(variant)"),
  "Efeitos sonoros não são decodificados e reproduzidos em memória.");
 check(html.includes('id="profileSfxVolume"')&&html.includes("SFX_VOLUME_CACHE_KEY"),
  "O perfil não oferece volume independente e persistente para os efeitos da interface.");
-check(html.includes('id="profileGameSfxVolume"')&&html.includes("GAME_SFX_VOLUME_CACHE_KEY")&&html.includes("function restoreProfileGameSfxVolume()")&&html.includes("gameSfxVolumeLevel=.75"),
- "O volume separado do modo jogo não está configurado com 75% por padrão.");
+check(html.includes('id="profileGameSfxVolume"')&&html.includes("GAME_SFX_VOLUME_CACHE_KEY")&&html.includes("function restoreProfileGameSfxVolume()")&&html.includes("gameSfxVolumeLevel=.04"),
+ "O volume separado do modo jogo não está configurado com 4% por padrão.");
 check(html.includes("function previewGameSfxVolume()")&&html.includes("playUiSound(name,'game')")&&html.includes("function resetProfileGameSfxVolume()"),
  "A prévia ou a redefinição do volume do modo jogo está ausente.");
 check(html.includes("playFeedback(!!entry.correct,entry.mode==='training'?'game':'interface')")&&html.includes("playUiSound('verify','game')")&&html.includes("playUiSound('click','game')"),
@@ -346,7 +349,7 @@ async function testViewport(name, viewport, mobile = false) {
       { answered: 6, hits: 5, misses: 1 }
     ];
     activeProfile = "perfil-smoke";
-    profilesData[activeProfile] = { displayName: "Perfil de teste", sfxVolume: 0.82, featuredTitles: [] };
+    profilesData[activeProfile] = { displayName: "Perfil de teste", featuredTitles: [] };
     document.querySelector("#authScreen").classList.add("hidden");
     document.querySelector("#setup").classList.remove("hidden");
     refreshProfileIdentity();
@@ -416,8 +419,11 @@ async function testViewport(name, viewport, mobile = false) {
   check(await page.locator("#profileSfxVolume").isVisible(), name + ": o controle de efeitos da interface não aparece.");
   check(await page.locator("#profileGameSfxVolume").isVisible(),name+": o controle de efeitos do modo jogo não aparece.");
   check(await page.locator("#profileMusicVolume").isVisible(), name + ": o controle de música não aparece.");
-  check((await page.locator("#profileGameSfxVolume").inputValue())==="75",name+": o volume padrão do modo jogo não começa em 75%.");
-  check(await page.locator("#resetProfileGameSfxVolume").isVisible(),name+": o botão de redefinir o volume do modo jogo não aparece.");
+  check((await page.locator("#profileMusicVolume").inputValue())==="70",name+": o volume padrão da música não começa em 70%.");
+  check((await page.locator("#profileSfxVolume").inputValue())==="90",name+": o volume padrão da interface não começa em 90%.");
+  check((await page.locator("#profileGameSfxVolume").inputValue())==="4",name+": o volume padrão do modo jogo não começa em 4%.");
+  for(const id of ["#resetProfileMusicVolume","#resetProfileSfxVolume","#resetProfileGameSfxVolume"])
+    check(!(await page.locator(id).isVisible()),name+": "+id+" deveria ficar oculto quando já está no padrão.");
   await page.evaluate(() => {
     window.__previewCalls=0;window.__gamePreviewCalls=0;window.__audioPreferenceWrites=0;window.__audioPreferencePayload=null;
     window.cloudTokenReady=()=>true;
@@ -450,14 +456,33 @@ async function testViewport(name, viewport, mobile = false) {
   await page.waitForFunction(()=>uiSfxGain&&Math.abs(uiSfxGain.gain.value-.55)<.02,null,{timeout:3000});
   await page.waitForFunction(()=>gameSfxGain&&Math.abs(gameSfxGain.gain.value-.45)<.02,null,{timeout:3000});
   await page.waitForFunction(()=>window.__previewCalls>0&&window.__gamePreviewCalls>0,null,{timeout:3000});
+  for(const id of ["#resetProfileMusicVolume","#resetProfileSfxVolume","#resetProfileGameSfxVolume"])
+    check(await page.locator(id).isVisible(),name+": após alterar o volume, "+id+" deveria aparecer.");
   await page.locator("#resetProfileGameSfxVolume").click();
-  check((await page.locator("#profileGameSfxVolume").inputValue())==="75"&&
-    (await page.locator("#profileGameSfxVolumeValue").textContent()).trim()==="75%",
-    name+": o botão de redefinir não retornou o volume do modo jogo a 75%.");
-  check(await page.evaluate(()=>Math.abs(gameSfxVolumeLevel-.75)<.01),
-    name+": a redefinição não aplicou 75% ao áudio do modo jogo.");
-  const gamePreviewCallsBeforeSecondAdjust=await page.evaluate(()=>window.__gamePreviewCalls);
+  check((await page.locator("#profileGameSfxVolume").inputValue())==="4"&&
+    (await page.locator("#profileGameSfxVolumeValue").textContent()).trim()==="4%",
+    name+": o modo jogo não retornou ao padrão de 4%.");
+  check(await page.evaluate(()=>Math.abs(gameSfxVolumeLevel-.04)<.001),name+": não aplicou 4% ao modo jogo.");
+  check(!(await page.locator("#resetProfileGameSfxVolume").isVisible()),name+": o reset do modo jogo deveria sumir no padrão.");
+  await page.locator("#resetProfileSfxVolume").click();
+  check((await page.locator("#profileSfxVolume").inputValue())==="90"&&
+    (await page.locator("#profileSfxVolumeValue").textContent()).trim()==="90%",
+    name+": a interface não retornou ao padrão de 90%.");
+  check(!(await page.locator("#resetProfileSfxVolume").isVisible()),name+": o reset da interface deveria sumir no padrão.");
+  await page.locator("#resetProfileMusicVolume").click();
+  check((await page.locator("#profileMusicVolume").inputValue())==="70"&&
+    (await page.locator("#profileMusicVolumeValue").textContent()).trim()==="70%",
+    name+": a música não retornou ao padrão de 70%.");
+  check(await page.evaluate(()=>Math.abs(volumeLevel-.70)<.001),name+": não aplicou 70% à música.");
+  check(!(await page.locator("#resetProfileMusicVolume").isVisible()),name+": o reset da música deveria sumir no padrão.");
+  check(await page.locator("#soundtrackAudio").evaluate(el=>!el.paused&&Math.abs(el.volume-.70)<.02),
+    name+": a música não foi atualizada para 70% ao vivo após restaurar.");
+  await page.locator("#profileSfxVolume").evaluate(element=>{element.value="55";element.dispatchEvent(new Event("input",{bubbles:true}));});
   await page.locator("#profileGameSfxVolume").evaluate(element=>{element.value="45";element.dispatchEvent(new Event("input",{bubbles:true}));});
+  await page.locator("#profileMusicVolume").evaluate(element=>{element.value="43";element.dispatchEvent(new Event("input",{bubbles:true}));});
+  for(const id of ["#resetProfileMusicVolume","#resetProfileSfxVolume","#resetProfileGameSfxVolume"])
+    check(await page.locator(id).isVisible(),name+": os botões de reset deveriam reaparecer após sair do padrão.");
+  const gamePreviewCallsBeforeSecondAdjust=await page.evaluate(()=>window.__gamePreviewCalls);
   await page.waitForFunction(previous=>window.__gamePreviewCalls>previous,gamePreviewCallsBeforeSecondAdjust,{timeout:4000});
   await page.locator("#saveProfileAudioPreferences").click();
   await page.waitForFunction(()=>window.__audioPreferenceWrites===1,null,{timeout:5000});
@@ -468,6 +493,8 @@ async function testViewport(name, viewport, mobile = false) {
   }));
   check(Math.abs(savedAudioProfile.sfx-.55)<.01&&Math.abs(savedAudioProfile.game-.45)<.01&&Math.abs(savedAudioProfile.music-.43)<.01,name+": os três volumes não foram salvos no perfil local.");
   check(Math.abs(savedAudioProfile.remoteSfx-.55)<.01&&Math.abs(savedAudioProfile.remoteGame-.45)<.01&&Math.abs(savedAudioProfile.remoteMusic-.43)<.01,name+": os três volumes não foram enviados à nuvem.");
+  check((await page.locator("#saveProfileAudioPreferences").textContent()).includes("Salvar como preferência da conta"),
+    name+": o botão não foi renomeado corretamente.");
   check((await page.locator("#profileAudioSaveStatus").textContent()).includes("Padrão salvo na sua conta"),name+": confirmação do salvamento não apareceu.");
   check((await page.locator("#closeProfileOptions").textContent()).includes("Menu principal"),
     name+": o botão de Opções não indica retorno ao menu principal.");
@@ -481,7 +508,7 @@ async function testViewport(name, viewport, mobile = false) {
   if(musicWasPlayingBeforeOptions)await page.waitForFunction(()=>!document.querySelector("#soundtrackAudio").paused,null,{timeout:5000});
   await page.evaluate(()=>{
     setVolume(100);
-    sfxVolumeLevel=.82;gameSfxVolumeLevel=.75;
+    sfxVolumeLevel=.90;gameSfxVolumeLevel=.04;
     restoreProfileSfxVolume();restoreProfileGameSfxVolume();restoreProfileMusicVolume();
   });
   check((await page.locator("#globalVolume").inputValue())==="43",name+": o volume da música não foi restaurado ao retornar.");

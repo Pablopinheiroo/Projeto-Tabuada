@@ -1012,7 +1012,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   <div class="music-buttons">
    <button id="soundToggle" class="music-button" type="button" aria-pressed="true">♫ Pausar música</button>
    <button id="replayTune" class="music-button" type="button">⏭ Próxima faixa</button>
-   <label class="volume-control" for="globalVolume">🔊 Volume <input id="globalVolume" type="range" min="0" max="100" value="100"><strong id="volumeValue">100%</strong></label>
+   <label class="volume-control" for="globalVolume">🔊 Volume <input id="globalVolume" type="range" min="0" max="100" value="70"><strong id="volumeValue">70%</strong></label>
   </div>
  </div>
  <audio id="soundtrackAudio" preload="auto" autoplay playsinline></audio>
@@ -1124,32 +1124,33 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
    <p>Controla as trilhas de fundo e também o volume máximo da música dos desafios. A música continua tocando para você comparar o volume.</p>
    <label class="profile-sfx-volume" for="profileMusicVolume">
     <span>Volume da música</span>
-    <input id="profileMusicVolume" type="range" min="0" max="100" step="1" value="100">
-    <strong id="profileMusicVolumeValue">100%</strong>
+    <input id="profileMusicVolume" type="range" min="0" max="100" step="1" value="70">
+    <strong id="profileMusicVolumeValue">70%</strong>
    </label>
+   <div class="profile-audio-reset-row hidden"><button id="resetProfileMusicVolume" class="secondary profile-audio-reset" type="button">↺ Restaurar padrão · 70%</button></div>
   </section>
   <section class="profile-audio-settings" aria-label="Efeitos da interface">
    <h3>🔊 Efeitos da interface</h3>
    <p>Controla cliques, teclas e botões dos menus. Um som de teste toca enquanto você ajusta.</p>
    <label class="profile-sfx-volume" for="profileSfxVolume">
     <span>Volume dos efeitos da interface</span>
-    <input id="profileSfxVolume" type="range" min="0" max="100" step="1" value="82">
-    <strong id="profileSfxVolumeValue">82%</strong>
+    <input id="profileSfxVolume" type="range" min="0" max="100" step="1" value="90">
+    <strong id="profileSfxVolumeValue">90%</strong>
    </label>
-   <div class="profile-audio-reset-row"><button id="resetProfileSfxVolume" class="secondary profile-audio-reset" type="button">↺ Restaurar padrão · 82%</button></div>
+   <div class="profile-audio-reset-row hidden"><button id="resetProfileSfxVolume" class="secondary profile-audio-reset" type="button">↺ Restaurar padrão · 90%</button></div>
   </section>
   <section class="profile-audio-settings" aria-label="Efeitos do modo jogo">
    <h3>🎮 Efeitos do modo jogo</h3>
    <p>Controla somente os sons de Verificar, Acertei, Errei e Tive dificuldade. Uma prévia toca os quatro efeitos para você comparar.</p>
    <label class="profile-sfx-volume" for="profileGameSfxVolume">
     <span>Volume dos efeitos do modo jogo</span>
-    <input id="profileGameSfxVolume" type="range" min="0" max="100" step="1" value="75">
-    <strong id="profileGameSfxVolumeValue">75%</strong>
+    <input id="profileGameSfxVolume" type="range" min="0" max="100" step="1" value="4">
+    <strong id="profileGameSfxVolumeValue">4%</strong>
    </label>
-   <div class="profile-audio-reset-row"><button id="resetProfileGameSfxVolume" class="secondary profile-audio-reset" type="button">↺ Restaurar padrão · 75%</button></div>
+   <div class="profile-audio-reset-row hidden"><button id="resetProfileGameSfxVolume" class="secondary profile-audio-reset" type="button">↺ Restaurar padrão · 4%</button></div>
   </section>
   <div class="profile-audio-save">
-   <button id="saveProfileAudioPreferences" class="primary" type="button">💾 Salvar como padrão da conta</button>
+   <button id="saveProfileAudioPreferences" class="primary" type="button">💾 Salvar como preferência da conta</button>
    <p id="profileAudioSaveStatus" role="status" aria-live="polite">Depois de ajustar os volumes, salve para usar essas escolhas nos próximos acessos à sua conta.</p>
   </div>
  </section>
@@ -1537,7 +1538,8 @@ function updateTrainingGlobalModeControls(){
 }
 let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
 let trainingReviewMode=false,trainingReviewFacts=[],trainingRoundTarget=0,currentQuestionTimeMs=0,currentQuestionTimeStopped=false,currentDifficultyMarked=false;
-let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=1,sfxVolumeLevel=.82,gameSfxVolumeLevel=.75;
+const DEFAULT_AUDIO_PREFERENCES={music:70,interface:90,game:4};
+let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=.70,sfxVolumeLevel=.90,gameSfxVolumeLevel=.04;
 let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueuePosition=0,musicStartPending=false,mainMusicTimer=null;
 let profileOptionsOpen=false,profileOptionsResumeMusic=false,sfxPreviewTimer=null,gameSfxPreviewTimers=[];
 const LAST_TRACK_STORAGE_KEY='projetoTabuadaUltimaFaixaV2:';
@@ -4532,6 +4534,17 @@ function playUiSfxBuffer(buffer,channel='interface'){
 const SFX_VOLUME_CACHE_KEY='projetoTabuadaVolumeEfeitosV1';
 const GAME_SFX_VOLUME_CACHE_KEY='projetoTabuadaVolumeModoJogoV1';
 const MUSIC_VOLUME_CACHE_KEY='projetoTabuadaVolumeMusicaV1';
+function syncAudioResetButtons(){
+ const values=[
+  ['resetProfileMusicVolume',volumeLevel,DEFAULT_AUDIO_PREFERENCES.music],
+  ['resetProfileSfxVolume',sfxVolumeLevel,DEFAULT_AUDIO_PREFERENCES.interface],
+  ['resetProfileGameSfxVolume',gameSfxVolumeLevel,DEFAULT_AUDIO_PREFERENCES.game]
+ ];
+ values.forEach(([id,value,standard])=>{
+  const row=$(id)?.closest('.profile-audio-reset-row');
+  if(row)row.classList.toggle('hidden',Math.round(Number(value)*100)===standard);
+ });
+}
 function applySfxVolumeToPlayers(){
  const value=Math.max(0,Math.min(1,sfxVolumeLevel));
  const gameValue=Math.max(0,Math.min(1,gameSfxVolumeLevel));
@@ -4542,6 +4555,7 @@ function applySfxVolumeToPlayers(){
  if(uiSfxGain&&audioContext)uiSfxGain.gain.setTargetAtTime(value*SFX_OUTPUT_BOOST,audioContext.currentTime,.012);
  if($('profileSfxVolume'))$('profileSfxVolume').value=String(Math.round(value*100));
  if($('profileSfxVolumeValue'))$('profileSfxVolumeValue').textContent=Math.round(value*100)+'%';
+ syncAudioResetButtons();
 }
 function applyGameSfxVolume(){
  const value=Math.max(0,Math.min(1,gameSfxVolumeLevel));
@@ -4551,6 +4565,7 @@ function applyGameSfxVolume(){
  for(const pool of uiSfxAudioPool.values())for(const player of pool){
   if(player.dataset.sfxChannel==='game')player.volume=Math.min(1,value*SFX_OUTPUT_BOOST);
  }
+ syncAudioResetButtons();
 }
 function restoreProfileSfxVolume(){
  const profile=profilesData[activeProfile]||{};
@@ -4563,7 +4578,7 @@ function restoreProfileSfxVolume(){
    if(cached!==null&&cached!==undefined&&Number.isFinite(Number(cached)))saved=Number(cached);
   }catch{}
  }
- sfxVolumeLevel=saved===null?.82:Math.max(0,Math.min(1,saved));
+ sfxVolumeLevel=saved===null?DEFAULT_AUDIO_PREFERENCES.interface/100:Math.max(0,Math.min(1,saved));
  applySfxVolumeToPlayers();
 }
 function restoreProfileGameSfxVolume(){
@@ -4577,7 +4592,7 @@ function restoreProfileGameSfxVolume(){
    if(cached!==null&&cached!==undefined&&Number.isFinite(Number(cached)))saved=Number(cached);
   }catch{}
  }
- gameSfxVolumeLevel=saved===null?.75:Math.max(0,Math.min(1,saved));
+ gameSfxVolumeLevel=saved===null?DEFAULT_AUDIO_PREFERENCES.game/100:Math.max(0,Math.min(1,saved));
  applyGameSfxVolume();
 }
 function restoreProfileMusicVolume(){
@@ -4591,7 +4606,7 @@ function restoreProfileMusicVolume(){
    if(cached!==null&&cached!==undefined&&Number.isFinite(Number(cached)))saved=Number(cached);
   }catch{}
  }
- setVolume((saved===null?1:Math.max(0,Math.min(1,saved)))*100);
+ setVolume((saved===null?DEFAULT_AUDIO_PREFERENCES.music/100:Math.max(0,Math.min(1,saved)))*100);
 }
 function syncAudioPreferenceControls(){
  if($('profileSfxVolume'))$('profileSfxVolume').value=String(Math.round(sfxVolumeLevel*100));
@@ -4600,6 +4615,7 @@ function syncAudioPreferenceControls(){
  if($('profileGameSfxVolumeValue'))$('profileGameSfxVolumeValue').textContent=Math.round(gameSfxVolumeLevel*100)+'%';
  if($('profileMusicVolume'))$('profileMusicVolume').value=String(Math.round(volumeLevel*100));
  if($('profileMusicVolumeValue'))$('profileMusicVolumeValue').textContent=Math.round(volumeLevel*100)+'%';
+ syncAudioResetButtons();
 }
 function setProfileSfxVolume(value){
  sfxVolumeLevel=Math.max(0,Math.min(1,Number(value)/100));
@@ -4622,8 +4638,9 @@ function previewGameSfxVolume(){
   gameSfxPreviewTimers.push(timer);
  });
 }
-function resetProfileSfxVolume(){setProfileSfxVolume(82);previewSfxVolume();}
-function resetProfileGameSfxVolume(){setProfileGameSfxVolume(75);previewGameSfxVolume();}
+function resetProfileMusicVolume(){setVolume(DEFAULT_AUDIO_PREFERENCES.music);}
+function resetProfileSfxVolume(){setProfileSfxVolume(DEFAULT_AUDIO_PREFERENCES.interface);previewSfxVolume();}
+function resetProfileGameSfxVolume(){setProfileGameSfxVolume(DEFAULT_AUDIO_PREFERENCES.game);previewGameSfxVolume();}
 async function saveProfileAudioPreferences(){
  const username=activeProfile;
  const status=$('profileAudioSaveStatus');
@@ -4755,6 +4772,7 @@ function setVolume(value){
  if($('volumeValue'))$('volumeValue').textContent=Math.round(volumeLevel*100)+'%';
  if($('profileMusicVolume'))$('profileMusicVolume').value=String(Math.round(volumeLevel*100));
  if($('profileMusicVolumeValue'))$('profileMusicVolumeValue').textContent=Math.round(volumeLevel*100)+'%';
+ syncAudioResetButtons();
 }
 function showTrack(){
  const track=musicalTracks[currentTrackIndex];if(!track)return;
@@ -4955,6 +4973,7 @@ $('trackSelect').addEventListener('change',e=>chooseTrack(e.target.value));
 $('globalVolume').addEventListener('input',e=>setVolume(e.target.value));
 $('profileSfxVolume').addEventListener('input',e=>{setProfileSfxVolume(e.target.value);previewSfxVolume();});
 $('profileGameSfxVolume').addEventListener('input',e=>{setProfileGameSfxVolume(e.target.value);previewGameSfxVolume();});
+$('resetProfileMusicVolume').addEventListener('click',resetProfileMusicVolume);
 $('resetProfileSfxVolume').addEventListener('click',resetProfileSfxVolume);
 $('resetProfileGameSfxVolume').addEventListener('click',resetProfileGameSfxVolume);
 $('profileMusicVolume').addEventListener('input',e=>setVolume(e.target.value));
