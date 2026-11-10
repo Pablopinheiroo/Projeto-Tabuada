@@ -89,6 +89,7 @@ check(workerSource.includes('const WORKER_BUILD_ID = "2026-11-10-community-prese
   workerSource.includes("PRESENCE_MIN_WRITE_INTERVAL_MS")&&
   workerSource.includes('if (route === "/api/presence" && request.method === "POST")')&&
   workerSource.includes("profile: { ...profile, lastOnlineAt }")&&
+  workerSource.includes("invalidateCommunitySummaryCache();")&&
   workerSource.includes("lastOnlineAt: typeof profile.lastOnlineAt")&&
   workerSource.includes("lastOnlinePresence: true"),
   "A API precisa registrar e devolver a última presença da comunidade, com proteção contra gravações excessivas.");
