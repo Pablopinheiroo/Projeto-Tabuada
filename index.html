@@ -1957,7 +1957,7 @@ document.addEventListener('keydown',event=>{
  if(trigger&&(event.key==='Enter'||event.key===' ')){event.preventDefault();openBadgeInfoPopover(trigger);}
 });
 window.addEventListener('resize',()=>closeBadgeInfoPopover(false));
-window.addEventListener('scroll',()=>closeBadgeInfoPopover(false),true);
+window.addEventListener('scroll',()=>{if(!badgeInfoAnchor)return;if(badgeInfoAnchor.isConnected)openBadgeInfoPopover(badgeInfoAnchor);else closeBadgeInfoPopover(false);},true);
 
 
 const ECONOMY_CACHE_KEY='projetoTabuadaEconomiaCacheV1';
