@@ -1514,6 +1514,7 @@ async function handleApi(request, env, origin) {
         updatedAt: lastOnlineAt
       };
       const sha = await writeUser(username, updated, record.sha, env);
+      invalidateCommunitySummaryCache();
       return json({ ok: true, lastOnlineAt, updated: true, sha, updatedAt: updated.updatedAt }, 200, origin);
     }
 
