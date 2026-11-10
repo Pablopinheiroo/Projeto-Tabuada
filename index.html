@@ -4314,6 +4314,8 @@ function setMainContentSections({hub=false,training=false,adventure=false,challe
   const element=$(id);
   if(element)element.classList.toggle('hidden',!visible);
  }
+  const topReturn=$('topReturnToGame');
+  if(topReturn)topReturn.classList.toggle('hidden',shop);
 }
 function showCommunityOnly(){
  setMainContentSections({community:true});
