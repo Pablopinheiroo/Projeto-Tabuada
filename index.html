@@ -1594,6 +1594,7 @@ let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueu
 let profileOptionsOpen=false,profileOptionsResumeMusic=false,sfxPreviewTimer=null,gameSfxPreviewTimers=[],optionMusicPreviewTimer=null,optionMusicPreviewActive=false,optionPreviewSources=new Set();
 const LAST_TRACK_STORAGE_KEY='projetoTabuadaUltimaFaixaV2:';
 let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,questionClockPaused=false,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0,sessionCompletedQuestionCount=0,trainingSessionSaving=false;
+let sessionTrainingCorrectClaimed=0,sessionTrainingCorrectNext=10,sessionIntelligentQuestionsClaimed=0,sessionIntelligentQuestionsNext=10,sessionRewardQueue=Promise.resolve();
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
 let gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,trainingCorrectProgress:0,trainingCorrectClaimIds:[],intelligentTrainingProgress:0,intelligentTrainingClaimIds:[],errorTrainingClaimIds:[],completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
 let rewardSyncBusy=false;
@@ -2262,7 +2263,7 @@ async function deliverPendingGameReward(item){
  updateProfileLastSavedAt();
  if(result.newAchievements?.length){
   showAchievementCongratulations(result.newAchievements,result.coinsAdded>0?'🪙 +'+Number(result.coinsAdded).toLocaleString('pt-BR')+' moedas':'');
- }else if(result.coinsAdded>0)showGameRewardToast('🪙 +'+result.coinsAdded+' moedas!');
+ }else if(result.coinsAdded>0)showGameRewardToast('🎉 Parabéns! +'+result.coinsAdded+' moedas!',true);
  saveClientEconomyCache();refreshEconomyDisplay();renderAchievementShelf();renderAvatarShop();
  if($('profileAvatarGrid')&&!$('profileScreen').classList.contains('hidden')){
   renderAvatarGrid('profileAvatarGrid',selectedProfileAvatar,key=>{selectedProfileAvatar=key;});
@@ -2318,6 +2319,39 @@ async function claimGameReward(type,payload){
   return null;
  }
 }
+function queueTrainingSessionReward(type,payload){
+ const run=()=>claimGameReward(type,payload);
+ const queued=sessionRewardQueue.then(run,run);
+ sessionRewardQueue=queued.then(()=>undefined,()=>undefined);
+ return queued;
+}
+function newTrainingRewardClaimId(prefix){
+ return prefix+'-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
+}
+function checkTrainingSessionRewardMilestones(){
+ if(trainingModeType==='intelligent'){
+  while(sessionCompletedQuestionCount-sessionIntelligentQuestionsClaimed>=sessionIntelligentQuestionsNext){
+   const count=sessionIntelligentQuestionsNext;
+   sessionIntelligentQuestionsClaimed+=count;
+   sessionIntelligentQuestionsNext=10;
+   queueTrainingSessionReward('intelligent_training_questions',{
+    claimId:newTrainingRewardClaimId('intelligent-training'),questionCount:count
+   });
+  }
+  return;
+ }
+ if(trainingModeType==='standard'||trainingModeType==='difficulties'){
+  while(hits-sessionTrainingCorrectClaimed>=sessionTrainingCorrectNext){
+   const count=sessionTrainingCorrectNext;
+   sessionTrainingCorrectClaimed+=count;
+   sessionTrainingCorrectNext=10;
+   queueTrainingSessionReward('training_questions',{
+    claimId:newTrainingRewardClaimId('training-correct'),correctCount:count
+   });
+  }
+ }
+}
+
 async function purchaseAvatar(key){
  const price=avatarPrice(key);
  const message=$('shopMessage')||$('profileMessage');
@@ -3159,14 +3193,26 @@ async function finishSession(){
   persistProfiles();
  }
  showReport();
- let reward=null;
- if(trainingModeType==='intelligent'&&sessionCompletedQuestionCount>0){
-  const claimId='intelligent-training-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
-  reward=await claimGameReward('intelligent_training_questions',{claimId,questionCount:sessionCompletedQuestionCount});
- }else if(trainingModeType!=='errors'&&hits>0){
-  const claimId='training-correct-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
-  reward=await claimGameReward('training_questions',{claimId,correctCount:hits});
+ let queuedReward=null;
+ if(trainingModeType==='intelligent'){
+  const remainder=sessionCompletedQuestionCount-sessionIntelligentQuestionsClaimed;
+  if(remainder>0){
+   sessionIntelligentQuestionsClaimed+=remainder;
+   queuedReward=queueTrainingSessionReward('intelligent_training_questions',{
+    claimId:newTrainingRewardClaimId('intelligent-training'),questionCount:remainder
+   });
+  }
+ }else if(trainingModeType!=='errors'){
+  const remainder=hits-sessionTrainingCorrectClaimed;
+  if(remainder>0){
+   sessionTrainingCorrectClaimed+=remainder;
+   queuedReward=queueTrainingSessionReward('training_questions',{
+    claimId:newTrainingRewardClaimId('training-correct'),correctCount:remainder
+   });
+  }
  }
+ await sessionRewardQueue;
+ const reward=queuedReward?await queuedReward:null;
  const saved=await saveProgressNow('Treinamento');
  if(reward?.coinsAdded>0){
   $('reportIntro').textContent+=' Você ganhou '+reward.coinsAdded+' moedas.';
@@ -3176,6 +3222,7 @@ async function finishSession(){
  if(!saved&&activeProfile){
   $('reportIntro').textContent+=' O resultado ficou guardado neste aparelho e será sincronizado quando possível.';
  }
+ showTrainingExitCelebration();
  return saved;
 }
 
@@ -4333,10 +4380,9 @@ function completeErrorTraining(){
  if(errorTrainingCompleted)return;
  errorTrainingCompleted=true;
  pauseTrainingQuestionClock();
- const claimId='error-training-complete-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
- claimGameReward('error_training_complete',{claimId}).then(async reward=>{
+ const claimId=newTrainingRewardClaimId('error-training-complete');
+ queueTrainingSessionReward('error_training_complete',{claimId}).then(async()=>{
   await finishSession();
-  showGameRewardToast(reward?.coinsAdded>0?'🎉 Parabéns! Todos os erros foram treinados. Você ganhou 10 moedas!':'🎉 Parabéns! Todos os erros pendentes foram treinados.',true);
   trainingModeType='standard';trainingReviewMode=false;
   updateReviewTrainingButton();
  });
@@ -4413,6 +4459,11 @@ function start(){
  hits=0;misses=0;round=0;position=0;deck=[];roundCorrect=new Set();trainingRoundTarget=0;
  currentQuestionTimeMs=0;currentQuestionTimeStopped=false;currentDifficultyMarked=false;
  sessionAnswers=[];sessionSkipped=0;sessionQuestionTimeMs=0;sessionCompletedQuestionCount=0;trainingSessionSaving=false;sessionStartedAt=performance.now();
+ sessionTrainingCorrectClaimed=0;
+ sessionTrainingCorrectNext=Math.max(1,10-Math.max(0,Math.min(9,Number(gameEconomy.trainingCorrectProgress)||0)));
+ sessionIntelligentQuestionsClaimed=0;
+ sessionIntelligentQuestionsNext=Math.max(1,10-Math.max(0,Math.min(9,Number(gameEconomy.intelligentTrainingProgress)||0)));
+ sessionRewardQueue=Promise.resolve();
  $('report').classList.add('hidden');$('setup').classList.add('hidden');$('game').classList.remove('hidden');
  if(soundOn)ensureAudio();
  if(!$('profileName').value.trim())activeProfile='';
@@ -4453,6 +4504,7 @@ function judge(ok){
   }else deck.push({...current});
   $('answer').classList.add('wrong');
  }
+ checkTrainingSessionRewardMilestones();
  position++;currentQuestionTimeMs=0;currentQuestionTimeStopped=false;currentDifficultyMarked=false;
  updateReviewTrainingButton();renderCommunityRanking();next();saveCheckpoint();
 }
@@ -4965,6 +5017,7 @@ function markCurrentQuestionDifficulty(){
  }
  currentDifficultyMarked=true;saveHistory();
  sessionCompletedQuestionCount++;
+ checkTrainingSessionRewardMilestones();
  sessionQuestionTimeMs+=Math.max(0,Number(currentQuestionTimeMs)||0);
  sessionSkipped++;
  deck.push({a:current.a,b:current.b});
@@ -4973,6 +5026,43 @@ function markCurrentQuestionDifficulty(){
  $('markDifficulty').disabled=true;$('markDifficulty').classList.add('marked');$('markDifficulty').textContent='✓ Marcada para revisão';
  updateReviewTrainingButton();updateStats();
  next();saveCheckpoint();
+}
+function showTrainingExitCelebration(){
+ document.querySelectorAll('.training-celebration-overlay').forEach(item=>item.remove());
+ const answered=sessionAnswers.length;
+ const accuracy=answered?Math.round(hits/answered*100):0;
+ const totalTime=sessionQuestionTimeMs;
+ const completedErrors=trainingModeType==='errors'&&errorTrainingCompleted;
+ const title=completedErrors?'Parabéns! Você treinou todos os seus erros!':
+  hits>0?'Parabéns pelo seu treino!':'Treino encerrado!';
+ const detail=completedErrors
+  ?'Você conseguiu resolver todos os erros pendentes com dois acertos seguidos em cada conta.'
+  :answered
+   ?'Seu resultado foi salvo. Veja abaixo o desempenho desta partida e o ranking das contas.'
+   :'Sua partida foi encerrada. O resultado desta sessão está disponível abaixo.';
+ const overlay=document.createElement('div');
+ overlay.className='training-celebration-overlay';
+ overlay.setAttribute('role','dialog');
+ overlay.setAttribute('aria-modal','true');
+ overlay.setAttribute('aria-label','Parabéns e resultado do treino');
+ overlay.innerHTML='<div class="training-celebration-confetti">'+Array.from({length:28},(_,i)=>'<i style="--n:'+i+'"></i>').join('')+'</div>'+
+  '<div class="training-celebration-card training-exit-card"><div class="training-celebration-cup">🎉</div>'+
+  '<span class="music-kicker">PARTIDA FINALIZADA</span><h2>'+escapeHtml(title)+'</h2><p>'+escapeHtml(detail)+'</p>'+
+  '<div class="training-exit-results">'+
+   '<div class="training-exit-result"><span>Acertos</span><strong>'+hits+'</strong></div>'+
+   '<div class="training-exit-result"><span>Erros</span><strong>'+misses+'</strong></div>'+
+   '<div class="training-exit-result"><span>Precisão</span><strong>'+accuracy+'%</strong></div>'+
+   '<div class="training-exit-result"><span>Tempo</span><strong>'+escapeHtml(formatDuration(totalTime))+'</strong></div>'+
+  '</div><p class="training-exit-answered">Questões classificadas: <strong>'+answered+'</strong> · Sem classificação: <strong>'+sessionSkipped+'</strong></p>'+
+  '<button type="button" class="primary" data-dismiss-exit-result>Ver resultado completo</button></div>';
+ document.body.appendChild(overlay);
+ playCelebrationSound();
+ const dismiss=()=>{
+  overlay.remove();
+  const report=$('report');
+  if(report){report.scrollIntoView({behavior:'smooth',block:'start'});report.querySelector('h2')?.focus({preventScroll:true});}
+ };
+ overlay.querySelector('[data-dismiss-exit-result]')?.addEventListener('click',dismiss);
 }
 function showTrainingCycleCelebration(result,isReview,reviewComplete=false){
  pauseTrainingQuestionClock();
