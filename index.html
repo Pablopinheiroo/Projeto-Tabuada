@@ -3213,19 +3213,12 @@ async function saveProfileEdits(event){
  profilesData[activeProfile].updatedAt=new Date().toISOString();
  profilesData[activeProfile].publicProfileUpdatedAt=profilesData[activeProfile].updatedAt;
  persistProfiles();
- try{
-  const payload=buildRemoteUserData();
-  const newSha=await writeRemoteUser(activeProfile,payload,remoteUserSha);
-  remoteUserSha=newSha;remoteUserData=payload;
-  studyTimeBaseMs=Math.max(studyTimeBaseMs,Number(payload.profile.studyTimeMs)||0);
-  updateProfileLastSavedAt();
-  pendingActiveMs=0;savePendingActiveTime(activeProfile);persistProfiles();
-  $('profileMessage').textContent='Perfil atualizado com sucesso!';
+ const saved=await saveProgressNow('Perfil');
+ if(saved){
+  $('profileMessage').textContent='Perfil atualizado e sincronizado com a comunidade!';
   renderFeaturedAwardsEditor();renderProfileFeaturedTitlesEditor();refreshProfileIdentity();
-  communityCacheAt=0;
-  renderCommunityRanking();
- }catch(error){
-  $('profileMessage').textContent='Não foi possível salvar o perfil: '+siteErrorMessage(error);
+ }else{
+  $('profileMessage').textContent='Perfil salvo neste aparelho. A sincronização com a comunidade ainda está pendente.';
  }
 }
 async function changePassword(event){
@@ -3240,7 +3233,10 @@ async function changePassword(event){
   if(result.sha)remoteUserSha=result.sha;
   if(remoteUserData)remoteUserData.updatedAt=new Date().toISOString();
   $('changePasswordForm').reset();
-  $('passwordMessage').textContent='Senha alterada com sucesso. Use a nova senha no próximo acesso.';
+  const saved=await saveProgressNow('Alteração de senha');
+  $('passwordMessage').textContent=saved
+   ?'Senha alterada. O progresso e a alteração foram sincronizados com sua conta.'
+   :'Senha alterada com sucesso. O progresso ficou guardado neste aparelho e será sincronizado depois.';
  }catch(error){
   $('passwordMessage').textContent='Não foi possível alterar a senha: '+siteErrorMessage(error);
  }
@@ -5127,15 +5123,12 @@ async function saveProfileAudioPreferences(){
   localStorage.setItem(MUSIC_VOLUME_CACHE_KEY,JSON.stringify(musicPrefs));
  }catch{}
  try{
-  if(!remoteUserData||!cloudTokenReady())throw new Error('Não foi possível acessar a sessão da nuvem.');
-  const payload=buildRemoteUserData();
-  const newSha=await writeRemoteUser(username,payload,remoteUserSha);
-  if(activeProfile!==username)return;
-  remoteUserSha=newSha;remoteUserData=payload;lastCloudSaveAt=Date.now();
-  updateProfileLastSavedAt();
-  status.textContent='✅ Padrão salvo na sua conta. Será aplicado automaticamente nos próximos acessos.';
+  const saved=await saveProgressNow('Preferências de áudio');
+  status.textContent=saved
+   ?'✅ Preferências salvas na sua conta. Serão aplicadas nos próximos acessos.'
+   :'⚠️ Preferências guardadas neste aparelho; a sincronização com a conta ainda está pendente.';
  }catch(error){
-  status.textContent='⚠️ Salvo neste aparelho, mas não foi sincronizado com a conta: '+siteErrorMessage(error);
+  status.textContent='⚠️ Não foi possível sincronizar as preferências: '+siteErrorMessage(error);
  }finally{button.disabled=false;}
 }
 async function loadUiSfx(){
