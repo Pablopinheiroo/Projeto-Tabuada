@@ -2349,8 +2349,8 @@ function profileLearningStats(){
   adventure:{label:'Modo jogo',sources:['adventure']},
   challenge:{label:'Desafio',sources:['challenge']},
   tournament:{label:'Torneio',sources:['tournament']},
-  tournamentReview:{label:'Revisão do torneio',sources:['tournament_error_training']},
-  legacy:{label:'Histórico sem divisão por modo',sources:[]}
+  tournamentReview:{label:'Rev. torneio',sources:['tournament_error_training']},
+  legacy:{label:'Histórico antigo',sources:[]}
  };
  const modes=Object.fromEntries(Object.entries(modeSources).map(([key,value])=>[key,{label:value.label,attempts:0,correct:0,wrong:0,timeMs:0}]));
  rows.forEach(row=>{
