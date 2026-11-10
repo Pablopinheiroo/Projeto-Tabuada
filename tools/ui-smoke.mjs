@@ -173,6 +173,12 @@ check(html.includes(".community-rank-public-stats{color:#102b49"),
  "O texto de estatísticas da comunidade continua com contraste baixo.");
 check(html.includes('<button id="navCommunity" type="button">🌐 Comunidade</button>'),
  "O ícone anterior da comunidade não foi restaurado.");
+check(html.includes('<button id="navShop" type="button">🛍️ Loja</button>')&&html.includes('id="shopScreen"')&&html.includes('id="avatarShopGrid"'),
+ "O botão Loja ou a tela de compras de avatares está ausente.");
+check(html.includes("const isProfile=containerId==='profileAvatarGrid';")&&html.includes(".filter(item=>!isProfile||item.isOwned)")&&html.includes("function renderAvatarShop()")&&html.includes("/api/game/shop"),
+ "O perfil não está limitado aos avatares adquiridos ou a Loja perdeu a compra com moedas.");
+check(html.includes("Comprar · '+price.toLocaleString('pt-BR')+' moedas")&&!html.includes("Loja de avatares <small class=\"shop-rules\""),
+ "Os avatares bloqueados continuam aparecendo no editor do perfil em vez de ficarem na Loja.");
 check(html.includes("const ACTIVE_TIME_SYNC_MS=30*60*1000;"), "O salvamento automático não está configurado para 30 minutos.");
 check(logoutCode.length>0&&!logoutCode.includes("flushCloudSave(true)"), "Sair da conta ainda força um salvamento antes dos 30 minutos.");
 check(html.includes("pendingActiveMs>0?loadHistory():remoteHistory"), "O login não preserva o histórico local que ainda não foi sincronizado.");
@@ -403,6 +409,48 @@ async function testViewport(name, viewport, mobile = false) {
     name + ": voltar das estatísticas não retornou ao menu principal.");
   await page.locator("#openProfile").click();
   await page.waitForTimeout(250);
+  await page.evaluate(()=>{
+    gameEconomy={version:1,coins:2400,totalEarned:3000,trainingCycles:30,completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0','imagem:1','gif:2'],achievements:{}};
+    selectedProfileAvatar='imagem:0';
+    renderAvatarGrid('profileAvatarGrid',selectedProfileAvatar,key=>{selectedProfileAvatar=key;});
+    renderAvatarShop();
+  });
+  check(await page.locator("#profileAvatarGrid .avatar-choice").count()===3,
+    name+": Meu perfil não mostra somente os três avatares que já pertencem à conta.");
+  check(await page.locator("#profileAvatarGrid .avatar-choice.locked").count()===0&&
+    await page.locator("#profileAvatarGrid [data-avatar-buy]").count()===0,
+    name+": ainda há avatares bloqueados ou para comprar dentro de Meu perfil.");
+  check(await page.locator("#avatarShopGrid .shop-avatar-card").count()===23,
+    name+": a Loja não listou os 23 avatares que antes ficavam bloqueados.");
+  check(await page.locator("#avatarShopGrid .shop-avatar-card.locked").count()===0&&
+    await page.locator("#avatarShopGrid [data-avatar-buy]").count()===21&&
+    await page.locator("#avatarShopGrid .shop-avatar-card.owned").count()===2,
+    name+": a Loja não separou corretamente itens adquiridos e itens à venda.");
+  check((await page.locator("#shopCoins").textContent()).trim()==="2.400",
+    name+": o saldo de moedas não apareceu na Loja.");
+  await page.evaluate(async()=>{
+    const original=window.apiRequest;
+    window.__shopRequest=null;
+    window.apiRequest=async(path,options)=>{
+      if(path!=="/api/game/shop")throw new Error("Rota inesperada: "+path);
+      window.__shopRequest={path,method:options.method,body:options.body};
+      return {economy:{...gameEconomy,coins:gameEconomy.coins-100,ownedAvatars:[...gameEconomy.ownedAvatars,"imagem:2"]},sha:"shop-smoke-sha",newAchievements:[]};
+    };
+    try{await purchaseAvatar("imagem:2");}finally{window.apiRequest=original;}
+  });
+  const shopPurchase=await page.evaluate(()=>window.__shopRequest);
+  check(shopPurchase?.path==="/api/game/shop"&&shopPurchase?.method==="POST"&&shopPurchase?.body?.avatarKey==="imagem:2",
+    name+": a compra não foi enviada ao servidor pela rota oficial da Loja.");
+  check(await page.locator("#profileAvatarGrid .avatar-choice").count()===4&&
+    await page.locator("#avatarShopGrid .shop-avatar-card.owned").count()===3&&
+    (await page.locator("#shopCoins").textContent()).trim()==="2.300",
+    name+": o avatar comprado não passou para a coleção e o saldo não foi atualizado.");
+  await page.locator("#navShop").click();
+  check(!(await page.locator("#shopScreen").evaluate(el=>el.classList.contains("hidden"))),
+    name+": o botão Loja não abriu a nova seção.");
+  await page.locator("#navCommunity").click();
+  check(await page.locator("#shopScreen").evaluate(el=>el.classList.contains("hidden")),
+    name+": ao voltar para Comunidade, a seção Loja não foi ocultada.");
   const profileReturnState=await page.evaluate(()=>({
     gameHidden:document.querySelector("#game").classList.contains("hidden"),
     setupHidden:document.querySelector("#setup").classList.contains("hidden"),
