@@ -730,7 +730,7 @@ async function testViewport(name, viewport, mobile = false) {
     await oldRender;
     window.apiRequest=originalApiRequest;
   });
-  check((await page.locator(".community-rank-display-title").first().textContent()).trim()==="Nome novo",
+  check((await page.locator(".community-rank-display-title").first().textContent()).trim()==="Nome Novo",
     name+": uma resposta antiga da comunidade sobrescreveu o perfil mais recente.");
   check((await page.locator(".community-rank-public-stats").first().textContent()).includes("18")&&
     (await page.locator(".community-rank-public-stats").first().textContent()).includes("4"),
