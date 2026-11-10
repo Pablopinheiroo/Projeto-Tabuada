@@ -14,7 +14,7 @@ const AVATAR_GIF_COUNT = 12;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
 const CHALLENGE_PLAYER_METADATA_MAX = 45;
-const WORKER_BUILD_ID = "2026-11-09-challenge-draws-refunds-public-stats-audio-fallback";
+const WORKER_BUILD_ID = "2026-11-09-community-freshness-audio-options-preview";
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
 const CHALLENGE_DIRECTORY = "desafios/partidas";
@@ -39,7 +39,13 @@ const CHALLENGE_PRESETS = {
   lenda: { name: "Lenda", tables: Array.from({ length: 20 }, (_, i) => i + 1), options: 6 },
   extremo: { name: "Extremo", tables: [3, 4, 6, 7, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19], options: 6 }
 };
-let communitySummaryCache = { expiresAt: 0, records: null, pending: null };
+let communitySummaryCache = { expiresAt: 0, records: null, pending: null, generation: 0 };
+function invalidateCommunitySummaryCache(){
+  communitySummaryCache.generation = (Number(communitySummaryCache.generation) || 0) + 1;
+  communitySummaryCache.expiresAt = 0;
+  communitySummaryCache.records = null;
+  communitySummaryCache.pending = null;
+}
 
 function json(data, status = 200, origin = "", extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
@@ -179,6 +185,7 @@ async function writeUser(username, data, sha, env) {
     env,
     { method: "PUT", body: JSON.stringify(body) }
   );
+  invalidateCommunitySummaryCache();
   return result.content.sha;
 }
 
@@ -386,6 +393,66 @@ function safeHistory(value) {
   return {
     questions: value.questions && typeof value.questions === "object" ? value.questions : {},
     sessions: Array.isArray(value.sessions) ? value.sessions : []
+  };
+}
+function historyAttemptCount(item) {
+  const attempts = Math.max(0, Number(item?.attempts) || 0);
+  const correct = Math.max(0, Number(item?.correct) || 0);
+  const wrong = Math.max(0, Number(item?.wrong) || 0);
+  return Math.max(attempts, correct + wrong);
+}
+function historyLastAt(item) {
+  const value = Date.parse(item?.lastAt || "");
+  return Number.isFinite(value) ? value : 0;
+}
+function chooseNewerQuestionSnapshot(current, incoming) {
+  if (!current) return incoming;
+  if (!incoming) return current;
+  const currentAttempts = historyAttemptCount(current);
+  const incomingAttempts = historyAttemptCount(incoming);
+  if (incomingAttempts > currentAttempts) return incoming;
+  if (currentAttempts > incomingAttempts) return current;
+  return historyLastAt(incoming) >= historyLastAt(current) ? incoming : current;
+}
+function historySessionKey(session) {
+  if (session && typeof session.id === "string" && session.id) return "id:" + session.id;
+  if (session && typeof session.sessionId === "string" && session.sessionId) return "session:" + session.sessionId;
+  if (!session || typeof session !== "object") return "value:" + String(session);
+  return [
+    session.date || session.startedAt || session.createdAt || "",
+    session.mode || "",
+    session.answered ?? "",
+    session.hits ?? "",
+    session.misses ?? "",
+    session.timeMs ?? ""
+  ].join("|");
+}
+function mergeHistorySnapshots(currentValue, incomingValue) {
+  const current = safeHistory(currentValue);
+  const incoming = safeHistory(incomingValue);
+  const questions = {};
+  const keys = new Set([
+    ...Object.keys(current.questions || {}),
+    ...Object.keys(incoming.questions || {})
+  ]);
+  for (const key of keys) {
+    const chosen = chooseNewerQuestionSnapshot(current.questions[key], incoming.questions[key]);
+    if (chosen && typeof chosen === "object") questions[key] = chosen;
+  }
+  const sessions = new Map();
+  for (const session of [...current.sessions, ...incoming.sessions]) {
+    const key = historySessionKey(session);
+    const previous = sessions.get(key);
+    const previousDate = Date.parse(previous?.date || previous?.startedAt || previous?.createdAt || "") || 0;
+    const incomingDate = Date.parse(session?.date || session?.startedAt || session?.createdAt || "") || 0;
+    if (!previous || incomingDate >= previousDate) sessions.set(key, session);
+  }
+  return {
+    questions,
+    sessions: [...sessions.values()].sort((a, b) =>
+      (Date.parse(b?.date || b?.startedAt || b?.createdAt || "") || 0) -
+      (Date.parse(a?.date || a?.startedAt || a?.createdAt || "") || 0)
+    ).slice(0, 300)
   };
 }
 
@@ -1033,6 +1100,7 @@ function communitySummary(record) {
     : [];
   return {
     username: record.username,
+    updatedAt: record.updatedAt || profile.updatedAt || null,
     displayName: profile.displayName || record.username,
     avatar: profile.avatar || "imagem:0",
     correct, wrong, attempts: correct + wrong, timeMs,
@@ -1052,6 +1120,7 @@ async function loadCommunitySummaries(env) {
     return communitySummaryCache.records;
   }
   if (communitySummaryCache.pending) return communitySummaryCache.pending;
+  const generation = communitySummaryCache.generation;
   const pending = (async () => {
     const entries = await githubRequest(
       "/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + GH_DIRECTORY +
@@ -1076,8 +1145,11 @@ async function loadCommunitySummaries(env) {
   communitySummaryCache.pending = pending;
   try {
     const records = await pending;
-    communitySummaryCache.records = records;
-    communitySummaryCache.expiresAt = Date.now() + COMMUNITY_CACHE_TTL_MS;
+    if (generation !== communitySummaryCache.generation) return loadCommunitySummaries(env);
+    if (communitySummaryCache.pending === pending) {
+      communitySummaryCache.records = records;
+      communitySummaryCache.expiresAt = Date.now() + COMMUNITY_CACHE_TTL_MS;
+    }
     return records;
   } finally {
     if (communitySummaryCache.pending === pending) communitySummaryCache.pending = null;
@@ -1764,31 +1836,63 @@ async function handleApi(request, env, origin) {
       const record = await readUser(username, env);
       if (!record) return json({ error: "A conta não foi encontrada no repositório privado." }, 404, origin);
 
+      const currentProfile = record.data.profile && typeof record.data.profile === "object"
+        ? record.data.profile : {};
+      const incomingProfile = body.profile && typeof body.profile === "object" ? body.profile : {};
+      const baseMatches = typeof body.baseSha === "string" && body.baseSha === record.sha;
+      const parseTime = value => {
+        const result = Date.parse(value || "");
+        return Number.isFinite(result) ? result : 0;
+      };
+      const incomingPublicAt = parseTime(incomingProfile.publicProfileUpdatedAt);
+      const currentPublicAt = parseTime(currentProfile.publicProfileUpdatedAt || currentProfile.updatedAt);
+      const currentGeneralAt = parseTime(currentProfile.updatedAt);
+      const incomingGeneralAt = parseTime(incomingProfile.updatedAt);
+      const incomingAudioAt = parseTime(incomingProfile.audioPreferencesSavedAt);
+      const currentAudioAt = parseTime(currentProfile.audioPreferencesSavedAt);
+      const mayApplyProfile = baseMatches || incomingPublicAt > currentPublicAt || !currentPublicAt;
+      const mayApplyAudio = baseMatches || incomingAudioAt > currentAudioAt || (!currentAudioAt && incomingAudioAt > 0);
+      const mergedProfile = {
+        ...currentProfile,
+        ...(mayApplyProfile ? incomingProfile : {}),
+        studyTimeMs: Math.max(
+          Number(currentProfile.studyTimeMs) || 0,
+          Number(incomingProfile.studyTimeMs) || 0
+        ),
+        challengeStats: currentProfile.challengeStats || incomingProfile.challengeStats,
+        monthlyTournaments: {
+          ...(incomingProfile.monthlyTournaments || {}),
+          ...(currentProfile.monthlyTournaments || {})
+        },
+        tournamentAwards: {
+          ...(incomingProfile.tournamentAwards || {}),
+          ...(currentProfile.tournamentAwards || {})
+        },
+        tournamentFrame: currentProfile.tournamentFrame || incomingProfile.tournamentFrame
+      };
+      const audioKeys = ["musicVolume", "sfxVolume", "gameSfxVolume", "audioPreferencesSavedAt"];
+      for (const key of audioKeys) {
+        if (mayApplyAudio) {
+          if (incomingProfile[key] !== undefined) mergedProfile[key] = incomingProfile[key];
+        } else if (currentProfile[key] !== undefined) {
+          mergedProfile[key] = currentProfile[key];
+        }
+      }
+      if (mayApplyProfile && incomingGeneralAt > currentGeneralAt) {
+        mergedProfile.updatedAt = incomingProfile.updatedAt;
+      }
+
       const updated = {
         ...record.data,
-        profile: body.profile && typeof body.profile === "object"
-          ? {
-              ...record.data.profile,
-              ...body.profile,
-              studyTimeMs: Math.max(Number(record.data.profile?.studyTimeMs) || 0, Number(body.profile.studyTimeMs) || 0),
-              challengeStats: record.data.profile?.challengeStats || body.profile.challengeStats,
-              monthlyTournaments: {
-                ...(body.profile.monthlyTournaments || {}),
-                ...(record.data.profile?.monthlyTournaments || {})
-              },
-              tournamentAwards: {
-                ...(body.profile.tournamentAwards || {}),
-                ...(record.data.profile?.tournamentAwards || {})
-              },
-              tournamentFrame: record.data.profile?.tournamentFrame || body.profile.tournamentFrame
-            }
-          : record.data.profile,
-        history: body.history && typeof body.history === "object"
-          ? safeHistory(body.history) : record.data.history,
+        profile: mergedProfile,
+        history: mergeHistorySnapshots(
+          record.data.history,
+          body.history && typeof body.history === "object" ? body.history : record.data.history
+        ),
         updatedAt: new Date().toISOString()
       };
       const sha = await writeUser(username, updated, record.sha, env);
-      return json({ ok: true, sha }, 200, origin);
+      return json({ ok: true, sha, updatedAt: updated.updatedAt }, 200, origin);
     }
 
     if (route === "/api/community" && request.method === "GET") {

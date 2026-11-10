@@ -1118,10 +1118,10 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   <p class="stats-data-note">A análise considera erros, acertos e tempo médio por resposta. Os dados antigos continuam preservados; a separação por modo fica mais completa conforme você joga cada modalidade após esta atualização.</p>
  </section>
  <section id="profileOptionsPanel" class="profile-options-panel hidden" aria-label="Opções do jogo">
-  <div class="profile-subscreen-heading"><div><span class="music-kicker">PREFERÊNCIAS</span><h2>⚙️ Opções</h2><p class="hint">Ouça a música e os efeitos enquanto ajusta cada volume. As mudanças são aplicadas na hora.</p></div><button id="closeProfileOptions" class="secondary" type="button">← Menu principal</button></div>
+  <div class="profile-subscreen-heading"><div><span class="music-kicker">PREFERÊNCIAS</span><h2>⚙️ Opções</h2><p class="hint">A música geral fica pausada nesta tela. Ao mover uma barra, você ouvirá somente a prévia correspondente àquela configuração.</p></div><button id="closeProfileOptions" class="secondary" type="button">← Menu principal</button></div>
   <section class="profile-audio-settings" aria-label="Volume da música">
    <h3>🎵 Volume da música</h3>
-   <p>Controla as trilhas de fundo e também o volume máximo da música dos desafios. A música continua tocando para você comparar o volume.</p>
+   <p>Controla as trilhas de fundo e também o volume máximo da música dos desafios. Ao mover esta barra, uma breve prévia da trilha toca no volume escolhido.</p>
    <label class="profile-sfx-volume" for="profileMusicVolume">
     <span>Volume da música</span>
     <input id="profileMusicVolume" type="range" min="0" max="100" step="1" value="70">
@@ -1131,7 +1131,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   </section>
   <section class="profile-audio-settings" aria-label="Efeitos da interface">
    <h3>🔊 Efeitos da interface</h3>
-   <p>Controla cliques, teclas e botões dos menus. Um som de teste toca enquanto você ajusta.</p>
+   <p>Controla cliques, teclas e botões dos menus. Ao mover esta barra, somente o som de clique é reproduzido como prévia.</p>
    <label class="profile-sfx-volume" for="profileSfxVolume">
     <span>Volume dos efeitos da interface</span>
     <input id="profileSfxVolume" type="range" min="0" max="100" step="1" value="90">
@@ -1141,7 +1141,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   </section>
   <section class="profile-audio-settings" aria-label="Efeitos do modo jogo">
    <h3>🎮 Efeitos do modo jogo</h3>
-   <p>Controla somente os sons de Verificar, Acertei, Errei e Tive dificuldade. Uma prévia toca os quatro efeitos para você comparar.</p>
+   <p>Controla somente os sons de Verificar, Acertei, Errei e Tive dificuldade. Ao mover esta barra, somente esses quatro efeitos são reproduzidos como prévia.</p>
    <label class="profile-sfx-volume" for="profileGameSfxVolume">
     <span>Volume dos efeitos do modo jogo</span>
     <input id="profileGameSfxVolume" type="range" min="0" max="100" step="1" value="4">
@@ -1541,7 +1541,7 @@ let trainingReviewMode=false,trainingReviewFacts=[],trainingRoundTarget=0,curren
 const DEFAULT_AUDIO_PREFERENCES={music:70,interface:90,game:4};
 let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),currentTrackIndex=-1,previousTrackIndex=-1,volumeLevel=.70,sfxVolumeLevel=.90,gameSfxVolumeLevel=.04;
 let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueuePosition=0,musicStartPending=false,mainMusicTimer=null;
-let profileOptionsOpen=false,profileOptionsResumeMusic=false,sfxPreviewTimer=null,gameSfxPreviewTimers=[];
+let profileOptionsOpen=false,profileOptionsResumeMusic=false,sfxPreviewTimer=null,gameSfxPreviewTimers=[],optionMusicPreviewTimer=null,optionMusicPreviewActive=false;
 const LAST_TRACK_STORAGE_KEY='projetoTabuadaUltimaFaixaV2:';
 let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0;
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
@@ -1593,7 +1593,7 @@ let historyData=loadHistory();
 const API_BASE='https://projeto-tabuada-api.nuvemx.workers.dev';
 const API_TOKEN_KEY='projetoTabuadaSessaoSeguraV1';
 let remoteUserSha=null,remoteUserData=null,cloudSyncTimer=null,cloudSyncBusy=false,cloudSyncQueued=false,lastCloudSaveAt=0;
-let communityCache=[],communityCacheAt=0,communityPage=0;
+let communityCache=[],communityCacheAt=0,communityPage=0,communityCacheRequest=0,communityRenderRequest=0;
 const COMMUNITY_PAGE_SIZE=4;
 let selectedRegisterAvatar='imagem:0',selectedProfileAvatar='imagem:0';
 const AVATARS=[
@@ -2347,7 +2347,7 @@ async function writeRemoteUser(username,data){
  if(username!==activeProfile)throw new Error('A sessão não corresponde à conta ativa.');
  const result=await apiRequest('/api/me',{
   method:'PUT',
-  body:{profile:data.profile||{},history:normalizeHistory(data.history)}
+  body:{profile:data.profile||{},history:normalizeHistory(data.history),baseSha:remoteUserSha}
  });
  return result.sha||null;
 }
@@ -2422,12 +2422,63 @@ async function flushCloudSave(force=false){
   if(cloudSyncQueued){cloudSyncQueued=false;scheduleCloudSave();}
  }
 }
+function communityUpdatedAtMs(record){
+ const value=record?.updatedAt||record?.profile?.updatedAt||null;
+ const parsed=Date.parse(value||'');
+ return Number.isFinite(parsed)?parsed:0;
+}
+function mergeCommunityRecord(current,incoming){
+ if(!current)return incoming;
+ if(!incoming)return current;
+ const currentTime=communityUpdatedAtMs(current),incomingTime=communityUpdatedAtMs(incoming);
+ const newest=incomingTime>=currentTime?incoming:current;
+ const older=newest===incoming?current:incoming;
+ const maxValue=key=>Math.max(0,Number(current[key])||0,Number(incoming[key])||0);
+ const unionValues=(a,b,keyFn)=>{
+  const values=new Map();
+  for(const item of [...(Array.isArray(a)?a:[]),...(Array.isArray(b)?b:[])]){
+   const key=keyFn(item);
+   if(key!==null&&!values.has(key))values.set(key,item);
+  }
+  return [...values.values()];
+ };
+ return {
+  ...older,...newest,
+  correct:maxValue('correct'),
+  wrong:maxValue('wrong'),
+  attempts:Math.max(maxValue('attempts'),maxValue('correct')+maxValue('wrong')),
+  timeMs:maxValue('timeMs'),
+  totalEarned:maxValue('totalEarned'),
+  trainingCycles:maxValue('trainingCycles'),
+  completedStages:maxValue('completedStages'),
+  achievementCount:maxValue('achievementCount'),
+  challengeWins:maxValue('challengeWins'),
+  challengeLosses:maxValue('challengeLosses'),
+  challengeDraws:maxValue('challengeDraws'),
+  challengeTotal:Math.max(maxValue('challengeTotal'),maxValue('challengeWins')+maxValue('challengeLosses')+maxValue('challengeDraws')),
+  titles:[...new Set([...(Array.isArray(older.titles)?older.titles:[]),...(Array.isArray(newest.titles)?newest.titles:[])])],
+  medals:unionValues(older.medals,newest.medals,item=>item?.id||item?.name||null),
+  awards:unionValues(older.awards,newest.awards,item=>item?.month||null),
+  featuredTitles:Array.isArray(newest.featuredTitles)?newest.featuredTitles:[],
+  featuredAwards:Array.isArray(newest.featuredAwards)?newest.featuredAwards:[],
+  updatedAt:newest.updatedAt||older.updatedAt||null
+ };
+}
+function mergeCommunityRecords(incomingRecords){
+ const merged=new Map((Array.isArray(communityCache)?communityCache:[]).map(record=>[record.username,record]));
+ for(const incoming of Array.isArray(incomingRecords)?incomingRecords:[]){
+  if(!incoming?.username)continue;
+  merged.set(incoming.username,mergeCommunityRecord(merged.get(incoming.username),incoming));
+ }
+ return [...merged.values()];
+}
 async function loadCommunityRecords(force=false){
  if(!force&&communityCacheAt&&Date.now()-communityCacheAt<300000)return communityCache;
+ const requestId=++communityCacheRequest;
  const result=await apiRequest('/api/community');
  if(!Array.isArray(result.records))throw new Error('O servidor não retornou a lista de participantes.');
- communityCache=result.records;
- communityCacheAt=Date.now();
+ communityCache=mergeCommunityRecords(result.records);
+ if(requestId===communityCacheRequest)communityCacheAt=Date.now();
  return communityCache;
 }
 function communityStatsFromRecord(record){
@@ -2470,10 +2521,12 @@ function communityStatsFromRecord(record){
  };
 }
 async function renderCommunityRanking(){
+ const renderId=++communityRenderRequest;
  const box=$('communityRanking');if(!box)return;
  box.innerHTML='<div class="community-empty">Carregando comunidade...</div>';
  try{
   const records=await loadCommunityRecords();
+  if(renderId!==communityRenderRequest)return;
   const users=records.map(communityStatsFromRecord);
   const mode=$('communitySort')?.value||'time';
   const sorters={time:(a,b)=>b.timeMs-a.timeMs||b.correct-a.correct,correct:(a,b)=>b.correct-a.correct||b.timeMs-a.timeMs,wrong:(a,b)=>b.wrong-a.wrong||b.timeMs-a.timeMs};
@@ -2549,6 +2602,7 @@ async function renderCommunityRanking(){
   const note=document.querySelector('.community-list-note');
   if(note)note.textContent='Mostrando '+(first+1)+'–'+Math.min(first+pageUsers.length,users.length)+' de '+users.length+' participantes. As moedas aparecem ao lado do nome; clique no perfil para abrir mais informações.';
  }catch(error){
+  if(renderId!==communityRenderRequest)return;
   box.innerHTML='<div class="community-empty">'+escapeHtml(siteErrorMessage(error))+'</div>';
   $('communityPagination').innerHTML='';
   console.error('Falha ao carregar a comunidade:',error);
@@ -2864,6 +2918,9 @@ function showProfileOptions(){
  profileOptionsOpen=true;
  clearMainMusicTimer();
  musicWasPlayingBeforeHide=false;
+ stopOptionMusicPreview();
+ if(soundtrackAudio&&!soundtrackAudio.paused)soundtrackAudio.pause();
+ musicStartPending=false;
  $('siteMusicBox').classList.add('hidden');
  $('profileMainPanel').classList.add('hidden');
  $('profileStatsPanel').classList.add('hidden');
@@ -2875,14 +2932,11 @@ function showProfileOptions(){
 }
 function closeProfileOptions(){
  const resume=profileOptionsResumeMusic;
+ stopOptionMusicPreview();
  profileOptionsOpen=false;
  profileOptionsResumeMusic=false;
  $('profileOptionsPanel').classList.add('hidden');
- closeProfileScreen();
- if(resume&&soundOn&&soundtrackAudio&&soundtrackAudio.paused){
-  if(document.hidden)musicWasPlayingBeforeHide=true;
-  else playCurrentTrack();
- }
+ closeProfileScreen(resume);
 }
 function closeProfileStats(){
  closeProfileScreen();
@@ -2926,6 +2980,7 @@ async function saveProfileEdits(event){
  profilesData[activeProfile].featuredAwards=selectedFeatures;
  profilesData[activeProfile].featuredTitles=selectedTitles;
  profilesData[activeProfile].updatedAt=new Date().toISOString();
+ profilesData[activeProfile].publicProfileUpdatedAt=profilesData[activeProfile].updatedAt;
  persistProfiles();
  try{
   const payload=buildRemoteUserData();
@@ -2959,14 +3014,14 @@ async function changePassword(event){
   $('passwordMessage').textContent='Não foi possível alterar a senha: '+siteErrorMessage(error);
  }
 }
-function closeProfileScreen(){
+function closeProfileScreen(resumeMusic=soundOn){
  profileOptionsOpen=false;
  profileOptionsResumeMusic=false;
  $('profileOptionsPanel').classList.add('hidden');
  $('profileStatsPanel').classList.add('hidden');
  $('profileMainPanel').classList.remove('hidden');
  $('siteMusicBox').classList.remove('hidden');
- setMusicCategory('principal',true);
+ setMusicCategory('principal',!!resumeMusic);
  $('profileScreen').classList.add('hidden');
  $('setup').classList.remove('hidden');
  refreshProfileIdentity();
@@ -4622,23 +4677,43 @@ function setProfileSfxVolume(value){
  applySfxVolumeToPlayers();
 }
 function previewSfxVolume(){
+ if(!profileOptionsOpen)return;
  if(sfxPreviewTimer)clearTimeout(sfxPreviewTimer);
- sfxPreviewTimer=setTimeout(()=>{sfxPreviewTimer=null;playUiSound('click','interface');},90);
+ sfxPreviewTimer=setTimeout(()=>{sfxPreviewTimer=null;playUiSound('click','interface',true);},90);
+}
+function stopOptionMusicPreview(){
+ if(optionMusicPreviewTimer!==null){clearTimeout(optionMusicPreviewTimer);optionMusicPreviewTimer=null;}
+ if(soundtrackAudio&&optionMusicPreviewActive)soundtrackAudio.pause();
+ optionMusicPreviewActive=false;
+}
+function previewMusicVolume(){
+ if(!profileOptionsOpen||!soundtrackAudio||currentTrackIndex<0)return;
+ if(optionMusicPreviewTimer!==null)clearTimeout(optionMusicPreviewTimer);
+ if(!optionMusicPreviewActive){
+  optionMusicPreviewActive=true;
+  soundtrackAudio.volume=challengeMusicActive?challengeVolumeLimit/100*volumeLevel:volumeLevel;
+  let playback;
+  try{playback=soundtrackAudio.play();}
+  catch(error){optionMusicPreviewActive=false;return;}
+  if(playback&&typeof playback.catch==='function')playback.catch(()=>{optionMusicPreviewActive=false;});
+ }
+ optionMusicPreviewTimer=setTimeout(stopOptionMusicPreview,1200);
 }
 function setProfileGameSfxVolume(value){
  gameSfxVolumeLevel=Math.max(0,Math.min(1,Number(value)/100));
  applyGameSfxVolume();
 }
 function previewGameSfxVolume(){
+ if(!profileOptionsOpen)return;
  gameSfxPreviewTimers.forEach(timer=>clearTimeout(timer));
  gameSfxPreviewTimers=[];
  const samples=['verify','correct','wrong','click'];
  samples.forEach((name,index)=>{
-  const timer=setTimeout(()=>playUiSound(name,'game'),90+index*230);
+  const timer=setTimeout(()=>playUiSound(name,'game',true),90+index*230);
   gameSfxPreviewTimers.push(timer);
  });
 }
-function resetProfileMusicVolume(){setVolume(DEFAULT_AUDIO_PREFERENCES.music);}
+function resetProfileMusicVolume(){setVolume(DEFAULT_AUDIO_PREFERENCES.music);previewMusicVolume();}
 function resetProfileSfxVolume(){setProfileSfxVolume(DEFAULT_AUDIO_PREFERENCES.interface);previewSfxVolume();}
 function resetProfileGameSfxVolume(){setProfileGameSfxVolume(DEFAULT_AUDIO_PREFERENCES.game);previewGameSfxVolume();}
 async function saveProfileAudioPreferences(){
@@ -4719,8 +4794,8 @@ async function loadUiSfx(){
   applySfxVolumeToPlayers();
  }catch(error){console.warn('Efeitos sonoros indisponíveis:',error);}
 }
-function playUiSound(name,channel='interface'){
- if(document.hidden)return;
+function playUiSound(name,channel='interface',optionPreview=false){
+ if(document.hidden||(profileOptionsOpen&&!optionPreview))return;
  const isGameChannel=channel==='game';
  const channelVolume=isGameChannel?gameSfxVolumeLevel:sfxVolumeLevel;
  const files=[...(uiSfxLibrary[name]||[])];
@@ -4793,7 +4868,7 @@ function clearMainMusicTimer(){
 }
 function scheduleMainMusicRotation(){
  clearMainMusicTimer();
- if(!soundOn||!soundtrackAudio||soundtrackAudio.paused||document.hidden||isGameScreenActive()||challengeMusicActive)return;
+ if(!soundOn||!soundtrackAudio||soundtrackAudio.paused||document.hidden||isGameScreenActive()||challengeMusicActive||profileOptionsOpen)return;
  const duration=Number.isFinite(soundtrackAudio.duration)?soundtrackAudio.duration:(musicalTracks[currentTrackIndex]?.duration_seconds||0);
  const remaining=Math.max(0,duration-(soundtrackAudio.currentTime||0));
  if(!remaining)return;
@@ -4810,7 +4885,7 @@ function watchGameScreenForMusic(){
  observer.observe(game,{attributes:true,attributeFilter:['class']});
 }
 function playCurrentTrack(){
- if(!soundtrackAudio||currentTrackIndex<0||!soundOn||document.hidden)return Promise.resolve(false);
+ if(!soundtrackAudio||currentTrackIndex<0||!soundOn||document.hidden||profileOptionsOpen)return Promise.resolve(false);
  if(musicStartPending)return Promise.resolve(false);
  soundtrackAudio.volume=challengeMusicActive?challengeVolumeLimit/100*volumeLevel:volumeLevel;
  musicStartPending=true;
@@ -4855,7 +4930,7 @@ function chooseTrack(value){
  if(Number.isInteger(index)&&index>=0&&index<musicalTracks.length)playTrack(index,true);
 }
 function unlockMusic(){
- if(!soundOn||document.hidden||!soundtrackAudio)return;
+ if(!soundOn||document.hidden||!soundtrackAudio||profileOptionsOpen)return;
  if(soundtrackAudio.paused)playCurrentTrack();
 }
 function pauseAudioForBackground(){
@@ -4867,6 +4942,7 @@ function pauseAudioForBackground(){
  if(musicWasPlayingBeforeHide)$('musicTitle').textContent='⏸ Faixa pausada enquanto você está fora da página';
 }
 function resumeAudioWhenVisible(){
+ if(profileOptionsOpen){musicWasPlayingBeforeHide=false;return;}
  if(!musicWasPlayingBeforeHide||!soundOn||document.hidden)return;
  musicWasPlayingBeforeHide=false;
  if(audioContext&&audioContext.state==='suspended')audioContext.resume().catch(()=>{});
@@ -4904,7 +4980,7 @@ function initMusicPlayer(){
   showTrack();scheduleMainMusicRotation();
  });
  soundtrackAudio.addEventListener('ended',()=>{
-  if(!soundOn||document.hidden)return;
+  if(!soundOn||document.hidden||profileOptionsOpen)return;
   if(challengeMusicActive){playNextTrack();return;}
   playNextTrack();
  });
@@ -4927,7 +5003,7 @@ function initMusicPlayer(){
  window.addEventListener('pageshow',()=>{
   if(!document.hidden){
    if(musicWasPlayingBeforeHide)resumeAudioWhenVisible();
-   else if(soundOn&&soundtrackAudio.paused)playCurrentTrack();
+   else if(soundOn&&soundtrackAudio.paused&&!profileOptionsOpen)playCurrentTrack();
   }
  });
  playTrack(currentTrackIndex,true);
@@ -4976,7 +5052,7 @@ $('profileGameSfxVolume').addEventListener('input',e=>{setProfileGameSfxVolume(e
 $('resetProfileMusicVolume').addEventListener('click',resetProfileMusicVolume);
 $('resetProfileSfxVolume').addEventListener('click',resetProfileSfxVolume);
 $('resetProfileGameSfxVolume').addEventListener('click',resetProfileGameSfxVolume);
-$('profileMusicVolume').addEventListener('input',e=>setVolume(e.target.value));
+$('profileMusicVolume').addEventListener('input',e=>{setVolume(e.target.value);previewMusicVolume();});
 $('saveProfileAudioPreferences').addEventListener('click',saveProfileAudioPreferences);
 $('soundToggle').addEventListener('click',toggleSound);
 $('replayTune').addEventListener('click',replayTune);

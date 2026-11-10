@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
+import vm from "node:vm";
 import { chromium } from "playwright";
 
 const ROOT = process.cwd();
@@ -78,6 +79,22 @@ check(workerSource.includes("const featuredTitles = Array.isArray(profile.featur
   workerSource.includes("selectableTitleIds.has(id)") &&
   workerSource.includes("featuredAwards, featuredTitles"),
   "A API da comunidade não devolve os três títulos públicos escolhidos pelo perfil.");
+check(workerSource.includes("invalidateCommunitySummaryCache()")&&
+  workerSource.includes("generation !== communitySummaryCache.generation")&&
+  workerSource.includes("updatedAt: record.updatedAt || profile.updatedAt || null"),
+  "O cache público da comunidade não é invalidado ou marcado com a versão dos dados.");
+check(workerSource.includes("mergeHistorySnapshots(")&&workerSource.includes("body.baseSha"),
+  "A API não protege o histórico contra snapshots antigos.");
+const workerTestSource=workerSource.replace("export default {","globalThis.__workerDefault = {");
+const workerContext={Date,Set,Map,Object,Array,Number,String,Math,RegExp,JSON,TextEncoder,TextDecoder,Uint8Array,Response,Headers,URL};
+vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;",workerContext);
+const olderHistory={questions:{"2x3":{a:2,b:3,attempts:7,correct:5,wrong:2,totalTimeMs:7000,lastAt:"2026-11-08T10:00:00Z"},"4x5":{a:4,b:5,attempts:2,correct:2,wrong:0,totalTimeMs:1500}},sessions:[{date:"2026-11-08T10:00:00Z",mode:"training",answered:7,hits:5,misses:2,timeMs:7000}]};
+const newerHistory={questions:{"2x3":{a:2,b:3,attempts:12,correct:9,wrong:3,totalTimeMs:12000,lastAt:"2026-11-09T10:00:00Z"},"6x7":{a:6,b:7,attempts:3,correct:3,wrong:0,totalTimeMs:2500}},sessions:[{date:"2026-11-09T10:00:00Z",mode:"training",answered:12,hits:9,misses:3,timeMs:12000}]};
+const mergedHistory=workerContext.__mergeHistorySnapshots(newerHistory,olderHistory);
+check(mergedHistory.questions["2x3"].attempts===12&&mergedHistory.questions["4x5"].attempts===2&&mergedHistory.questions["6x7"].attempts===3,
+  "A ponderação de histórico permitiu que um snapshot antigo reduzisse o progresso mais novo.");
+check(mergedHistory.sessions.length===2,
+  "A união dos históricos não preservou as sessões distintas.");
 
 const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(match => match[1]);
@@ -95,9 +112,9 @@ check(html.includes("loadUiSfx();")&&html.includes("playUiSound('key')")&&html.i
 check(html.includes("SOFT_UI_CLICK_VARIANTS")&&html.includes("prepareSoftUiClickBuffers()")&&html.includes("const SFX_OUTPUT_BOOST=1.0;"),"As quatro variações suaves ou a redução de ganho dos efeitos estão ausentes.");
 check(html.includes('data-sfx="verify"')&&html.includes("button.dataset.sfx||'click'"),"O botão Verificar não usa seu efeito próprio.");
 check(html.includes("function showProfileOptions()")&&html.includes("function closeProfileOptions()")&&
-  !html.includes("if(soundtrackAudio)soundtrackAudio.pause();\n $('siteMusicBox').classList.add('hidden')")&&
-  html.includes("if(soundtrackAudio)soundtrackAudio.volume=outputLevel"),
- "A música deve continuar tocando e o volume deve ser aplicado ao vivo na tela Opções.");
+  html.includes("stopOptionMusicPreview();")&&html.includes("profileOptionsOpen&&!optionPreview")&&
+  html.includes("function previewMusicVolume()")&&html.includes("setTimeout(stopOptionMusicPreview,1200)"),
+ "A música geral deve ficar pausada em Opções e somente as prévias das barras devem tocar.");
 check(html.includes("$('openProfile').addEventListener('click',()=>openProfileScreen());")&&
   html.includes("$('navProfile').addEventListener('click',()=>openProfileScreen());"),
  "Os atalhos do perfil não podem confundir o evento de clique com a opção de abrir Estatísticas.");
@@ -123,8 +140,9 @@ check(html.includes("playFeedback(!!entry.correct,entry.mode==='training'?'game'
  "Os efeitos de Verificar, Acertei, Errei e Tive dificuldade não estão ligados ao canal do modo jogo.");
 check(html.includes("profile.gameSfxVolume=gameSfxVolumeLevel"),
  "O volume do modo jogo não é salvo no perfil e na nuvem.");
-check(html.includes("A música continua tocando para você comparar o volume")&&!html.includes("A música fica pausada nesta tela"),
- "A tela Opções não informa que a música pode ser ouvida durante o ajuste.");
+check(html.includes("A música geral fica pausada nesta tela")&&html.includes("breve prévia da trilha")&&
+  html.includes("som de clique é reproduzido como prévia"),
+ "A tela Opções não explica que a música geral fica pausada e que cada barra reproduz sua própria prévia.");
 check(html.includes("function closeProfileOptions()")&&html.includes("closeProfileScreen();")&&html.includes("function closeProfileStats(){\n closeProfileScreen();"),
  "Os botões de retorno de Opções e Estatísticas não levam ao menu principal.");
 check(!html.includes("Biblioteca com 100 trilhas gratuitas")&&!html.includes('class="music-note"'),
@@ -415,7 +433,8 @@ async function testViewport(name, viewport, mobile = false) {
   await page.locator("#openProfileOptions").click();
   check(!(await page.locator("#profileOptionsPanel").evaluate(el => el.classList.contains("hidden"))), name + ": a tela Opções não abriu.");
   check(await page.locator("#siteMusicBox").evaluate(el => el.classList.contains("hidden")), name + ": o player musical ficou visível em Opções.");
-  if(musicWasPlayingBeforeOptions)check(!(await page.locator("#soundtrackAudio").evaluate(el => el.paused)),name+": a música foi pausada ao abrir Opções.");
+  await page.waitForFunction(()=>document.querySelector("#soundtrackAudio").paused,null,{timeout:4000});
+  check(await page.locator("#soundtrackAudio").evaluate(el=>el.paused),name+": a música geral não foi pausada ao abrir Opções.");
   check(await page.locator("#profileSfxVolume").isVisible(), name + ": o controle de efeitos da interface não aparece.");
   check(await page.locator("#profileGameSfxVolume").isVisible(),name+": o controle de efeitos do modo jogo não aparece.");
   check(await page.locator("#profileMusicVolume").isVisible(), name + ": o controle de música não aparece.");
@@ -451,11 +470,16 @@ async function testViewport(name, viewport, mobile = false) {
   check(await page.evaluate(()=>Math.abs(sfxVolumeLevel-.55)<.01),name+": o volume dos efeitos da interface não foi aplicado.");
   check(await page.evaluate(()=>Math.abs(gameSfxVolumeLevel-.45)<.01),name+": o volume dos efeitos do modo jogo não foi aplicado.");
   check(await page.evaluate(()=>Math.abs(volumeLevel-.43)<.01),name+": o volume da música não foi aplicado.");
-  check(await page.locator("#soundtrackAudio").evaluate(el=>!el.paused&&Math.abs(el.volume-.43)<.02),
-    name+": a música não continuou tocando no volume escolhido durante o ajuste.");
+  await page.waitForFunction(()=>optionMusicPreviewActive&&!document.querySelector("#soundtrackAudio").paused,null,{timeout:4000});
+  await page.waitForTimeout(1350);
+  check(await page.locator("#soundtrackAudio").evaluate(el=>el.paused)&&
+    await page.evaluate(()=>!optionMusicPreviewActive),
+    name+": a prévia da música não terminou ou a trilha geral continuou tocando.");
   await page.waitForFunction(()=>uiSfxGain&&Math.abs(uiSfxGain.gain.value-.55)<.02,null,{timeout:3000});
   await page.waitForFunction(()=>gameSfxGain&&Math.abs(gameSfxGain.gain.value-.45)<.02,null,{timeout:3000});
   await page.waitForFunction(()=>window.__previewCalls>0&&window.__gamePreviewCalls>0,null,{timeout:3000});
+  check(await page.locator("#soundtrackAudio").evaluate(el=>el.paused),
+    name+": a música de fundo tocou junto com as prévias dos efeitos da interface ou do modo jogo.");
   for(const id of ["#resetProfileMusicVolume","#resetProfileSfxVolume","#resetProfileGameSfxVolume"])
     check(await page.locator(id).isVisible(),name+": após alterar o volume, "+id+" deveria aparecer.");
   await page.locator("#resetProfileGameSfxVolume").click();
@@ -506,6 +530,8 @@ async function testViewport(name, viewport, mobile = false) {
   check(!(await page.locator("#siteMusicBox").evaluate(el=>el.classList.contains("hidden"))),
     name+": o player de música não voltou a aparecer no menu principal depois de fechar Opções.");
   if(musicWasPlayingBeforeOptions)await page.waitForFunction(()=>!document.querySelector("#soundtrackAudio").paused,null,{timeout:5000});
+  else check(await page.locator("#soundtrackAudio").evaluate(el=>el.paused),
+    name+": a música voltou a tocar após fechar Opções, apesar de estar pausada antes.");
   await page.evaluate(()=>{
     setVolume(100);
     sfxVolumeLevel=.90;gameSfxVolumeLevel=.04;
@@ -567,6 +593,32 @@ async function testViewport(name, viewport, mobile = false) {
   });
   check(challengePosition, name + ": os desafios não aparecem logo abaixo das estatísticas ao expandir o perfil.");
   await page.screenshot({ path: "artifacts/" + name + "-comunidade.png", fullPage: true });
+  // Duas respostas chegam fora de ordem: a resposta antiga não pode sobrescrever a nova.
+  await page.evaluate(async()=>{
+    const originalApiRequest=window.apiRequest;
+    const pending=[];
+    communityCache=[];communityCacheAt=0;
+    window.apiRequest=(path)=>path==="/api/community"?new Promise(resolve=>pending.push(resolve)):originalApiRequest(path);
+    const baseRecord={username:"race_user",avatar:"imagem:0",coins:40,totalEarned:80,trainingCycles:2,completedStages:1,
+      achievementCount:2,challengeWins:0,challengeLosses:0,challengeDraws:0,challengeTotal:0,
+      titles:["Primeiro Ciclo"],medals:[],awards:[],featuredAwards:[],featuredTitles:[],
+      profile:{displayName:"Perfil"},history:{questions:{},sessions:[]}};
+    const oldRecord={...baseRecord,displayName:"Nome antigo",correct:10,wrong:3,attempts:13,timeMs:30000,updatedAt:"2026-11-08T10:00:00.000Z"};
+    const freshRecord={...baseRecord,displayName:"Nome novo",correct:18,wrong:4,attempts:22,timeMs:60000,updatedAt:"2026-11-09T10:00:00.000Z"};
+    const oldRender=renderCommunityRanking();
+    const newRender=renderCommunityRanking();
+    pending[1]({records:[freshRecord]});
+    await newRender;
+    pending[0]({records:[oldRecord]});
+    await oldRender;
+    window.apiRequest=originalApiRequest;
+  });
+  check((await page.locator(".community-rank-display-title").first().textContent()).trim()==="Nome novo",
+    name+": uma resposta antiga da comunidade sobrescreveu o perfil mais recente.");
+  check((await page.locator(".community-rank-public-stats").first().textContent()).includes("18")&&
+    (await page.locator(".community-rank-public-stats").first().textContent()).includes("4"),
+    name+": os acertos e erros públicos foram substituídos por valores de uma resposta antiga.");
+
 
   await page.locator("#openTrainingMode").click();
   check(!(await page.locator("#trainingModePanel").evaluate(el => el.classList.contains("hidden"))), name + ": botão Treinamento não abriu a modalidade.");
