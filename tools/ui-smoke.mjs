@@ -319,16 +319,16 @@ check(html.includes("mode:'challenge'")&&html.includes("collectLearningFacts()")
 check(html.includes("function checkTrainingSessionRewardMilestones()")&&
   html.includes("sessionTrainingCorrectNext")&&html.includes("sessionTrainingCorrectClaimed")&&
   html.includes("queueTrainingSessionReward('training_questions'")&&html.includes("correctCount:count")&&
-  html.includes("checkTrainingSessionRewardMilestones();"),
-  "A cada 10 acertos, as 5 moedas precisam ser solicitadas imediatamente durante a partida.");
-check(html.includes("queueTrainingSessionReward('intelligent_training_questions'")&&
-  html.includes("sessionIntelligentQuestionsNext")&&html.includes("sessionIntelligentQuestionsClaimed")&&
-  html.includes("questionCount:count"),
-  "O treino inteligente precisa conceder as moedas ao completar cada grupo de 10 questões.");
+  html.includes("trainingModeType==='intelligent'")&&html.includes("hits-sessionTrainingCorrectClaimed")&&
+  !html.includes("queueTrainingSessionReward('intelligent_training_questions'"),
+  "Todas as modalidades de treino devem contar somente acertos reais para moedas.");
+const difficultyRewardCode=html.slice(html.indexOf("function markCurrentQuestionDifficulty()"),html.indexOf("function showTrainingExitCelebration()"));
+check(difficultyRewardCode.includes("sessionCompletedQuestionCount++")&&
+  !difficultyRewardCode.includes("checkTrainingSessionRewardMilestones()"),
+  "Marcar dificuldade deve continuar no aprendizado, sem chamar a contagem de moedas.");
 check(html.includes("const remainder=hits-sessionTrainingCorrectClaimed")&&
-  html.includes("const remainder=sessionCompletedQuestionCount-sessionIntelligentQuestionsClaimed")&&
   html.includes("await sessionRewardQueue"),
-  "Ao sair da partida, o restante da contagem precisa ser salvo sem repetir as moedas já solicitadas.");
+  "Ao sair da partida, o restante dos acertos precisa ser salvo sem repetir as moedas já solicitadas.");
 check(!html.includes("item.errorTrainingResolved")&&!html.includes("item.errorTrainingCorrectStreak")&&
   html.includes("trainingModeType!=='errors'&&trainingModeType!=='tournamentErrors'"),
   "Os dois treinos de erros não podem compartilhar estado, nem conceder moedas por acertos como treino normal.");
@@ -1017,39 +1017,47 @@ async function testViewport(name, viewport, mobile = false) {
       const standard=requests.map(item=>({type:item.type,count:item.correctCount}));
       requests.length=0;
       trainingModeType='intelligent';sessionRewardQueue=Promise.resolve();
-      sessionIntelligentQuestionsClaimed=0;sessionIntelligentQuestionsNext=1;sessionCompletedQuestionCount=1;
+      sessionTrainingCorrectClaimed=0;sessionTrainingCorrectNext=10;
+      hits=19;sessionCompletedQuestionCount=20; // 19 acertos + 1 questão marcada como difícil.
       checkTrainingSessionRewardMilestones();
-      sessionCompletedQuestionCount=10;checkTrainingSessionRewardMilestones();
-      sessionCompletedQuestionCount=11;checkTrainingSessionRewardMilestones();
       await sessionRewardQueue;
-      const intelligent=requests.map(item=>({type:item.type,count:item.questionCount}));
-      return {standardFresh,freshNineDidNotClaim,standard,intelligent};
+      const intelligentAt19WithDifficulty=requests.map(item=>({type:item.type,count:item.correctCount}));
+      requests.length=0;
+      hits=20;sessionCompletedQuestionCount=21;
+      checkTrainingSessionRewardMilestones();
+      await sessionRewardQueue;
+      const intelligentAt20Correct=requests.map(item=>({type:item.type,count:item.correctCount}));
+      return {standardFresh,freshNineDidNotClaim,standard,intelligentAt19WithDifficulty,intelligentAt20Correct};
     }finally{
       claimGameReward=original;trainingModeType='standard';sessionRewardQueue=Promise.resolve();
-      sessionTrainingCorrectClaimed=0;sessionTrainingCorrectNext=10;
-      sessionIntelligentQuestionsClaimed=0;sessionIntelligentQuestionsNext=10;sessionCompletedQuestionCount=0;
+      sessionTrainingCorrectClaimed=0;sessionTrainingCorrectNext=10;sessionCompletedQuestionCount=0;
     }
   });
 const rewardDeliveryStart=html.indexOf("async function deliverPendingGameReward");
 const rewardDeliveryEnd=html.indexOf("async function retryPendingGameRewards",rewardDeliveryStart);
 const rewardDelivery=html.slice(rewardDeliveryStart,rewardDeliveryEnd);
-check(html.includes("function showCoinRewardNotification(coinsAdded,item={})")&&
+const coinToastCode=html.slice(html.indexOf("function showCoinRewardNotification("),html.indexOf("function showAchievementCongratulations("));
+check(html.includes("function showCoinRewardNotification(coinsAdded,item={},newTitles=[])")&&
+  html.includes("function showTrainingRewardNotification(message)")&&
   html.includes(".game-reward-toast.coin-reward-notification{position:fixed")&&
   html.includes("pointer-events:none")&&html.includes("(batches*10)")&&html.includes("acertos acumulados")&&
-  html.includes("playPrizeCelebrationMusic();")&&
-  rewardDelivery.includes("if(newTitles.length)")&&
-  rewardDelivery.includes("showPrizeCelebration({")&&
-  rewardDelivery.includes("showCoinRewardNotification(coinsAdded,item)"),
-  "Recompensas de moedas devem aparecer como notificação fixa e não bloqueante; medalhas/títulos continuam com tela de comemoração.");
+  !coinToastCode.includes("playPrizeCelebrationMusic();")&&
+  rewardDelivery.includes("trainingRewardTypes=['training_cycle','training_questions','intelligent_training_questions','error_training_complete']")&&
+  rewardDelivery.includes("showTrainingRewardNotification(")&&
+  rewardDelivery.includes("showCoinRewardNotification(coinsAdded,item,newTitles)"),
+  "Recompensas de treino devem aparecer em aviso pequeno, sem modal, música ou bloqueio da partida.");
   check(liveRewardMilestones.freshNineDidNotClaim&&JSON.stringify(liveRewardMilestones.standardFresh)===JSON.stringify([
     {type:'training_questions',count:10}
   ]),name+": o treino comum precisa esperar o décimo acerto quando não existe saldo anterior ("+JSON.stringify({freshNineDidNotClaim:liveRewardMilestones.freshNineDidNotClaim,standardFresh:liveRewardMilestones.standardFresh})+").");
   check(JSON.stringify(liveRewardMilestones.standard)===JSON.stringify([
     {type:'training_questions',count:2},{type:'training_questions',count:10}
   ]),name+": 5 moedas não foram solicitadas no décimo acerto acumulado ou o lote seguinte não voltou a contar 10 ("+JSON.stringify(liveRewardMilestones.standard)+").");
-  check(JSON.stringify(liveRewardMilestones.intelligent)===JSON.stringify([
-    {type:'intelligent_training_questions',count:1},{type:'intelligent_training_questions',count:10}
-  ]),name+": o treino inteligente não solicitou a recompensa ao completar 10 questões acumuladas ("+JSON.stringify(liveRewardMilestones.intelligent)+").");
+  check(JSON.stringify(liveRewardMilestones.intelligentAt19WithDifficulty)===JSON.stringify([
+    {type:'training_questions',count:10}
+  ]),name+": 19 acertos + 1 dificuldade geraram moeda como se fossem 20 acertos ("+JSON.stringify(liveRewardMilestones.intelligentAt19WithDifficulty)+").");
+  check(JSON.stringify(liveRewardMilestones.intelligentAt20Correct)===JSON.stringify([
+    {type:'training_questions',count:10}
+  ]),name+": o vigésimo acerto real não gerou o lote correto de moedas ("+JSON.stringify(liveRewardMilestones.intelligentAt20Correct)+").");
   await page.evaluate(()=>{
     if(questionTimer!==null)clearInterval(questionTimer);
     questionTimer=null;questionStartedAt=0;questionElapsedBeforeStart=0;questionClockPaused=false;
