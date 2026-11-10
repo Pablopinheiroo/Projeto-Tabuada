@@ -2532,6 +2532,7 @@ function hydrateRemoteUser(username,record){
  historyData=preserveLocal?mergeLocalHistorySnapshots(remoteHistory,loadHistory()):remoteHistory;
  persistProfiles();
  saveHistory();
+ updateReviewTrainingButton();
  communityCacheAt=0;
  updateProfileLastSavedAt();
  if(hasPendingSave){
