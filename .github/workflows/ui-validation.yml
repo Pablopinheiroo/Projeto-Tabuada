@@ -32,6 +32,9 @@ jobs:
           npm install --no-save playwright
           npx playwright install --with-deps chromium
 
+      - name: Validar sintaxe do Worker
+        run: node --input-type=module --check < worker/src/index.js
+
       - name: Iniciar servidor local
         run: |
           python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/projeto-tabuada-http.log 2>&1 &
