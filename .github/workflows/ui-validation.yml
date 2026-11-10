@@ -6,6 +6,8 @@ on:
       - "assets/music/**"
       - "assets/sfx/**"
       - "index.html"
+      - "worker/src/**"
+      - "worker/wrangler.toml"
       - "tools/ui-smoke.mjs"
       - ".github/workflows/ui-validation.yml"
   workflow_dispatch:
