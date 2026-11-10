@@ -3942,7 +3942,10 @@ async function finishChallengeMatch(){
   $('challengeResultStatus').textContent='Volte aos desafios e atualize para verificar se o envio foi concluído.';
   $('challengeResultBack').textContent='Voltar e atualizar';
  }
- await saveProgressNow('Desafio');
+ const saved=await saveProgressNow('Desafio');
+ $('challengeResultStatus').textContent+=(saved
+  ?' ✓ Seu histórico de respostas, acertos e erros também foi salvo.'
+  :' ⚠️ O resultado ficou guardado neste aparelho; a sincronização será tentada novamente.');
 }
 function showChallengeResult(challenge){
   if(!challenge)return;
@@ -4253,7 +4256,10 @@ async function finishMonthlyTournament(){
   }
  }finally{
   tournamentBusy=false;
-  await saveProgressNow('Torneio');
+  const saved=await saveProgressNow('Torneio');
+  $('tournamentResultText').textContent+=saved
+   ?' O histórico da partida também foi salvo no seu perfil.'
+   :' O histórico ficou guardado neste aparelho; a sincronização será tentada novamente.';
  }
 }
 async function exitTournamentMatchAndSave(){
@@ -4706,6 +4712,7 @@ async function finishAdventureStage(){
  const passed=adventureFirstTryCorrect>=required;
  const stars=passed?(adventureFirstTryCorrect===total?3:adventureFirstTryCorrect>=total-1?2:1):0;
  historyData.sessions.unshift({
+  id:'adventure-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2)),
   date:new Date().toISOString(),mode:'adventure',stageId:stage.id,stageTitle:stage.title,
   answered:total,hits:adventureFirstTryCorrect,misses:Math.max(0,total-adventureFirstTryCorrect),
   skipped:0,timeMs:Math.round(adventureStageTimeMs),completed:passed,stars
