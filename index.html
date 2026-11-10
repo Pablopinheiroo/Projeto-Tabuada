@@ -2866,16 +2866,16 @@ async function handleLogin(event){
 async function logout(){
  if(!$('game').classList.contains('hidden')){alert('Encerre ou salve a partida antes de sair da conta.');return;}
  stopActiveTimeTracking();
+ await retryPendingGameRewards();
+ await flushCloudSave(true);
  stopChallengePolling();stopChallengeTimers();stopChallengeMusic();
  challengeCurrent=null;challengeItems=[];
- // Sair não força uma gravação. O tempo parcial permanece neste aparelho e
- // será somado ao próximo período até completar 30 minutos.
  localStorage.removeItem(REMEMBER_SESSION_KEY);
  sessionStorage.removeItem(AUTH_SESSION_KEY);
  sessionStorage.removeItem(API_TOKEN_KEY);
  activeProfile='';
  remoteUserData=null;remoteUserSha=null;historyData=loadHistory();
- gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
+ gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,trainingQuestionProgress:0,trainingQuestionClaimIds:[],completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
  pendingActiveMs=0;studyTimeBaseMs=0;
  selectedRegisterAvatar='imagem:0';renderAvatarGrid('registerAvatarGrid',selectedRegisterAvatar,key=>{selectedRegisterAvatar=key;});refreshEconomyDisplay();
  $('setup').classList.add('hidden');$('report').classList.add('hidden');$('authScreen').classList.remove('hidden');
@@ -2896,7 +2896,7 @@ function loadHistory(){
  }catch(error){return {questions:{},sessions:[]}}
 }
 function saveHistory(){
- try{localStorage.setItem(profileHistoryKey(),JSON.stringify(historyData));scheduleCloudSave();return true}
+ try{localStorage.setItem(profileHistoryKey(),JSON.stringify(historyData));return true}
  catch(error){return false}
 }
 function formatStudyTimeCompact(milliseconds){
@@ -3088,7 +3088,7 @@ function selectProfile(){
  updateTrainingGlobalModeControls();
  
 }
-function saveProfile(showMessage=true){
+async function saveProfile(showMessage=true){
  const name=$('profileName').value.trim();
  if(!name){$('profileStatus').textContent='Digite um nome para criar ou selecionar seu perfil.';return false;}
  activeProfile=name;profilesData[name]=profilesData[name]||{};
@@ -3096,15 +3096,18 @@ function saveProfile(showMessage=true){
  profilesData[name].updatedAt=new Date().toISOString();
  if(!persistProfiles()){$('profileStatus').textContent='Não foi possível salvar os dados neste navegador.';return false;}
  historyData=loadHistory();
- if(showMessage){flushCloudSave(true);$('profileStatus').textContent='Perfil “'+name+'” salvo. O progresso será sincronizado online.';}
- else scheduleCloudSave();
+ if(showMessage){
+  const saved=await saveProgressNow('Perfil');
+  $('profileStatus').textContent=saved?'✓ Perfil “'+name+'” salvo e sincronizado.':'⚠️ Perfil “'+name+'” salvo neste aparelho; a sincronização ainda está pendente.';
+  return saved;
+ }
  return true;
 }
 function saveCheckpoint(){
  if(!activeProfile||!round||!profilesData[activeProfile]||$('game').classList.contains('hidden'))return;
  const c=profileSnapshot();
  c.currentElapsedMs=questionStartedAt?questionElapsedBeforeStart+performance.now()-questionStartedAt:0;
- profilesData[activeProfile].checkpoint=c;profilesData[activeProfile].updatedAt=new Date().toISOString();persistProfiles();scheduleCloudSave();
+ profilesData[activeProfile].checkpoint=c;profilesData[activeProfile].updatedAt=new Date().toISOString();persistProfiles();
 }
 function showProfileOptions(){
  profileOptionsResumeMusic=!!(soundOn&&soundtrackAudio&&!soundtrackAudio.paused&&!soundtrackAudio.ended&&!challengeMusicActive);
@@ -5437,7 +5440,7 @@ $('challengeResultBack').addEventListener('click',async()=>{
  await refreshChallengeData();
 });
 document.addEventListener('visibilitychange',handleChallengeVisibility);
-document.addEventListener('visibilitychange',()=>{lastActiveTick=Date.now();if(!document.hidden&&pendingActiveMs>=ACTIVE_TIME_SYNC_MS)scheduleCloudSave();});
+document.addEventListener('visibilitychange',()=>{lastActiveTick=Date.now();});
 $('backToModeHubMap').addEventListener('click',showModeHub);
 $('adventureIntroBack').addEventListener('click',showAdventureMap);
 $('adventureStartStage').addEventListener('click',()=>startAdventureStage(adventureActiveStageIndex));
@@ -5458,7 +5461,7 @@ $('saveProfile').addEventListener('click',()=>saveProfile(true));
 
 
 $('trainingGlobalMode').addEventListener('change',updateTrainingGlobalModeControls);
-$('start').addEventListener('click',()=>{trainingReviewMode=false;trainingReviewFacts=[];if($('profileName').value.trim())saveProfile(false);start()});
+$('start').addEventListener('click',()=>{trainingReviewMode=false;trainingReviewFacts=[];start()});
 $('verify').addEventListener('click',verify);
 $('markDifficulty').addEventListener('click',markCurrentQuestionDifficulty);
 $('startReviewTraining').addEventListener('click',startMistakeTraining);
