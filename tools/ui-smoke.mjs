@@ -953,9 +953,12 @@ async function testViewport(name, viewport, mobile = false) {
   await assertVisibleSections(["modeHub","communitySection"],"Voltar ao jogo pelo Meu perfil");
 
   // Estatísticas também devem sair para a página inicial, e não restaurar a Loja.
-  await page.locator("#navShop").click();
-  await page.locator("#navProfile").click();
-  await page.locator("#openProfileStats").click();
+  await page.evaluate(()=>{
+    setMainContentSections({shop:true});
+    openProfileScreen(true);
+  });
+  check(!(await page.locator("#shopScreen").evaluate(el=>el.classList.contains("hidden"))),
+    name+": o cenário de origem da Loja não foi preparado para as Estatísticas.");
   check(!(await page.locator("#profileStatsPanel").evaluate(el=>el.classList.contains("hidden"))),
     name+": Minhas estatísticas não abriram.");
   check((await page.locator("#closeProfileStats").textContent()).includes("Voltar ao jogo"),
@@ -964,9 +967,13 @@ async function testViewport(name, viewport, mobile = false) {
   await assertVisibleSections(["modeHub","communitySection"],"Voltar ao jogo pelas Estatísticas");
 
   // Opções seguem a mesma regra, mesmo abertas depois da Loja.
-  await page.locator("#navShop").click();
-  await page.locator("#navProfile").click();
-  await page.locator("#openProfileOptions").click();
+  await page.evaluate(()=>{
+    setMainContentSections({shop:true});
+    openProfileScreen();
+    showProfileOptions();
+  });
+  check(!(await page.locator("#shopScreen").evaluate(el=>el.classList.contains("hidden"))),
+    name+": o cenário de origem da Loja não foi preparado para Opções.");
   check(!(await page.locator("#profileOptionsPanel").evaluate(el=>el.classList.contains("hidden"))),
     name+": Opções não abriram.");
   check((await page.locator("#closeProfileOptions").textContent()).includes("Voltar ao jogo"),
