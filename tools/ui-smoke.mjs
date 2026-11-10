@@ -348,8 +348,12 @@ check(html.includes("challenge-standing-card")&&html.includes("challenge-standin
 check(html.includes("function formatCommunityLastOnline(value)")&&
   html.includes('class="community-last-online"')&&html.includes("lastOnlineAt:record.lastOnlineAt||profile.lastOnlineAt||null")&&
   html.includes("function startPresenceTracking()")&&html.includes("sendPresencePing(true)")&&
-  html.includes("setInterval(()=>sendPresencePing(false),120_000)")&&html.includes("apiRequest('/api/presence'"),
-  "A comunidade precisa exibir a última vez online e atualizar a presença da conta ativa.");
+  html.includes("setInterval(()=>{\n  sendPresencePing(false);")&&html.includes("apiRequest('/api/presence'")&&
+  html.includes("if(result.sha)remoteUserSha=result.sha;")&&html.includes("profilesData[username].lastOnlineAt=result.lastOnlineAt;")&&
+  workerSource.includes("updatedAt: updated.updatedAt"),
+  "A comunidade precisa exibir a última vez online, atualizar a presença e manter o SHA remoto sincronizado.");
+check(html.includes("item.winner!=='empate'&&(item.winner===activeProfile||winners.includes(activeProfile))"),
+  "Um empate não pode ser apresentado como vitória individual.");
 check(html.includes("function renderChallengeList()")&&html.includes("challenge-card-facts")&&
   html.includes("challenge-preview-head")&&html.includes("challenge-preview-row")&&
   html.includes("Ver classificação final")&&html.includes("Ver prévia da classificação")&&
@@ -360,6 +364,9 @@ check(html.includes("function showPrizeCelebration(")&&html.includes("function p
   html.includes("if(result.newAchievements?.length||Number(result.coinsAdded)>0)")&&
   html.includes("earnedChallengeMedalIds(nextStats)")&&html.includes("PREMIAÇÃO DO TORNEIO"),
   "Prêmios, moedas, medalhas e títulos precisam usar uma tela única com música própria ao serem conquistados.");
+check(html.includes("if(!result.alreadyOwned){")&&html.includes("NOVO ITEM DESBLOQUEADO")&&
+  html.includes("Novo avatar na sua coleção!")&&html.includes("newTitles=["),
+  "Um avatar realmente desbloqueado deve receber comemoração, sem confundir isso com uma compra repetida.");
 const trainingCycleCode=html.slice(html.indexOf("function showTrainingCycleCelebration("),html.indexOf("function makeRound()",html.indexOf("function showTrainingCycleCelebration(")));
 check(trainingCycleCode&&!trainingCycleCode.includes("showPrizeCelebration(")&&!trainingCycleCode.includes("playCelebrationSound()"),
   "Concluir um ciclo sem ganhar prêmio não deve abrir uma comemoração de recompensa.");
