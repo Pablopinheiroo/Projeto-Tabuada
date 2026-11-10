@@ -1391,7 +1391,7 @@ async function handleApi(request, env, origin) {
         ok: true,
         service: "Projeto Tabuada API",
         buildId: WORKER_BUILD_ID,
-        features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, trainingCoinsPerTenCorrectAnswers: true, trainingCorrectProgress: true, intelligentTrainingRewards: true, intelligentTrainingProgress: true, errorTrainingRewards: true, difficultyTrainingBelow90Percent: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true },
+        features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, trainingCoinsPerTenCorrectAnswers: true, trainingCorrectProgress: true, intelligentTrainingRewards: true, intelligentTrainingProgress: true, errorTrainingRewards: true, difficultyTrainingBelow90Percent: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true, lastOnlinePresence: true, awardCelebrations: true },
         githubSecretConfigured: true,
         githubConnected: true,
         githubContentReadAccess: true
@@ -1979,9 +1979,9 @@ async function handleApi(request, env, origin) {
           ...(currentProfile.tournamentAwards || {})
         },
         tournamentFrame: currentProfile.tournamentFrame || incomingProfile.tournamentFrame,
-        lastOnlineAt: Date.parse(currentProfile.lastOnlineAt || "") >= Date.parse(incomingProfile.lastOnlineAt || "")
+        lastOnlineAt: parseTime(currentProfile.lastOnlineAt) >= parseTime(incomingProfile.lastOnlineAt)
           ? currentProfile.lastOnlineAt || incomingProfile.lastOnlineAt || null
-          : incomingProfile.lastOnlineAt
+          : incomingProfile.lastOnlineAt || currentProfile.lastOnlineAt || null
       };
       const audioKeys = ["musicVolume", "sfxVolume", "gameSfxVolume", "audioPreferencesSavedAt"];
       for (const key of audioKeys) {
