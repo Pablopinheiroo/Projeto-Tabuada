@@ -290,7 +290,8 @@ check(html.includes('id="startIntelligentTraining"')&&html.includes('id="startEr
 check(html.includes("questionCount:sessionCompletedQuestionCount")&&html.includes("intelligent_training_questions")&&
   html.includes("error_training_complete")&&html.includes("errorTrainingCorrectStreak")&&
   html.includes("item.errorTrainingResolved=item.errorTrainingCorrectStreak>=2")&&
-  html.includes("item.errorTrainingResolved=false"),
+  html.includes("item.errorTrainingResolved=false")&&
+  html.includes("if(trainingModeType==='errors'){\n  item.errorTrainingCorrectStreak=0;\n  item.errorTrainingResolved=false;"),
   "A contagem acumulada do treino inteligente ou a sequência de dois acertos nos erros está incompleta.");
 check(html.includes("getDifficultyTrainingFacts()")&&html.includes("item.accuracy<.90")&&
   workerSource.includes("difficultyTrainingBelow90Percent: true"),
