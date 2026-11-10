@@ -194,6 +194,7 @@ function defaultGameEconomy(currentAvatar = "imagem:0") {
     ? String(currentAvatar) : "imagem:0";
   return {
     version: 1, coins: 0, totalEarned: 0, trainingCycles: 0,
+    trainingQuestionProgress: 0, trainingQuestionClaimIds: [],
     completedStages: [], perfectStages: [], comboStages: [],
     trainingClaimIds: [], ownedAvatars: [...new Set(["imagem:0", legacyAvatar])],
     achievements: {}
@@ -221,6 +222,8 @@ function normalizeGameEconomy(record) {
     coins: safeInt(raw?.coins),
     totalEarned: safeInt(raw?.totalEarned),
     trainingCycles: safeInt(raw?.trainingCycles),
+    trainingQuestionProgress: safeInt(raw?.trainingQuestionProgress, 9),
+    trainingQuestionClaimIds: [...new Set((Array.isArray(raw?.trainingQuestionClaimIds) ? raw.trainingQuestionClaimIds : []).filter(id => typeof id === "string" && id.length <= 100))].slice(-500),
     completedStages: [...new Set((Array.isArray(raw?.completedStages) ? raw.completedStages : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= ADVENTURE_STAGE_COUNT))],
     perfectStages: [...new Set((Array.isArray(raw?.perfectStages) ? raw.perfectStages : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= ADVENTURE_STAGE_COUNT))],
     comboStages: [...new Set((Array.isArray(raw?.comboStages) ? raw.comboStages : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= ADVENTURE_STAGE_COUNT))],
@@ -1685,13 +1688,35 @@ async function handleApi(request, env, origin) {
             economy.trainingClaimIds.push(claimId);
             economy.trainingClaimIds = economy.trainingClaimIds.slice(-500);
             economy.trainingCycles += 1;
-            economy.coins += 10;
-            economy.totalEarned += 10;
-            coinsAdded = 10;
             changed = true;
           }
           if (body.learningFromErrors === true && !economy.achievements.learning_from_errors) {
             economy.achievements.learning_from_errors = new Date().toISOString();
+            changed = true;
+          }
+        } else if (body.type === "training_questions") {
+          const claimId = typeof body.claimId === "string" ? body.claimId : "";
+          const questionCount = Math.max(0, Math.min(100_000, Math.floor(Number(body.questionCount) || 0)));
+          if (!/^[A-Za-z0-9:_-]{8,100}$/.test(claimId) || questionCount < 1) {
+            return json({ error: "Lote de questões de treinamento inválido." }, 400, origin);
+          }
+          if (economy.trainingQuestionClaimIds.includes(claimId)) {
+            alreadyClaimed = true;
+          } else {
+            economy.trainingQuestionClaimIds.push(claimId);
+            economy.trainingQuestionClaimIds = economy.trainingQuestionClaimIds.slice(-500);
+            const totalQuestions = economy.trainingQuestionProgress + questionCount;
+            const earnedBatches = Math.floor(totalQuestions / 10);
+            economy.trainingQuestionProgress = totalQuestions % 10;
+            coinsAdded = earnedBatches * 5;
+            if (coinsAdded > 0) {
+              economy.coins += coinsAdded;
+              economy.totalEarned += coinsAdded;
+            }
+            changed = true;
+          }
+          if (body.history && typeof body.history === "object") {
+            record.data.history = mergeHistorySnapshots(record.data.history, body.history);
             changed = true;
           }
         } else if (body.type === "adventure_stage") {
