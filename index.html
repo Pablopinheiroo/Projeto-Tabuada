@@ -440,6 +440,20 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .avatar-choice.locked .avatar-status{color:#fde68a;font-weight:900}
 .avatar-status{display:block;line-height:1.25;font-size:.64rem}
 .avatar-choice:not(.locked) .avatar-status{color:#67e8f9}
+.avatar-shop-catalog{display:grid;gap:18px;margin-top:16px}
+.avatar-shop-group-title{margin:0 0 10px;padding:9px 11px;border:1px solid #397c9e;border-radius:11px;background:linear-gradient(100deg,#102d4a,#25204b);color:#67e8f9;font-size:.82rem;font-weight:900;letter-spacing:.05em;text-transform:uppercase}
+.avatar-shop-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+.shop-avatar-card{min-width:0;display:grid;justify-items:center;align-content:start;gap:8px;padding:12px 8px;border:1px solid #385477;border-radius:15px;background:linear-gradient(145deg,#10213a,#191d3c);color:#eaf4ff;text-align:center}
+.shop-avatar-card img{display:block;width:min(100%,82px);aspect-ratio:1;object-fit:cover;border:2px solid #67e8f9;border-radius:50%;background:#0b172a}
+.shop-avatar-card.gif-shop-item img{border:3px solid #d946ef;outline:2px solid #fbbf24;border-radius:22%}
+.shop-avatar-card strong{font-size:.82rem;line-height:1.3;overflow-wrap:anywhere}
+.shop-avatar-price{color:#fcd34d;font-size:.76rem;font-weight:850}
+.shop-avatar-card button{width:100%;padding:9px 7px;border:1px solid #65a8d0;border-radius:9px;background:linear-gradient(110deg,#1d4ed8,#6d28d9);color:#fff;font-size:.76rem;font-weight:900}
+.shop-avatar-card button:disabled{border-color:#3e8068;background:#174b3e;color:#a7f3d0;opacity:1;cursor:default}
+.shop-wallet{display:flex;align-items:center;gap:7px;padding:10px 14px;border:1px solid #a17a31;border-radius:12px;background:linear-gradient(110deg,#3c2a0d,#42305a);color:#fde68a;font-weight:850;white-space:nowrap}
+.shop-wallet strong{font-size:1.15rem}
+.shop-intro{color:#a9c1e5;font-size:.87rem;line-height:1.5;margin:8px 0 0}
+@media(max-width:560px){.avatar-shop-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.shop-avatar-card{padding:10px 7px}.shop-wallet{width:100%;justify-content:center}}
 .game-reward-toast{position:sticky;top:8px;z-index:20;width:max-content;max-width:min(92vw,560px);margin:0 auto 12px;padding:11px 17px;border:1px solid #fbbf24;border-radius:999px;background:linear-gradient(110deg,#422006,#713f12);color:#fef3c7;font-weight:900;text-align:center;box-shadow:0 8px 26px #02061788;animation:rewardPop .22s ease-out}
 @keyframes rewardPop{from{opacity:0;transform:translateY(-7px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:620px){.wallet-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.achievement-shelf{grid-template-columns:1fr}.wallet-inline{align-items:flex-start}}
@@ -1085,7 +1099,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  
  <form id="profileEditForm" class="auth-form">
   <label>Nome que aparece no jogo<input id="profileDisplayName" maxlength="24" required placeholder="Seu nome de exibição"></label>
-  <div class="avatar-field">Loja de avatares <small class="shop-rules">Imagem: 100 moedas · GIF animado: 1.500 moedas. Seu avatar inicial é gratuito. Avatares comprados ficam na sua conta.</small><div id="profileAvatarGrid" class="avatar-grid" role="group" aria-label="Loja e seleção de avatares"></div></div>
+  <div class="avatar-field">Avatares adquiridos <small class="shop-rules">Aqui aparecem somente o avatar inicial gratuito e os avatares que você já comprou com moedas. Para obter outros, acesse a Loja no menu.</small><div id="profileAvatarGrid" class="avatar-grid" role="group" aria-label="Seleção de avatares adquiridos"></div></div>
   <button class="primary" type="submit">Salvar perfil</button>
   <p id="profileMessage" class="auth-message" role="status"></p>
  </form>
@@ -1180,6 +1194,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  <button id="navChallenge" type="button">⚔️ Desafio</button>
  <button id="navTournament" type="button">🏁 Torneio</button>
  <button id="navCommunity" type="button">🌐 Comunidade</button>
+ <button id="navShop" type="button">🛍️ Loja</button>
 </nav>
 
 <div id="modeHub" class="mode-hub">
@@ -1436,6 +1451,17 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  <div id="communityPagination" class="list-pagination community-pagination" aria-label="Paginação da comunidade"></div>
  <p class="ranking-local-note community-list-note">Ranking compartilhado entre os participantes cadastrados. Os dados são lidos do repositório privado de dados.</p>
 </div>
+
+<section id="shopScreen" class="community-ranking hidden" aria-labelledby="shopTitle">
+ <div class="community-heading">
+  <div><span class="music-kicker">🪙 ECONOMIA DO JOGO</span><h2 id="shopTitle">🛍️ Loja de avatares</h2><p class="shop-intro">Use suas moedas para comprar imagens e GIFs animados. Depois da compra, o avatar ficará disponível em Meu perfil.</p></div>
+  <div class="shop-wallet"><i class="coin-symbol" aria-hidden="true"></i> Saldo: <strong id="shopCoins">0</strong></div>
+ </div>
+ <p class="shop-intro">Imagens: <b>100 moedas</b> cada · GIFs animados: <b>1.500 moedas</b> cada. Os itens abaixo são apresentados para compra, sem cadeados.</p>
+ <div id="avatarShopGrid" class="avatar-shop-catalog" aria-label="Avatares disponíveis para compra"></div>
+ <p id="shopMessage" class="auth-message" role="status" aria-live="polite"></p>
+ <div class="game-return-footer"><button id="shopBackToGame" type="button" class="secondary">↑ Voltar ao jogo</button></div>
+</section>
 
 <div class="game-return-footer"><button id="bottomReturnToGame" type="button" class="secondary">↑ Voltar ao jogo</button></div>
 </section>
@@ -1726,20 +1752,43 @@ function renderAvatarGrid(containerId,selectedKey,onSelect){
  const box=$(containerId);if(!box)return;
  const selected=normalizeAvatarKey(selectedKey);
  const isRegistration=containerId==='registerAvatarGrid';
+ const isProfile=containerId==='profileAvatarGrid';
  const owned=new Set(Array.isArray(gameEconomy.ownedAvatars)?gameEconomy.ownedAvatars:['imagem:0']);
- const renderGroup=(title,list,kind)=>'<div class="avatar-section-title">'+title+'</div><div class="avatar-grid-list">'+list.map((avatar,index)=>{
-  const key=kind+':'+index,active=key===selected,isOwned=owned.has(key),price=avatarPrice(key);
-  const classes='avatar-choice '+(kind==='gif'?'gif-choice':'image-choice')+(active?' selected':'')+(!isOwned?' locked':'');
-  const status=isOwned?(active?'✓ Equipado':'✓ Disponível'):(isRegistration?'🔒 Após cadastro':'🔒 '+price.toLocaleString('pt-BR')+' moedas');
-  const action=isOwned?'data-avatar-key="'+key+'"':(!isRegistration?'data-avatar-buy="'+key+'"':'disabled');
-  return '<button type="button" class="'+classes+'" '+action+' aria-pressed="'+(isOwned&&active)+'" title="'+(isOwned?'Selecionar avatar':(isRegistration?'Disponível após cadastro':'Comprar por '+price+' moedas'))+'"><img src="'+avatarImage(key)+'" alt=""><span>'+avatar.name+'</span><small class="avatar-status">'+status+'</small></button>';
- }).join('')+'</div>';
- box.innerHTML=renderGroup('🖼️ Imagens · 100 moedas cada',AVATARS,'imagem')+renderGroup('✨ GIFs animados · 1.500 moedas cada',GIF_AVATARS,'gif');
+ const renderGroup=(title,list,kind)=>{
+  const items=list.map((avatar,index)=>({avatar,index,key:kind+':'+index,isOwned:owned.has(kind+':'+index)}))
+   .filter(item=>!isProfile||item.isOwned);
+  if(!items.length)return '';
+  return '<div class="avatar-section-title">'+title+'</div><div class="avatar-grid-list">'+items.map(item=>{
+   const {avatar,index,key,isOwned}=item,active=key===selected,price=avatarPrice(key);
+   const classes='avatar-choice '+(kind==='gif'?'gif-choice':'image-choice')+(active?' selected':'')+(!isOwned?' locked':'');
+   const status=isOwned?(active?'✓ Equipado':'✓ Disponível'):(isRegistration?'🔒 Após cadastro':'🔒 '+price.toLocaleString('pt-BR')+' moedas');
+   const action=isOwned?'data-avatar-key="'+key+'"':(!isRegistration&&!isProfile?'data-avatar-buy="'+key+'"':'disabled');
+   return '<button type="button" class="'+classes+'" '+action+' aria-pressed="'+(isOwned&&active)+'" title="'+(isOwned?'Selecionar avatar':(isRegistration?'Disponível após cadastro':'Comprar por '+price+' moedas'))+'"><img src="'+avatarImage(key)+'" alt=""><span>'+avatar.name+'</span><small class="avatar-status">'+status+'</small></button>';
+  }).join('')+'</div>';
+ };
+ const imageTitle=isProfile?'🖼️ Imagens adquiridas':'🖼️ Imagens · 100 moedas cada';
+ const gifTitle=isProfile?'✨ GIFs animados adquiridos':'✨ GIFs animados · 1.500 moedas cada';
+ box.innerHTML=renderGroup(imageTitle,AVATARS,'imagem')+renderGroup(gifTitle,GIF_AVATARS,'gif');
  box.querySelectorAll('[data-avatar-key]').forEach(button=>button.addEventListener('click',()=>{
   const key=button.dataset.avatarKey;onSelect(key);renderAvatarGrid(containerId,key,onSelect);
  }));
  box.querySelectorAll('[data-avatar-buy]').forEach(button=>button.addEventListener('click',()=>purchaseAvatar(button.dataset.avatarBuy)));
 }
+function renderAvatarShop(){
+ const box=$('avatarShopGrid');if(!box)return;
+ const owned=new Set(Array.isArray(gameEconomy.ownedAvatars)?gameEconomy.ownedAvatars:['imagem:0']);
+ if($('shopCoins'))$('shopCoins').textContent=(Number(gameEconomy.coins)||0).toLocaleString('pt-BR');
+ const renderGroup=(title,list,kind)=>'<div><h3 class="avatar-shop-group-title">'+title+'</h3><div class="avatar-shop-grid">'+list.map((avatar,index)=>{
+  const key=kind+':'+index;
+  if(key==='imagem:0')return '';
+  const isOwned=owned.has(key),price=avatarPrice(key);
+  return '<article class="shop-avatar-card '+(kind==='gif'?'gif-shop-item':'')+(isOwned?' owned':'')+'"><img src="'+avatarImage(key)+'" alt=""><strong>'+avatar.name+'</strong><span class="shop-avatar-price">'+(isOwned?'✓ Já adquirido':price.toLocaleString('pt-BR')+' moedas')+'</span>'+(isOwned?'<button type="button" disabled>✓ Adquirido</button>':'<button type="button" data-avatar-buy="'+key+'">Comprar · '+price.toLocaleString('pt-BR')+' moedas</button>')+'</article>';
+ }).join('')+'</div></div>';
+ box.innerHTML=renderGroup('🖼️ Imagens · 100 moedas cada',AVATARS,'imagem')+
+  renderGroup('✨ GIFs animados · 1.500 moedas cada',GIF_AVATARS,'gif');
+ box.querySelectorAll('[data-avatar-buy]').forEach(button=>button.addEventListener('click',()=>purchaseAvatar(button.dataset.avatarBuy)));
+}
+
 function refreshProfileIdentity(){
  const profile=profilesData[activeProfile]||{};
  restoreProfileSfxVolume();
@@ -2121,7 +2170,7 @@ async function deliverPendingGameReward(item){
   showGameRewardToast('🏆 Nova conquista: '+names.join(', '));
  }
  if(result.coinsAdded>0)showGameRewardToast('🪙 +'+result.coinsAdded+' moedas!');
- saveClientEconomyCache();refreshEconomyDisplay();renderAchievementShelf();
+ saveClientEconomyCache();refreshEconomyDisplay();renderAchievementShelf();renderAvatarShop();
  if($('profileAvatarGrid')&&!$('profileScreen').classList.contains('hidden')){
   renderAvatarGrid('profileAvatarGrid',selectedProfileAvatar,key=>{selectedProfileAvatar=key;});
  }
@@ -2165,8 +2214,11 @@ async function claimGameReward(type,payload){
 }
 async function purchaseAvatar(key){
  const price=avatarPrice(key);
+ const message=$('shopMessage')||$('profileMessage');
+ if(!validClientAvatarKey(key)||key==='imagem:0'){if(message)message.textContent='Este item não está disponível para compra.';return;}
  if(!gameEconomy.ownedAvatars.includes(key)&&gameEconomy.coins<price){
-  $('profileMessage').textContent='Você tem '+gameEconomy.coins+' moedas. Este avatar custa '+price+'. Continue treinando para juntar moedas.';return;
+  if(message)message.textContent='Você tem '+gameEconomy.coins.toLocaleString('pt-BR')+' moedas. Este avatar custa '+price.toLocaleString('pt-BR')+'. Continue jogando para juntar moedas.';
+  return;
  }
  try{
   const result=await apiRequest('/api/game/shop',{method:'POST',body:{avatarKey:key}});
@@ -2174,12 +2226,20 @@ async function purchaseAvatar(key){
   if(result.sha)remoteUserSha=result.sha;
   saveClientEconomyCache();refreshEconomyDisplay();renderAchievementShelf();
   renderAvatarGrid('profileAvatarGrid',selectedProfileAvatar,value=>{selectedProfileAvatar=value;});
-  $('profileMessage').textContent=result.alreadyOwned?'Este avatar já está na sua coleção.':'Avatar desbloqueado! Selecione-o e salve seu perfil para usar.';
+  renderAvatarShop();
+  const confirmation=result.alreadyOwned?'Este avatar já está na sua coleção.':'Compra realizada! O avatar agora está disponível em Meu perfil.';
+  if($('shopMessage'))$('shopMessage').textContent=confirmation;
+  if($('profileMessage'))$('profileMessage').textContent=confirmation;
   if(result.newAchievements?.length){
-   const names=result.newAchievements.map(id=>ACHIEVEMENT_DEFINITIONS.find(a=>a.id===id)?.title||id);
+   const names=result.newAchievements.map(a=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===a)?.title||a);
    showGameRewardToast('🏆 Nova conquista: '+names.join(', '));
-  }else showGameRewardToast('🎨 Avatar desbloqueado!');
- }catch(error){$('profileMessage').textContent=error.message||'Não foi possível comprar este avatar.';}
+  }else showGameRewardToast(result.alreadyOwned?'🎨 Avatar já adquirido!':'🛍️ Avatar comprado!');
+ }catch(error){
+  if(message)message.textContent=error.message||'Não foi possível comprar este avatar.';
+ }
+}
+function validClientAvatarKey(value){
+ return typeof value==='string'&&/^(imagem|gif):\\d+$/.test(value)&&(()=>{const [kind,raw]=value.split(':');const index=Number(raw);return Number.isInteger(index)&&index>=0&&index<(kind==='gif'?GIF_AVATARS.length:AVATARS.length);})();
 }
 
 function makeSalt(){return [...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,'0')).join('')}
@@ -5127,8 +5187,10 @@ $('navTraining').addEventListener('click',showTrainingMode);
 $('navAdventure').addEventListener('click',showAdventureMap);
 $('navChallenge').addEventListener('click',openChallengeMode);
 $('navTournament').addEventListener('click',openTournamentMode);
-$('navCommunity').addEventListener('click',()=>$('communityRanking').scrollIntoView({behavior:'smooth',block:'start'}));
-function returnToGameHome(){showModeHub();$('modeHub').scrollIntoView({behavior:'smooth',block:'start'});}
+$('navCommunity').addEventListener('click',()=>{$('shopScreen').classList.add('hidden');$('communityRanking').scrollIntoView({behavior:'smooth',block:'start'});});
+$('navShop').addEventListener('click',()=>{$('shopScreen').classList.remove('hidden');renderAvatarShop();$('shopScreen').scrollIntoView({behavior:'smooth',block:'start'});});
+$('shopBackToGame').addEventListener('click',()=>{$('shopScreen').classList.add('hidden');returnToGameHome();});
+function returnToGameHome(){$('shopScreen').classList.add('hidden');showModeHub();$('modeHub').scrollIntoView({behavior:'smooth',block:'start'});}
 $('topReturnToGame').addEventListener('click',returnToGameHome);
 $('bottomReturnToGame').addEventListener('click',returnToGameHome);
 $('communitySort').addEventListener('change',()=>{communityPage=0;renderCommunityRanking();});
