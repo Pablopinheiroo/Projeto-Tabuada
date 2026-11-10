@@ -449,6 +449,9 @@ async function testViewport(name, viewport, mobile = false) {
     try{
       const trainingBefore=getErrorTrainingFacts('training').map(item=>item.wrong);
       const tournamentBefore=getErrorTrainingFacts('tournament').map(item=>item.wrong);
+      updateReviewTrainingButton();
+      const regularCardVisible=!document.querySelector("#errorTrainingCard").classList.contains("hidden");
+      const tournamentCardVisible=!document.querySelector("#tournamentErrorTrainingCard").classList.contains("hidden");
       const allSkillsBefore=collectLearningFacts().find(item=>item.a===2&&item.b===3);
       const item=historyData.questions["2x3"];
       setErrorTrainingPoolState(item,'training',true);
@@ -462,7 +465,7 @@ async function testViewport(name, viewport, mobile = false) {
       setErrorTrainingPoolState(item,'tournament',true);
       setErrorTrainingPoolState(item,'tournament',true);
       return {
-        trainingBefore,tournamentBefore,
+        trainingBefore,tournamentBefore,regularCardVisible,tournamentCardVisible,
         allSkillsBefore:{wrong:allSkillsBefore?.wrong,attempts:allSkillsBefore?.attempts},
         trainingAfterResolved,tournamentAfterTrainingResolved,
         allSkillsAfterChallenge:{wrong:allSkillsAfterChallenge?.wrong,attempts:allSkillsAfterChallenge?.attempts},
@@ -478,6 +481,8 @@ async function testViewport(name, viewport, mobile = false) {
   check(JSON.stringify(separatedErrorPools.trainingBefore)==='[6]'&&
     JSON.stringify(separatedErrorPools.tournamentBefore)==='[3]',
     name+": a lista de erros misturou modalidades; deve somar Treinar+Modo jogo separadamente do Torneio ("+JSON.stringify(separatedErrorPools)+").");
+  check(separatedErrorPools.regularCardVisible&&separatedErrorPools.tournamentCardVisible,
+    name+": os dois cartões de revisão não apareceram quando existem erros nas respectivas modalidades.");
   check(separatedErrorPools.allSkillsBefore?.wrong===14&&separatedErrorPools.allSkillsBefore?.attempts===18,
     name+": as habilidades gerais não somaram os erros de desafio e das outras modalidades.");
   check(separatedErrorPools.trainingAfterResolved===0&&separatedErrorPools.tournamentAfterTrainingResolved===1,
