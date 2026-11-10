@@ -480,12 +480,17 @@ async function testViewport(name, viewport, mobile = false) {
     await page.locator("#avatarShopGrid .shop-avatar-card.owned").count()===3&&
     (await page.locator("#shopCoins").textContent()).trim()==="2.300",
     name+": o avatar comprado não passou para a coleção e o saldo não foi atualizado.");
+  await page.evaluate(()=>{
+    document.querySelector("#profileScreen").classList.add("hidden");
+    document.querySelector("#setup").classList.remove("hidden");
+  });
   await page.locator("#navShop").click();
   check(!(await page.locator("#shopScreen").evaluate(el=>el.classList.contains("hidden"))),
     name+": o botão Loja não abriu a nova seção.");
   await page.locator("#navCommunity").click();
   check(await page.locator("#shopScreen").evaluate(el=>el.classList.contains("hidden")),
     name+": ao voltar para Comunidade, a seção Loja não foi ocultada.");
+  await page.locator("#openProfile").click();
   const profileReturnState=await page.evaluate(()=>({
     gameHidden:document.querySelector("#game").classList.contains("hidden"),
     setupHidden:document.querySelector("#setup").classList.contains("hidden"),
