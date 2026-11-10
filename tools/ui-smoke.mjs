@@ -231,7 +231,9 @@ check(html.includes("async function saveProgressNow(")&&!html.includes("ACTIVE_T
   "O salvamento automático por tempo deve estar removido e o salvamento deve ser explícito.");
 check(logoutCode.length>0&&logoutCode.includes("flushCloudSave(true)")&&logoutCode.includes("retryPendingGameRewards()"),
   "Sair da conta não tenta concluir os salvamentos/recompensas pendentes.");
-check(html.includes("pendingActiveMs>0?loadHistory():remoteHistory"), "O login não preserva o histórico local que ainda não foi sincronizado.");
+check(html.includes("PENDING_PROFILE_SAVE_KEY")&&html.includes("mergeLocalHistorySnapshots(remoteHistory,loadHistory())")&&
+  html.includes("markProfileSavePending(activeProfile)")&&html.includes("clearProfileSavePending(username)"),
+  "Um salvamento que falhar não preserva as alterações locais até a próxima sincronização.");
 check(html.includes("Último salvamento: "), "O perfil não mostra o rótulo do último salvamento.");
 check(html.includes("sessionCompletedQuestionCount++")&&html.includes("claimGameReward('training_questions'")&&
   html.includes("completedQuestions:sessionCompletedQuestionCount"),
@@ -1062,11 +1064,18 @@ async function testViewport(name, viewport, mobile = false) {
 async function testExplicitSave(browser) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 }, locale: "pt-BR" });
   const writes = [];
+  let failNextWrite = false;
   await page.route("https://projeto-tabuada-api.nuvemx.workers.dev/**", async route => {
     const request = route.request();
     const pathname = new URL(request.url()).pathname;
     if (request.method() === "PUT" && pathname === "/api/me") {
-      writes.push(JSON.parse(request.postData() || "{}"));
+      const body = JSON.parse(request.postData() || "{}");
+      if(failNextWrite){
+        failNextWrite=false;
+        await route.fulfill({status:503,contentType:"application/json",body:JSON.stringify({error:"Falha temporária de rede"})});
+        return;
+      }
+      writes.push(body);
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -1133,11 +1142,36 @@ async function testExplicitSave(browser) {
       "O segundo salvamento não ocorreu após a ação explícita de sair.");
     check(Number(writes[1].profile?.studyTimeMs)>=30*60*1000,
       "O salvamento ao sair não incluiu todo o tempo que ainda estava pendente.");
+    failNextWrite=true;
+    const failedSave=await page.evaluate(async()=>{
+      historyData.questions["88x1"]={a:88,b:1,attempts:1,correct:0,wrong:1,totalTimeMs:900,bestTimeMs:900};
+      saveHistory();
+      const saved=await saveProgressNow("Teste de salvamento pendente",{refreshCommunity:false});
+      return {saved,pending:pendingProfileSaves()[activeProfile]===true};
+    });
+    check(!failedSave.saved&&failedSave.pending,
+      "Uma falha de rede não deixou a alteração marcada para sincronizar depois.");
+    const restoredPending=await page.evaluate(()=>{
+      hydrateRemoteUser("explicit-save-smoke",{
+        sha:"remote-old-sha",
+        data:{profile:{studyTimeMs:0},history:{questions:{},sessions:[]},economy:{}}
+      });
+      return {
+        pending:pendingProfileSaves()[activeProfile]===true,
+        question:historyData.questions["88x1"]?.wrong
+      };
+    });
+    check(restoredPending.pending&&restoredPending.question===1,
+      "Ao entrar novamente, o histórico local pendente foi substituído pelos dados antigos da nuvem.");
+    const retrySaved=await page.evaluate(()=>saveProgressNow("Reenviar salvamento pendente",{refreshCommunity:false}));
+    check(retrySaved&&writes.length===3&&await page.evaluate(()=>pendingProfileSaves()[activeProfile]!==true),
+      "A próxima ação explícita não sincronizou nem limpou o salvamento pendente.");
+
     const lastSavedLabel = (await page.locator("#profileLastSavedAt").textContent()) || "";
     check(lastSavedLabel.startsWith("Último salvamento:"),
       "O perfil não exibiu a data e o horário do último salvamento.");
 
-    return { result: "PASS", explicitSaves: writes.length, autoSavesWithoutAction: 0, lastSavedLabel };
+    return { result: "PASS", explicitSaves: writes.length, autoSavesWithoutAction: 0, pendingSaveRestored: true, lastSavedLabel };
   } finally {
     await page.close();
   }
