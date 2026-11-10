@@ -800,6 +800,7 @@ async function testViewport(name, viewport, mobile = false) {
   await assertVisibleSections(["challengeModeView","communitySection"],"Desafio com Comunidade");
   await page.evaluate(()=>{setMusicMenuExpanded(true);showChallengeSubPanel("challengePlayPanel");});
   await assertMusicMenuMinimized("partida de Desafio");
+  await page.evaluate(()=>showChallengeSubPanel("challengeHomePanel"));
   await page.locator("#backFromChallenge").click();
   await assertVisibleSections(["modeHub","communitySection"],"retorno do Desafio");
 
