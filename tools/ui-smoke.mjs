@@ -307,6 +307,11 @@ check(html.includes("const modes=item.modes&&typeof item.modes==='object'?item.m
   html.includes("item.attempts++;")&&html.includes("if(entry.correct)item.correct++;else item.wrong++;")&&
   html.includes("modeItem.attempts++;if(entry.correct)modeItem.correct++;else modeItem.wrong++;"),
   "As estatísticas gerais devem somar todas as modalidades, mas os treinos devem usar somente seus erros de origem.");
+check(html.includes("function collectTrainingLearningFacts()")&&
+  html.includes("return collectTrainingLearningFacts().filter(item=>item.accuracy<.90")&&
+  html.includes("function profileLearningStats()")&&html.includes("tournamentReview:{label:'Rev. torneio'")&&
+  html.includes("legacy:{label:'Histórico antigo'"),
+  "As sugestões de treino devem excluir Desafio e Torneio, enquanto o painel geral mostra todas as modalidades.");
 check(html.includes("mode:'challenge'")&&html.includes("collectLearningFacts()")&&
   html.includes("getErrorTrainingFacts('training')")&&html.includes("getErrorTrainingFacts('tournament')")&&
   html.includes("function startRound()")&&html.includes("trainingModeType==='errors'||trainingModeType==='tournamentErrors'"),
@@ -443,6 +448,11 @@ async function testViewport(name, viewport, mobile = false) {
           tournament_error_training:{attempts:1,correct:0,wrong:1,totalTimeMs:1000}
         },
         errorTrainingPools:{}
+      },
+      "6x7":{
+        a:6,b:7,attempts:2,correct:0,wrong:2,totalTimeMs:4000,
+        modes:{challenge:{attempts:2,correct:0,wrong:2,totalTimeMs:4000}},
+        errorTrainingPools:{}
       }
     },sessions:[]};
     saveHistory=()=>{};updateReviewTrainingButton=()=>{};playFeedback=()=>{};
@@ -453,6 +463,9 @@ async function testViewport(name, viewport, mobile = false) {
       const regularCardVisible=!document.querySelector("#errorTrainingCard").classList.contains("hidden");
       const tournamentCardVisible=!document.querySelector("#tournamentErrorTrainingCard").classList.contains("hidden");
       const allSkillsBefore=collectLearningFacts().find(item=>item.a===2&&item.b===3);
+      const challengeOnlySkill=collectLearningFacts().find(item=>item.a===6&&item.b===7);
+      const challengeOnlyInTraining=getIntelligentTrainingFacts().some(item=>item.a===6&&item.b===7)||
+        getDifficultyTrainingFacts().some(item=>item.a===6&&item.b===7);
       const item=historyData.questions["2x3"];
       setErrorTrainingPoolState(item,'training',true);
       setErrorTrainingPoolState(item,'training',true);
@@ -467,6 +480,8 @@ async function testViewport(name, viewport, mobile = false) {
       return {
         trainingBefore,tournamentBefore,regularCardVisible,tournamentCardVisible,
         allSkillsBefore:{wrong:allSkillsBefore?.wrong,attempts:allSkillsBefore?.attempts},
+        challengeOnlySkill:{wrong:challengeOnlySkill?.wrong,attempts:challengeOnlySkill?.attempts},
+        challengeOnlyInTraining,
         trainingAfterResolved,tournamentAfterTrainingResolved,
         allSkillsAfterChallenge:{wrong:allSkillsAfterChallenge?.wrong,attempts:allSkillsAfterChallenge?.attempts},
         trainingAfterChallenge,tournamentAfterChallenge,
@@ -483,8 +498,10 @@ async function testViewport(name, viewport, mobile = false) {
     name+": a lista de erros misturou modalidades; deve somar Treinar+Modo jogo separadamente do Torneio ("+JSON.stringify(separatedErrorPools)+").");
   check(separatedErrorPools.regularCardVisible&&separatedErrorPools.tournamentCardVisible,
     name+": os dois cartões de revisão não apareceram quando existem erros nas respectivas modalidades.");
-  check(separatedErrorPools.allSkillsBefore?.wrong===14&&separatedErrorPools.allSkillsBefore?.attempts===18,
-    name+": as habilidades gerais não somaram os erros de desafio e das outras modalidades.");
+  check(separatedErrorPools.allSkillsBefore?.wrong===14&&separatedErrorPools.allSkillsBefore?.attempts===18&&
+    separatedErrorPools.challengeOnlySkill?.wrong===2&&separatedErrorPools.challengeOnlySkill?.attempts===2&&
+    !separatedErrorPools.challengeOnlyInTraining,
+    name+": o Desafio deve aparecer nas estatísticas gerais, mas não deve criar sugestões de treino.");
   check(separatedErrorPools.trainingAfterResolved===0&&separatedErrorPools.tournamentAfterTrainingResolved===1,
     name+": resolver os erros do Treinar afetou a lista de erros do Torneio.");
   check(separatedErrorPools.allSkillsAfterChallenge?.wrong===15&&separatedErrorPools.allSkillsAfterChallenge?.attempts===19,
