@@ -1097,7 +1097,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
    <div class="wallet-stat"><span>🏁 CICLOS DE TREINO</span><strong id="profileTrainingCycles">0</strong></div>
    <div class="wallet-stat"><span>🗺️ FASES CONCLUÍDAS</span><strong id="profileCompletedStages">0/26</strong></div>
   </div>
-  <p class="economy-rules">Recompensas: <b>+10 moedas</b> por ciclo completo no treinamento e <b>+50 moedas</b> na primeira conclusão de cada fase do desafio.</p>
+  <p class="economy-rules">Recompensas: <b>+5 moedas a cada 10 questões concluídas</b> no Treinamento (a contagem continua entre sessões) e <b>+50 moedas</b> na primeira conclusão de cada fase do Modo Jogo.</p>
   <h3 class="achievement-title challenge-profile-title">⚔️ Histórico de desafios <span id="challengeMedalCount">0/11 medalhas</span></h3>
   <div class="wallet-grid challenge-profile-summary">
    <div class="wallet-stat"><span>🏆 VITÓRIAS</span><strong id="profileChallengeWins">0</strong></div>
@@ -1970,6 +1970,8 @@ function normalizeClientEconomy(value,currentAvatar='imagem:0'){
   version:1,coins:Math.max(0,Math.floor(Number(raw.coins)||0)),
   totalEarned:Math.max(0,Math.floor(Number(raw.totalEarned)||0)),
   trainingCycles:Math.max(0,Math.floor(Number(raw.trainingCycles)||0)),
+  trainingQuestionProgress:Math.max(0,Math.min(9,Math.floor(Number(raw.trainingQuestionProgress)||0))),
+  trainingQuestionClaimIds:Array.isArray(raw.trainingQuestionClaimIds)?raw.trainingQuestionClaimIds.filter(id=>typeof id==='string').slice(-500):[],
   completedStages:Array.isArray(raw.completedStages)?raw.completedStages.map(Number).filter(n=>Number.isInteger(n)&&n>=1&&n<=26):[],
   perfectStages:Array.isArray(raw.perfectStages)?raw.perfectStages.map(Number).filter(n=>Number.isInteger(n)&&n>=1&&n<=26):[],
   comboStages:Array.isArray(raw.comboStages)?raw.comboStages.map(Number).filter(n=>Number.isInteger(n)&&n>=1&&n<=26):[],
@@ -2279,8 +2281,11 @@ async function claimGameReward(type,payload){
  }
  const body=type==='training_cycle'
   ?{type,claimId:payload.claimId,learningFromErrors:payload.learningFromErrors===true}
-  :{type,stageId:payload.stageId,...(type==='adventure_stage'?{...(payload.adventureProgress?{adventureProgress:payload.adventureProgress}:{}),history:normalizeHistory(historyData)}:{})};
- const key=type==='training_cycle'?'training:'+payload.claimId:'stage:'+payload.stageId;
+  :type==='training_questions'
+   ?{type,claimId:payload.claimId,questionCount:Math.max(0,Math.floor(Number(payload.questionCount)||0)),history:normalizeHistory(historyData)}
+   :{type,stageId:payload.stageId,...(type==='adventure_stage'?{...(payload.adventureProgress?{adventureProgress:payload.adventureProgress}:{}),history:normalizeHistory(historyData)}:{})};
+ const key=type==='training_cycle'?'training:'+payload.claimId:
+  type==='training_questions'?'training-questions:'+payload.claimId:'stage:'+payload.stageId;
  const pending=readPendingGameRewards();
  if(!pending.some(item=>item.username===activeProfile&&item.key===key)){
   pending.push({username:activeProfile,key,type,body});savePendingGameRewards(pending);
