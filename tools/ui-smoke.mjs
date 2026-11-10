@@ -295,6 +295,27 @@ check(html.includes("questionCount:sessionCompletedQuestionCount")&&html.include
   html.includes("if(round===0){\n    round=1;roundCorrect=new Set();")&&
   html.includes("if(item.errorTrainingResolved)roundCorrect.add(key)"),
   "A contagem acumulada do treino inteligente ou a sequência/progresso dos dois acertos nos erros está incompleta.");
+check(html.includes("function checkTrainingSessionRewardMilestones()")&&
+  html.includes("sessionTrainingCorrectNext")&&html.includes("sessionTrainingCorrectClaimed")&&
+  html.includes("queueTrainingSessionReward('training_questions'")&&html.includes("correctCount:count")&&
+  html.includes("checkTrainingSessionRewardMilestones();"),
+  "A cada 10 acertos, as 5 moedas precisam ser solicitadas imediatamente durante a partida.");
+check(html.includes("queueTrainingSessionReward('intelligent_training_questions'")&&
+  html.includes("sessionIntelligentQuestionsNext")&&html.includes("sessionIntelligentQuestionsClaimed")&&
+  html.includes("questionCount:count"),
+  "O treino inteligente precisa conceder as moedas ao completar cada grupo de 10 questões.");
+check(html.includes("const remainder=hits-sessionTrainingCorrectClaimed")&&
+  html.includes("const remainder=sessionCompletedQuestionCount-sessionIntelligentQuestionsClaimed")&&
+  html.includes("await sessionRewardQueue"),
+  "Ao sair da partida, o restante da contagem precisa ser salvo sem repetir as moedas já solicitadas.");
+check(html.includes("function showTrainingExitCelebration()")&&html.includes("data-dismiss-exit-result")&&
+  html.includes("training-exit-results")&&html.includes("Ver resultado completo"),
+  "Ao encerrar a partida, deve aparecer uma tela de parabéns com acertos, erros, precisão e tempo.");
+check((html.match(/training-celebration-overlay\{position:fixed;inset:0;z-index:9999;display:flex/g)||[]).length===2&&
+  html.includes("width:100vw;height:100vh;height:100dvh")&&
+  html.includes("training-exit-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))")&&
+  html.includes(".game-reward-toast.achievement-congrats{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;z-index:10001;box-sizing:border-box"),
+  "A tela de parabéns e a notificação precisam ficar centralizadas e caber na largura/altura do celular.");
 check(html.includes("getDifficultyTrainingFacts()")&&html.includes("item.accuracy<.90")&&
   workerSource.includes("difficultyTrainingBelow90Percent: true"),
   "O modo de dificuldades precisa usar percentual estritamente inferior a 90% e estar declarado na API.");
