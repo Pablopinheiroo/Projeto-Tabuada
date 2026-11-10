@@ -740,6 +740,7 @@ async function testViewport(name, viewport, mobile = false) {
   await page.evaluate(()=>{
     document.querySelector("#profileScreen").classList.add("hidden");
     document.querySelector("#setup").classList.remove("hidden");
+    setMainContentSections({hub:true,community:true});
   });
   const mainSections=["modeHub","trainingModePanel","adventureMapView","adventureIntroView","adventurePlayView","adventureResultView","challengeModeView","tournamentModeView","communitySection","shopScreen"];
   const getVisibleMainSections=()=>page.evaluate(ids=>Object.fromEntries(ids.map(id=>[id,!document.getElementById(id).classList.contains("hidden")])),mainSections);
