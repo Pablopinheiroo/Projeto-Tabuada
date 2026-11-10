@@ -173,6 +173,16 @@ check(html.includes(".community-rank-public-stats{color:#102b49"),
  "O texto de estatísticas da comunidade continua com contraste baixo.");
 check(html.includes('<button id="navCommunity" type="button">🌐 Comunidade</button>'),
  "O ícone anterior da comunidade não foi restaurado.");
+check(html.includes("function formatCommunityDisplayName(value)")&&html.includes("displayName:formatCommunityDisplayName("),
+ "O nome público da comunidade não recebe a formatação em título.");
+check(html.includes("field.matches('#loginUsername,#registerUsername')"),
+ "A digitação no campo de usuário ainda recebe um efeito sonoro extra do jogo.");
+check(html.indexOf('<button id="right"')<html.indexOf('<button id="wrong"')&&
+  html.indexOf('<button id="wrong"')<html.indexOf('<button id="markDifficulty"'),
+ "Os botões de treinamento não estão na ordem Acertei, Errei e Tive dificuldade.");
+check(html.includes('<button id="navShop" type="button">🛒 Loja</button>')&&
+  html.includes('id="shopTitle">🛒 Loja de avatares</h2>')&&!html.includes("🛍️"),
+ "O ícone da Loja não usa o cesto de compras.");
 check(html.includes('<button id="navShop" type="button">🛍️ Loja</button>')&&html.includes('id="shopScreen"')&&html.includes('id="avatarShopGrid"'),
  "O botão Loja ou a tela de compras de avatares está ausente.");
 check(html.includes("const isProfile=containerId==='profileAvatarGrid';")&&html.includes(".filter(item=>!isProfile||item.isOwned)")&&html.includes("function renderAvatarShop()")&&html.includes("/api/game/shop"),
@@ -261,6 +271,30 @@ async function testViewport(name, viewport, mobile = false) {
   check(homeOverflow.document <= homeOverflow.viewport + 1, name + ": há rolagem horizontal na tela inicial (" + JSON.stringify(homeOverflow) + ").");
   check(await page.locator("#loginUsername").isVisible(), name + ": campo de usuário não está visível.");
   check(await page.locator("#loginPassword").isVisible(), name + ": campo de senha não está visível.");
+  const typingSoundCalls=await page.evaluate(()=>{
+    const calls=[],original=window.playUiSound;
+    window.playUiSound=(...args)=>calls.push(args);
+    const login=document.querySelector("#loginUsername");
+    login.dispatchEvent(new KeyboardEvent("keydown",{key:"j",bubbles:true}));
+    const regular=document.createElement("input");
+    regular.id="smokeRegularTextInput";
+    document.body.appendChild(regular);
+    regular.dispatchEvent(new KeyboardEvent("keydown",{key:"j",bubbles:true}));
+    regular.remove();
+    window.playUiSound=original;
+    return calls.map(args=>args[0]);
+  });
+  check(JSON.stringify(typingSoundCalls)===JSON.stringify(["key"]),
+    name+": o campo de login reproduziu um som extra durante a digitação ("+JSON.stringify(typingSoundCalls)+").");
+  const feedbackOrder=await page.locator("#judge button").evaluateAll(items=>items.map(item=>item.id));
+  check(JSON.stringify(feedbackOrder)===JSON.stringify(["right","wrong","markDifficulty"]),
+    name+": os botões de resposta estão fora da ordem solicitada ("+JSON.stringify(feedbackOrder)+").");
+  const formattedNames=await page.evaluate(()=>["jonas","jonas ribeiro","  JONAS   RIBEIRO  ","ana-maria"].map(formatCommunityDisplayName));
+  check(JSON.stringify(formattedNames)===JSON.stringify(["Jonas","Jonas Ribeiro","Jonas Ribeiro","Ana-Maria"]),
+    name+": a capitalização do nome na comunidade está incorreta ("+JSON.stringify(formattedNames)+").");
+  check((await page.locator("#navShop").textContent()).includes("🛒")&&
+    (await page.locator("#shopTitle").textContent()).includes("🛒"),
+    name+": o ícone de cesto de compras não aparece no atalho e no título da Loja.");
   const rememberColor = await page.locator(".remember-session").evaluate(element => getComputedStyle(element).color);
   check(rememberColor === "rgb(66, 83, 107)", name + ": texto da opção manter conectado está com contraste incorreto (" + rememberColor + ").");
   const rememberLayout = await page.locator(".remember-session").evaluate(element => {
