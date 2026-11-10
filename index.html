@@ -5566,6 +5566,8 @@ $('challengeOptions').addEventListener('click',event=>{
 });
 $('challengeVolume').addEventListener('input',event=>applyChallengeVolume(event.target.value));
  $('challengeMusicToggle').addEventListener('click',toggleChallengeMusic);
+$('challengeQuitMatch').addEventListener('click',exitChallengeMatchAndSave);
+$('tournamentQuitMatch').addEventListener('click',exitTournamentMatchAndSave);
 $('challengeResultBack').addEventListener('click',async()=>{
  showChallengeSubPanel('challengeHomePanel');
  await refreshChallengeData();
