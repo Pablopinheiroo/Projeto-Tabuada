@@ -297,7 +297,7 @@ check(html.includes('id="startIntelligentTraining"')&&html.includes('id="startEr
 check(html.includes("function getErrorTrainingPoolState(item,scope)")&&
   html.includes("function setErrorTrainingPoolState(item,scope,correct)")&&
   html.includes("function errorTrainingSourceScope(mode)")&&
-  html.includes("const sourceModes=scope==='tournament'?['tournament']:['training','adventure']")&&
+  html.includes("const sourceModes=scope==='tournament'?['tournament']:['training','intelligent_training','difficulty_training','error_training','adventure']")&&
   html.includes("trainingModeType==='tournamentErrors'?'tournament_error_training'")&&
   html.includes("trainingModeType==='errors'||trainingModeType==='tournamentErrors'"),
   "Os erros precisam ter progresso separado por origem: Treinar/Modo jogo e Torneio.");
@@ -366,7 +366,9 @@ check(html.includes("function formatCommunityLastOnline(value)")&&
 check(html.includes("item.winner!=='empate'&&(item.winner===activeProfile||winners.includes(activeProfile))")&&
   html.includes("Date.now()-completedAt<10*60_000"),
   "Somente uma vitória recente e sem empate pode gerar a comemoração do duelo.");
-check(html.includes("function renderChallengeList()")&&html.includes("challenge-card-facts")&&
+check(html.includes("function profileLearningStats()")&&html.includes("challenge:{label:'Desafio'")&&
+  html.includes("tournamentReview:{label:'Rev. torneio'")&&html.includes("legacy:{label:'Histórico antigo'")&&
+  html.includes("function renderChallengeList()")&&html.includes("challenge-card-facts")&&
   html.includes("challenge-preview-head")&&html.includes("challenge-preview-row")&&
   html.includes("Ver classificação final")&&html.includes("Ver prévia da classificação")&&
   html.includes(".challenge-card-facts")&&html.includes(".challenge-preview-body"),
@@ -466,13 +468,14 @@ async function testViewport(name, viewport, mobile = false) {
         allSkillsAfterChallenge:{wrong:allSkillsAfterChallenge?.wrong,attempts:allSkillsAfterChallenge?.attempts},
         trainingAfterChallenge,tournamentAfterChallenge,
         tournamentAfterResolved:getErrorTrainingFacts('tournament').length,
+        modeBreakdown:profileLearningStats().modes,
         modes:item.modes
       };
     }finally{
       historyData=originalHistory;saveHistory=originalSave;updateReviewTrainingButton=originalUpdate;playFeedback=originalFeedback;
     }
   });
-  check(JSON.stringify(separatedErrorPools.trainingBefore)==='[3]'&&
+  check(JSON.stringify(separatedErrorPools.trainingBefore)==='[6]'&&
     JSON.stringify(separatedErrorPools.tournamentBefore)==='[3]',
     name+": a lista de erros misturou modalidades; deve somar Treinar+Modo jogo separadamente do Torneio ("+JSON.stringify(separatedErrorPools)+").");
   check(separatedErrorPools.allSkillsBefore?.wrong===14&&separatedErrorPools.allSkillsBefore?.attempts===18,
@@ -484,6 +487,10 @@ async function testViewport(name, viewport, mobile = false) {
   check(separatedErrorPools.trainingAfterChallenge===0&&separatedErrorPools.tournamentAfterChallenge===1&&
     separatedErrorPools.tournamentAfterResolved===0,
     name+": um erro no Desafio alterou indevidamente os treinos separados, ou a revisão do Torneio não ficou independente.");
+  check(separatedErrorPools.modeBreakdown.training.attempts===5&&separatedErrorPools.modeBreakdown.challenge.attempts===6&&
+    separatedErrorPools.modeBreakdown.challenge.wrong===5&&separatedErrorPools.modeBreakdown.tournament.attempts===4&&
+    separatedErrorPools.modeBreakdown.tournamentReview.attempts===1,
+    name+": o painel geral não mostrou corretamente todas as modalidades, incluindo Desafio e revisão de erros do Torneio.");
   const clickActionTiming = await page.evaluate(() => {
     const events=[];
     const original=window.playUiSound;
