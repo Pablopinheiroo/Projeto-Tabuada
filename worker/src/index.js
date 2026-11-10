@@ -1514,7 +1514,7 @@ async function handleApi(request, env, origin) {
         updatedAt: lastOnlineAt
       };
       const sha = await writeUser(username, updated, record.sha, env);
-      return json({ ok: true, lastOnlineAt, updated: true, sha }, 200, origin);
+      return json({ ok: true, lastOnlineAt, updated: true, sha, updatedAt: updated.updatedAt }, 200, origin);
     }
 
     if (route === "/api/challenges/players" && request.method === "GET") {
