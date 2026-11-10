@@ -1850,7 +1850,7 @@ async function handleApi(request, env, origin) {
       const incomingGeneralAt = parseTime(incomingProfile.updatedAt);
       const incomingAudioAt = parseTime(incomingProfile.audioPreferencesSavedAt);
       const currentAudioAt = parseTime(currentProfile.audioPreferencesSavedAt);
-      const mayApplyProfile = baseMatches || incomingPublicAt > currentPublicAt || !currentPublicAt;
+      const mayApplyProfile = baseMatches || (incomingPublicAt > 0 && incomingPublicAt >= currentPublicAt);
       const mayApplyAudio = baseMatches || incomingAudioAt > currentAudioAt || (!currentAudioAt && incomingAudioAt > 0);
       const mergedProfile = {
         ...currentProfile,

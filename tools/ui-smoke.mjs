@@ -134,7 +134,7 @@ check(html.includes('id="profileSfxVolume"')&&html.includes("SFX_VOLUME_CACHE_KE
  "O perfil não oferece volume independente e persistente para os efeitos da interface.");
 check(html.includes('id="profileGameSfxVolume"')&&html.includes("GAME_SFX_VOLUME_CACHE_KEY")&&html.includes("function restoreProfileGameSfxVolume()")&&html.includes("gameSfxVolumeLevel=.04"),
  "O volume separado do modo jogo não está configurado com 4% por padrão.");
-check(html.includes("function previewGameSfxVolume()")&&html.includes("playUiSound(name,'game')")&&html.includes("function resetProfileGameSfxVolume()"),
+check(html.includes("function previewGameSfxVolume()")&&html.includes("playUiSound(name,'game',true)")&&html.includes("function resetProfileGameSfxVolume()"),
  "A prévia ou a redefinição do volume do modo jogo está ausente.");
 check(html.includes("playFeedback(!!entry.correct,entry.mode==='training'?'game':'interface')")&&html.includes("playUiSound('verify','game')")&&html.includes("playUiSound('click','game')"),
  "Os efeitos de Verificar, Acertei, Errei e Tive dificuldade não estão ligados ao canal do modo jogo.");
@@ -454,10 +454,10 @@ async function testViewport(name, viewport, mobile = false) {
     remoteUserData={version:1,username:activeProfile,profile:{},history:{questions:{},sessions:[]}};
     remoteUserSha="smoke-audio-sha";
     window.__originalPlayUiSound=window.playUiSound;
-    window.playUiSound=function(name,channel='interface'){
+    window.playUiSound=function(name,channel='interface',optionPreview=false){
       if(channel==='game')window.__gamePreviewCalls++;
       else if(name==="click")window.__previewCalls++;
-      return window.__originalPlayUiSound(name,channel);
+      return window.__originalPlayUiSound(name,channel,optionPreview);
     };
   });
   await page.locator("#profileSfxVolume").evaluate(element=>{element.value="55";element.dispatchEvent(new Event("input",{bubbles:true}));});
@@ -499,8 +499,11 @@ async function testViewport(name, viewport, mobile = false) {
     name+": a música não retornou ao padrão de 70%.");
   check(await page.evaluate(()=>Math.abs(volumeLevel-.70)<.001),name+": não aplicou 70% à música.");
   check(!(await page.locator("#resetProfileMusicVolume").isVisible()),name+": o reset da música deveria sumir no padrão.");
-  check(await page.locator("#soundtrackAudio").evaluate(el=>!el.paused&&Math.abs(el.volume-.70)<.02),
-    name+": a música não foi atualizada para 70% ao vivo após restaurar.");
+  await page.waitForFunction(()=>optionMusicPreviewActive&&!document.querySelector("#soundtrackAudio").paused,null,{timeout:4000});
+  await page.waitForTimeout(1350);
+  check(await page.locator("#soundtrackAudio").evaluate(el=>el.paused)&&
+    await page.evaluate(()=>!optionMusicPreviewActive),
+    name+": a restauração de 70% não tocou e encerrou somente a prévia da música.");
   await page.locator("#profileSfxVolume").evaluate(element=>{element.value="55";element.dispatchEvent(new Event("input",{bubbles:true}));});
   await page.locator("#profileGameSfxVolume").evaluate(element=>{element.value="45";element.dispatchEvent(new Event("input",{bubbles:true}));});
   await page.locator("#profileMusicVolume").evaluate(element=>{element.value="43";element.dispatchEvent(new Event("input",{bubbles:true}));});
