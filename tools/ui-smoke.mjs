@@ -454,8 +454,8 @@ async function testViewport(name, viewport, mobile = false) {
   check(chartOverflow.document <= chartOverflow.viewport + 1, name + ": os gráficos causam rolagem horizontal (" + JSON.stringify(chartOverflow) + ").");
   check(chartOverflow.radar <= chartOverflow.radarBox + 1, name + ": gráfico radar ultrapassa o cartão.");
   await page.screenshot({ path: "artifacts/" + name + "-graficos.png", fullPage: true });
-  check((await page.locator("#closeProfileStats").textContent()).includes("Menu principal"),
-    name + ": o botão das estatísticas não indica retorno ao menu principal.");
+  check((await page.locator("#closeProfileStats").textContent()).includes("Voltar ao jogo"),
+     name + ": o botão das estatísticas não indica retorno à página inicial do jogo.");
   await page.locator("#closeProfileStats").click();
   check(!(await page.locator("#setup").evaluate(el => el.classList.contains("hidden"))) &&
     await page.locator("#profileScreen").evaluate(el => el.classList.contains("hidden")),
@@ -756,8 +756,8 @@ async function testViewport(name, viewport, mobile = false) {
   check((await page.locator("#saveProfileAudioPreferences").textContent()).includes("Salvar como preferência da conta"),
     name+": o botão não foi renomeado corretamente.");
   check((await page.locator("#profileAudioSaveStatus").textContent()).includes("Padrão salvo na sua conta"),name+": confirmação do salvamento não apareceu.");
-  check((await page.locator("#closeProfileOptions").textContent()).includes("Menu principal"),
-    name+": o botão de Opções não indica retorno ao menu principal.");
+  check((await page.locator("#closeProfileOptions").textContent()).includes("Voltar ao jogo"),
+     name+": o botão de Opções não indica retorno à página inicial do jogo.");
   await page.locator("#closeProfileOptions").click();
   check(await page.locator("#profileOptionsPanel").evaluate(el=>el.classList.contains("hidden"))&&
     await page.locator("#profileScreen").evaluate(el=>el.classList.contains("hidden"))&&
