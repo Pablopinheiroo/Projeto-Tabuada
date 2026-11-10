@@ -4097,7 +4097,6 @@ async function refreshChallengeData(){
   const previousProfile=profilesData[activeProfile]||{};
   const previousStats=previousProfile.challengeStats||{};
   const previousEconomy=gameEconomy;
-  const previousCoins=Math.max(0,Number(previousEconomy.coins)||0);
   const previousAchievementIds=new Set(Object.keys(previousEconomy.achievements||{}));
   const previousMedalIds=new Set(earnedChallengeMedalIds(previousStats));
   const result=await apiRequest('/api/challenges');
