@@ -455,7 +455,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .shop-intro{color:#a9c1e5;font-size:.87rem;line-height:1.5;margin:8px 0 0}
 @media(max-width:560px){.avatar-shop-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.shop-avatar-card{padding:10px 7px}.shop-wallet{width:100%;justify-content:center}}
 .game-reward-toast{position:sticky;top:8px;z-index:20;width:max-content;max-width:min(92vw,560px);margin:0 auto 12px;padding:11px 17px;border:1px solid #fbbf24;border-radius:999px;background:linear-gradient(110deg,#422006,#713f12);color:#fef3c7;font-weight:900;text-align:center;box-shadow:0 8px 26px #02061788;animation:rewardPop .22s ease-out}
-.game-reward-toast.achievement-congrats{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;z-index:10001;width:min(560px,calc(100vw - 24px));max-width:calc(100vw - 24px);margin:0;padding:15px 19px;border:2px solid #fbbf24;border-radius:17px;background:linear-gradient(120deg,#713f12,#49306f 58%,#12395b);color:#fff7d6;font-size:.96rem;line-height:1.45;box-shadow:0 15px 42px #020617cc,0 0 0 3px #fbbf2422;animation:achievementRewardPop .24s ease-out}
+.game-reward-toast.achievement-congrats{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;z-index:10001;box-sizing:border-box;width:min(560px,calc(100vw - 24px));max-width:calc(100vw - 24px);margin:0;padding:15px 16px;border:2px solid #fbbf24;border-radius:17px;background:linear-gradient(120deg,#713f12,#49306f 58%,#12395b);color:#fff7d6;font-size:.96rem;line-height:1.45;text-align:center;overflow-wrap:anywhere;box-shadow:0 15px 42px #020617cc,0 0 0 3px #fbbf2422;animation:achievementRewardPop .24s ease-out}
 @keyframes achievementRewardPop{from{opacity:0;transform:translate(-50%,-9px) scale(.97)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
 @keyframes rewardPop{from{opacity:0;transform:translateY(-7px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:620px){.wallet-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.achievement-shelf{grid-template-columns:1fr}.wallet-inline{align-items:flex-start}}
@@ -782,11 +782,17 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .difficulty-mark.marked{background:linear-gradient(120deg,#b45309,#9a3412);border-color:#fdba74}
 .bottom{margin-top:38px;padding-top:24px;border-top:1px solid #314765}
 .stop{min-width:min(100%,300px);min-height:49px}
-.training-celebration-overlay{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:18px;background:#030817d9;backdrop-filter:blur(6px);animation:celebrateFade .22s ease-out}
-.training-celebration-card{position:relative;z-index:2;width:min(100%,430px);padding:28px 22px;border:1px solid #fbbf24;border-radius:22px;background:linear-gradient(145deg,#152d4b,#242047);box-shadow:0 22px 70px #0009;text-align:center}
+.training-celebration-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:100vw;height:100vh;height:100dvh;padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;background:#030817d9;backdrop-filter:blur(6px);animation:celebrateFade .22s ease-out}
+.training-celebration-card{position:relative;z-index:2;flex:0 1 auto;box-sizing:border-box;width:min(100%,430px);max-width:430px;max-height:calc(100dvh - 24px);margin:auto;padding:24px 18px;overflow-y:auto;border:1px solid #fbbf24;border-radius:22px;background:linear-gradient(145deg,#152d4b,#242047);box-shadow:0 22px 70px #0009;text-align:center}
 .training-celebration-cup{font-size:3.2rem;animation:celebratePop .6s cubic-bezier(.2,1.5,.4,1)}
 .training-celebration-card h2{margin:8px 0;color:#fff;font-size:1.55rem}
 .training-celebration-card p{color:#c5d8f1;font-size:.9rem;line-height:1.5}
+.training-exit-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:18px 0}
+.training-exit-result{min-width:0;padding:12px 8px;border:1px solid #425d83;border-radius:13px;background:#102541}
+.training-exit-result span{display:block;color:#a9c5e3;font-size:.76rem;font-weight:750}
+.training-exit-result strong{display:block;margin-top:4px;color:#f8d879;font-size:1.35rem;font-variant-numeric:tabular-nums}
+.training-exit-answered{font-size:.78rem!important;overflow-wrap:anywhere}
+.training-exit-card>.primary{width:100%;margin-top:6px}
 .training-celebration-coins{display:flex;align-items:center;justify-content:center;gap:9px;margin:18px 0;padding:12px;border-radius:14px;background:#3b2b19;color:#ffe5a3;font-size:1rem}
 .training-celebration-coins .coin-symbol{width:27px;height:27px}
 .training-celebration-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none}
@@ -877,11 +883,17 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .difficulty-mark.marked{background:linear-gradient(120deg,#b45309,#9a3412);border-color:#fdba74}
 .bottom{margin-top:38px;padding-top:24px;border-top:1px solid #314765}
 .stop{min-width:min(100%,300px);min-height:49px}
-.training-celebration-overlay{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:18px;background:#030817d9;backdrop-filter:blur(6px);animation:celebrateFade .22s ease-out}
-.training-celebration-card{position:relative;z-index:2;width:min(100%,430px);padding:28px 22px;border:1px solid #fbbf24;border-radius:22px;background:linear-gradient(145deg,#152d4b,#242047);box-shadow:0 22px 70px #0009;text-align:center}
+.training-celebration-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:100vw;height:100vh;height:100dvh;padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));overflow-y:auto;overscroll-behavior:contain;background:#030817d9;backdrop-filter:blur(6px);animation:celebrateFade .22s ease-out}
+.training-celebration-card{position:relative;z-index:2;flex:0 1 auto;box-sizing:border-box;width:min(100%,430px);max-width:430px;max-height:calc(100dvh - 24px);margin:auto;padding:24px 18px;overflow-y:auto;border:1px solid #fbbf24;border-radius:22px;background:linear-gradient(145deg,#152d4b,#242047);box-shadow:0 22px 70px #0009;text-align:center}
 .training-celebration-cup{font-size:3.2rem;animation:celebratePop .6s cubic-bezier(.2,1.5,.4,1)}
 .training-celebration-card h2{margin:8px 0;color:#fff;font-size:1.55rem}
 .training-celebration-card p{color:#c5d8f1;font-size:.9rem;line-height:1.5}
+.training-exit-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:18px 0}
+.training-exit-result{min-width:0;padding:12px 8px;border:1px solid #425d83;border-radius:13px;background:#102541}
+.training-exit-result span{display:block;color:#a9c5e3;font-size:.76rem;font-weight:750}
+.training-exit-result strong{display:block;margin-top:4px;color:#f8d879;font-size:1.35rem;font-variant-numeric:tabular-nums}
+.training-exit-answered{font-size:.78rem!important;overflow-wrap:anywhere}
+.training-exit-card>.primary{width:100%;margin-top:6px}
 .training-celebration-coins{display:flex;align-items:center;justify-content:center;gap:9px;margin:18px 0;padding:12px;border-radius:14px;background:#3b2b19;color:#ffe5a3;font-size:1rem}
 .training-celebration-coins .coin-symbol{width:27px;height:27px}
 .training-celebration-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none}
