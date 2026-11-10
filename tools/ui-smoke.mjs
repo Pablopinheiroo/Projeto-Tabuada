@@ -944,6 +944,36 @@ async function testViewport(name, viewport, mobile = false) {
   await page.locator("#topReturnToGame").click();
   await assertVisibleSections(["modeHub","communitySection"],"Voltar ao jogo");
 
+  // Abrir o perfil a partir da Loja e voltar deve sempre levar à página inicial do jogo.
+  await page.locator("#navShop").click();
+  await page.locator("#navProfile").click();
+  check(!(await page.locator("#profileScreen").evaluate(el=>el.classList.contains("hidden"))),
+    name+": o atalho Meu perfil não abriu a tela do perfil a partir da Loja.");
+  await page.locator("#backFromProfileTop").click();
+  await assertVisibleSections(["modeHub","communitySection"],"Voltar ao jogo pelo Meu perfil");
+
+  // Estatísticas também devem sair para a página inicial, e não restaurar a Loja.
+  await page.locator("#navShop").click();
+  await page.locator("#navProfile").click();
+  await page.locator("#openProfileStats").click();
+  check(!(await page.locator("#profileStatsPanel").evaluate(el=>el.classList.contains("hidden"))),
+    name+": Minhas estatísticas não abriram.");
+  check((await page.locator("#closeProfileStats").textContent()).includes("Voltar ao jogo"),
+    name+": o botão das estatísticas não está identificado como Voltar ao jogo.");
+  await page.locator("#closeProfileStats").click();
+  await assertVisibleSections(["modeHub","communitySection"],"Voltar ao jogo pelas Estatísticas");
+
+  // Opções seguem a mesma regra, mesmo abertas depois da Loja.
+  await page.locator("#navShop").click();
+  await page.locator("#navProfile").click();
+  await page.locator("#openProfileOptions").click();
+  check(!(await page.locator("#profileOptionsPanel").evaluate(el=>el.classList.contains("hidden"))),
+    name+": Opções não abriram.");
+  check((await page.locator("#closeProfileOptions").textContent()).includes("Voltar ao jogo"),
+    name+": o botão de Opções não está identificado como Voltar ao jogo.");
+  await page.locator("#closeProfileOptions").click();
+  await assertVisibleSections(["modeHub","communitySection"],"Voltar ao jogo pelas Opções");
+
   await page.locator("#openTrainingMode").click();
   check(!(await page.locator("#trainingModePanel").evaluate(el => el.classList.contains("hidden"))), name + ": botão Treinamento não abriu a modalidade.");
   check((await page.locator("#musicCategoryKicker").textContent()).includes("TREINAMENTO"), name + ": música não mudou para Treinamento.");
