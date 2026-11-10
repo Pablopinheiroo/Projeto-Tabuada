@@ -846,26 +846,20 @@ async function testViewport(name, viewport, mobile = false) {
     current=null;document.querySelector("#game").classList.add("hidden");
     showAchievementCongratulations(["training_first"]);
   });
-  check(await page.locator("#gameRewardToast").isVisible()&&
-    (await page.locator("#gameRewardToast").textContent()).includes("Parabéns!")&&
-    (await page.locator("#gameRewardToast").textContent()).includes("Primeiro Ciclo")&&
-    await page.locator("#gameRewardToast").evaluate(el=>el.classList.contains("achievement-congrats")),
-    name+": a conquista não mostrou o alerta de parabenização destacado.");
+  check(await page.locator(".prize-celebration-overlay").isVisible()&&
+    (await page.locator(".prize-celebration-card h2").textContent()).includes("Novo título")&&
+    (await page.locator(".prize-celebration-items").textContent()).includes("Primeiro Ciclo"),
+    name+": a conquista não mostrou a tela de prêmio com o título recebido.");
   await page.waitForTimeout(300);
-  const toastBounds=await page.locator("#gameRewardToast").evaluate(el=>{
+  const prizeCardBounds=await page.locator(".prize-celebration-card").evaluate(el=>{
     const rect=el.getBoundingClientRect();
     return {left:rect.left,right:rect.right,width:rect.width,center:rect.left+rect.width/2,viewport:innerWidth};
   });
-  check(toastBounds.left>=-1&&toastBounds.right<=toastBounds.viewport+1&&
-    Math.abs(toastBounds.center-toastBounds.viewport/2)<=1,
-    name+": a notificação de parabéns ficou descentralizada ou ultrapassou a tela ("+JSON.stringify(toastBounds)+").");
-  await page.evaluate(()=>{
-    if(rewardToastTimer!==null)clearTimeout(rewardToastTimer);
-    rewardToastTimer=null;
-    document.querySelector("#gameRewardToast").classList.add("hidden");
-    document.querySelector("#gameRewardToast").classList.remove("achievement-congrats");
-    document.querySelector("#setup").classList.remove("hidden");
-  });
+  check(prizeCardBounds.left>=-1&&prizeCardBounds.right<=prizeCardBounds.viewport+1&&
+    Math.abs(prizeCardBounds.center-prizeCardBounds.viewport/2)<=1,
+    name+": a tela de prêmio ficou descentralizada ou ultrapassou a tela ("+JSON.stringify(prizeCardBounds)+").");
+  await page.locator(".prize-celebration-overlay [data-close-prize]").click();
+  await page.evaluate(()=>document.querySelector("#setup").classList.remove("hidden"));
   await page.evaluate(()=>{
     sessionAnswers=[{a:2,b:3,correct:true,timeMs:1200},{a:3,b:4,correct:false,timeMs:1800}];
     hits=1;misses=1;sessionSkipped=1;sessionQuestionTimeMs=4200;
@@ -882,7 +876,7 @@ async function testViewport(name, viewport, mobile = false) {
     Math.abs(exitCardBounds.centerX-exitCardBounds.viewportWidth/2)<=2&&
     exitCardBounds.top>=-1&&exitCardBounds.bottom<=exitCardBounds.viewportHeight+1&&
     exitCardBounds.height<=exitCardBounds.viewportHeight+1,
-    name+": a tela de parabenização do resultado não ficou centralizada no celular ("+JSON.stringify(exitCardBounds)+").");
+    name+": a tela de resultado não ficou centralizada no celular ("+JSON.stringify(exitCardBounds)+").");
   await page.locator("[data-dismiss-exit-result]").click();
   await page.evaluate(()=>{trainingModeType='standard';errorTrainingCompleted=false;});
 
