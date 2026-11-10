@@ -266,16 +266,15 @@ check(html.includes('id="communitySection"')&&html.includes("function setMainCon
  "O menu não controla a exibição exclusiva das seções Loja, Comunidade e modalidades.");
 check(html.includes("function pauseTrainingQuestionClock()")&&html.includes("function resumeTrainingQuestionClock()")&&
   html.includes("pauseTrainingQuestionClock();")&&html.includes("questionClockPaused?0:performance.now()")&&
-  html.includes("data-dismiss-celebration")&&!html.includes("setTimeout(()=>overlay.remove(),5200)"),
- "A tela de parabéns precisa pausar o cronômetro até ser fechada, sem desaparecer sozinha.");
-check(html.includes("deck.push({a:current.a,b:current.b});")&&
+  html.includes("data-dismiss-prize")&&html.includes("function showPrizeCelebration(")&&
+  !html.includes("setTimeout(()=>overlay.remove(),5200)"),
+ "A comemoração de prêmios precisa ficar aberta até a pessoa fechar, sem desaparecer sozinha.");check(html.includes("deck.push({a:current.a,b:current.b});")&&
   html.includes("sessionSkipped++;")&&html.includes("position++;")&&html.includes("next();saveCheckpoint();"),
  "Marcar Tive dificuldade deve avançar e colocar a mesma conta novamente no ciclo.");
 check(html.includes("function showAchievementCongratulations(ids,extra='')")&&
-  html.includes("🎉 Parabéns! Você conquistou:")&&html.includes("achievement-congrats")&&
+  html.includes("NOVO TÍTULO CONQUISTADO")&&html.includes("showPrizeCelebration({")&&
   html.includes("showAchievementCongratulations(result.newAchievements"),
- "O alerta de parabéns por novas conquistas está ausente.");
-check(!html.includes('id="shopBackToGame"')&&!html.includes("$('shopBackToGame').addEventListener")&&
+ "A tela de comemoração por novos títulos precisa informar a conquista recebida.");check(!html.includes('id="shopBackToGame"')&&!html.includes("$('shopBackToGame').addEventListener")&&
   html.includes("topReturn.classList.toggle('hidden',shop)"),
  "A Loja ainda possui mais de uma opção de Voltar ao jogo.");
 check(html.includes("async function saveProgressNow(")&&!html.includes("ACTIVE_TIME_SYNC_MS")&&
