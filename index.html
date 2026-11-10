@@ -2546,10 +2546,10 @@ async function loadCommunityRecords(force=false){
  return communityCache;
 }
 function formatCommunityDisplayName(value){
- const normalized=String(value||'').trim().replace(/\\s+/g,' ').toLocaleLowerCase('pt-BR');
+ const normalized=String(value||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('pt-BR');
  if(!normalized)return '';
- return normalized.split(/(\\s+|-)/).map(part=>{
-  if(!part||/^\\s+$/.test(part)||part==='-')return part;
+ return normalized.split(/(\s+|-)/).map(part=>{
+  if(!part||/^\s+$/.test(part)||part==='-')return part;
   return part.charAt(0).toLocaleUpperCase('pt-BR')+part.slice(1);
  }).join('');
 }
