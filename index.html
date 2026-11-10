@@ -3837,10 +3837,36 @@ function submitChallengeChoice(value){
  }
  renderChallengeQuestion(previousText);
 }
+async function exitChallengeMatchAndSave(){
+ if(!challengeCurrent){showChallengeSubPanel('challengeHomePanel');return false;}
+ stopChallengeTimers();
+ stopChallengeMusic();
+ const answered=challengeAnswerLog.length;
+ const total=challengeQuestions.length||10;
+ const elapsed=Math.max(0,performance.now()-challengeMatchStarted);
+ historyData.sessions.unshift({
+  id:'challenge-partial-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2)),
+  date:new Date().toISOString(),mode:'challenge',answered,hits:challengeLocalScore,
+  misses:Math.max(0,answered-challengeLocalScore),skipped:Math.max(0,total-answered),
+  timeMs:Math.round(elapsed),abandoned:true
+ });
+ historyData.sessions=historyData.sessions.slice(0,300);
+ saveHistory();
+ challengeCurrent=null;
+ challengeRole='';
+ showChallengeSubPanel('challengeHomePanel');
+ $('challengeListStatus').textContent='Salvando o resultado parcial do desafio...';
+ const saved=await saveProgressNow('Desafio');
+ await refreshChallengeData();
+ $('challengeListStatus').textContent=saved
+  ?'✓ Partida encerrada. Respostas, acertos e erros foram salvos.'
+  :'⚠️ Partida encerrada. O histórico ficou guardado neste aparelho e será sincronizado depois.';
+ return saved;
+}
 async function finishChallengeMatch(){
  stopChallengeTimers();
  communityCacheAt=0;
- historyData.sessions.unshift({date:new Date().toISOString(),mode:'challenge',answered:challengeAnswerLog.length,hits:challengeLocalScore,misses:challengeAnswerLog.length-challengeLocalScore,skipped:0,timeMs:Math.max(0,performance.now()-challengeMatchStarted)});
+ historyData.sessions.unshift({id:'challenge-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2)),date:new Date().toISOString(),mode:'challenge',answered:challengeAnswerLog.length,hits:challengeLocalScore,misses:challengeAnswerLog.length-challengeLocalScore,skipped:0,timeMs:Math.max(0,performance.now()-challengeMatchStarted)});
  historyData.sessions=historyData.sessions.slice(0,300);saveHistory();
  stopChallengeMusic();
  $('challengePlayPanel').classList.add('hidden');
@@ -3862,6 +3888,7 @@ async function finishChallengeMatch(){
   $('challengeResultStatus').textContent='Volte aos desafios e atualize para verificar se o envio foi concluído.';
   $('challengeResultBack').textContent='Voltar e atualizar';
  }
+ await saveProgressNow('Desafio');
 }
 function showChallengeResult(challenge){
   if(!challenge)return;
@@ -4129,7 +4156,7 @@ function submitTournamentAnswer(value){
 async function finishMonthlyTournament(){
  stopTournamentClock();
  communityCacheAt=0;
- historyData.sessions.unshift({date:new Date().toISOString(),mode:'tournament',answered:tournamentQuestions.length,hits:tournamentScore,misses:tournamentQuestions.length-tournamentScore,skipped:0,timeMs:Math.max(0,performance.now()-tournamentMatchStarted)});
+ historyData.sessions.unshift({id:'tournament-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2)),date:new Date().toISOString(),mode:'tournament',answered:tournamentQuestions.length,hits:tournamentScore,misses:tournamentQuestions.length-tournamentScore,skipped:0,timeMs:Math.max(0,performance.now()-tournamentMatchStarted)});
  historyData.sessions=historyData.sessions.slice(0,300);saveHistory();
  if(tournamentBusy)return;
  tournamentBusy=true;
@@ -4170,7 +4197,33 @@ async function finishMonthlyTournament(){
    $('tournamentResultTop10').innerHTML='<p class="hint">Sua tentativa permanece associada à dificuldade escolhida. Volte ao torneio e confira novamente o envio.</p>';
    $('tournamentResultBack').textContent='Ver classificação';
   }
- }finally{tournamentBusy=false;}
+ }finally{
+  tournamentBusy=false;
+  await saveProgressNow('Torneio');
+ }
+}
+async function exitTournamentMatchAndSave(){
+ if(!tournamentCurrent){showTournamentSubPanel('tournamentHomePanel');return false;}
+ stopTournamentClock();
+ const total=tournamentQuestions.length||50;
+ const answered=Math.min(total,tournamentIndex);
+ const elapsed=Math.max(0,performance.now()-tournamentMatchStarted);
+ historyData.sessions.unshift({
+  id:'tournament-partial-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2)),
+  date:new Date().toISOString(),mode:'tournament',answered,hits:tournamentScore,
+  misses:Math.max(0,answered-tournamentScore),skipped:Math.max(0,total-answered),
+  timeMs:Math.round(elapsed),abandoned:true
+ });
+ historyData.sessions=historyData.sessions.slice(0,300);
+ saveHistory();
+ showTournamentSubPanel('tournamentHomePanel');
+ $('tournamentLockMessage').textContent='Salvando o resultado parcial do torneio...';
+ const saved=await saveProgressNow('Torneio');
+ await refreshTournamentDashboard();
+ $('tournamentLockMessage').textContent=saved
+  ?'✓ Partida encerrada. Respostas, acertos e erros foram salvos; esta tentativa não entrou no ranking.'
+  :'⚠️ Partida encerrada. O histórico ficou guardado neste aparelho e será sincronizado depois.';
+ return saved;
 }
 function handleTournamentQuestionClick(event){
  const button=event.target.closest('[data-tournament-answer]');
