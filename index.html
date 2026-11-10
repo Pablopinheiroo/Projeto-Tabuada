@@ -4797,7 +4797,7 @@ function handleTournamentQuestionClick(event){
 function startRound(){
  round++;
  roundCorrect=new Set();
- if(trainingModeType==='errors')deck=shuffle(errorTrainingFacts.map(item=>({a:item.a,b:item.b})));
+ if(trainingModeType==='errors'||trainingModeType==='tournamentErrors')deck=shuffle(errorTrainingFacts.map(item=>({a:item.a,b:item.b})));
  else if(trainingReviewMode)deck=shuffle(trainingReviewFacts.map(item=>({a:item.a,b:item.b})));
  else deck=makeRound();
  trainingRoundTarget=new Set(deck.map(item=>item.a+'x'+item.b)).size;
