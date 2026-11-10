@@ -2277,7 +2277,7 @@ async function retryPendingGameRewards(){
  }finally{rewardSyncBusy=false;}
 }
 async function claimGameReward(type,payload){
- if(!activeProfile||!cloudTokenReady()){
+ if(!activeProfile){
   showGameRewardToast('Entre na sua conta para receber e guardar suas moedas.');return null;
  }
  const body=type==='training_cycle'
@@ -2290,6 +2290,10 @@ async function claimGameReward(type,payload){
  const pending=readPendingGameRewards();
  if(!pending.some(item=>item.username===activeProfile&&item.key===key)){
   pending.push({username:activeProfile,key,type,body});savePendingGameRewards(pending);
+ }
+ if(!cloudTokenReady()){
+  showGameRewardToast('Recompensa salva neste aparelho. Entre novamente para receber suas moedas.');
+  return null;
  }
  try{
   const result=await deliverPendingGameReward({username:activeProfile,key,type,body});
