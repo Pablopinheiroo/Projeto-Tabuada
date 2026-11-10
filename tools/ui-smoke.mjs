@@ -289,17 +289,28 @@ check(html.includes("sessionCompletedQuestionCount++")&&html.includes("queueTrai
   html.includes("a cada 10 questões acertadas"),
   "O treino comum e o modo dificuldades não solicitam a recompensa com base somente nos acertos.");
 check(html.includes('id="startIntelligentTraining"')&&html.includes('id="startErrorTraining"')&&
-  html.includes('id="startDifficultyTraining"')&&html.includes("function getIntelligentTrainingFacts()")&&
-  html.includes("function getErrorTrainingFacts()")&&html.includes("function getDifficultyTrainingFacts()"),
-  "As três modalidades inteligentes, de erros e dificuldades não estão disponíveis.");
-check(html.includes("const remainder=sessionCompletedQuestionCount-sessionIntelligentQuestionsClaimed")&&html.includes("intelligent_training_questions")&&
-  html.includes("error_training_complete")&&html.includes("errorTrainingCorrectStreak")&&
-  html.includes("item.errorTrainingResolved=item.errorTrainingCorrectStreak>=2")&&
-  html.includes("item.errorTrainingResolved=false")&&
-  html.includes("if(trainingModeType==='errors'){\n  item.errorTrainingCorrectStreak=0;\n  item.errorTrainingResolved=false;")&&
-  html.includes("if(round===0){\n    round=1;roundCorrect=new Set();")&&
-  html.includes("if(item.errorTrainingResolved)roundCorrect.add(key)"),
-  "A contagem acumulada do treino inteligente ou a sequência/progresso dos dois acertos nos erros está incompleta.");
+  html.includes('id="startTournamentErrorTraining"')&&html.includes('id="startDifficultyTraining"')&&
+  html.includes('id="tournamentErrorTrainingCard"')&&html.includes("function getIntelligentTrainingFacts()")&&
+  html.includes("function getErrorTrainingFacts(scope='training')")&&html.includes("function getDifficultyTrainingFacts()")&&
+  html.includes("function startTournamentErrorTraining()"),
+  "As modalidades de treino e a revisão exclusiva dos erros do torneio não estão disponíveis.");
+check(html.includes("function getErrorTrainingPoolState(item,scope)")&&
+  html.includes("function setErrorTrainingPoolState(item,scope,correct)")&&
+  html.includes("function errorTrainingSourceScope(mode)")&&
+  html.includes("const sourceModes=scope==='tournament'?['tournament']:['training','adventure']")&&
+  html.includes("trainingModeType==='tournamentErrors'?'tournament_error_training'")&&
+  html.includes("trainingModeType==='errors'||trainingModeType==='tournamentErrors'"),
+  "Os erros precisam ter progresso separado por origem: Treinar/Modo jogo e Torneio.");
+check(html.includes("const modes=item.modes&&typeof item.modes==='object'?item.modes:{}")&&
+  html.includes("const wrong=sourceModes.reduce(")&&
+  html.includes("const scope=errorTrainingSourceScope(mode);")&&
+  html.includes("item.attempts++;")&&html.includes("if(entry.correct)item.correct++;else item.wrong++;")&&
+  html.includes("modeItem.attempts++;if(entry.correct)modeItem.correct++;else modeItem.wrong++;"),
+  "As estatísticas gerais devem somar todas as modalidades, mas os treinos devem usar somente seus erros de origem.");
+check(html.includes("mode:'challenge'")&&html.includes("collectLearningFacts()")&&
+  html.includes("getErrorTrainingFacts('training')")&&html.includes("getErrorTrainingFacts('tournament')")&&
+  html.includes("function startRound()")&&html.includes("trainingModeType==='errors'||trainingModeType==='tournamentErrors'"),
+  "Os erros de desafio devem ficar fora dos treinos específicos, sem desaparecer das estatísticas gerais.");
 check(html.includes("function checkTrainingSessionRewardMilestones()")&&
   html.includes("sessionTrainingCorrectNext")&&html.includes("sessionTrainingCorrectClaimed")&&
   html.includes("queueTrainingSessionReward('training_questions'")&&html.includes("correctCount:count")&&
@@ -313,6 +324,9 @@ check(html.includes("const remainder=hits-sessionTrainingCorrectClaimed")&&
   html.includes("const remainder=sessionCompletedQuestionCount-sessionIntelligentQuestionsClaimed")&&
   html.includes("await sessionRewardQueue"),
   "Ao sair da partida, o restante da contagem precisa ser salvo sem repetir as moedas já solicitadas.");
+check(!html.includes("item.errorTrainingResolved")&&!html.includes("item.errorTrainingCorrectStreak")&&
+  html.includes("trainingModeType!=='errors'&&trainingModeType!=='tournamentErrors'"),
+  "Os dois treinos de erros não podem compartilhar estado, nem conceder moedas por acertos como treino normal.");
 check(html.includes("function showTrainingExitCelebration()")&&html.includes("data-dismiss-exit-result")&&
   html.includes("training-exit-results")&&html.includes("Ver resultado completo"),
   "Ao encerrar a partida, deve aparecer uma tela de parabéns com acertos, erros, precisão e tempo.");
@@ -410,6 +424,66 @@ async function testViewport(name, viewport, mobile = false) {
   await page.waitForFunction(() => uiSfxBuffers.size === 18, null, { timeout: 30000 });
   check(await page.evaluate(() => uiSfxBuffers.size) === 18,
     name + ": os 14 áudios originais e as quatro variações suaves não foram pré-carregados.");
+  const separatedErrorPools=await page.evaluate(()=>{
+    const originalHistory=historyData;
+    const originalSave=saveHistory,originalUpdate=updateReviewTrainingButton,originalFeedback=playFeedback;
+    historyData={questions:{
+      "2x3":{
+        a:2,b:3,attempts:18,correct:10,wrong:8,totalTimeMs:18000,
+        modes:{
+          training:{attempts:2,correct:1,wrong:1,totalTimeMs:2000},
+          adventure:{attempts:3,correct:1,wrong:2,totalTimeMs:3000},
+          tournament:{attempts:4,correct:1,wrong:3,totalTimeMs:4000},
+          challenge:{attempts:5,correct:1,wrong:4,totalTimeMs:5000},
+          intelligent_training:{attempts:1,correct:0,wrong:1,totalTimeMs:1000},
+          difficulty_training:{attempts:1,correct:0,wrong:1,totalTimeMs:1000},
+          error_training:{attempts:1,correct:0,wrong:1,totalTimeMs:1000},
+          tournament_error_training:{attempts:1,correct:0,wrong:1,totalTimeMs:1000}
+        },
+        errorTrainingPools:{}
+      }
+    },sessions:[]};
+    saveHistory=()=>{};updateReviewTrainingButton=()=>{};playFeedback=()=>{};
+    try{
+      const trainingBefore=getErrorTrainingFacts('training').map(item=>item.wrong);
+      const tournamentBefore=getErrorTrainingFacts('tournament').map(item=>item.wrong);
+      const allSkillsBefore=collectLearningFacts().find(item=>item.a===2&&item.b===3);
+      const item=historyData.questions["2x3"];
+      setErrorTrainingPoolState(item,'training',true);
+      setErrorTrainingPoolState(item,'training',true);
+      const trainingAfterResolved=getErrorTrainingFacts('training').length;
+      const tournamentAfterTrainingResolved=getErrorTrainingFacts('tournament').length;
+      addAnswerToHistory({a:2,b:3,correct:false,timeMs:250,mode:'challenge'});
+      const allSkillsAfterChallenge=collectLearningFacts().find(value=>value.a===2&&value.b===3);
+      const trainingAfterChallenge=getErrorTrainingFacts('training').length;
+      const tournamentAfterChallenge=getErrorTrainingFacts('tournament').length;
+      setErrorTrainingPoolState(item,'tournament',true);
+      setErrorTrainingPoolState(item,'tournament',true);
+      return {
+        trainingBefore,tournamentBefore,
+        allSkillsBefore:{wrong:allSkillsBefore?.wrong,attempts:allSkillsBefore?.attempts},
+        trainingAfterResolved,tournamentAfterTrainingResolved,
+        allSkillsAfterChallenge:{wrong:allSkillsAfterChallenge?.wrong,attempts:allSkillsAfterChallenge?.attempts},
+        trainingAfterChallenge,tournamentAfterChallenge,
+        tournamentAfterResolved:getErrorTrainingFacts('tournament').length,
+        modes:item.modes
+      };
+    }finally{
+      historyData=originalHistory;saveHistory=originalSave;updateReviewTrainingButton=originalUpdate;playFeedback=originalFeedback;
+    }
+  });
+  check(JSON.stringify(separatedErrorPools.trainingBefore)==='[3]'&&
+    JSON.stringify(separatedErrorPools.tournamentBefore)==='[3]',
+    name+": a lista de erros misturou modalidades; deve somar Treinar+Modo jogo separadamente do Torneio ("+JSON.stringify(separatedErrorPools)+").");
+  check(separatedErrorPools.allSkillsBefore?.wrong===14&&separatedErrorPools.allSkillsBefore?.attempts===18,
+    name+": as habilidades gerais não somaram os erros de desafio e das outras modalidades.");
+  check(separatedErrorPools.trainingAfterResolved===0&&separatedErrorPools.tournamentAfterTrainingResolved===1,
+    name+": resolver os erros do Treinar afetou a lista de erros do Torneio.");
+  check(separatedErrorPools.allSkillsAfterChallenge?.wrong===15&&separatedErrorPools.allSkillsAfterChallenge?.attempts===19,
+    name+": uma resposta errada no Desafio não entrou nas estatísticas gerais de habilidade.");
+  check(separatedErrorPools.trainingAfterChallenge===0&&separatedErrorPools.tournamentAfterChallenge===1&&
+    separatedErrorPools.tournamentAfterResolved===0,
+    name+": um erro no Desafio alterou indevidamente os treinos separados, ou a revisão do Torneio não ficou independente.");
   const clickActionTiming = await page.evaluate(() => {
     const events=[];
     const original=window.playUiSound;
