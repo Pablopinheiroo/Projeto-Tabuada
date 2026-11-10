@@ -5411,15 +5411,35 @@ function collectLearningFacts(){
    errorRate:safeAttempts?wrong/safeAttempts:0};
  }).filter(item=>Number.isInteger(item.a)&&item.a>=1&&item.a<=20&&Number.isInteger(item.b)&&item.b>=1&&item.b<=10&&item.attempts>0);
 }
+function collectTrainingLearningFacts(){
+ const sourceModes=['training','intelligent_training','difficulty_training','error_training','adventure'];
+ return Object.values(historyData.questions||{}).filter(item=>item&&typeof item==='object').flatMap(item=>{
+  const modes=item.modes&&typeof item.modes==='object'?item.modes:{};
+  const totals=sourceModes.reduce((sum,mode)=>{
+   const part=modes[mode]||{};
+   sum.attempts+=Math.max(0,Number(part.attempts)||0);
+   sum.correct+=Math.max(0,Number(part.correct)||0);
+   sum.wrong+=Math.max(0,Number(part.wrong)||0);
+   sum.totalTimeMs+=Math.max(0,Number(part.totalTimeMs)||0);
+   return sum;
+  },{attempts:0,correct:0,wrong:0,totalTimeMs:0});
+  const flags=Math.max(0,Number(item.difficultyFlags)||0);
+  if(!totals.attempts)return [];
+  return [{a:Number(item.a),b:Number(item.b),...totals,flags,
+   avgTime:totals.totalTimeMs/totals.attempts,
+   accuracy:totals.correct/totals.attempts,
+   errorRate:totals.wrong/totals.attempts}];
+ }).filter(item=>Number.isInteger(item.a)&&item.a>=1&&item.a<=20&&Number.isInteger(item.b)&&item.b>=1&&item.b<=10);
+}
 function getIntelligentTrainingFacts(){
- return collectLearningFacts().filter(item=>item.accuracy<.90&&(item.wrong>0||item.flags>0||item.avgTime>=5000))
+ return collectTrainingLearningFacts().filter(item=>item.accuracy<.90&&(item.wrong>0||item.flags>0||item.avgTime>=5000))
   .sort((a,b)=>{
    const score=item=>item.errorRate*.65+Math.min(1,item.avgTime/9000)*.20+Math.min(1,item.flags/3)*.15;
    return score(b)-score(a)||b.wrong-a.wrong||b.avgTime-a.avgTime;
   }).slice(0,60);
 }
 function getDifficultyTrainingFacts(){
- return collectLearningFacts().filter(item=>item.accuracy<.90)
+ return collectTrainingLearningFacts().filter(item=>item.accuracy<.90)
   .sort((a,b)=>a.accuracy-b.accuracy||b.wrong-a.wrong||b.attempts-a.attempts).slice(0,60);
 }
 function getErrorTrainingFacts(scope='training'){
