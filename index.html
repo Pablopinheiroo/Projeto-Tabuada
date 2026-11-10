@@ -1546,6 +1546,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  <button id="start" class="primary">▶ Iniciar treinamento livre</button>
  <div class="review-training-card"><div><span class="music-kicker">SEU TREINO INTELIGENTE</span><h3>🧠 Treino inteligente</h3><p id="reviewTrainingSummary" class="hint">Treino adaptado com contas erradas, difíceis ou demoradas. A cada 10 questões treinadas, ganhe 5 moedas; o restante acumula.</p></div><button id="startIntelligentTraining" class="review-training-button" type="button">Iniciar treino inteligente</button></div>
  <div id="errorTrainingCard" class="review-training-card hidden"><div><span class="music-kicker">REVISÃO DE ERROS</span><h3>❌ Treine seus erros</h3><p id="errorTrainingSummary" class="hint">Resolva cada conta errada com dois acertos seguidos. Ao concluir todos os erros pendentes, ganhe 10 moedas.</p></div><button id="startErrorTraining" class="review-training-button" type="button">Treinar meus erros</button></div>
+ <div id="tournamentErrorTrainingCard" class="review-training-card hidden"><div><span class="music-kicker">REVISÃO DO TORNEIO</span><h3>🏆 Revisar erros do torneio</h3><p id="tournamentErrorTrainingSummary" class="hint">Treine somente as contas que você errou no Torneio mensal, sem misturar com outras modalidades.</p></div><button id="startTournamentErrorTraining" class="review-training-button" type="button">Revisar erros do torneio</button></div>
  <div class="review-training-card"><div><span class="music-kicker">ABAIXO DE 90% DE ACERTOS</span><h3>🎯 Treinar minhas dificuldades</h3><p id="difficultyTrainingSummary" class="hint">Aparecem as contas com menos de 90% de acertos. Esta modalidade continua disponível e concede 5 moedas a cada 10 acertos.</p></div><button id="startDifficultyTraining" class="review-training-button" type="button">Carregar minhas dificuldades</button></div>
  <p class="small">No modo normal, a tabuada segue de 1 a 10. No aleatório, a ordem muda.</p>
 </div>
@@ -3386,13 +3387,37 @@ function endQuestionClock(){
  $('questionTime').textContent='Tempo nesta questão: '+formatDuration(elapsed);
  return elapsed;
 }
+function getErrorTrainingPoolState(item,scope){
+ const state=item?.errorTrainingPools?.[scope];
+ return {
+  resolved:state?.resolved===true,
+  correctStreak:Math.max(0,Math.min(2,Math.floor(Number(state?.correctStreak)||0)))
+ };
+}
+function setErrorTrainingPoolState(item,scope,correct){
+ if(!item.errorTrainingPools||typeof item.errorTrainingPools!=='object')item.errorTrainingPools={};
+ const previous=getErrorTrainingPoolState(item,scope);
+ const correctStreak=correct?Math.min(2,previous.correctStreak+1):0;
+ item.errorTrainingPools[scope]={correctStreak,resolved:correctStreak>=2};
+ return item.errorTrainingPools[scope];
+}
+function resetErrorTrainingPoolState(item,scope){
+ return setErrorTrainingPoolState(item,scope,false);
+}
+function errorTrainingSourceScope(mode){
+ if(mode==='training'||mode==='adventure')return 'training';
+ if(mode==='tournament')return 'tournament';
+ return null;
+}
 function addAnswerToHistory(entry){
  playFeedback(!!entry.correct,String(entry.mode||'').includes('training')?'game':'interface');
  const key=entry.a+'x'+entry.b;
  if(!historyData.questions[key])historyData.questions[key]={a:entry.a,b:entry.b,attempts:0,correct:0,wrong:0,totalTimeMs:0,bestTimeMs:null};
  const item=historyData.questions[key];
- const mode=['training','intelligent_training','difficulty_training','error_training','adventure','challenge','tournament'].includes(entry.mode)?entry.mode:'training';
- if(!item.modes||typeof item.modes!=='object')item.modes={training:{attempts:item.attempts,correct:item.correct,wrong:item.wrong,totalTimeMs:item.totalTimeMs}};
+ const mode=['training','intelligent_training','difficulty_training','error_training','adventure','challenge','tournament','tournament_error_training'].includes(entry.mode)?entry.mode:'training';
+ // Mantém os dados gerais para as estatísticas, mas não presume que um
+ // histórico antigo sem divisão por modalidade pertence ao treino normal.
+ if(!item.modes||typeof item.modes!=='object')item.modes={};
  item.attempts++;
  if(entry.correct)item.correct++;else item.wrong++;
  const timeMs=Math.max(0,Number(entry.timeMs)||0);
@@ -3405,8 +3430,8 @@ function addAnswerToHistory(entry){
  item.lastMode=mode;
  item.lastAt=new Date().toISOString();
  if(!entry.correct){
-  item.errorTrainingResolved=false;
-  item.errorTrainingCorrectStreak=0;
+  const scope=errorTrainingSourceScope(mode);
+  if(scope)resetErrorTrainingPoolState(item,scope);
  }
  saveHistory();
  updateReviewTrainingButton();
@@ -3503,7 +3528,7 @@ async function finishSession(){
  if(sessionStartedAt){
   const summary={
    id:'training-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2)),
-   date:new Date().toISOString(),mode:trainingModeType==='standard'?'training':trainingModeType,answered:sessionAnswers.length,
+   date:new Date().toISOString(),mode:trainingModeType==='standard'?'training':trainingModeType==='tournamentErrors'?'tournament_error_training':trainingModeType,answered:sessionAnswers.length,
    completedQuestions:sessionCompletedQuestionCount,hits,misses,skipped:sessionSkipped,timeMs:sessionQuestionTimeMs
   };
   historyData.sessions.unshift(summary);
@@ -3526,7 +3551,7 @@ async function finishSession(){
     claimId:newTrainingRewardClaimId('intelligent-training'),questionCount:remainder
    });
   }
- }else if(trainingModeType!=='errors'){
+ }else if(trainingModeType!=='errors'&&trainingModeType!=='tournamentErrors'){
   const remainder=hits-sessionTrainingCorrectClaimed;
   if(remainder>0){
    sessionTrainingCorrectClaimed+=remainder;
@@ -4789,7 +4814,8 @@ function completeErrorTraining(){
  if(errorTrainingCompleted)return;
  errorTrainingCompleted=true;
  pauseTrainingQuestionClock();
- const claimId=newTrainingRewardClaimId('error-training-complete');
+ const prefix=trainingModeType==='tournamentErrors'?'tournament-error-training-complete':'error-training-complete';
+ const claimId=newTrainingRewardClaimId(prefix);
  queueTrainingSessionReward('error_training_complete',{claimId}).then(async()=>{
   await finishSession();
   trainingModeType='standard';trainingReviewMode=false;
@@ -4798,14 +4824,15 @@ function completeErrorTraining(){
 }
 function next(){
  if(position>=deck.length){
-  if(trainingModeType==='errors'){
+  if(trainingModeType==='errors'||trainingModeType==='tournamentErrors'){
    if(round===0){
     round=1;roundCorrect=new Set();
     deck=shuffle(errorTrainingFacts.map(item=>({a:item.a,b:item.b})));
     trainingRoundTarget=new Set(deck.map(item=>item.a+'x'+item.b)).size;
     position=0;
    }else{
-    const remaining=getErrorTrainingFacts();
+    const scope=trainingModeType==='tournamentErrors'?'tournament':'training';
+    const remaining=getErrorTrainingFacts(scope);
     if(remaining.length){
      deck.push(...remaining.map(item=>({a:item.a,b:item.b})));
     }else{
@@ -4837,7 +4864,7 @@ function next(){
  current=deck[position];
  revealed=false;currentQuestionTimeMs=0;currentQuestionTimeStopped=false;currentDifficultyMarked=false;
  $('equation').textContent=current.a+' × '+current.b;
- const modeLabel=trainingModeType==='errors'?'TREINE SEUS ERROS':trainingModeType==='intelligent'?'TREINO INTELIGENTE':trainingModeType==='difficulties'?'MINHAS DIFICULDADES':'Rodada '+round;
+ const modeLabel=trainingModeType==='errors'?'TREINE SEUS ERROS':trainingModeType==='tournamentErrors'?'REVISE OS ERROS DO TORNEIO':trainingModeType==='intelligent'?'TREINO INTELIGENTE':trainingModeType==='difficulties'?'MINHAS DIFICULDADES':'Rodada '+round;
  $('counter').textContent=modeLabel+' · Questão '+(position+1)+' de '+deck.length;
  $('answer').textContent='';$('answer').className='answer';
  $('verify').classList.remove('hidden');$('judge').classList.add('hidden');
@@ -4855,10 +4882,12 @@ function start(){
  }else if(trainingModeType==='difficulties'){
   trainingReviewFacts=getDifficultyTrainingFacts().map(item=>({a:item.a,b:item.b}));
  }else if(trainingModeType==='errors'){
-  errorTrainingFacts=getErrorTrainingFacts();
+  errorTrainingFacts=getErrorTrainingFacts('training');
+ }else if(trainingModeType==='tournamentErrors'){
+  errorTrainingFacts=getErrorTrainingFacts('tournament');
  }
  if(trainingReviewMode){
-  const facts=trainingModeType==='errors'?errorTrainingFacts:trainingReviewFacts;
+  const facts=(trainingModeType==='errors'||trainingModeType==='tournamentErrors')?errorTrainingFacts:trainingReviewFacts;
   selected=[...new Set(facts.map(item=>item.a))].sort((a,b)=>a-b).map(n=>({n,mode:'normal'}));
  }else{
   selected=[...tablesEl.querySelectorAll('.table-row')].filter(r=>r.querySelector('input').checked)
@@ -4890,24 +4919,27 @@ function verify(){
 function judge(ok){
  if(!revealed)return;
  const timeMs=currentQuestionTimeStopped?currentQuestionTimeMs:endQuestionClock();
- const historyMode=trainingModeType==='intelligent'?'intelligent_training':trainingModeType==='difficulties'?'difficulty_training':trainingModeType==='errors'?'error_training':'training';
+ const historyMode=trainingModeType==='intelligent'?'intelligent_training':
+  trainingModeType==='difficulties'?'difficulty_training':
+  trainingModeType==='errors'?'error_training':
+  trainingModeType==='tournamentErrors'?'tournament_error_training':'training';
  const entry={a:current.a,b:current.b,correct:!!ok,timeMs,mode:historyMode};
  sessionAnswers.push(entry);sessionQuestionTimeMs+=timeMs;sessionCompletedQuestionCount++;addAnswerToHistory(entry);
  const key=current.a+'x'+current.b;
+ const errorScope=trainingModeType==='errors'?'training':trainingModeType==='tournamentErrors'?'tournament':null;
  if(ok){
   hits++;roundCorrect.add(key);$('answer').classList.add('correct');
-  if(trainingModeType==='errors'){
+  if(errorScope){
    const item=historyData.questions[key];
-   item.errorTrainingCorrectStreak=Math.min(2,Math.max(0,Number(item.errorTrainingCorrectStreak)||0)+1);
-   item.errorTrainingResolved=item.errorTrainingCorrectStreak>=2;
-   if(item.errorTrainingResolved)roundCorrect.add(key);
+   const state=setErrorTrainingPoolState(item,errorScope,true);
+   if(state.resolved)roundCorrect.add(key);
    else{roundCorrect.delete(key);deck.push({...current});}
    saveHistory();updateReviewTrainingButton();
   }
  }else{
   misses++;
-  if(trainingModeType==='errors'){
-   const item=historyData.questions[key];item.errorTrainingCorrectStreak=0;item.errorTrainingResolved=false;
+  if(errorScope){
+   const item=historyData.questions[key];resetErrorTrainingPoolState(item,errorScope);
    roundCorrect.delete(key);
    deck.push({...current});saveHistory();updateReviewTrainingButton();
   }else deck.push({...current});
@@ -5379,19 +5411,25 @@ function getDifficultyTrainingFacts(){
  return collectLearningFacts().filter(item=>item.accuracy<.90)
   .sort((a,b)=>a.accuracy-b.accuracy||b.wrong-a.wrong||b.attempts-a.attempts).slice(0,60);
 }
-function getErrorTrainingFacts(){
- return Object.entries(historyData.questions||{}).filter(([key,item])=>{
-  if(!item||typeof item!=='object'||Number(item.wrong)<=0||item.errorTrainingResolved===true)return false;
-  const [a,b]=key.split('x').map(Number);
-  return Number.isInteger(a)&&a>=1&&a<=20&&Number.isInteger(b)&&b>=1&&b<=10;
- }).map(([key,item])=>({a:Number(item.a)||Number(key.split('x')[0]),b:Number(item.b)||Number(key.split('x')[1]),wrong:Math.max(0,Number(item.wrong)||0),streak:Math.max(0,Math.min(1,Number(item.errorTrainingCorrectStreak)||0))}))
-  .sort((a,b)=>b.wrong-a.wrong||a.a-b.a||a.b-b.b).slice(0,100);
+function getErrorTrainingFacts(scope='training'){
+ const sourceModes=scope==='tournament'?['tournament']:['training','adventure'];
+ return Object.entries(historyData.questions||{}).flatMap(([key,item])=>{
+  if(!item||typeof item!=='object')return [];
+  const modes=item.modes&&typeof item.modes==='object'?item.modes:{};
+  const wrong=sourceModes.reduce((sum,mode)=>sum+Math.max(0,Number(modes[mode]?.wrong)||0),0);
+  const state=getErrorTrainingPoolState(item,scope);
+  if(wrong<=0||state.resolved)return [];
+  const [keyA,keyB]=key.split('x').map(Number);
+  const a=Number(item.a)||keyA,b=Number(item.b)||keyB;
+  if(!Number.isInteger(a)||a<1||a>20||!Number.isInteger(b)||b<1||b>10)return [];
+  return [{a,b,wrong,streak:Math.min(1,state.correctStreak)}];
+ }).sort((a,b)=>b.wrong-a.wrong||a.a-b.a||a.b-b.b).slice(0,100);
 }
 function getCurrentReviewFacts(){
  return trainingModeType==='intelligent'?getIntelligentTrainingFacts():getDifficultyTrainingFacts();
 }
 function updateReviewTrainingButton(){
- const intelligent=getIntelligentTrainingFacts(),errors=getErrorTrainingFacts(),difficulties=getDifficultyTrainingFacts();
+ const intelligent=getIntelligentTrainingFacts(),errors=getErrorTrainingFacts('training'),tournamentErrors=getErrorTrainingFacts('tournament'),difficulties=getDifficultyTrainingFacts();
  const smartButton=$('startIntelligentTraining'),smartNote=$('reviewTrainingSummary');
  if(smartButton){smartButton.disabled=!intelligent.length;smartButton.textContent=intelligent.length?'🧠 Iniciar treino inteligente · '+intelligent.length+' contas':'🧠 Nenhuma conta pendente';}
  if(smartNote)smartNote.textContent=intelligent.length
@@ -5401,8 +5439,14 @@ function updateReviewTrainingButton(){
  if(errorCard)errorCard.classList.toggle('hidden',!errors.length);
  if(errorButton){errorButton.disabled=!errors.length;errorButton.textContent=errors.length?'❌ Treinar '+errors.length+' conta(s) errada(s)':'❌ Nenhum erro pendente';}
  if(errorNote)errorNote.textContent=errors.length
-  ?'Cada conta precisa de dois acertos seguidos para sair da lista. Um erro zera a sequência. Ao resolver todos os erros pendentes, ganhe 10 moedas.'
-  :'Todos os erros foram treinados.';
+  ?'Inclui somente erros do Treinar normal e do Modo jogo. Erros de torneio, desafio e outras modalidades ficam separados. Cada conta precisa de dois acertos seguidos; ao concluir, ganhe 10 moedas.'
+  :'Nenhum erro pendente no Treinar normal ou no Modo jogo.';
+ const tournamentErrorCard=$('tournamentErrorTrainingCard'),tournamentErrorButton=$('startTournamentErrorTraining'),tournamentErrorNote=$('tournamentErrorTrainingSummary');
+ if(tournamentErrorCard)tournamentErrorCard.classList.toggle('hidden',!tournamentErrors.length);
+ if(tournamentErrorButton){tournamentErrorButton.disabled=!tournamentErrors.length;tournamentErrorButton.textContent=tournamentErrors.length?'🏆 Revisar '+tournamentErrors.length+' conta(s) do torneio':'🏆 Nenhum erro de torneio pendente';}
+ if(tournamentErrorNote)tournamentErrorNote.textContent=tournamentErrors.length
+  ?'Mostra somente contas erradas no Torneio mensal. Cada conta precisa de dois acertos seguidos para sair da lista.'
+  :'Nenhum erro pendente do Torneio mensal.';
  const difficultyButton=$('startDifficultyTraining'),difficultyNote=$('difficultyTrainingSummary');
  if(difficultyButton){difficultyButton.disabled=!difficulties.length;difficultyButton.textContent=difficulties.length?'🎯 Treinar '+difficulties.length+' dificuldade(s)':'🎯 Nenhuma dificuldade pendente';}
  if(difficultyNote)difficultyNote.textContent=difficulties.length
@@ -5411,6 +5455,7 @@ function updateReviewTrainingButton(){
 }
 function startIntelligentTraining(){trainingModeType='intelligent';trainingReviewMode=true;start();}
 function startErrorTraining(){trainingModeType='errors';trainingReviewMode=true;errorTrainingCompleted=false;start();}
+function startTournamentErrorTraining(){trainingModeType='tournamentErrors';trainingReviewMode=true;errorTrainingCompleted=false;start();}
 function startDifficultyTraining(){trainingModeType='difficulties';trainingReviewMode=true;start();}
 function markCurrentQuestionDifficulty(){
  if(!current||!revealed||currentDifficultyMarked)return;
@@ -5420,9 +5465,8 @@ function markCurrentQuestionDifficulty(){
  const item=historyData.questions[key];
  item.difficultyFlags=Math.min(100000,(Number(item.difficultyFlags)||0)+1);
  item.lastDifficultyAt=new Date().toISOString();
- if(trainingModeType==='errors'){
-  item.errorTrainingCorrectStreak=0;
-  item.errorTrainingResolved=false;
+ if(trainingModeType==='errors'||trainingModeType==='tournamentErrors'){
+  resetErrorTrainingPoolState(item,trainingModeType==='tournamentErrors'?'tournament':'training');
   roundCorrect.delete(key);
  }
  currentDifficultyMarked=true;saveHistory();
@@ -5442,10 +5486,11 @@ function showTrainingExitCelebration(){
  const answered=sessionAnswers.length;
  const accuracy=answered?Math.round(hits/answered*100):0;
  const totalTime=sessionQuestionTimeMs;
- const completedErrors=trainingModeType==='errors'&&errorTrainingCompleted;
- const title=completedErrors?'Treino de erros concluído':'Treino finalizado';
+ const completedErrors=(trainingModeType==='errors'||trainingModeType==='tournamentErrors')&&errorTrainingCompleted;
+ const completedTournamentErrors=completedErrors&&trainingModeType==='tournamentErrors';
+ const title=completedTournamentErrors?'Erros do torneio revisados':completedErrors?'Treino de erros concluído':'Treino finalizado';
  const detail=completedErrors
-  ?'Todos os erros pendentes foram resolvidos com dois acertos seguidos em cada conta.'
+  ?(completedTournamentErrors?'Todos os erros registrados no Torneio mensal foram resolvidos com dois acertos seguidos em cada conta.':'Todos os erros do Treinar normal e do Modo jogo foram resolvidos com dois acertos seguidos em cada conta.')
   :answered
    ?'Seu resultado foi salvo. Confira o desempenho desta partida e o ranking das contas.'
    :'Sua partida foi encerrada. O resultado desta sessão está disponível abaixo.';
@@ -6266,6 +6311,7 @@ $('verify').addEventListener('click',verify);
 $('markDifficulty').addEventListener('click',markCurrentQuestionDifficulty);
 $('startIntelligentTraining').addEventListener('click',startIntelligentTraining);
 $('startErrorTraining').addEventListener('click',startErrorTraining);
+$('startTournamentErrorTraining').addEventListener('click',startTournamentErrorTraining);
 $('startDifficultyTraining').addEventListener('click',startDifficultyTraining);
 $('right').addEventListener('click',()=>judge(true));
 $('wrong').addEventListener('click',()=>judge(false));
