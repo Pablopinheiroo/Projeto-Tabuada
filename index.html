@@ -824,7 +824,11 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .training-exit-result span{display:block;color:#a9c5e3;font-size:.76rem;font-weight:750}
 .training-exit-result strong{display:block;margin-top:4px;color:#f8d879;font-size:1.35rem;font-variant-numeric:tabular-nums}
 .training-exit-answered{font-size:.78rem!important;overflow-wrap:anywhere}
-.training-exit-card>.primary{width:100%;margin-top:6px}
+.training-exit-card{padding:28px 20px 22px}
+.training-exit-close{position:absolute;top:9px;right:10px;display:grid;place-items:center;width:38px;height:38px;padding:0;border:1px solid #627b9d;border-radius:50%;background:#0b1a30;color:#f8fafc;font-size:1.55rem;font-weight:700;line-height:1;cursor:pointer}
+.training-exit-close:focus-visible{outline:3px solid #fbbf24;outline-offset:2px}
+.training-exit-actions{display:grid;gap:10px;margin-top:22px}
+.training-exit-actions button{width:100%;min-height:48px;margin:0}
 .training-celebration-coins{display:flex;align-items:center;justify-content:center;gap:9px;margin:18px 0;padding:12px;border-radius:14px;background:#3b2b19;color:#ffe5a3;font-size:1rem}
 .training-celebration-coins .coin-symbol{width:27px;height:27px}
 .training-celebration-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none}
@@ -925,7 +929,11 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .training-exit-result span{display:block;color:#a9c5e3;font-size:.76rem;font-weight:750}
 .training-exit-result strong{display:block;margin-top:4px;color:#f8d879;font-size:1.35rem;font-variant-numeric:tabular-nums}
 .training-exit-answered{font-size:.78rem!important;overflow-wrap:anywhere}
-.training-exit-card>.primary{width:100%;margin-top:6px}
+.training-exit-card{padding:28px 20px 22px}
+.training-exit-close{position:absolute;top:9px;right:10px;display:grid;place-items:center;width:38px;height:38px;padding:0;border:1px solid #627b9d;border-radius:50%;background:#0b1a30;color:#f8fafc;font-size:1.55rem;font-weight:700;line-height:1;cursor:pointer}
+.training-exit-close:focus-visible{outline:3px solid #fbbf24;outline-offset:2px}
+.training-exit-actions{display:grid;gap:10px;margin-top:22px}
+.training-exit-actions button{width:100%;min-height:48px;margin:0}
 .training-celebration-coins{display:flex;align-items:center;justify-content:center;gap:9px;margin:18px 0;padding:12px;border-radius:14px;background:#3b2b19;color:#ffe5a3;font-size:1rem}
 .training-celebration-coins .coin-symbol{width:27px;height:27px}
 .training-celebration-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none}
@@ -3610,10 +3618,10 @@ function renderRanking(){
   '<div class="rank-cell"><strong>'+Math.round(row.accuracy*100)+'%</strong><small>de acerto</small></div></div>'
  ).join('');
 }
-function showReport(){
+function showReport(display=true){
  $('game').classList.add('hidden');
  $('setup').classList.add('hidden');
- $('report').classList.remove('hidden');
+ $('report').classList.toggle('hidden',!display);
  const answered=sessionAnswers.length;
  const totalTime=sessionQuestionTimeMs;
  const answeredTime=sessionAnswers.reduce((sum,item)=>sum+item.timeMs,0);
@@ -3660,7 +3668,7 @@ async function finishSession(){
   profilesData[activeProfile].updatedAt=new Date().toISOString();
   persistProfiles();
  }
- showReport();
+ showReport(false);
  let queuedReward=null;
  if(trainingModeType==='intelligent'){
   const remainder=sessionCompletedQuestionCount-sessionIntelligentQuestionsClaimed;
@@ -5717,37 +5725,53 @@ function markCurrentQuestionDifficulty(){
 function showTrainingExitCelebration(){
  document.querySelectorAll('.training-celebration-overlay').forEach(item=>item.remove());
  const answered=sessionAnswers.length;
- const accuracy=answered?Math.round(hits/answered*100):0;
- const totalTime=sessionQuestionTimeMs;
  const completedErrors=(trainingModeType==='errors'||trainingModeType==='tournamentErrors')&&errorTrainingCompleted;
  const completedTournamentErrors=completedErrors&&trainingModeType==='tournamentErrors';
- const title=completedTournamentErrors?'Erros do torneio revisados':completedErrors?'Treino de erros concluído':'Treino finalizado';
+ const kicker=completedErrors?'TREINO COMPLETO':'PARTIDA FINALIZADA';
  const detail=completedErrors
-  ?(completedTournamentErrors?'Todos os erros registrados no Torneio mensal foram resolvidos com dois acertos seguidos em cada conta.':'Todos os erros do Treinar normal e do Modo jogo foram resolvidos com dois acertos seguidos em cada conta.')
+  ?(completedTournamentErrors
+   ?'Você concluiu a revisão de todos os erros registrados no Torneio mensal. Seu progresso foi salvo.'
+   :'Você concluiu a revisão de todos os erros do Treinar e do Modo jogo. Seu progresso foi salvo.')
   :answered
-   ?'Seu resultado foi salvo. Confira o desempenho desta partida e o ranking das contas.'
-   :'Sua partida foi encerrada. O resultado desta sessão está disponível abaixo.';
+   ?'Seu resultado foi salvo. Veja abaixo o desempenho desta partida e o ranking das contas.'
+   :'Sua partida foi encerrada e o resultado desta sessão foi salvo.';
  const overlay=document.createElement('div');
  overlay.className='training-celebration-overlay';
  overlay.setAttribute('role','dialog');
  overlay.setAttribute('aria-modal','true');
- overlay.setAttribute('aria-label','Resultado do treino');
- overlay.innerHTML='<div class="training-celebration-card training-exit-card"><div class="training-celebration-cup">📊</div>'+
-  '<span class="music-kicker">RESULTADO DA PARTIDA</span><h2>'+escapeHtml(title)+'</h2><p>'+escapeHtml(detail)+'</p>'+
-  '<div class="training-exit-results">'+
-   '<div class="training-exit-result"><span>Acertos</span><strong>'+hits+'</strong></div>'+
-   '<div class="training-exit-result"><span>Erros</span><strong>'+misses+'</strong></div>'+
-   '<div class="training-exit-result"><span>Precisão</span><strong>'+accuracy+'%</strong></div>'+
-   '<div class="training-exit-result"><span>Tempo</span><strong>'+escapeHtml(formatDuration(totalTime))+'</strong></div>'+
-  '</div><p class="training-exit-answered">Questões classificadas: <strong>'+answered+'</strong> · Sem classificação: <strong>'+sessionSkipped+'</strong></p>'+
-  '<button type="button" class="primary" data-dismiss-exit-result>Ver resultado completo</button></div>';
+ overlay.setAttribute('aria-label','Partida finalizada');
+ overlay.innerHTML='<div class="training-celebration-card training-exit-card">'+
+  '<button type="button" class="training-exit-close" data-exit-close aria-label="Fechar e voltar ao menu inicial">×</button>'+
+  '<div class="training-celebration-cup">🎉</div>'+
+  '<span class="music-kicker">'+kicker+'</span><h2>Parabéns pelo seu treino!</h2><p>'+escapeHtml(detail)+'</p>'+
+  '<div class="training-exit-actions">'+
+   '<button type="button" class="secondary" data-exit-menu>Voltar ao menu inicial</button>'+
+   '<button type="button" class="primary" data-open-training-report>Resultado do treino</button>'+
+  '</div></div>';
+ $('game').classList.add('hidden');
+ $('setup').classList.add('hidden');
+ $('report').classList.add('hidden');
  document.body.appendChild(overlay);
- const dismiss=()=>{
+ const returnToModes=()=>{
+  overlay.remove();
+  $('report').classList.add('hidden');
+  $('game').classList.add('hidden');
+  $('setup').classList.remove('hidden');
+  showModeHub();
+  window.scrollTo({top:0,behavior:'smooth'});
+ };
+ const openReport=()=>{
   overlay.remove();
   const report=$('report');
-  if(report){report.scrollIntoView({behavior:'smooth',block:'start'});report.querySelector('h2')?.focus({preventScroll:true});}
+  if(report){
+   report.classList.remove('hidden');
+   report.scrollIntoView({behavior:'smooth',block:'start'});
+   report.querySelector('h2')?.focus({preventScroll:true});
+  }
  };
- overlay.querySelector('[data-dismiss-exit-result]')?.addEventListener('click',dismiss);
+ overlay.querySelector('[data-exit-menu]')?.addEventListener('click',returnToModes);
+ overlay.querySelector('[data-exit-close]')?.addEventListener('click',returnToModes);
+ overlay.querySelector('[data-open-training-report]')?.addEventListener('click',openReport);
 }
 function showTrainingCycleCelebration(result,isReview,reviewComplete=false){
  pauseTrainingQuestionClock();
