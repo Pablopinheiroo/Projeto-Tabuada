@@ -314,7 +314,8 @@ check(html.includes("function showTrainingExitCelebration()")&&html.includes("da
 check((html.match(/training-celebration-overlay\{position:fixed;inset:0;z-index:9999;display:flex/g)||[]).length===2&&
   html.includes("width:100vw;height:100vh;height:100dvh")&&
   html.includes("training-exit-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))")&&
-  html.includes(".game-reward-toast.achievement-congrats{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;z-index:10001;box-sizing:border-box"),
+  html.includes(".game-reward-toast.achievement-congrats{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;z-index:10001;box-sizing:border-box")&&
+  html.includes("transform:translateX(-50%);box-shadow:0 15px 42px #020617cc,0 0 0 3px #fbbf2422;animation:achievementRewardPop"),
   "A tela de parabéns e a notificação precisam ficar centralizadas e caber na largura/altura do celular.");
 check(html.includes("getDifficultyTrainingFacts()")&&html.includes("item.accuracy<.90")&&
   workerSource.includes("difficultyTrainingBelow90Percent: true"),
@@ -765,6 +766,7 @@ async function testViewport(name, viewport, mobile = false) {
     (await page.locator("#gameRewardToast").textContent()).includes("Primeiro Ciclo")&&
     await page.locator("#gameRewardToast").evaluate(el=>el.classList.contains("achievement-congrats")),
     name+": a conquista não mostrou o alerta de parabenização destacado.");
+  await page.waitForTimeout(300);
   const toastBounds=await page.locator("#gameRewardToast").evaluate(el=>{
     const rect=el.getBoundingClientRect();
     return {left:rect.left,right:rect.right,width:rect.width,center:rect.left+rect.width/2,viewport:innerWidth};
