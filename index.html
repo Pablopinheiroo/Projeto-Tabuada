@@ -607,6 +607,17 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .challenge-player-check input{width:18px;height:18px;accent-color:#22d3ee}
 .challenge-player-avatar{width:38px;height:38px;flex:0 0 38px;object-fit:cover;border-radius:50%;border:2px solid #67e8f9}
 .challenge-result-scores .challenge-score-box.winner{border-color:#fbbf24;background:#3b2d17}
+.challenge-result-scores .challenge-standing-card{display:grid;grid-template-rows:auto auto auto auto;align-content:start;justify-items:center;gap:7px;flex:1 1 145px;min-width:135px;max-width:210px;padding:14px 12px 13px;text-align:center;background:linear-gradient(155deg,#122b4b,#111b35);border-color:#547397;box-shadow:0 6px 16px #02061735}
+.challenge-standing-place{display:inline-flex;align-items:center;justify-content:center;min-height:25px;padding:4px 9px;border:1px solid #547397;border-radius:999px;background:#1b385a;color:#d9eafe;font-size:.67rem;font-weight:950;letter-spacing:.045em}
+.challenge-result-scores .challenge-standing-name{display:block;max-width:100%;color:#f8fbff;font-size:1rem;font-weight:950;line-height:1.25;overflow-wrap:anywhere}
+.challenge-result-scores .challenge-standing-score{display:block;color:#67e8f9;font-size:1.45rem;font-weight:950;line-height:1.1}
+.challenge-standing-meta{display:block;color:#b8cbe4;font-size:.7rem;line-height:1.4}
+.challenge-standing-card.place-1 .challenge-standing-place{border-color:#fbbf24;background:linear-gradient(120deg,#713f12,#60451c);color:#fef3c7}
+.challenge-standing-card.place-2 .challenge-standing-place{border-color:#cbd5e1;background:linear-gradient(120deg,#475569,#334155);color:#f1f5f9}
+.challenge-standing-card.place-3 .challenge-standing-place{border-color:#c08457;background:linear-gradient(120deg,#78350f,#713f12);color:#ffedd5}
+.challenge-result-scores .challenge-standing-card.winner{border:2px solid #fbbf24;background:linear-gradient(145deg,#493517,#2a2340);box-shadow:0 0 0 3px #fbbf2425,0 8px 20px #02061755}
+.challenge-standing-card.winner .challenge-standing-name{color:#fff7d6}
+@media(max-width:560px){.challenge-result-scores .challenge-standing-card{flex-basis:calc(50% - 8px);min-width:120px;max-width:none;padding:12px 8px}.challenge-result-scores .challenge-standing-name{font-size:.9rem}.challenge-standing-place{font-size:.62rem}}
 .challenge-medal-shelf{margin-top:8px}
 .tournament-frame-gold{outline:3px solid #fbbf24;outline-offset:3px;box-shadow:0 0 0 6px #fbbf2433!important}
 .tournament-frame-silver{outline:3px solid #cbd5e1;outline-offset:3px;box-shadow:0 0 0 6px #cbd5e133!important}
@@ -624,14 +635,31 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 
 
 .profile-last-saved{display:block;margin:2px 0 8px 2px;color:#91a0b4;font-size:.62rem;font-weight:600;line-height:1.35;font-variant-numeric:tabular-nums}
-.training-global-mode{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;padding:12px;border:1px solid #dbe4ef;border-radius:12px;background:#f7f9fc}
-.training-global-mode label{display:grid;gap:5px;color:#334155;font-size:.82rem;font-weight:800;min-width:0;flex:1}
-.training-global-mode select{width:100%;max-width:280px;padding:9px 11px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#26364d;font:inherit;font-size:.82rem}
-.training-global-mode p{margin:0;color:#718096;font-size:.7rem;line-height:1.4;max-width:230px}
+.training-global-mode{display:grid;gap:12px;margin:0 0 14px;padding:16px;border:1px solid #3d638d;border-radius:16px;background:linear-gradient(145deg,#0c2039,#17284a 60%,#241e45);box-shadow:0 8px 22px #02061740;color:#eaf4ff}
+.training-order-heading{display:flex;align-items:center;gap:11px}
+.training-order-icon{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border:1px solid #3d83a9;border-radius:12px;background:linear-gradient(145deg,#164e63,#233b70);color:#a5f3fc;font-size:1.45rem;font-weight:950}
+.training-order-heading>div{display:grid;gap:3px;min-width:0}
+.training-order-heading strong{color:#f3f8ff;font-size:.98rem;font-weight:950}
+.training-order-heading small{color:#a9bfdc;font-size:.72rem;line-height:1.4}
+.training-order-field{display:grid;gap:7px;min-width:0;color:#d6e5f8;font-size:.78rem;font-weight:850}
+.training-order-select-wrap{position:relative;display:block;min-width:0}
+.training-order-select-wrap:after{content:"⌄";position:absolute;right:15px;top:50%;transform:translateY(-55%);color:#a5f3fc;font-size:1.2rem;font-weight:950;pointer-events:none}
+.training-global-mode select{appearance:none;-webkit-appearance:none;display:block;width:100%;max-width:none;min-height:50px;padding:12px 44px 12px 14px;border:1px solid #4e79a7;border-radius:12px;background:linear-gradient(120deg,#142f52,#1a355c);color:#f8fbff;font:inherit;font-size:.86rem;font-weight:850;box-shadow:inset 0 1px #ffffff12;cursor:pointer;transition:border-color .16s ease,box-shadow .16s ease,background .16s ease}
+.training-global-mode select:hover{border-color:#67e8f9;background:linear-gradient(120deg,#183b61,#203e68)}
+.training-global-mode select:focus-visible{outline:3px solid #67e8f9;outline-offset:3px;border-color:#67e8f9;box-shadow:0 0 0 5px #22d3ee22}
+.training-global-mode select option{background:#10233d;color:#f8fbff}
+.training-global-mode p.training-order-hint{display:flex;align-items:flex-start;gap:7px;margin:0;color:#b8cbe4;font-size:.73rem;line-height:1.45;max-width:none}
+.training-order-hint:before{content:"ⓘ";flex:0 0 auto;color:#67e8f9;font-weight:950}
+.training-order-save{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:45px;padding:10px 14px;border:1px solid #4387ad;border-radius:11px;background:linear-gradient(110deg,#164e63,#1d4771);color:#ecfeff;font:inherit;font-size:.82rem;font-weight:900;box-shadow:0 5px 13px #02061744;cursor:pointer;transition:filter .15s ease,transform .15s ease,border-color .15s ease}
+.training-order-save:hover{filter:brightness(1.13);border-color:#67e8f9}
+.training-order-save:active{transform:translateY(1px)}
+.training-order-save:focus-visible{outline:3px solid #67e8f9;outline-offset:3px}
+.training-global-mode p.training-order-status{min-height:1.1em;margin:-5px 0 0;color:#9fb8d7;font-size:.7rem;line-height:1.4;max-width:none}
+.training-global-mode p.training-order-status.is-saved{color:#86efac}
 .table-row .mode:disabled{opacity:.45;background:#e8edf4;color:#8995a5;cursor:not-allowed}
 .table-row.global-order{grid-template-columns:minmax(0,1fr)}
 .table-row.global-order .mode{display:none!important}
-@media(max-width:560px){.training-global-mode{align-items:stretch;flex-direction:column}.training-global-mode select{max-width:none}.training-global-mode p{max-width:none}}
+@media(max-width:560px){.training-global-mode{padding:13px}.training-order-heading strong{font-size:.92rem}.training-order-heading small{font-size:.68rem}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 
 
@@ -1402,15 +1430,24 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 <div id="trainingModePanel" class="mode-view hidden">
  <div class="mode-view-heading"><div><span class="music-kicker">📘 TREINO LIVRE</span><h2>Escolha as tabuadas</h2></div><button id="backToModeHubTraining" class="secondary compact-back" type="button">← Modos</button></div>
  <p class="hint">Marque as tabuadas e defina a ordem das questões.</p>
- <div class="training-global-mode">
-  <label for="trainingGlobalMode">Ordem das questões
-   <select id="trainingGlobalMode">
-    <option value="individual">Escolher por tabuada</option>
-    <option value="normal">Padrão para todas</option>
-    <option value="random">Aleatório para todas</option>
-   </select>
+ <div class="training-global-mode" aria-labelledby="trainingOrderTitle">
+  <div class="training-order-heading">
+   <span class="training-order-icon" aria-hidden="true">↕</span>
+   <div><strong id="trainingOrderTitle">Ordem das questões</strong><small>Escolha como as contas vão aparecer no treinamento.</small></div>
+  </div>
+  <label class="training-order-field" for="trainingGlobalMode">
+   <span>Modo de organização</span>
+   <span class="training-order-select-wrap">
+    <select id="trainingGlobalMode">
+     <option value="individual">Escolher por tabuada (individual)</option>
+     <option value="normal">Normal para todas</option>
+     <option value="random">Aleatório para todas</option>
+    </select>
+   </span>
   </label>
-  <p id="trainingGlobalModeHint">No modo individual, cada tabuada pode ter sua própria ordem.</p>
+  <p id="trainingGlobalModeHint" class="training-order-hint">No modo individual, cada tabuada pode ter sua própria ordem.</p>
+  <button id="saveTrainingDefinition" class="training-order-save" type="button">💾 Salvar definição</button>
+  <p id="trainingDefinitionStatus" class="training-order-status" role="status" aria-live="polite">Escolha a ordem e salve para manter essa preferência nos próximos treinos.</p>
  </div>
  <div id="tables" class="tables"></div>
  <button id="start" class="primary">▶ Iniciar treinamento livre</button>
@@ -1597,6 +1634,64 @@ function updateTrainingGlobalModeControls(){
  if(hint)hint.textContent=individual
   ?'Modo individual: cada tabuada pode ter sua própria ordem.'
   :mode==='normal'?'Todas as tabuadas seguem a ordem padrão, de 1 a 10.':'Todas as tabuadas terão questões em ordem aleatória.';
+}
+const TRAINING_DEFINITION_STORAGE_PREFIX='projetoTabuadaTreinoDefinitionV1:';
+let trainingDefinitionDirty=false;
+function trainingDefinitionStorageKey(){
+ const profile=String(activeProfile||$('profileName')?.value||'sem-perfil').trim().toLowerCase()||'sem-perfil';
+ return TRAINING_DEFINITION_STORAGE_PREFIX+encodeURIComponent(profile);
+}
+function updateTrainingDefinitionStatus(message){
+ const status=$('trainingDefinitionStatus');
+ if(!status)return;
+ if(message!==undefined)status.textContent=message;
+ status.classList.toggle('is-saved',!trainingDefinitionDirty&&status.textContent.startsWith('✓'));
+}
+function markTrainingDefinitionDirty(){
+ trainingDefinitionDirty=true;
+ updateTrainingDefinitionStatus('Alterações ainda não salvas. Toque em “Salvar definição” para usar esta ordem nos próximos treinos.');
+}
+function loadTrainingDefinition(){
+ let saved=null;
+ try{saved=JSON.parse(localStorage.getItem(trainingDefinitionStorageKey())||'null');}catch(error){saved=null;}
+ const validModes=['individual','normal','random'];
+ if(saved&&saved.version===1&&validModes.includes(saved.globalMode)){
+  $('trainingGlobalMode').value=saved.globalMode;
+  const tableModes=saved.tableModes&&typeof saved.tableModes==='object'?saved.tableModes:{};
+  tablesEl.querySelectorAll('.table-row').forEach(row=>{
+   const number=row.querySelector('input').value;
+   const mode=tableModes[number];
+   row.querySelector('.mode').value=mode==='random'?'random':'normal';
+  });
+  trainingDefinitionDirty=false;
+  updateTrainingGlobalModeControls();
+  updateTrainingDefinitionStatus('✓ Definição salva carregada para este perfil.');
+  return true;
+ }
+ trainingDefinitionDirty=false;
+ updateTrainingGlobalModeControls();
+ updateTrainingDefinitionStatus('Escolha a ordem e toque em “Salvar definição” para guardar sua preferência.');
+ return false;
+}
+function saveTrainingDefinition(){
+ const definition={
+  version:1,
+  globalMode:$('trainingGlobalMode')?.value||'individual',
+  tableModes:Object.fromEntries([...tablesEl.querySelectorAll('.table-row')].map(row=>[
+   row.querySelector('input').value,row.querySelector('.mode').value==='random'?'random':'normal'
+  ])),
+  savedAt:new Date().toISOString()
+ };
+ try{
+  localStorage.setItem(trainingDefinitionStorageKey(),JSON.stringify(definition));
+  trainingDefinitionDirty=false;
+  updateTrainingDefinitionStatus('✓ Definição salva! Ela será carregada sempre que você voltar ao treinamento neste perfil.');
+  return true;
+ }catch(error){
+  trainingDefinitionDirty=true;
+  updateTrainingDefinitionStatus('Não foi possível salvar neste aparelho. Verifique o espaço disponível.');
+  return false;
+ }
 }
 let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
 let trainingReviewMode=false,trainingReviewFacts=[],errorTrainingFacts=[],trainingModeType='standard',errorTrainingCompleted=false,trainingRoundTarget=0,currentQuestionTimeMs=0,currentQuestionTimeStopped=false,currentDifficultyMarked=false;
@@ -4054,7 +4149,8 @@ function showChallengeResult(challenge){
     if(!previous||item.score!==previous.score||item.totalMs!==previous.totalMs)place=index+1;
     previous=item;
     const isWinner=winners.includes(item.username);
-    return '<div class="challenge-score-box '+(isWinner?'winner':'')+'"><strong>#'+place+' · '+item.score+'/10</strong><small>@'+escapeHtml(item.username)+' · '+formatDuration(item.totalMs)+(isWinner&&draw?' · Empate':'')+'</small></div>';
+    const rankIcon=place===1?'🥇':place===2?'🥈':place===3?'🥉':'🏅';
+    return '<div class="challenge-score-box challenge-standing-card place-'+Math.min(place,4)+' '+(isWinner?'winner':'')+'" data-position="'+place+'"><span class="challenge-standing-place">'+rankIcon+' '+place+'º LUGAR</span><strong class="challenge-standing-name">@'+escapeHtml(item.username)+'</strong><b class="challenge-standing-score">'+item.score+'/10</b><small class="challenge-standing-meta">'+formatDuration(item.totalMs)+(isWinner&&draw?' · Empate':'')+'</small></div>';
    }).join('');
    $('challengeResultTime').textContent='Sua duração: '+formatDuration(mine?.totalMs||0);
    $('challengeResultStatus').textContent=challenge.betMode?(challenge.betPaid?(draw?'Houve empate. As moedas apostadas foram devolvidas aos dois participantes.':winner?'Você recebeu '+(Number(challenge.stake||0)*2).toLocaleString('pt-BR')+' moedas, o total da aposta.':'Você perdeu a aposta de '+Number(challenge.stake||0).toLocaleString('pt-BR')+' moedas.'):'Resultado salvo. O sistema está confirmando o pagamento ou a devolução da aposta; volte à lista para atualizar.'):'O resultado e o histórico foram salvos nos perfis dos participantes.';
@@ -4639,6 +4735,7 @@ function showModeHub(){
 }
 function showTrainingMode(){
  setMusicCategory('treinamento',true);
+ loadTrainingDefinition();
  setMainContentSections({training:true});
 }
 function showAdventureMap(){
@@ -5875,7 +5972,9 @@ $('adventureMap').addEventListener('click',event=>{
 $('saveProfile').addEventListener('click',()=>saveProfile(true));
 
 
-$('trainingGlobalMode').addEventListener('change',updateTrainingGlobalModeControls);
+$('trainingGlobalMode').addEventListener('change',()=>{updateTrainingGlobalModeControls();markTrainingDefinitionDirty();});
+tablesEl.addEventListener('change',event=>{if(event.target.matches('.mode'))markTrainingDefinitionDirty();});
+$('saveTrainingDefinition').addEventListener('click',saveTrainingDefinition);
 $('start').addEventListener('click',()=>{trainingModeType='standard';trainingReviewMode=false;trainingReviewFacts=[];errorTrainingFacts=[];start()});
 $('verify').addEventListener('click',verify);
 $('markDifficulty').addEventListener('click',markCurrentQuestionDifficulty);
