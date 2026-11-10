@@ -1591,16 +1591,15 @@ let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),curren
 let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueuePosition=0,musicStartPending=false,mainMusicTimer=null;
 let profileOptionsOpen=false,profileOptionsResumeMusic=false,sfxPreviewTimer=null,gameSfxPreviewTimers=[],optionMusicPreviewTimer=null,optionMusicPreviewActive=false,optionPreviewSources=new Set();
 const LAST_TRACK_STORAGE_KEY='projetoTabuadaUltimaFaixaV2:';
-let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,questionClockPaused=false,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0;
+let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,questionClockPaused=false,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0,sessionCompletedQuestionCount=0,trainingSessionSaving=false;
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
-let gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
+let gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,trainingQuestionProgress:0,trainingQuestionClaimIds:[],completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
 let rewardSyncBusy=false;
 let selectedChallengePlayers=new Set();
 let challengePlayerPage=0;
 const CHALLENGE_PLAYER_PAGE_SIZE=8;
 const REMEMBER_SESSION_KEY="projetoTabuadaSessaoLembradaV1";
 const ACTIVE_TIME_CACHE_KEY="projetoTabuadaTempoPendenteV1";
-const ACTIVE_TIME_SYNC_MS=30*60*1000;
 let pendingActiveMs=0,studyTimeBaseMs=0,activeTimeTimer=null,lastActiveTick=Date.now(),lastCloudSaveAttemptAt=0;
 let tournamentDashboard=null,tournamentCurrent=null,tournamentQuestions=[],tournamentAnswers=[],tournamentIndex=0,tournamentQuestionStarted=0,tournamentQuestionTimer=null,tournamentMatchStarted=0,tournamentQuestionLocked=false,tournamentScore=0,tournamentBusy=false;
 
@@ -1640,7 +1639,7 @@ let historyData=loadHistory();
 // O endereço do Cloudflare Worker será preenchido após a publicação do servidor seguro.
 const API_BASE='https://projeto-tabuada-api.nuvemx.workers.dev';
 const API_TOKEN_KEY='projetoTabuadaSessaoSeguraV1';
-let remoteUserSha=null,remoteUserData=null,cloudSyncTimer=null,cloudSyncBusy=false,cloudSyncQueued=false,lastCloudSaveAt=0;
+let remoteUserSha=null,remoteUserData=null,cloudSyncTimer=null,cloudSyncBusy=false,lastCloudSaveAt=0,cloudSyncWaiters=[];
 let communityCache=[],communityCacheAt=0,communityPage=0,communityCacheRequest=0,communityRenderRequest=0;
 const COMMUNITY_PAGE_SIZE=4;
 let selectedRegisterAvatar='imagem:0',selectedProfileAvatar='imagem:0';
