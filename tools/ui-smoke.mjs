@@ -1074,6 +1074,49 @@ check(html.includes("function showCoinRewardNotification(coinsAdded,item={})")&&
   check(!ordinaryCycle.paused&&ordinaryCycle.timer&&ordinaryCycle.startedAt>0&&
     !ordinaryCycle.prizeOverlay&&!ordinaryCycle.resultOverlay,
     name+": concluir um ciclo sem receber prêmio não pode abrir comemoração nem parar o cronômetro: "+JSON.stringify(ordinaryCycle));
+  const compactTrainingRewards=await page.evaluate(async()=>{
+    const originals={
+      apiRequest,refreshEconomyDisplay,renderAchievementShelf,renderAvatarShop,saveClientEconomyCache
+    };
+    apiRequest=async(path,options)=>options.body?.type==='training_cycle'
+      ?{newAchievements:['training_first'],coinsAdded:0}
+      :{newAchievements:['learning_from_errors'],coinsAdded:10};
+    refreshEconomyDisplay=()=>{};renderAchievementShelf=()=>{};renderAvatarShop=()=>{};saveClientEconomyCache=()=>{};
+    try{
+      await deliverPendingGameReward({type:'training_cycle',body:{type:'training_cycle'},username:'smoke',key:'cycle'});
+      const cycle={visible:!$('gameRewardToast').classList.contains('hidden'),
+        compact:$('gameRewardToast').classList.contains('coin-reward-notification'),
+        text:$('gameRewardToast').textContent,modal:!!document.querySelector('.prize-celebration-overlay')};
+      await deliverPendingGameReward({type:'error_training_complete',body:{type:'error_training_complete'},username:'smoke',key:'errors'});
+      const coins={visible:!$('gameRewardToast').classList.contains('hidden'),
+        compact:$('gameRewardToast').classList.contains('coin-reward-notification'),
+        text:$('gameRewardToast').textContent,modal:!!document.querySelector('.prize-celebration-overlay'),
+        pointerEvents:getComputedStyle($('gameRewardToast')).pointerEvents,
+        clockRunning:!questionClockPaused&&questionTimer!==null};
+      return {cycle,coins};
+    }finally{
+      Object.assign(window,originals);
+    }
+  });
+  check(compactTrainingRewards.cycle.visible&&compactTrainingRewards.cycle.compact&&
+    compactTrainingRewards.cycle.text.includes('Novo título')&&!compactTrainingRewards.cycle.modal,
+    name+": completar um ciclo abriu um quadrado de comemoração em vez de aviso pequeno: "+JSON.stringify(compactTrainingRewards.cycle));
+  check(compactTrainingRewards.coins.visible&&compactTrainingRewards.coins.compact&&
+    compactTrainingRewards.coins.text.includes('+10 moedas')&&!compactTrainingRewards.coins.modal&&
+    compactTrainingRewards.coins.pointerEvents==='none'&&compactTrainingRewards.coins.clockRunning,
+    name+": recompensa de moedas interrompeu a partida ou abriu modal: "+JSON.stringify(compactTrainingRewards.coins));
+  const pendingLegacyRewards=await page.evaluate(()=>{
+    const old=localStorage.getItem(PENDING_REWARDS_KEY);
+    localStorage.setItem(PENDING_REWARDS_KEY,JSON.stringify([
+      {type:'intelligent_training_questions',body:{type:'intelligent_training_questions',questionCount:1}},
+      {type:'training_questions',body:{type:'training_questions',correctCount:2}}
+    ]));
+    const safe=readPendingGameRewards();
+    if(old===null)localStorage.removeItem(PENDING_REWARDS_KEY);else localStorage.setItem(PENDING_REWARDS_KEY,old);
+    return safe.map(item=>item.type);
+  });
+  check(JSON.stringify(pendingLegacyRewards)===JSON.stringify(['training_questions']),
+    name+": uma recompensa antiga que incluía dificuldades ainda pode ser enviada como acerto.");
   await page.evaluate(()=>showPrizeCelebration({title:"Prêmio de teste",description:"Teste de pausa do cronômetro."}));
   const clockPausedBefore=await page.evaluate(()=>({
     paused:questionClockPaused,timer:questionTimer===null,startedAt:questionStartedAt,elapsed:questionElapsedBeforeStart,
