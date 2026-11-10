@@ -791,7 +791,13 @@ async function testViewport(name, viewport, mobile = false) {
   check(Math.abs(savedAudioProfile.remoteSfx-.55)<.01&&Math.abs(savedAudioProfile.remoteGame-.45)<.01&&Math.abs(savedAudioProfile.remoteMusic-.43)<.01,name+": os três volumes não foram enviados à nuvem.");
   check((await page.locator("#saveProfileAudioPreferences").textContent()).includes("Salvar como preferência da conta"),
     name+": o botão não foi renomeado corretamente.");
-  check((await page.locator("#profileAudioSaveStatus").textContent()).includes("Preferências salvas na sua conta"),name+": confirmação do salvamento não apareceu.");
+  await page.waitForFunction(
+    ()=>!document.querySelector("#profileAudioSaveStatus").textContent.includes("Salvando suas preferências"),
+    null,{timeout:5000}
+  );
+  const audioSaveStatus=(await page.locator("#profileAudioSaveStatus").textContent())||"";
+  check(audioSaveStatus.includes("Preferências salvas na sua conta"),
+    name+": confirmação do salvamento não apareceu. Texto atual: "+audioSaveStatus);
   check((await page.locator("#closeProfileOptions").textContent()).includes("Voltar ao jogo"),
      name+": o botão de Opções não indica retorno à página inicial do jogo.");
   await page.locator("#closeProfileOptions").click();
