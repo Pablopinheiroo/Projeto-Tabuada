@@ -859,6 +859,10 @@ async function testViewport(name, viewport, mobile = false) {
   await assertVisibleSections(["modeHub","communitySection"],"menu inicial");
   await page.locator("#navShop").click();
   await assertVisibleSections(["shopScreen"],"Loja");
+  const shopReturnButtons=await page.locator("button").evaluateAll(items=>items.filter(button=>
+    button.getClientRects().length&&/Voltar ao jogo/i.test(button.textContent||"")).map(button=>button.id));
+  check(JSON.stringify(shopReturnButtons)===JSON.stringify(["bottomReturnToGame"]),
+    name+": a Loja deve ter uma única opção visível de Voltar ao jogo: "+JSON.stringify(shopReturnButtons));
   await page.locator("#navCommunity").click();
   await assertVisibleSections(["communitySection"],"Comunidade");
   await page.locator("#topReturnToGame").click();
