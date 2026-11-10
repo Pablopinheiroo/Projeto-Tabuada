@@ -4387,7 +4387,7 @@ async function saveAdventureProgress(){
   return false;
  }
  if(status)status.textContent='Salvando seu avanço no perfil...';
- const saved=await flushCloudSave(true);
+ const saved=await saveProgressNow('Modo Jogo',{refreshCommunity:false});
  if(status)status.textContent=saved?'✓ Progresso sincronizado no seu perfil.':'Progresso guardado neste aparelho; a sincronização será tentada novamente.';
  return saved;
 }
@@ -4798,8 +4798,7 @@ function markCurrentQuestionDifficulty(){
 function showTrainingCycleCelebration(result,isReview,reviewComplete=false){
  pauseTrainingQuestionClock();
  document.querySelector('.training-celebration-overlay')?.remove();
- const coins=Math.max(0,Number(result?.coinsAdded)||0);
- const rewardText=coins?'+'+coins+' moedas':(result?.alreadyClaimed?'Recompensa já recebida':'Recompensa em sincronização');
+ const rewardText='5 moedas a cada 10 questões concluídas, mesmo quando você encerra antes de completar o ciclo. O saldo é creditado ao salvar o treino.';
  const overlay=document.createElement('div');overlay.className='training-celebration-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-label','Ciclo de estudos concluído');
  overlay.innerHTML='<div class="training-celebration-confetti">'+Array.from({length:32},(_,i)=>'<i style="--n:'+i+'"></i>').join('')+'</div>'+
   '<div class="training-celebration-card"><button type="button" class="training-celebration-close" data-dismiss-celebration aria-label="Fechar tela de parabéns">×</button><div class="training-celebration-cup">🎉</div><span class="music-kicker">CICLO DE ESTUDOS CONCLUÍDO</span>'+
