@@ -4547,6 +4547,51 @@ function submitAdventureAnswer(event){
  if(!Number.isSafeInteger(value))return;
  answerAdventureQuestion(value,null);
 }
+async function exitAdventureStageAndSave(){
+ const stage=ADVENTURE_STAGES[adventureActiveStageIndex];
+ if(!stage){showAdventureMap();return false;}
+ const total=adventureQuestions.length;
+ const answered=Math.min(total,adventureQuestionIndex+(adventureHasAnswered?1:0));
+ const now=performance.now();
+ const activeQuestionTime=adventureQuestionStartedAt?Math.max(0,now-adventureQuestionStartedAt):0;
+ const elapsed=Math.round(adventureStageTimeMs+activeQuestionTime);
+ adventureQuestionStartedAt=0;
+ const date=new Date().toISOString();
+ historyData.sessions.unshift({
+  id:'adventure-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2)),
+  date,mode:'adventure',stageId:stage.id,stageTitle:stage.title,
+  answered,hits:adventureFirstTryCorrect,misses:Math.max(0,answered-adventureFirstTryCorrect),
+  skipped:Math.max(0,total-answered),timeMs:elapsed,completed:false,abandoned:true
+ });
+ historyData.sessions=historyData.sessions.slice(0,300);
+ saveHistory();
+ if(activeProfile){
+  const progress=getAdventureProgress();
+  const key=String(stage.id);
+  const entry=progress.stages[key]||{attempts:0,completed:false,stars:0,bestCorrect:0};
+  entry.attempts=(Number(entry.attempts)||0)+1;
+  entry.bestCorrect=Math.max(Number(entry.bestCorrect)||0,adventureFirstTryCorrect);
+  entry.bestTotal=total;
+  entry.lastCorrect=adventureFirstTryCorrect;
+  entry.bestCombo=Math.max(Number(entry.bestCombo)||0,adventureBestCombo);
+  entry.lastPlayedAt=date;
+  entry.lastAbandonedAt=date;
+  progress.stages[key]=entry;
+  progress.lastStageId=stage.id;
+  profilesData[activeProfile]=profilesData[activeProfile]||{};
+  profilesData[activeProfile].adventureProgress=progress;
+  profilesData[activeProfile].updatedAt=date;
+  persistProfiles();
+ }
+ $('adventureSaveStatus').textContent='Salvando o avanço desta fase...';
+ const saved=await saveAdventureProgress();
+ showAdventureMap();
+ $('adventureSaveStatus').textContent=saved
+  ?'✓ Saída salva. Suas respostas e o avanço parcial foram enviados para a comunidade.'
+  :'⚠️ Saída guardada neste aparelho. A sincronização será tentada novamente.';
+ return saved;
+}
+
 async function finishAdventureStage(){
  const stage=ADVENTURE_STAGES[adventureActiveStageIndex];
  const total=adventureQuestions.length;
@@ -5477,7 +5522,7 @@ document.addEventListener('visibilitychange',()=>{lastActiveTick=Date.now();});
 $('backToModeHubMap').addEventListener('click',showModeHub);
 $('adventureIntroBack').addEventListener('click',showAdventureMap);
 $('adventureStartStage').addEventListener('click',()=>startAdventureStage(adventureActiveStageIndex));
-$('adventureQuitStage').addEventListener('click',showAdventureMap);
+$('adventureQuitStage').addEventListener('click',exitAdventureStageAndSave);
 $('adventureAnswerForm').addEventListener('submit',submitAdventureAnswer);
 $('adventureChoices').addEventListener('click',event=>{
  const button=event.target.closest('[data-adventure-answer]');
