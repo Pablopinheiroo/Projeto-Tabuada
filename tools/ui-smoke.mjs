@@ -87,7 +87,25 @@ check(workerSource.includes("mergeHistorySnapshots(")&&workerSource.includes("bo
   "A API não protege o histórico contra snapshots antigos.");
 const workerTestSource=workerSource.replace("export default {","globalThis.__workerDefault = {");
 const workerContext={Date,Set,Map,Object,Array,Number,String,Math,RegExp,JSON,TextEncoder,TextDecoder,Uint8Array,Response,Headers,URL};
-vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;",workerContext);
+vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;globalThis.__normalizeGameEconomy=normalizeGameEconomy;",workerContext);
+const normalizedEconomy=workerContext.__normalizeGameEconomy({
+  profile:{avatar:"imagem:0"},
+  economy:{coins:15,totalEarned:20,trainingQuestionProgress:8,trainingQuestionClaimIds:["claim-1"]}
+});
+check(normalizedEconomy.trainingQuestionProgress===8&&normalizedEconomy.trainingQuestionClaimIds.includes("claim-1"),
+  "A economia do usuário não preserva as questões pendentes para a próxima recompensa de treinamento.");
+const trainingRewardBranch=workerSource.slice(
+  workerSource.indexOf('if (body.type === "training_cycle")'),
+  workerSource.indexOf('} else if (body.type === "adventure_stage")')
+);
+check(trainingRewardBranch.includes('body.type === "training_questions"')&&
+  trainingRewardBranch.includes("economy.trainingQuestionProgress + questionCount")&&
+  trainingRewardBranch.includes("coinsAdded = earnedBatches * 5")&&
+  trainingRewardBranch.includes("trainingQuestionClaimIds.includes(claimId)"),
+  "A API não soma as questões entre sessões e libera 5 moedas a cada 10 questões.");
+const cycleRewardBranch=trainingRewardBranch.slice(0,trainingRewardBranch.indexOf('} else if (body.type === "training_questions")'));
+check(!cycleRewardBranch.includes("economy.coins +=")&&!cycleRewardBranch.includes("economy.totalEarned +="),
+  "O treinamento ainda concede moedas somente por completar o ciclo.");
 const olderHistory={questions:{"2x3":{a:2,b:3,attempts:7,correct:5,wrong:2,totalTimeMs:7000,lastAt:"2026-11-08T10:00:00Z"},"4x5":{a:4,b:5,attempts:2,correct:2,wrong:0,totalTimeMs:1500}},sessions:[{date:"2026-11-08T10:00:00Z",mode:"training",answered:7,hits:5,misses:2,timeMs:7000}]};
 const newerHistory={questions:{"2x3":{a:2,b:3,attempts:12,correct:9,wrong:3,totalTimeMs:12000,lastAt:"2026-11-09T10:00:00Z"},"6x7":{a:6,b:7,attempts:3,correct:3,wrong:0,totalTimeMs:2500}},sessions:[{date:"2026-11-09T10:00:00Z",mode:"training",answered:12,hits:9,misses:3,timeMs:12000}]};
 const mergedHistory=workerContext.__mergeHistorySnapshots(newerHistory,olderHistory);
@@ -208,15 +226,31 @@ check(html.includes("function showAchievementCongratulations(ids,extra='')")&&
 check(!html.includes('id="shopBackToGame"')&&!html.includes("$('shopBackToGame').addEventListener")&&
   html.includes("topReturn.classList.toggle('hidden',shop)"),
  "A Loja ainda possui mais de uma opção de Voltar ao jogo.");
-check(html.includes("const ACTIVE_TIME_SYNC_MS=30*60*1000;"), "O salvamento automático não está configurado para 30 minutos.");
-check(logoutCode.length>0&&!logoutCode.includes("flushCloudSave(true)"), "Sair da conta ainda força um salvamento antes dos 30 minutos.");
+check(html.includes("async function saveProgressNow(")&&!html.includes("ACTIVE_TIME_SYNC_MS")&&
+  !html.includes("scheduleCloudSave")&&!html.includes("Próximo salvamento automático"),
+  "O salvamento automático por tempo deve estar removido e o salvamento deve ser explícito.");
+check(logoutCode.length>0&&logoutCode.includes("flushCloudSave(true)")&&logoutCode.includes("retryPendingGameRewards()"),
+  "Sair da conta não tenta concluir os salvamentos/recompensas pendentes.");
 check(html.includes("pendingActiveMs>0?loadHistory():remoteHistory"), "O login não preserva o histórico local que ainda não foi sincronizado.");
 check(html.includes("Último salvamento: "), "O perfil não mostra o rótulo do último salvamento.");
-const autosaveContract = {
-  thresholdMinutes: 30,
-  preservesPartialTimeOnLogout: true,
-  restoresLocalHistoryWhenPending: true,
-  displaysLastSavedLabel: true
+check(html.includes("sessionCompletedQuestionCount++")&&html.includes("claimGameReward('training_questions'")&&
+  html.includes("completedQuestions:sessionCompletedQuestionCount"),
+  "O treino não conta as questões concluídas ou não solicita a recompensa a cada 10 questões.");
+check(html.includes("function exitAdventureStageAndSave()")&&html.includes("function exitChallengeMatchAndSave()")&&
+  html.includes("function exitTournamentMatchAndSave()")&&html.includes("await saveProgressNow('Treinamento')")&&
+  html.includes("await saveProgressNow('Desafio')")&&html.includes("await saveProgressNow('Torneio')"),
+  "Um dos modos de jogo não salva o histórico ao sair da partida.");
+check(html.includes("await saveProgressNow('Perfil')")&&html.includes("await saveProgressNow('Alteração de senha')")&&
+  html.includes("await saveProgressNow('Preferências de áudio')"),
+  "As modificações do perfil, senha ou opções não executam salvamento explícito.");
+const explicitSaveContract = {
+  timedAutosaveRemoved: true,
+  saveTrainingOnExit: true,
+  saveAdventureOnExit: true,
+  saveChallengeOnExit: true,
+  saveTournamentOnExit: true,
+  saveProfilePasswordAndOptionsOnSave: true,
+  trainingCoinsPerTenQuestions: 5
 };
 const selectorRefs = [...inlineScripts[0].matchAll(/\$\(['"]([^'"]+)['"]\)/g)].map(match => match[1]);
 const missingIds = [...new Set(selectorRefs.filter(id => !ids.includes(id)))];
@@ -1025,7 +1059,7 @@ async function testViewport(name, viewport, mobile = false) {
   await page.close();
 }
 
-async function testAutosave(browser) {
+async function testExplicitSave(browser) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 }, locale: "pt-BR" });
   const writes = [];
   await page.route("https://projeto-tabuada-api.nuvemx.workers.dev/**", async route => {
@@ -1036,7 +1070,7 @@ async function testAutosave(browser) {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify({ sha: "autosave-smoke-new-sha" })
+        body: JSON.stringify({ sha: "explicit-save-smoke-new-sha" })
       });
       return;
     }
@@ -1050,7 +1084,7 @@ async function testAutosave(browser) {
   try {
     await page.goto(SITE_URL, { waitUntil: "domcontentloaded", timeout: 60000 });
     await page.evaluate(() => {
-      const username = "autosave-smoke";
+      const username = "explicit-save-smoke";
       sessionStorage.setItem(API_TOKEN_KEY, "fake-session-token");
       sessionStorage.setItem(AUTH_SESSION_KEY, username);
       activeProfile = username;
@@ -1059,74 +1093,51 @@ async function testAutosave(browser) {
         version: 1, username, profile: { studyTimeMs: 0 },
         history: { questions: {}, sessions: [] }, updatedAt: "2026-11-09T12:00:00.000Z"
       };
-      profilesData[username] = {
-        displayName: "Perfil local preservado",
-        checkpoint: { marker: "não perder" },
-        studyTimeMs: 0
-      };
+      profilesData[username] = { displayName: "Perfil salvo no botão", studyTimeMs: 0 };
       historyData = {
         questions: {
-          "77x1": { a: 77, b: 1, attempts: 1, correct: 1, wrong: 0, totalTimeMs: 800, bestTimeMs: 800 }
+          "77x1": { a: 77, b: 1, attempts: 1, correct: 0, wrong: 1, totalTimeMs: 800, bestTimeMs: 800 }
         },
-        sessions: [{ answered: 1, hits: 1, misses: 0 }]
+        sessions: [{ id:"training-explicit-1", date:"2026-11-09T12:10:00.000Z", mode:"training", answered:1, hits:0, misses:1 }]
       };
+      pendingActiveMs = 10 * 60 * 1000;
+      studyTimeBaseMs = 0;
+      activeTimeTimer = null;
+      savePendingActiveTime(username);
       persistProfiles();
       saveHistory();
-      pendingActiveMs = 10 * 60 * 1000;
-      savePendingActiveTime(username);
-      lastActiveTick = Date.now();
     });
 
-    await page.evaluate(() => logout());
-    check(writes.length === 0, "O logout salvou os dados antes de completar 30 minutos.");
-    const retainedTenMinutes = await page.evaluate(() => {
-      const map = JSON.parse(localStorage.getItem(ACTIVE_TIME_CACHE_KEY) || "{}");
-      return map["autosave-smoke"] || 0;
-    });
-    check(retainedTenMinutes >= 10 * 60 * 1000,
-      "Os 10 minutos não foram mantidos no aparelho depois de sair.");
+    await page.waitForTimeout(250);
+    check(writes.length === 0,
+      "O histórico foi enviado automaticamente sem a pessoa clicar em salvar ou sair da partida.");
 
-    await page.evaluate(async () => {
-      const username = "autosave-smoke";
-      await hydrateRemoteUser(username, {
-        sha: "remote-sha",
-        data: {
-          profile: { studyTimeMs: 0 },
-          history: { questions: {}, sessions: [] },
-          economy: {}
-        }
-      });
-    });
-    await page.evaluate(() => {
-      sessionStorage.setItem(API_TOKEN_KEY, "fake-session-token");
-      sessionStorage.setItem(AUTH_SESSION_KEY, "autosave-smoke");
-    });
-    const restored = await page.evaluate(() => ({
-      pending: pendingActiveMs,
-      checkpoint: profilesData["autosave-smoke"]?.checkpoint?.marker,
-      localQuestion: !!historyData.questions["77x1"]
-    }));
-    check(restored.pending >= 10 * 60 * 1000, "O período anterior não foi somado ao entrar novamente.");
-    check(restored.checkpoint === "não perder" && restored.localQuestion,
-      "O histórico e o ponto da partida foram substituídos por dados antigos da nuvem.");
-    check(writes.length === 0, "O login disparou um salvamento antes dos 30 minutos.");
+    const firstSaved = await page.evaluate(()=>saveProgressNow("Treinamento",{refreshCommunity:false}));
+    check(firstSaved&&writes.length===1,
+      "O botão de salvamento explícito não enviou o histórico ao servidor.");
+    check(writes[0].history?.questions?.["77x1"]?.wrong===1&&
+      Number(writes[0].profile?.studyTimeMs)>=10*60*1000,
+      "O salvamento explícito não incluiu o erro e o tempo acumulado.");
 
     await page.evaluate(() => {
       pendingActiveMs += 20 * 60 * 1000;
       profilesData[activeProfile].studyTimeMs = studyTimeBaseMs + pendingActiveMs;
       savePendingActiveTime(activeProfile);
-      scheduleCloudSave();
     });
-    await page.waitForFunction(() => cloudSyncBusy === false &&
-      remoteUserData?.updatedAt !== "2026-11-09T12:00:00.000Z", null, { timeout: 15000 });
-    check(writes.length === 1, "O salvamento não ocorreu uma única vez ao completar 30 minutos.");
-    check(Number(writes[0].profile?.studyTimeMs) >= 30 * 60 * 1000,
-      "O salvamento não incluiu os 10 + 20 minutos acumulados.");
+    await page.waitForTimeout(300);
+    check(writes.length===1,
+      "O tempo acumulado voltou a disparar salvamento automático.");
+
+    const secondSaved = await page.evaluate(()=>saveProgressNow("Sair da partida",{refreshCommunity:false}));
+    check(secondSaved&&writes.length===2,
+      "O segundo salvamento não ocorreu após a ação explícita de sair.");
+    check(Number(writes[1].profile?.studyTimeMs)>=30*60*1000,
+      "O salvamento ao sair não incluiu todo o tempo que ainda estava pendente.");
     const lastSavedLabel = (await page.locator("#profileLastSavedAt").textContent()) || "";
     check(lastSavedLabel.startsWith("Último salvamento:"),
       "O perfil não exibiu a data e o horário do último salvamento.");
 
-    return { result: "PASS", minutesAccumulated: 30, writesAfterThreshold: writes.length, lastSavedLabel };
+    return { result: "PASS", explicitSaves: writes.length, autoSavesWithoutAction: 0, lastSavedLabel };
   } finally {
     await page.close();
   }
@@ -1136,7 +1147,7 @@ try {
   await testViewport("celular", { width: 390, height: 844 }, true);
   await testViewport("celular-pequeno", { width: 360, height: 800 }, true);
   await testViewport("computador", { width: 1366, height: 900 }, false);
-  var autosaveResult = await testAutosave(browser);
+  var explicitSaveResult = await testExplicitSave(browser);
 } finally {
   await browser.close();
 }
@@ -1155,8 +1166,8 @@ console.log(JSON.stringify({
     checkedJavaScriptSelectors: new Set(selectorRefs).size,
     missingIds: missingIds.length,
     inlineJavaScriptSyntax: "valid",
-    autosave: autosaveContract
+    explicitSave: explicitSaveContract
   },
-  autosave: autosaveResult,
+  explicitSave: explicitSaveResult,
   browser: viewportResults
 }, null, 2));
