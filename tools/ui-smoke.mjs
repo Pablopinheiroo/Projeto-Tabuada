@@ -717,6 +717,39 @@ async function testViewport(name, viewport, mobile = false) {
     difficultyRepeat.current.a===2&&difficultyRepeat.current.b===3&&
     difficultyRepeat.skipped===1&&difficultyRepeat.time===125&&!difficultyRepeat.revealed,
     name+": ao marcar dificuldade, a questão não avançou ou não foi colocada novamente no ciclo: "+JSON.stringify(difficultyRepeat));
+  const liveRewardMilestones=await page.evaluate(async()=>{
+    const original=claimGameReward,requests=[];
+    claimGameReward=async(type,payload)=>{requests.push({type,...payload});return {coinsAdded:5};};
+    try{
+      trainingModeType='standard';sessionRewardQueue=Promise.resolve();
+      sessionTrainingCorrectClaimed=0;sessionTrainingCorrectNext=2;hits=1;
+      checkTrainingSessionRewardMilestones();
+      hits=2;checkTrainingSessionRewardMilestones();
+      hits=11;checkTrainingSessionRewardMilestones();
+      hits=12;checkTrainingSessionRewardMilestones();
+      await sessionRewardQueue;
+      const standard=requests.map(item=>({type:item.type,count:item.correctCount}));
+      requests.length=0;
+      trainingModeType='intelligent';sessionRewardQueue=Promise.resolve();
+      sessionIntelligentQuestionsClaimed=0;sessionIntelligentQuestionsNext=1;sessionCompletedQuestionCount=1;
+      checkTrainingSessionRewardMilestones();
+      sessionCompletedQuestionCount=10;checkTrainingSessionRewardMilestones();
+      sessionCompletedQuestionCount=11;checkTrainingSessionRewardMilestones();
+      await sessionRewardQueue;
+      const intelligent=requests.map(item=>({type:item.type,count:item.questionCount}));
+      return {standard,intelligent};
+    }finally{
+      claimGameReward=original;trainingModeType='standard';sessionRewardQueue=Promise.resolve();
+      sessionTrainingCorrectClaimed=0;sessionTrainingCorrectNext=10;
+      sessionIntelligentQuestionsClaimed=0;sessionIntelligentQuestionsNext=10;sessionCompletedQuestionCount=0;
+    }
+  });
+  check(JSON.stringify(liveRewardMilestones.standard)===JSON.stringify([
+    {type:'training_questions',count:2},{type:'training_questions',count:10}
+  ]),name+": 5 moedas não foram solicitadas no décimo acerto acumulado ou o lote seguinte não voltou a contar 10 ("+JSON.stringify(liveRewardMilestones.standard)+").");
+  check(JSON.stringify(liveRewardMilestones.intelligent)===JSON.stringify([
+    {type:'intelligent_training_questions',count:1},{type:'intelligent_training_questions',count:10}
+  ]),name+": o treino inteligente não solicitou a recompensa ao completar 10 questões acumuladas ("+JSON.stringify(liveRewardMilestones.intelligent)+").");
   await page.evaluate(()=>{
     if(questionTimer!==null)clearInterval(questionTimer);
     questionTimer=null;questionStartedAt=0;questionElapsedBeforeStart=0;questionClockPaused=false;
