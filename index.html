@@ -455,6 +455,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .shop-intro{color:#a9c1e5;font-size:.87rem;line-height:1.5;margin:8px 0 0}
 @media(max-width:560px){.avatar-shop-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.shop-avatar-card{padding:10px 7px}.shop-wallet{width:100%;justify-content:center}}
 .game-reward-toast{position:sticky;top:8px;z-index:20;width:max-content;max-width:min(92vw,560px);margin:0 auto 12px;padding:11px 17px;border:1px solid #fbbf24;border-radius:999px;background:linear-gradient(110deg,#422006,#713f12);color:#fef3c7;font-weight:900;text-align:center;box-shadow:0 8px 26px #02061788;animation:rewardPop .22s ease-out}
+.game-reward-toast.achievement-congrats{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;z-index:10001;width:min(560px,calc(100vw - 24px));max-width:calc(100vw - 24px);margin:0;padding:15px 19px;border:2px solid #fbbf24;border-radius:17px;background:linear-gradient(120deg,#713f12,#49306f 58%,#12395b);color:#fff7d6;font-size:.96rem;line-height:1.45;box-shadow:0 15px 42px #020617cc,0 0 0 3px #fbbf2422;animation:achievementRewardPop .24s ease-out}
+@keyframes achievementRewardPop{from{opacity:0;transform:translate(-50%,-9px) scale(.97)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
 @keyframes rewardPop{from{opacity:0;transform:translateY(-7px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:620px){.wallet-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.achievement-shelf{grid-template-columns:1fr}.wallet-inline{align-items:flex-start}}
 @media(prefers-reduced-motion:reduce){.game-reward-toast{animation:none}}
@@ -1021,6 +1023,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .community-coins-metric .coin-symbol{margin:0;vertical-align:middle}
 @keyframes badgeInfoAppear{from{opacity:0;transform:translateY(4px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(prefers-reduced-motion:reduce){.badge-info-popover{animation:none}}
+.training-celebration-close{position:absolute;top:9px;right:10px;display:grid;place-items:center;width:34px;height:34px;min-height:34px;padding:0;border:1px solid #7188a7;border-radius:10px;background:#1d3555;color:#fff;font-size:1.35rem;font-weight:950;line-height:1}
 </style>
 </head>
 <body>
@@ -1480,7 +1483,6 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  <p class="shop-intro">Imagens: <b>100 moedas</b> cada · GIFs animados: <b>1.500 moedas</b> cada. Os itens abaixo são apresentados para compra, sem cadeados.</p>
  <div id="avatarShopGrid" class="avatar-shop-catalog" aria-label="Avatares disponíveis para compra"></div>
  <p id="shopMessage" class="auth-message" role="status" aria-live="polite"></p>
- <div class="game-return-footer"><button id="shopBackToGame" type="button" class="secondary">↑ Voltar ao jogo</button></div>
 </section>
 
 <div class="game-return-footer"><button id="bottomReturnToGame" type="button" class="secondary">↑ Voltar ao jogo</button></div>
@@ -1589,7 +1591,7 @@ let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),curren
 let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueuePosition=0,musicStartPending=false,mainMusicTimer=null;
 let profileOptionsOpen=false,profileOptionsResumeMusic=false,sfxPreviewTimer=null,gameSfxPreviewTimers=[],optionMusicPreviewTimer=null,optionMusicPreviewActive=false,optionPreviewSources=new Set();
 const LAST_TRACK_STORAGE_KEY='projetoTabuadaUltimaFaixaV2:';
-let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0;
+let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,questionClockPaused=false,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0;
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
 let gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
 let rewardSyncBusy=false;
@@ -2223,11 +2225,21 @@ function renderProfileLearningStats(){
 }
 
 let rewardToastTimer=null;
-function showGameRewardToast(message){
+function showGameRewardToast(message,achievement=false){
  const toast=$('gameRewardToast');if(!toast)return;
- toast.textContent=message;toast.classList.remove('hidden');
+ toast.textContent=message;
+ toast.classList.toggle('achievement-congrats',!!achievement);
+ toast.classList.remove('hidden');
  if(rewardToastTimer!==null)clearTimeout(rewardToastTimer);
- rewardToastTimer=setTimeout(()=>toast.classList.add('hidden'),3800);
+ rewardToastTimer=setTimeout(()=>{
+  toast.classList.add('hidden');
+  toast.classList.remove('achievement-congrats');
+ },achievement?7000:3800);
+}
+function showAchievementCongratulations(ids,extra=''){
+ const names=(Array.isArray(ids)?ids:[]).map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||String(id));
+ if(!names.length)return;
+ showGameRewardToast('🎉 Parabéns! Você conquistou: '+names.join(', ')+(extra?' · '+extra:''),true);
 }
 function readPendingGameRewards(){
  try{const list=JSON.parse(localStorage.getItem(PENDING_REWARDS_KEY)||'[]');return Array.isArray(list)?list:[];}catch{return [];}
@@ -2240,11 +2252,9 @@ async function deliverPendingGameReward(item){
  if(result.sha)remoteUserSha=result.sha;
  if(result.updatedAt&&remoteUserData)remoteUserData.updatedAt=result.updatedAt;
  updateProfileLastSavedAt();
- if(result.newAchievements&&result.newAchievements.length){
-  const names=result.newAchievements.map(id=>ACHIEVEMENT_DEFINITIONS.find(a=>a.id===id)?.title||id);
-  showGameRewardToast('🏆 Nova conquista: '+names.join(', '));
- }
- if(result.coinsAdded>0)showGameRewardToast('🪙 +'+result.coinsAdded+' moedas!');
+ if(result.newAchievements?.length){
+  showAchievementCongratulations(result.newAchievements,result.coinsAdded>0?'🪙 +'+Number(result.coinsAdded).toLocaleString('pt-BR')+' moedas':'');
+ }else if(result.coinsAdded>0)showGameRewardToast('🪙 +'+result.coinsAdded+' moedas!');
  saveClientEconomyCache();refreshEconomyDisplay();renderAchievementShelf();renderAvatarShop();
  if($('profileAvatarGrid')&&!$('profileScreen').classList.contains('hidden')){
   renderAvatarGrid('profileAvatarGrid',selectedProfileAvatar,key=>{selectedProfileAvatar=key;});
@@ -2305,10 +2315,8 @@ async function purchaseAvatar(key){
   const confirmation=result.alreadyOwned?'Este avatar já está na sua coleção.':'Compra realizada! O avatar agora está disponível em Meu perfil.';
   if($('shopMessage'))$('shopMessage').textContent=confirmation;
   if($('profileMessage'))$('profileMessage').textContent=confirmation;
-  if(result.newAchievements?.length){
-   const names=result.newAchievements.map(a=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===a)?.title||a);
-   showGameRewardToast('🏆 Nova conquista: '+names.join(', '));
-  }else showGameRewardToast(result.alreadyOwned?'🎨 Avatar já adquirido!':'🛒 Avatar comprado!');
+  if(result.newAchievements?.length)showAchievementCongratulations(result.newAchievements);
+  else showGameRewardToast(result.alreadyOwned?'🎨 Avatar já adquirido!':'🛒 Avatar comprado!');
  }catch(error){
   if(message)message.textContent=error.message||'Não foi possível comprar este avatar.';
  }
@@ -2895,14 +2903,35 @@ function formatDuration(milliseconds){
  return String(minutes).padStart(2,'0')+':'+seconds;
 }
 function updateQuestionClock(){
- if(!questionStartedAt)return;
- $('questionTime').textContent='Tempo nesta questão: '+formatDuration(questionElapsedBeforeStart+performance.now()-questionStartedAt);
+ if(!questionStartedAt&&!questionClockPaused)return;
+ const running=questionStartedAt?Math.max(0,performance.now()-questionStartedAt):0;
+ $('questionTime').textContent='Tempo nesta questão: '+formatDuration(questionElapsedBeforeStart+running);
 }
 function beginQuestionClock(){
- questionStartedAt=performance.now();
- if(questionTimer!==null)clearInterval(questionTimer);
+ if(questionTimer!==null){clearInterval(questionTimer);questionTimer=null;}
+ questionStartedAt=questionClockPaused?0:performance.now();
  updateQuestionClock();
- questionTimer=setInterval(updateQuestionClock,250);
+ if(!questionClockPaused)questionTimer=setInterval(updateQuestionClock,250);
+}
+function pauseTrainingQuestionClock(){
+ if(questionClockPaused)return;
+ questionClockPaused=true;
+ if(questionStartedAt){
+  questionElapsedBeforeStart+=Math.max(0,performance.now()-questionStartedAt);
+  questionStartedAt=0;
+ }
+ if(questionTimer!==null){clearInterval(questionTimer);questionTimer=null;}
+ updateQuestionClock();
+}
+function resumeTrainingQuestionClock(){
+ if(!questionClockPaused)return;
+ questionClockPaused=false;
+ if(!$('game').classList.contains('hidden')&&!revealed&&current){
+  questionStartedAt=performance.now();
+  updateQuestionClock();
+  if(questionTimer!==null)clearInterval(questionTimer);
+  questionTimer=setInterval(updateQuestionClock,250);
+ }else questionStartedAt=0;
 }
 function endQuestionClock(){
  const elapsed=questionStartedAt?questionElapsedBeforeStart+Math.max(0,performance.now()-questionStartedAt):questionElapsedBeforeStart;
@@ -3024,6 +3053,7 @@ function finishSession(){
   historyData.sessions=historyData.sessions.slice(0,300);
   saveHistory();
  }
+ questionClockPaused=false;
  showReport();
 }
 
@@ -3909,7 +3939,9 @@ function renderTournamentFinalNotice(notice){
  box.classList.remove('hidden');
  const seenKey='projetoTabuadaTorneioAvisoV1_'+activeProfile+'_'+notice.month;
  if(!localStorage.getItem(seenKey)){
-  showGameRewardToast('🏆 Torneio '+name+': você ficou em '+place+'!');
+  const newAchievements=notice.award?.newAchievements||[];
+  if(newAchievements.length)showAchievementCongratulations(newAchievements,'🏆 Torneio: '+place);
+  else showGameRewardToast('🏆 Torneio '+name+': você ficou em '+place+'!');
   localStorage.setItem(seenKey,'1');
  }
  if(notice.award){
@@ -4116,7 +4148,8 @@ function next(){
  if(position>=deck.length){
   const completed=round>0&&trainingRoundTarget>0&&roundCorrect.size>=trainingRoundTarget;
   if(completed){
-   const isReview=trainingReviewMode;
+    pauseTrainingQuestionClock();
+    const isReview=trainingReviewMode;
    const claimId=crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);
    claimGameReward('training_cycle',{claimId,learningFromErrors:isReview}).then(result=>{
     const remaining=isReview?getMistakeTrainingFacts():[];
@@ -4610,25 +4643,33 @@ function markCurrentQuestionDifficulty(){
  item.difficultyFlags=Math.min(100000,(Number(item.difficultyFlags)||0)+1);
  item.lastDifficultyAt=new Date().toISOString();
  currentDifficultyMarked=true;saveHistory();
+ sessionQuestionTimeMs+=Math.max(0,Number(currentQuestionTimeMs)||0);
+ sessionSkipped++;
+ deck.push({a:current.a,b:current.b});
+ position++;
+ currentQuestionTimeMs=0;currentQuestionTimeStopped=false;
  $('markDifficulty').disabled=true;$('markDifficulty').classList.add('marked');$('markDifficulty').textContent='✓ Marcada para revisão';
- updateReviewTrainingButton();
+ updateReviewTrainingButton();updateStats();
+ next();saveCheckpoint();
 }
 function showTrainingCycleCelebration(result,isReview,reviewComplete=false){
+ pauseTrainingQuestionClock();
  document.querySelector('.training-celebration-overlay')?.remove();
  const coins=Math.max(0,Number(result?.coinsAdded)||0);
  const rewardText=coins?'+'+coins+' moedas':(result?.alreadyClaimed?'Recompensa já recebida':'Recompensa em sincronização');
  const overlay=document.createElement('div');overlay.className='training-celebration-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-label','Ciclo de estudos concluído');
  overlay.innerHTML='<div class="training-celebration-confetti">'+Array.from({length:32},(_,i)=>'<i style="--n:'+i+'"></i>').join('')+'</div>'+
-  '<div class="training-celebration-card"><div class="training-celebration-cup">🎉</div><span class="music-kicker">CONQUISTA DESBLOQUEADA</span>'+
+  '<div class="training-celebration-card"><button type="button" class="training-celebration-close" data-dismiss-celebration aria-label="Fechar tela de parabéns">×</button><div class="training-celebration-cup">🎉</div><span class="music-kicker">CICLO DE ESTUDOS CONCLUÍDO</span>'+
   '<h2>Parabéns! Ciclo completo!</h2><p>'+(isReview?'Você está aprendendo com seus erros e fortalecendo suas contas difíceis.':'Você concluiu mais um ciclo de estudos!')+'</p>'+
   '<div class="training-celebration-coins"><i class="coin-symbol" aria-hidden="true"></i><strong>'+escapeHtml(rewardText)+'</strong></div>'+
   '<button type="button" class="primary" data-dismiss-celebration>'+(reviewComplete?'Ver meu resultado':'Continuar estudando')+'</button></div>';
  document.body.appendChild(overlay);
- overlay.querySelector('[data-dismiss-celebration]').addEventListener('click',()=>{
+ const dismiss=()=>{
   overlay.remove();
   if(reviewComplete){trainingReviewMode=false;finishSession();}
- });
- if(!reviewComplete)setTimeout(()=>overlay.remove(),5200);
+  else resumeTrainingQuestionClock();
+ };
+ overlay.querySelectorAll('[data-dismiss-celebration]').forEach(button=>button.addEventListener('click',dismiss));
 }
 
 function makeRound(){
@@ -5303,7 +5344,6 @@ $('navChallenge').addEventListener('click',openChallengeMode);
 $('navTournament').addEventListener('click',openTournamentMode);
 $('navCommunity').addEventListener('click',showCommunityOnly);
 $('navShop').addEventListener('click',showShopOnly);
-$('shopBackToGame').addEventListener('click',()=>{$('shopScreen').classList.add('hidden');returnToGameHome();});
 function returnToGameHome(){showModeHub();$('modeHub').scrollIntoView({behavior:'smooth',block:'start'});}
 $('topReturnToGame').addEventListener('click',returnToGameHome);
 $('bottomReturnToGame').addEventListener('click',returnToGameHome);
