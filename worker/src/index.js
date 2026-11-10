@@ -14,7 +14,7 @@ const AVATAR_GIF_COUNT = 12;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
 const CHALLENGE_PLAYER_METADATA_MAX = 45;
-const WORKER_BUILD_ID = "2026-11-10-training-five-per-ten-correct";
+const WORKER_BUILD_ID = "2026-11-10-intelligent-error-difficulty-training-v1";
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
 const CHALLENGE_DIRECTORY = "desafios/partidas";
@@ -195,6 +195,7 @@ function defaultGameEconomy(currentAvatar = "imagem:0") {
   return {
     version: 1, coins: 0, totalEarned: 0, trainingCycles: 0,
     trainingCorrectProgress: 0, trainingCorrectClaimIds: [],
+    intelligentTrainingProgress: 0, intelligentTrainingClaimIds: [], errorTrainingClaimIds: [],
     completedStages: [], perfectStages: [], comboStages: [],
     trainingClaimIds: [], ownedAvatars: [...new Set(["imagem:0", legacyAvatar])],
     achievements: {}
@@ -224,6 +225,9 @@ function normalizeGameEconomy(record) {
     trainingCycles: safeInt(raw?.trainingCycles),
     trainingCorrectProgress: safeInt(raw?.trainingCorrectProgress, 9),
     trainingCorrectClaimIds: [...new Set((Array.isArray(raw?.trainingCorrectClaimIds) ? raw.trainingCorrectClaimIds : []).filter(id => typeof id === "string" && id.length <= 100))].slice(-500),
+    intelligentTrainingProgress: safeInt(raw?.intelligentTrainingProgress, 9),
+    intelligentTrainingClaimIds: [...new Set((Array.isArray(raw?.intelligentTrainingClaimIds) ? raw.intelligentTrainingClaimIds : []).filter(id => typeof id === "string" && id.length <= 100))].slice(-500),
+    errorTrainingClaimIds: [...new Set((Array.isArray(raw?.errorTrainingClaimIds) ? raw.errorTrainingClaimIds : []).filter(id => typeof id === "string" && id.length <= 100))].slice(-500),
     completedStages: [...new Set((Array.isArray(raw?.completedStages) ? raw.completedStages : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= ADVENTURE_STAGE_COUNT))],
     perfectStages: [...new Set((Array.isArray(raw?.perfectStages) ? raw.perfectStages : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= ADVENTURE_STAGE_COUNT))],
     comboStages: [...new Set((Array.isArray(raw?.comboStages) ? raw.comboStages : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= ADVENTURE_STAGE_COUNT))],
@@ -246,6 +250,33 @@ function applyTrainingCorrectReward(economy, claimId, correctCount) {
     economy.totalEarned += coinsAdded;
   }
   return { coinsAdded, alreadyClaimed: false, changed: true };
+}
+
+function applyIntelligentTrainingReward(economy, claimId, questionCount) {
+  if (economy.intelligentTrainingClaimIds.includes(claimId)) {
+    return { coinsAdded: 0, alreadyClaimed: true, changed: false };
+  }
+  economy.intelligentTrainingClaimIds.push(claimId);
+  economy.intelligentTrainingClaimIds = economy.intelligentTrainingClaimIds.slice(-500);
+  const totalQuestions = Math.max(0, Number(economy.intelligentTrainingProgress) || 0) + questionCount;
+  const earnedBatches = Math.floor(totalQuestions / 10);
+  economy.intelligentTrainingProgress = totalQuestions % 10;
+  const coinsAdded = earnedBatches * 5;
+  if (coinsAdded > 0) {
+    economy.coins += coinsAdded;
+    economy.totalEarned += coinsAdded;
+  }
+  return { coinsAdded, alreadyClaimed: false, changed: true };
+}
+function applyErrorTrainingReward(economy, claimId) {
+  if (economy.errorTrainingClaimIds.includes(claimId)) {
+    return { coinsAdded: 0, alreadyClaimed: true, changed: false };
+  }
+  economy.errorTrainingClaimIds.push(claimId);
+  economy.errorTrainingClaimIds = economy.errorTrainingClaimIds.slice(-500);
+  economy.coins += 10;
+  economy.totalEarned += 10;
+  return { coinsAdded: 10, alreadyClaimed: false, changed: true };
 }
 
 function evaluateGameAchievements(economy) {
@@ -1340,7 +1371,7 @@ async function handleApi(request, env, origin) {
           ok: false,
           service: "Projeto Tabuada API",
           buildId: WORKER_BUILD_ID,
-          features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, trainingCoinsPerTenCorrectAnswers: true, trainingCorrectProgress: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true },
+          features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, trainingCoinsPerTenCorrectAnswers: true, trainingCorrectProgress: true, intelligentTrainingRewards: true, intelligentTrainingProgress: true, errorTrainingRewards: true, difficultyTrainingBelow90Percent: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true },
           githubSecretConfigured: false,
           githubConnected: false
         }, 503, origin);
@@ -1358,7 +1389,7 @@ async function handleApi(request, env, origin) {
         ok: true,
         service: "Projeto Tabuada API",
         buildId: WORKER_BUILD_ID,
-        features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, trainingCoinsPerTenCorrectAnswers: true, trainingCorrectProgress: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true },
+        features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, trainingCoinsPerTenCorrectAnswers: true, trainingCorrectProgress: true, intelligentTrainingRewards: true, intelligentTrainingProgress: true, errorTrainingRewards: true, difficultyTrainingBelow90Percent: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true },
         githubSecretConfigured: true,
         githubConnected: true,
         githubContentReadAccess: true
@@ -1718,6 +1749,33 @@ async function handleApi(request, env, origin) {
             return json({ error: "Lote de questões acertadas no treinamento inválido." }, 400, origin);
           }
           const reward = applyTrainingCorrectReward(economy, claimId, correctCount);
+          coinsAdded = reward.coinsAdded;
+          alreadyClaimed = reward.alreadyClaimed;
+          changed = changed || reward.changed;
+          if (body.history && typeof body.history === "object") {
+            record.data.history = mergeHistorySnapshots(record.data.history, body.history);
+            changed = true;
+          }
+        } else if (body.type === "intelligent_training_questions") {
+          const claimId = typeof body.claimId === "string" ? body.claimId : "";
+          const questionCount = Math.max(0, Math.min(100_000, Math.floor(Number(body.questionCount) || 0)));
+          if (!/^[A-Za-z0-9:_-]{8,100}$/.test(claimId) || questionCount < 1) {
+            return json({ error: "Lote de questões do treino inteligente inválido." }, 400, origin);
+          }
+          const reward = applyIntelligentTrainingReward(economy, claimId, questionCount);
+          coinsAdded = reward.coinsAdded;
+          alreadyClaimed = reward.alreadyClaimed;
+          changed = changed || reward.changed;
+          if (body.history && typeof body.history === "object") {
+            record.data.history = mergeHistorySnapshots(record.data.history, body.history);
+            changed = true;
+          }
+        } else if (body.type === "error_training_complete") {
+          const claimId = typeof body.claimId === "string" ? body.claimId : "";
+          if (!/^[A-Za-z0-9:_-]{8,100}$/.test(claimId)) {
+            return json({ error: "Identificador da conclusão dos erros inválido." }, 400, origin);
+          }
+          const reward = applyErrorTrainingReward(economy, claimId);
           coinsAdded = reward.coinsAdded;
           alreadyClaimed = reward.alreadyClaimed;
           changed = changed || reward.changed;
