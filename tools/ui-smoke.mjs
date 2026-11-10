@@ -327,6 +327,16 @@ check(html.includes("function exitAdventureStageAndSave()")&&html.includes("func
 check(html.includes("await saveProgressNow('Perfil')")&&html.includes("await saveProgressNow('Alteração de senha')")&&
   html.includes("await saveProgressNow('Preferências de áudio')"),
   "As modificações do perfil, senha ou opções não executam salvamento explícito.");
+check(html.includes('id="saveTrainingDefinition"')&&html.includes('id="trainingDefinitionStatus"')&&
+  html.includes("function loadTrainingDefinition()")&&html.includes("function saveTrainingDefinition()")&&
+  html.includes("TRAINING_DEFINITION_STORAGE_PREFIX")&&html.includes("loadTrainingDefinition();")&&
+  html.includes("markTrainingDefinitionDirty();")&&html.includes("appearance:none")&&
+  html.includes("training-order-select-wrap:after"),
+  "A definição da ordem do treinamento precisa ter seletor visível, botão de salvar e restauração por perfil.");
+check(html.includes("challenge-standing-card")&&html.includes("challenge-standing-place")&&
+  html.includes("challenge-standing-name")&&html.includes("data-position")&&
+  html.includes("rankIcon=place===1"),
+  "Os resultados do duelo precisam destacar claramente o nome e a posição de cada participante.");
 const explicitSaveContract = {
   timedAutosaveRemoved: true,
   saveTrainingOnExit: true,
