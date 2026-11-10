@@ -1006,12 +1006,31 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .profile-audio-reset-row{display:flex;justify-content:flex-end;margin-top:9px}
 .profile-audio-reset{min-height:36px;padding:7px 11px;font-size:.75rem;border:1px solid #46658c;background:#142b49;color:#dcecff}
 .profile-audio-reset:hover{filter:brightness(1.12)}
+/* Balão de informação das conquistas, títulos e medalhas */
+.badge-info-popover{position:fixed;z-index:3000;width:min(340px,calc(100vw - 24px));max-height:min(42vh,280px);overflow:auto;padding:14px 15px;border:1px solid #7dd3fc;border-radius:15px;background:linear-gradient(145deg,#102b49,#211b43);box-shadow:0 18px 45px #020617bb,0 0 0 1px #67e8f933;color:#edf7ff;animation:badgeInfoAppear .14s ease-out}
+.badge-info-popover:before{content:"";position:absolute;top:0;left:16px;right:16px;height:2px;border-radius:99px;background:linear-gradient(90deg,#67e8f9,#c4b5fd,#fbbf24)}
+.badge-info-popover-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:7px}
+.badge-info-popover-head strong{color:#fde68a;font-size:.91rem;line-height:1.35}
+.badge-info-popover p{margin:0;color:#d1e2f6;font-size:.8rem;line-height:1.5;overflow-wrap:anywhere}
+.badge-info-popover button{display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;min-height:30px;padding:0;border:1px solid #6686a9;border-radius:9px;background:#1d3555;color:#fff;font-size:1.15rem;font-weight:950;line-height:1}
+[data-badge-info-trigger]{cursor:pointer}
+[data-badge-info-trigger]:focus-visible{outline:3px solid #67e8f9;outline-offset:3px}
+.wallet-inline>span:first-child{display:inline-flex;align-items:center;gap:5px;line-height:1.25}
+.wallet-inline .coin-symbol{margin:0;vertical-align:middle}
+.community-coins-metric strong{display:flex;align-items:center;justify-content:center;gap:5px;line-height:1.2}
+.community-coins-metric .coin-symbol{margin:0;vertical-align:middle}
+@keyframes badgeInfoAppear{from{opacity:0;transform:translateY(4px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(prefers-reduced-motion:reduce){.badge-info-popover{animation:none}}
 </style>
 </head>
 <body>
 <main>
 <header class="brand"><h1>📚 Projeto Tabuada</h1><p>Pratique no seu ritmo, uma questão de cada vez.</p></header>
 <div id="gameRewardToast" class="game-reward-toast hidden" role="status" aria-live="polite"></div>
+<div id="badgeInfoPopover" class="badge-info-popover hidden" role="dialog" aria-modal="false" aria-labelledby="badgeInfoPopoverTitle" aria-describedby="badgeInfoPopoverText" aria-hidden="true">
+ <div class="badge-info-popover-head"><strong id="badgeInfoPopoverTitle">Informações da conquista</strong><button type="button" id="badgeInfoPopoverClose" data-badge-info-close aria-label="Fechar">×</button></div>
+ <p id="badgeInfoPopoverText"></p>
+</div>
 <div class="music-box" id="siteMusicBox">
  <button class="music-menu-toggle" id="musicMenuToggle" type="button" aria-expanded="false" aria-controls="musicControls">
   <span class="music-menu-icon" aria-hidden="true">♫</span>
@@ -1887,6 +1906,56 @@ function renderTournamentAwardIcon(rank){
  const palettes=place===1?['#854d0e','#fde68a']:place===2?['#475569','#e2e8f0']:place===3?['#7c2d12','#fdba74']:['#1e40af','#bfdbfe'];
  return '<svg class="badge-art tournament-award-art" viewBox="0 0 64 64" role="img" aria-label="'+place+'º lugar"><path d="M32 4 54 13V30c0 15-9 25-22 31C19 55 10 45 10 30V13L32 4Z" fill="'+palettes[0]+'" stroke="'+palettes[1]+'" stroke-width="2.5"/><circle cx="32" cy="28" r="15" fill="#071326" opacity=".32" stroke="'+palettes[1]+'" stroke-width="2"/><path d="m32 15 4 8 9 1-7 6 2 9-8-5-8 5 2-9-7-6 9-1 4-8Z" fill="'+palettes[1]+'"/><text x="32" y="51" text-anchor="middle" font-size="10" font-weight="900" fill="#fff">'+(place<=10?place:'★')+'</text></svg>';
 }
+function badgeInfoAttributes(title,description){
+ return ' data-badge-info-trigger="true" data-badge-info-title="'+escapeHtml(title)+'" data-badge-info-description="'+escapeHtml(description)+'" tabindex="0" role="button" aria-haspopup="dialog" aria-label="Ver como foi adquirido: '+escapeHtml(title)+'"';
+}
+function challengeMedalDescription(levelName,wins=10){
+ const total=Math.max(10,Number(wins)||10);
+ return 'Conquistada ao vencer pelo menos 10 desafios no nível '+String(levelName||'selecionado')+'. Vitórias registradas: '+total+'.';
+}
+function tournamentAwardDescription(award,month=''){
+ const rank=Math.max(1,Number(award?.rank)||1);
+ const difficulty=String(award?.difficulty||'mensal');
+ const score=Math.max(0,Number(award?.score)||0);
+ const frame=award?.frame?' Categoria: '+String(award.frame)+'.':'';
+ return 'Conquistada ao terminar em '+rank+'º lugar no torneio '+difficulty+' de '+(month||award?.month||'um mês')+', com '+score+'/50 pontos.'+frame;
+}
+let badgeInfoAnchor=null;
+function openBadgeInfoPopover(trigger){
+ const popover=$('badgeInfoPopover');if(!popover||!trigger)return;
+ badgeInfoAnchor=trigger;
+ $('badgeInfoPopoverTitle').textContent=trigger.dataset.badgeInfoTitle||'Informações';
+ $('badgeInfoPopoverText').textContent=trigger.dataset.badgeInfoDescription||'Informações sobre como foi adquirido.';
+ popover.classList.remove('hidden');popover.setAttribute('aria-hidden','false');
+ popover.style.left='12px';popover.style.top='12px';
+ const anchorRect=trigger.getBoundingClientRect(),bubbleRect=popover.getBoundingClientRect();
+ const margin=12;
+ const left=Math.max(margin,Math.min(window.innerWidth-bubbleRect.width-margin,anchorRect.left+(anchorRect.width-bubbleRect.width)/2));
+ let top=anchorRect.bottom+9;
+ if(top+bubbleRect.height>window.innerHeight-margin)top=anchorRect.top-bubbleRect.height-9;
+ top=Math.max(margin,Math.min(window.innerHeight-bubbleRect.height-margin,top));
+ popover.style.left=left+'px';popover.style.top=top+'px';
+}
+function closeBadgeInfoPopover(restoreFocus=true){
+ const popover=$('badgeInfoPopover');if(!popover||popover.classList.contains('hidden'))return;
+ popover.classList.add('hidden');popover.setAttribute('aria-hidden','true');
+ const anchor=badgeInfoAnchor;badgeInfoAnchor=null;
+ if(restoreFocus&&anchor?.isConnected)anchor.focus({preventScroll:true});
+}
+document.addEventListener('click',event=>{
+ const closeButton=event.target.closest('[data-badge-info-close]');
+ if(closeButton){closeBadgeInfoPopover(true);return;}
+ const trigger=event.target.closest('[data-badge-info-trigger]');
+ if(trigger){openBadgeInfoPopover(trigger);return;}
+ if(!event.target.closest('#badgeInfoPopover'))closeBadgeInfoPopover(false);
+});
+document.addEventListener('keydown',event=>{
+ if(event.key==='Escape'){closeBadgeInfoPopover(true);return;}
+ const trigger=event.target.closest?.('[data-badge-info-trigger]');
+ if(trigger&&(event.key==='Enter'||event.key===' ')){event.preventDefault();openBadgeInfoPopover(trigger);}
+});
+window.addEventListener('resize',()=>closeBadgeInfoPopover(false));
+window.addEventListener('scroll',()=>closeBadgeInfoPopover(false),true);
 
 
 const ECONOMY_CACHE_KEY='projetoTabuadaEconomiaCacheV1';
@@ -1927,7 +1996,8 @@ function renderAchievementShelf(){
  shelf.innerHTML=visibleDefinitions.map(item=>{
   const date=earned[item.id],unlocked=!!date;
   const dateText=unlocked&&date!==true?new Date(date).toLocaleDateString('pt-BR'):'Conquista desbloqueada';
-  return '<article class="achievement-card '+(unlocked?'unlocked':'locked')+'"><span class="achievement-icon">'+(unlocked?renderBadgeIcon('achievement:'+item.id):renderBadgeIcon('locked',true))+'</span><div><strong>'+item.title+'</strong><p>'+item.description+'</p><small>'+(unlocked?dateText:'Ainda não conquistada')+'</small></div></article>';
+  const info=unlocked?badgeInfoAttributes(item.title,item.description+(dateText!=='Conquista desbloqueada'?' Conquistada em '+dateText+'.':'')):'';
+  return '<article class="achievement-card '+(unlocked?'unlocked':'locked')+'"'+info+'><span class="achievement-icon">'+(unlocked?renderBadgeIcon('achievement:'+item.id):renderBadgeIcon('locked',true))+'</span><div><strong>'+item.title+'</strong><p>'+item.description+'</p><small>'+(unlocked?dateText:'Ainda não conquistada')+'</small></div></article>';
  }).join('');
  refreshEconomyDisplay();
 }
@@ -1940,7 +2010,8 @@ function renderChallengeProfileStats(){
  const medals=CHALLENGE_PRESETS_UI.map(level=>{
   const wins=Math.max(0,Number(levels[level.id]?.wins)||0);
   const unlocked=wins>=10;
-  return '<article class="achievement-card challenge-medal '+(unlocked?'unlocked':'locked')+'"><span class="achievement-icon">'+(unlocked?challengeMedalIcon(level.id):renderBadgeIcon('locked',true))+'</span><div><strong>'+escapeHtml(level.name)+'</strong><p>'+(unlocked?'Medalha conquistada · 10 vitórias ou mais':'Vitórias: '+Math.min(wins,10)+'/10')+'</p><small>'+(unlocked?'Medalha desbloqueada':'Continue vencendo neste nível')+'</small></div></article>';
+  const info=unlocked?badgeInfoAttributes('Medalha '+level.name,challengeMedalDescription(level.name,wins)):'';
+  return '<article class="achievement-card challenge-medal '+(unlocked?'unlocked':'locked')+'"'+info+'><span class="achievement-icon">'+(unlocked?challengeMedalIcon(level.id):renderBadgeIcon('locked',true))+'</span><div><strong>'+escapeHtml(level.name)+'</strong><p>'+(unlocked?'Medalha conquistada · 10 vitórias ou mais':'Vitórias: '+Math.min(wins,10)+'/10')+'</p><small>'+(unlocked?'Medalha desbloqueada':'Continue vencendo neste nível')+'</small></div></article>';
  }).join('');
  if($('profileChallengeWins'))$('profileChallengeWins').textContent=String(Number(total.wins)||0);
  if($('profileChallengeLosses'))$('profileChallengeLosses').textContent=String(Number(total.losses)||0);
@@ -1954,7 +2025,8 @@ function renderChallengeProfileStats(){
   $('tournamentAwardShelf').innerHTML=awardItems.length?awardItems.map(([month,award])=>{
    const place=Number(award.rank)||0;
    const symbol=renderTournamentAwardIcon(place);
-   return '<article class="achievement-card challenge-medal unlocked"><span class="achievement-icon">'+symbol+'</span><div><strong>'+escapeHtml(award.difficulty||'Torneio')+' · '+month+'</strong><p>'+place+'º lugar · '+award.score+'/50 pontos</p><small>'+escapeHtml(award.frame||'Participação')+'</small></div></article>';
+   const awardTitle=(award.difficulty||'Torneio')+' · '+month;
+   return '<article class="achievement-card challenge-medal unlocked"'+badgeInfoAttributes(awardTitle,tournamentAwardDescription({...award,rank:place},month))+'><span class="achievement-icon">'+symbol+'</span><div><strong>'+escapeHtml(awardTitle)+'</strong><p>'+place+'º lugar · '+award.score+'/50 pontos</p><small>'+escapeHtml(award.frame||'Participação')+'</small></div></article>';
   }).join(''):'<div class="tournament-empty">Suas premiações mensais aparecerão aqui.</div>';
  }
 }
@@ -1966,32 +2038,34 @@ function featuredAwardInfo(id,source={}){
  const [kind,key]=id.split(':');
  if(kind==='achievement'){
   const item=ACHIEVEMENT_DEFINITIONS.find(entry=>entry.id===key);
-   return item?{id,icon:renderBadgeIcon('achievement:'+item.id),label:item.title,kind:'Conquista'}:null;
+  return item?{id,icon:renderBadgeIcon('achievement:'+item.id),label:item.title,kind:'Conquista',description:item.description}:null;
  }
  if(kind==='medal'){
   const item=CHALLENGE_PRESETS_UI.find(entry=>entry.id===key);
-  return item?{id,icon:challengeMedalIcon(key),label:'Medalha '+item.name,kind:'Medalha'}:null;
+  const wins=Number(source.profile?.challengeStats?.levels?.[key]?.wins)||10;
+  return item?{id,icon:challengeMedalIcon(key),label:'Medalha '+item.name,kind:'Medalha',description:challengeMedalDescription(item.name,wins)}:null;
  }
  if(kind==='award'&&/^\d{4}-\d{2}$/.test(key)){
   const award=(source.awards||[]).find(item=>item.month===key)||(source.profile?.tournamentAwards?.[key]?{month:key,...source.profile.tournamentAwards[key]}:null);
   if(!award)return null;
   const rank=Number(award.rank)||0;
-  return {id,icon:renderTournamentAwardIcon(rank),label:'Torneio '+key+' · '+rank+'º lugar',kind:'Premiação'};
+  return {id,icon:renderTournamentAwardIcon(rank),label:'Torneio '+key+' · '+rank+'º lugar',kind:'Premiação',description:tournamentAwardDescription(award,key)};
  }
  return null;
 }
 function profileFeaturedOptions(){
  const profile=profilesData[activeProfile]||{},options=[];
  for(const item of ACHIEVEMENT_DEFINITIONS){
-  if(gameEconomy.achievements?.[item.id]&&!item.hidden)options.push({id:'achievement:'+item.id,icon:renderBadgeIcon('achievement:'+item.id),label:item.title,kind:'Conquista'});
+  if(gameEconomy.achievements?.[item.id]&&!item.hidden)options.push({id:'achievement:'+item.id,icon:renderBadgeIcon('achievement:'+item.id),label:item.title,kind:'Conquista',description:item.description});
  }
  const levels=profile.challengeStats?.levels||{};
  for(const item of CHALLENGE_PRESETS_UI){
-  if((Number(levels[item.id]?.wins)||0)>=10)options.push({id:'medal:'+item.id,icon:challengeMedalIcon(item.id),label:'Medalha '+item.name,kind:'Medalha'});
+  const wins=Number(levels[item.id]?.wins)||0;
+  if(wins>=10)options.push({id:'medal:'+item.id,icon:challengeMedalIcon(item.id),label:'Medalha '+item.name,kind:'Medalha',description:challengeMedalDescription(item.name,wins)});
  }
  for(const [month,award] of Object.entries(profile.tournamentAwards||{})){
   const rank=Number(award?.rank)||0,icon=renderTournamentAwardIcon(rank);
-  if(rank>0)options.push({id:'award:'+month,icon,label:'Torneio '+month+' · '+rank+'º lugar',kind:'Premiação'});
+  if(rank>0)options.push({id:'award:'+month,icon,label:'Torneio '+month+' · '+rank+'º lugar',kind:'Premiação',description:tournamentAwardDescription(award,month)});
  }
  return options;
 }
@@ -2002,7 +2076,7 @@ function renderProfileFeaturedDisplay(){
  const options=profileFeaturedOptions();
  const badges=selected.map(id=>{
   const option=options.find(item=>item.id===id)||featuredAwardInfo(id,{profile});
-  return option?'<span class="profile-featured-badge">'+option.icon+' '+escapeHtml(option.label)+'</span>':'';
+  return option?'<span class="profile-featured-badge"'+badgeInfoAttributes(option.label,option.description||option.kind)+'>'+option.icon+' '+escapeHtml(option.label)+'</span>':'';
  }).join('');
  box.innerHTML=badges||'<small class="hint">Nenhum destaque escolhido ainda.</small>';
 }
@@ -2036,7 +2110,7 @@ function renderProfileFeaturedTitlesDisplay(){
   return;
  }
  box.innerHTML='<span class="featured-titles-preview-label">ASSIM APARECERÁ NA COMUNIDADE</span>'+
-  selected.map(item=>'<span class="profile-featured-title-chip">'+renderBadgeIcon('achievement:'+item.id)+' '+escapeHtml(item.title)+'</span>').join('');
+  selected.map(item=>'<span class="profile-featured-title-chip"'+badgeInfoAttributes(item.title,item.description)+'>'+renderBadgeIcon('achievement:'+item.id)+' '+escapeHtml(item.title)+'</span>').join('');
 }
 function renderProfileFeaturedTitlesEditor(){
  const box=$('featuredTitlesEditor');if(!box)return;
@@ -2611,8 +2685,12 @@ async function renderCommunityRanking(){
   box.innerHTML=pageUsers.map((user,index)=>{
    const place=first+index+1,rankClass=place===1?'rank-gold':place===2?'rank-silver':place===3?'rank-bronze':'';
    const frame=user.tournamentFrame?' tournament-frame-'+user.tournamentFrame:'';
-   const medals=user.medals.map(medal=>'<span class="community-rank-chip medal">'+challengeMedalIcon(medal.id)+' '+escapeHtml(medal.name||medal.id)+'</span>').join('');
-    const awards=user.awards.map(award=>'<span class="community-rank-chip medal">'+renderTournamentAwardIcon(award.rank)+' Torneio mensal · '+escapeHtml(award.month)+' · '+Number(award.rank)+'º lugar</span>').join('');
+   const medals=user.medals.map(medal=>{
+    const level=CHALLENGE_PRESETS_UI.find(item=>item.id===medal.id);
+    const name=medal.name||level?.name||medal.id;
+    return '<span class="community-rank-chip medal"'+badgeInfoAttributes('Medalha '+name,challengeMedalDescription(name,medal.wins||10))+'>'+challengeMedalIcon(medal.id)+' '+escapeHtml(name)+'</span>';
+   }).join('');
+   const awards=user.awards.map(award=>'<span class="community-rank-chip medal"'+badgeInfoAttributes('Torneio mensal · '+award.month+' · '+Number(award.rank)+'º lugar',tournamentAwardDescription(award,award.month))+'>'+renderTournamentAwardIcon(award.rank)+' Torneio mensal · '+escapeHtml(award.month)+' · '+Number(award.rank)+'º lugar</span>').join('');
    const unlockedTitleItems=user.titles.map(title=>{
     const item=ACHIEVEMENT_DEFINITIONS.find(entry=>entry.title===title||entry.id===title);
     return item&&!item.hidden?item:null;
@@ -2622,17 +2700,17 @@ async function renderCommunityRanking(){
     .filter(Boolean).slice(0,3);
    const displayedTitleItems=(selectedTitleItems.length?selectedTitleItems:unlockedTitleItems.slice(0,3)).slice(0,3);
    const titleBadges=displayedTitleItems.map(item=>
-    '<span class="community-rank-chip title community-title-chip community-rank-title-chip '+(selectedTitleItems.length?'is-selected':'is-automatic')+'">'+renderBadgeIcon('achievement:'+item.id)+' '+escapeHtml(item.title)+'</span>'
+    '<span class="community-rank-chip title community-title-chip community-rank-title-chip '+(selectedTitleItems.length?'is-selected':'is-automatic')+'"'+badgeInfoAttributes(item.title,item.description)+'>'+renderBadgeIcon('achievement:'+item.id)+' '+escapeHtml(item.title)+'</span>'
    ).join('');
    const titleSection='<div class="community-rank-title-section"><span class="community-title-label">TÍTULOS</span><div class="community-rank-titles">'+(titleBadges||'<span class="community-rank-no-titles">Ainda não conquistou títulos.</span>')+'</div></div>';
    const communityTitles=Array.isArray(user.titles)?user.titles:[];
    const achievementBadges=communityTitles.map(title=>{
     const item=ACHIEVEMENT_DEFINITIONS.find(entry=>entry.title===title||entry.id===title);
-    return '<span class="community-rank-chip title community-title-chip">'+(item?renderBadgeIcon('achievement:'+item.id):'✨')+' '+escapeHtml(item?.title||title)+'</span>';
+    return item?'<span class="community-rank-chip title community-title-chip"'+badgeInfoAttributes(item.title,item.description)+'>'+renderBadgeIcon('achievement:'+item.id)+' '+escapeHtml(item.title)+'</span>':'<span class="community-rank-chip title community-title-chip">✨ '+escapeHtml(title)+'</span>';
    }).join('');
    const featured=(user.featuredAwards||[]).map(id=>{
     const info=featuredAwardInfo(id,{awards:user.awards});
-    return info?'<span class="community-featured-badge">'+info.icon+' '+escapeHtml(info.label)+'</span>':'';
+    return info?'<span class="community-featured-badge"'+badgeInfoAttributes(info.label,info.description||info.kind)+'>'+info.icon+' '+escapeHtml(info.label)+'</span>':'';
    }).join('');
    return '<details class="community-rank-card '+rankClass+'">'+
     '<summary class="community-rank-summary">'+
@@ -2650,7 +2728,7 @@ async function renderCommunityRanking(){
     '<div class="community-profile-details">'+
      '<div class="community-profile-detail-section community-challenge-details"><span class="community-profile-detail-title">⚔️ DESAFIOS</span><div class="community-profile-detail-chips"><span class="community-rank-chip">'+user.challengeTotal+' partidas</span><span class="community-rank-chip">🏆 '+user.challengeWins+' vitórias</span><span class="community-rank-chip">🛡️ '+user.challengeLosses+' derrotas</span><span class="community-rank-chip">🤝 '+user.challengeDraws+' empates</span></div></div>'+
      '<div class="community-profile-detail-grid">'+
-      '<div class="community-rank-metric"><strong><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</strong><small>moedas disponíveis</small></div>'+
+      '<div class="community-rank-metric community-coins-metric"><strong><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</strong><small>moedas disponíveis</small></div>'+
       '<div class="community-rank-metric"><strong>'+user.totalEarned.toLocaleString('pt-BR')+'</strong><small>moedas ganhas</small></div>'+
       '<div class="community-rank-metric"><strong>'+user.trainingCycles.toLocaleString('pt-BR')+'</strong><small>ciclos de treino</small></div>'+
       '<div class="community-rank-metric"><strong>'+user.completedStages.toLocaleString('pt-BR')+'</strong><small>fases concluídas</small></div>'+
