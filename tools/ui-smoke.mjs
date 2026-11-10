@@ -732,6 +732,10 @@ async function testViewport(name, viewport, mobile = false) {
     name+": os acertos e erros públicos foram substituídos por valores de uma resposta antiga.");
 
 
+  await page.evaluate(()=>{
+    document.querySelector("#profileScreen").classList.add("hidden");
+    document.querySelector("#setup").classList.remove("hidden");
+  });
   const mainSections=["modeHub","trainingModePanel","adventureMapView","adventureIntroView","adventurePlayView","adventureResultView","challengeModeView","tournamentModeView","communitySection","shopScreen"];
   const getVisibleMainSections=()=>page.evaluate(ids=>Object.fromEntries(ids.map(id=>[id,!document.getElementById(id).classList.contains("hidden")])),mainSections);
   const assertVisibleSections=async(expected,label)=>{
