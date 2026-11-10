@@ -3032,7 +3032,7 @@ function openProfileScreen(showStats=false){
  renderAchievementShelf();refreshEconomyDisplay();renderChallengeProfileStats();
  renderFeaturedAwardsEditor();renderProfileFeaturedTitlesEditor();renderProfileLearningStats();
  profileOptionsOpen=false;profileOptionsResumeMusic=false;
- $('siteMusicBox').classList.remove('hidden');
+ showMusicMenuMinimized();
  $('profileOptionsPanel').classList.add('hidden');
  $('profileStatsPanel').classList.toggle('hidden',!showStats);
  $('profileMainPanel').classList.toggle('hidden',!!showStats);
@@ -3099,7 +3099,7 @@ function closeProfileScreen(resumeMusic=soundOn){
  $('profileOptionsPanel').classList.add('hidden');
  $('profileStatsPanel').classList.add('hidden');
  $('profileMainPanel').classList.remove('hidden');
- $('siteMusicBox').classList.remove('hidden');
+ showMusicMenuMinimized();
  setMusicCategory('principal',!!resumeMusic);
  $('profileScreen').classList.add('hidden');
  $('setup').classList.remove('hidden');
@@ -3154,13 +3154,14 @@ async function previewSelectedChallengeMusic(){
  }
 }
 function showChallengeSubPanel(name){
+ showMusicMenuMinimized();
  ['challengeHomePanel','challengeBetChoicePanel','challengeConfigPanel','challengePlayersPanel','challengePlayPanel','challengeResultPanel'].forEach(id=>$(id).classList.toggle('hidden',id!==name));
 }
 function openChallengeMode(){
  challengeBetMode=false;
  setMusicCategory('desafio',true);
  setMainContentSections({challenge:true,community:true});
- $('siteMusicBox').classList.add('hidden');
+ showMusicMenuMinimized();
  if(soundtrackAudio)soundtrackAudio.pause();
  clearMainMusicTimer();
  showChallengeSubPanel('challengeHomePanel');
@@ -3170,7 +3171,7 @@ function backToModeHubFromChallenge(){
  challengeBetMode=false;
  stopChallengeTimers();
  stopChallengeMusic();
- $('siteMusicBox').classList.remove('hidden');
+ showMusicMenuMinimized();
  showModeHub();
 }
 function openBetChallengeOptions(){
@@ -3627,7 +3628,7 @@ async function startChallengeGame(challenge,role){
   const track=(musicTrackCollections.desafio||[])[challenge.musicTrack]||CHALLENGE_MUSIC[challenge.musicTrack]||CHALLENGE_MUSIC[0];
  $('challengeMusicTitle').textContent='🎵 '+track.name;
  $('challengeMusicRule').textContent=role==='recipient'?'Música escolhida pelo desafiante. Ela está bloqueada para você.':'Você escolheu esta música. Todos os adversários ouvirão a mesma trilha.';
- $('siteMusicBox').classList.add('hidden');
+ showMusicMenuMinimized();
  $('challengeScore').textContent='0/10';
  $('challengeProgressBar').style.width='0%';
  $('challengeVolume').max=role==='recipient'?'30':'100';
@@ -3876,6 +3877,7 @@ async function refreshTournamentDashboard(){
 }
 async function startMonthlyTournament(difficulty){
  if(tournamentBusy)return;
+ showMusicMenuMinimized();
  tournamentBusy=true;
  try{
   ensureAudio();
@@ -4063,6 +4065,7 @@ function next(){
  updateStats();beginQuestionClock();
 }
 function start(){
+ showMusicMenuMinimized();
  setMusicCategory('treinamento',true);
  const globalMode=$('trainingGlobalMode')?.value||'individual';
  if(trainingReviewMode){
@@ -4183,6 +4186,7 @@ async function saveAdventureProgress(){
  return saved;
 }
 function setMainContentSections({hub=false,training=false,adventure=false,challenge=false,tournament=false,community=false,shop=false}={}){
+ showMusicMenuMinimized();
  const visibility={
   modeHub:hub,
   trainingModePanel:training,
@@ -4223,6 +4227,7 @@ function showAdventureMap(){
  renderAdventureMap();
 }
 function showAdventureIntro(index){
+ showMusicMenuMinimized();
  const progress=getAdventureProgress();
  if(index<0||index>=ADVENTURE_STAGES.length||index>progress.unlockedStage)return;
  adventureActiveStageIndex=index;
@@ -4317,6 +4322,7 @@ function renderAdventureQuestion(){
  updateAdventureQuestionHud();
 }
 function startAdventureStage(index){
+ showMusicMenuMinimized();
  setMusicCategory('modo-jogo',true);
  const progress=getAdventureProgress();
  if(index<0||index>progress.unlockedStage)return;
@@ -5130,6 +5136,12 @@ function setMusicMenuExpanded(expanded){
  $('siteMusicBox').classList.toggle('expanded',nextExpanded);
  $('musicMenuLabel').textContent=nextExpanded?'Fechar':'Alterar música';
  $('musicMenuChevron').textContent=nextExpanded?'⌃':'⌄';
+}
+function showMusicMenuMinimized(){
+ const box=$('siteMusicBox');
+ if(!box)return;
+ box.classList.remove('hidden');
+ setMusicMenuExpanded(false);
 }
 function toggleMusicMenu(){
  const expanded=$('musicMenuToggle').getAttribute('aria-expanded')==='true';
