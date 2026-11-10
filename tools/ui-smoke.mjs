@@ -87,7 +87,7 @@ check(workerSource.includes("mergeHistorySnapshots(")&&workerSource.includes("bo
   "A API não protege o histórico contra snapshots antigos.");
 const workerTestSource=workerSource.replace("export default {","globalThis.__workerDefault = {");
 const workerContext={Date,Set,Map,Object,Array,Number,String,Math,RegExp,JSON,TextEncoder,TextDecoder,Uint8Array,Response,Headers,URL};
-vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;globalThis.__normalizeGameEconomy=normalizeGameEconomy;",workerContext);
+vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;globalThis.__normalizeGameEconomy=normalizeGameEconomy;globalThis.__applyTrainingQuestionReward=applyTrainingQuestionReward;",workerContext);
 const normalizedEconomy=workerContext.__normalizeGameEconomy({
   profile:{avatar:"imagem:0"},
   economy:{coins:15,totalEarned:20,trainingQuestionProgress:8,trainingQuestionClaimIds:["claim-1"]}
@@ -99,10 +99,24 @@ const trainingRewardBranch=workerSource.slice(
   workerSource.indexOf('} else if (body.type === "adventure_stage")')
 );
 check(trainingRewardBranch.includes('body.type === "training_questions"')&&
-  trainingRewardBranch.includes("economy.trainingQuestionProgress + questionCount")&&
-  trainingRewardBranch.includes("coinsAdded = earnedBatches * 5")&&
-  trainingRewardBranch.includes("trainingQuestionClaimIds.includes(claimId)"),
-  "A API não soma as questões entre sessões e libera 5 moedas a cada 10 questões.");
+  trainingRewardBranch.includes("applyTrainingQuestionReward(economy, claimId, questionCount)")&&
+  trainingRewardBranch.includes("mergeHistorySnapshots(record.data.history, body.history)"),
+  "A API não usa a rotina de recompensa idempotente e preserva o histórico do treinamento.");
+const rewardEconomy=workerContext.__normalizeGameEconomy({
+  profile:{avatar:"imagem:0"},economy:{coins:0,totalEarned:0,trainingQuestionProgress:0}
+});
+const rewardNine=workerContext.__applyTrainingQuestionReward(rewardEconomy,"training-claim-0001",9);
+const rewardOne=workerContext.__applyTrainingQuestionReward(rewardEconomy,"training-claim-0002",1);
+const rewardDuplicate=workerContext.__applyTrainingQuestionReward(rewardEconomy,"training-claim-0002",1);
+const rewardTwenty=workerContext.__applyTrainingQuestionReward(rewardEconomy,"training-claim-0003",20);
+check(rewardNine.coinsAdded===0&&rewardEconomy.trainingQuestionProgress===9,
+  "As primeiras 9 questões não ficaram acumuladas para a próxima saída.");
+check(rewardOne.coinsAdded===5&&rewardEconomy.coins===5&&rewardEconomy.trainingQuestionProgress===0,
+  "A décima questão não concedeu exatamente 5 moedas.");
+check(rewardDuplicate.alreadyClaimed&&rewardDuplicate.coinsAdded===0&&rewardEconomy.coins===15,
+  "Uma mesma sessão duplicada concedeu moedas mais de uma vez.");
+check(rewardTwenty.coinsAdded===10&&rewardEconomy.coins===15&&rewardEconomy.totalEarned===15,
+  "20 questões não concederam 10 moedas ou não preservaram o total ganho.");
 const cycleRewardBranch=trainingRewardBranch.slice(0,trainingRewardBranch.indexOf('} else if (body.type === "training_questions")'));
 check(!cycleRewardBranch.includes("economy.coins +=")&&!cycleRewardBranch.includes("economy.totalEarned +="),
   "O treinamento ainda concede moedas somente por completar o ciclo.");
