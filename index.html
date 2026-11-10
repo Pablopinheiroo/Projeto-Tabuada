@@ -1634,7 +1634,7 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
  </div>
  </div>
  <button id="start" class="primary">▶ Iniciar treinamento livre</button>
- <div class="review-training-card"><div><span class="music-kicker">SEU TREINO INTELIGENTE</span><h3>🧠 Treino inteligente</h3><p id="reviewTrainingSummary" class="hint">Treino adaptado com contas erradas, difíceis ou demoradas. A cada 10 questões treinadas, ganhe 5 moedas; o restante acumula.</p></div><button id="startIntelligentTraining" class="review-training-button" type="button">Iniciar treino inteligente</button></div>
+ <div class="review-training-card"><div><span class="music-kicker">SEU TREINO INTELIGENTE</span><h3>🧠 Treino inteligente</h3><p id="reviewTrainingSummary" class="hint">Treino adaptado com contas erradas, difíceis ou demoradas. Ganhe 5 moedas a cada 10 acertos; erros e dificuldades ajudam no aprendizado, mas não contam para moedas.</p></div><button id="startIntelligentTraining" class="review-training-button" type="button">Iniciar treino inteligente</button></div>
  <div id="errorTrainingCard" class="review-training-card hidden"><div><span class="music-kicker">REVISÃO DE ERROS</span><h3>❌ Treine seus erros</h3><p id="errorTrainingSummary" class="hint">Resolva cada conta errada com dois acertos seguidos. Ao concluir todos os erros pendentes, ganhe 10 moedas.</p></div><button id="startErrorTraining" class="review-training-button" type="button">Treinar meus erros</button></div>
  <div id="tournamentErrorTrainingCard" class="review-training-card hidden"><div><span class="music-kicker">REVISÃO DO TORNEIO</span><h3>🏆 Revisar erros do torneio</h3><p id="tournamentErrorTrainingSummary" class="hint">Treine somente as contas que você errou no Torneio mensal, sem misturar com outras modalidades.</p></div><button id="startTournamentErrorTraining" class="review-training-button" type="button">Revisar erros do torneio</button></div>
  <div class="review-training-card"><div><span class="music-kicker">ABAIXO DE 90% DE ACERTOS</span><h3>🎯 Treinar minhas dificuldades</h3><p id="difficultyTrainingSummary" class="hint">Aparecem as contas com menos de 90% de acertos. Esta modalidade continua disponível e concede 5 moedas a cada 10 acertos.</p></div><button id="startDifficultyTraining" class="review-training-button" type="button">Carregar minhas dificuldades</button></div>
@@ -1885,7 +1885,7 @@ let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueu
 let profileOptionsOpen=false,profileOptionsResumeMusic=false,sfxPreviewTimer=null,gameSfxPreviewTimers=[],optionMusicPreviewTimer=null,optionMusicPreviewActive=false,optionPreviewSources=new Set();
 const LAST_TRACK_STORAGE_KEY='projetoTabuadaUltimaFaixaV2:';
 let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,questionClockPaused=false,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0,sessionCompletedQuestionCount=0,trainingSessionSaving=false;
-let sessionTrainingCorrectClaimed=0,sessionTrainingCorrectNext=10,sessionIntelligentQuestionsClaimed=0,sessionIntelligentQuestionsNext=10,sessionRewardQueue=Promise.resolve();
+let sessionTrainingCorrectClaimed=0,sessionTrainingCorrectNext=10,sessionRewardQueue=Promise.resolve();
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
 let gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,trainingCorrectProgress:0,trainingCorrectClaimIds:[],intelligentTrainingProgress:0,intelligentTrainingClaimIds:[],errorTrainingClaimIds:[],completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
 let rewardSyncBusy=false;
@@ -2593,17 +2593,9 @@ function showGameRewardToast(message,achievement=false){
   toast.classList.remove('achievement-congrats','coin-reward-notification');
  },achievement?7000:3800);
 }
-function showCoinRewardNotification(coinsAdded,item={}){
+function showTrainingRewardNotification(message){
  const toast=$('gameRewardToast');if(!toast)return;
- const coins=Math.max(0,Math.floor(Number(coinsAdded)||0));
- if(!coins)return;
- const batches=Math.max(1,Math.floor(coins/5));
- const detail=item.type==='training_questions'
-  ?' · '+(batches*10)+' acertos acumulados'
-  :item.type==='intelligent_training_questions'
-   ?' · '+(batches*10)+' questões concluídas'
-   :' · recompensa adicionada';
- toast.textContent='🎉 +'+coins.toLocaleString('pt-BR')+' moedas!'+detail+'.';
+ toast.textContent=String(message||'');
  toast.classList.remove('achievement-congrats');
  toast.classList.add('coin-reward-notification');
  toast.classList.remove('hidden');
@@ -2612,7 +2604,25 @@ function showCoinRewardNotification(coinsAdded,item={}){
   toast.classList.add('hidden');
   toast.classList.remove('coin-reward-notification');
  },4200);
- playPrizeCelebrationMusic();
+}
+function showCoinRewardNotification(coinsAdded,item={},newTitles=[]){
+ const toast=$('gameRewardToast');if(!toast)return;
+ const coins=Math.max(0,Math.floor(Number(coinsAdded)||0));
+ if(!coins)return;
+ const batches=Math.max(1,Math.floor(coins/5));
+ const detail=item.type==='training_questions'
+  ?' · '+(batches*10)+' acertos acumulados'
+  :' · recompensa adicionada';
+ const titleDetail=Array.isArray(newTitles)&&newTitles.length?' · '+newTitles.join(', '):'';
+ toast.textContent='🎉 +'+coins.toLocaleString('pt-BR')+' moedas!'+detail+titleDetail+'.';
+ toast.classList.remove('achievement-congrats');
+ toast.classList.add('coin-reward-notification');
+ toast.classList.remove('hidden');
+ if(rewardToastTimer!==null)clearTimeout(rewardToastTimer);
+ rewardToastTimer=setTimeout(()=>{
+  toast.classList.add('hidden');
+  toast.classList.remove('coin-reward-notification');
+ },4200);
 }
 function showAchievementCongratulations(ids,extra=''){
  const names=(Array.isArray(ids)?ids:[]).map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||String(id));
@@ -2624,7 +2634,14 @@ function showAchievementCongratulations(ids,extra=''){
  });
 }
 function readPendingGameRewards(){
- try{const list=JSON.parse(localStorage.getItem(PENDING_REWARDS_KEY)||'[]');return Array.isArray(list)?list:[];}catch{return [];}
+ try{
+  const list=JSON.parse(localStorage.getItem(PENDING_REWARDS_KEY)||'[]');
+  if(!Array.isArray(list))return [];
+  // O sistema antigo do treino inteligente contava erros e dificuldades. Não reenviar esses lotes como se fossem acertos.
+  const safe=list.filter(item=>item?.type!=='intelligent_training_questions'&&item?.body?.type!=='intelligent_training_questions');
+  if(safe.length!==list.length)localStorage.setItem(PENDING_REWARDS_KEY,JSON.stringify(safe));
+  return safe;
+ }catch{return [];}
 }
 function savePendingGameRewards(list){try{localStorage.setItem(PENDING_REWARDS_KEY,JSON.stringify(list.slice(-100)));}catch{}}
 async function deliverPendingGameReward(item){
@@ -2636,7 +2653,11 @@ async function deliverPendingGameReward(item){
  updateProfileLastSavedAt();
  const newTitles=(result.newAchievements||[]).map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||String(id));
  const coinsAdded=Math.max(0,Number(result.coinsAdded)||0);
- if(newTitles.length){
+ const trainingRewardTypes=['training_cycle','training_questions','intelligent_training_questions','error_training_complete'];
+ if(trainingRewardTypes.includes(item.type)){
+  if(coinsAdded>0)showCoinRewardNotification(coinsAdded,item,newTitles);
+  else if(newTitles.length)showTrainingRewardNotification('🏅 Novo título: '+newTitles.join(' · '));
+ }else if(newTitles.length){
   showPrizeCelebration({
    icon:'🏅',kicker:'RECOMPENSA E CONQUISTA',
    title:newTitles.length===1?'Parabéns! Você conquistou!':'Parabéns! Você conquistou!',
@@ -2711,18 +2732,8 @@ function newTrainingRewardClaimId(prefix){
  return prefix+'-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
 }
 function checkTrainingSessionRewardMilestones(){
- if(trainingModeType==='intelligent'){
-  while(sessionCompletedQuestionCount-sessionIntelligentQuestionsClaimed>=sessionIntelligentQuestionsNext){
-   const count=sessionIntelligentQuestionsNext;
-   sessionIntelligentQuestionsClaimed+=count;
-   sessionIntelligentQuestionsNext=10;
-   queueTrainingSessionReward('intelligent_training_questions',{
-    claimId:newTrainingRewardClaimId('intelligent-training'),questionCount:count
-   });
-  }
-  return;
- }
- if(trainingModeType==='standard'||trainingModeType==='difficulties'){
+ // A recompensa é por acertos reais. Erros e questões marcadas como difíceis continuam no aprendizado, mas não entram na contagem de moedas.
+ if(trainingModeType==='standard'||trainingModeType==='intelligent'||trainingModeType==='difficulties'){
   while(hits-sessionTrainingCorrectClaimed>=sessionTrainingCorrectNext){
    const count=sessionTrainingCorrectNext;
    sessionTrainingCorrectClaimed+=count;
@@ -3670,15 +3681,7 @@ async function finishSession(){
  }
  showReport(false);
  let queuedReward=null;
- if(trainingModeType==='intelligent'){
-  const remainder=sessionCompletedQuestionCount-sessionIntelligentQuestionsClaimed;
-  if(remainder>0){
-   sessionIntelligentQuestionsClaimed+=remainder;
-   queuedReward=queueTrainingSessionReward('intelligent_training_questions',{
-    claimId:newTrainingRewardClaimId('intelligent-training'),questionCount:remainder
-   });
-  }
- }else if(trainingModeType!=='errors'&&trainingModeType!=='tournamentErrors'){
+ if(trainingModeType!=='errors'&&trainingModeType!=='tournamentErrors'){
   const remainder=hits-sessionTrainingCorrectClaimed;
   if(remainder>0){
    sessionTrainingCorrectClaimed+=remainder;
@@ -5120,8 +5123,6 @@ function start(){
  sessionAnswers=[];sessionSkipped=0;sessionQuestionTimeMs=0;sessionCompletedQuestionCount=0;trainingSessionSaving=false;sessionStartedAt=performance.now();
  sessionTrainingCorrectClaimed=0;
  sessionTrainingCorrectNext=Math.max(1,10-Math.max(0,Math.min(9,Number(gameEconomy.trainingCorrectProgress)||0)));
- sessionIntelligentQuestionsClaimed=0;
- sessionIntelligentQuestionsNext=Math.max(1,10-Math.max(0,Math.min(9,Number(gameEconomy.intelligentTrainingProgress)||0)));
  sessionRewardQueue=Promise.resolve();
  $('report').classList.add('hidden');$('setup').classList.add('hidden');$('game').classList.remove('hidden');
  if(soundOn)ensureAudio();
@@ -5711,8 +5712,8 @@ function markCurrentQuestionDifficulty(){
   roundCorrect.delete(key);
  }
  currentDifficultyMarked=true;saveHistory();
+ // Continua contando como questão estudada, mas não como acerto para moedas.
  sessionCompletedQuestionCount++;
- checkTrainingSessionRewardMilestones();
  sessionQuestionTimeMs+=Math.max(0,Number(currentQuestionTimeMs)||0);
  sessionSkipped++;
  deck.push({a:current.a,b:current.b});
@@ -5774,12 +5775,10 @@ function showTrainingExitCelebration(){
  overlay.querySelector('[data-open-training-report]')?.addEventListener('click',openReport);
 }
 function showTrainingCycleCelebration(result,isReview,reviewComplete=false){
- pauseTrainingQuestionClock();
+ // O ciclo continua normalmente. Recompensas e títulos aparecem apenas como aviso pequeno, sem abrir tela sobre o jogo.
  if(reviewComplete){
   finishSession().finally(()=>{trainingReviewMode=false;trainingModeType='standard';});
-  return;
  }
- resumeTrainingQuestionClock();
 }
 
 function makeRound(){
