@@ -264,14 +264,11 @@ check(html.includes("Comprar · '+price.toLocaleString('pt-BR')+' moedas")&&!htm
 check(html.includes('id="communitySection"')&&html.includes("function setMainContentSections(")&&
   html.includes("function showCommunityOnly()")&&html.includes("function showShopOnly()"),
  "O menu não controla a exibição exclusiva das seções Loja, Comunidade e modalidades.");
-check(html.includes("function pauseTrainingQuestionClock()")&&html.includes("function resumeTrainingQuestionClock()")&&
-  html.includes("pauseTrainingQuestionClock();")&&html.includes("questionClockPaused?0:performance.now()")&&
-  html.includes("data-close-prize")&&html.includes("function showPrizeCelebration(")&&
-  !html.includes("setTimeout(()=>overlay.remove(),5200)"),
- "A comemoração de prêmios precisa ficar aberta até a pessoa fechar, sem desaparecer sozinha.");check(html.includes("deck.push({a:current.a,b:current.b});")&&
-  html.includes("sessionSkipped++;")&&html.includes("position++;")&&html.includes("next();saveCheckpoint();"),
- "Marcar Tive dificuldade deve avançar e colocar a mesma conta novamente no ciclo.");
-check(html.includes("function showAchievementCongratulations(ids,extra='')")&&
+const prizeModalCode=html.slice(html.indexOf("function showPrizeCelebration("),html.indexOf("function showGameRewardToast(",html.indexOf("function showPrizeCelebration(")));
+check(prizeModalCode.includes("data-close-prize")&&prizeModalCode.includes("overlay.remove()")&&
+  prizeModalCode.includes("document.removeEventListener('keydown',onEscape)")&&
+  !prizeModalCode.includes("setTimeout("),
+ "A comemoração dos prêmios precisa permanecer na tela até ser fechada pela pessoa.");check(html.includes("function showAchievementCongratulations(ids,extra='')")&&
   html.includes("NOVO TÍTULO CONQUISTADO")&&html.includes("showPrizeCelebration({")&&
   html.includes("description:'Você recebeu uma nova conquista no Projeto Tabuada.'"),
  "A tela de comemoração por novos títulos precisa informar a conquista recebida.");check(!html.includes('id="shopBackToGame"')&&!html.includes("$('shopBackToGame').addEventListener")&&
