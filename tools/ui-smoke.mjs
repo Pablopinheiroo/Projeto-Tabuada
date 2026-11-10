@@ -87,7 +87,7 @@ check(workerSource.includes("mergeHistorySnapshots(")&&workerSource.includes("bo
   "A API não protege o histórico contra snapshots antigos.");
 const workerTestSource=workerSource.replace("export default {","globalThis.__workerDefault = {");
 const workerContext={Date,Set,Map,Object,Array,Number,String,Math,RegExp,JSON,TextEncoder,TextDecoder,Uint8Array,Response,Headers,URL};
-vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;globalThis.__normalizeGameEconomy=normalizeGameEconomy;globalThis.__applyTrainingCorrectReward=applyTrainingCorrectReward;",workerContext);
+vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;globalThis.__normalizeGameEconomy=normalizeGameEconomy;globalThis.__applyTrainingCorrectReward=applyTrainingCorrectReward;globalThis.__applyIntelligentTrainingReward=applyIntelligentTrainingReward;globalThis.__applyErrorTrainingReward=applyErrorTrainingReward;",workerContext);
 const normalizedEconomy=workerContext.__normalizeGameEconomy({
   profile:{avatar:"imagem:0"},
   economy:{coins:15,totalEarned:20,trainingCorrectProgress:8,trainingCorrectClaimIds:["claim-1"],
@@ -97,6 +97,9 @@ check(normalizedEconomy.trainingCorrectProgress===8&&normalizedEconomy.trainingC
   "A economia do usuário não preserva as questões acertadas pendentes para a próxima recompensa.");
 check(normalizedEconomy.trainingCorrectProgress!==9,
   "O progresso antigo de questões respondidas foi convertido incorretamente em questões acertadas.");
+check(normalizedEconomy.intelligentTrainingProgress===0&&Array.isArray(normalizedEconomy.intelligentTrainingClaimIds)&&
+  Array.isArray(normalizedEconomy.errorTrainingClaimIds),
+  "A economia não inicializa os acumuladores e identificadores das novas modalidades.");
 const trainingRewardBranch=workerSource.slice(
   workerSource.indexOf('if (body.type === "training_cycle")'),
   workerSource.indexOf('} else if (body.type === "adventure_stage")')
@@ -104,8 +107,12 @@ const trainingRewardBranch=workerSource.slice(
 check(trainingRewardBranch.includes('body.type === "training_questions"')&&
   trainingRewardBranch.includes("applyTrainingCorrectReward(economy, claimId, correctCount)")&&
   trainingRewardBranch.includes("body.correctCount")&&
+  trainingRewardBranch.includes('body.type === "intelligent_training_questions"')&&
+  trainingRewardBranch.includes("applyIntelligentTrainingReward(economy, claimId, questionCount)")&&
+  trainingRewardBranch.includes('body.type === "error_training_complete"')&&
+  trainingRewardBranch.includes("applyErrorTrainingReward(economy, claimId)")&&
   trainingRewardBranch.includes("mergeHistorySnapshots(record.data.history, body.history)"),
-  "A API não usa a rotina de recompensa idempotente e preserva o histórico do treinamento.");
+  "A API não aplica as recompensas das três modalidades e não preserva o histórico.");
 const rewardEconomy=workerContext.__normalizeGameEconomy({
   profile:{avatar:"imagem:0"},economy:{coins:0,totalEarned:0,trainingCorrectProgress:0}
 });
@@ -125,6 +132,18 @@ check(rewardDuplicate.alreadyClaimed&&rewardDuplicate.coinsAdded===0&&afterDupli
   "Uma mesma sessão duplicada concedeu moedas mais de uma vez.");
 check(rewardTwenty.coinsAdded===10&&afterTwenty.coins===15&&afterTwenty.totalEarned===15,
   "20 questões acertadas não concederam 10 moedas ou não preservaram o total ganho.");
+const intelligentEconomy=workerContext.__normalizeGameEconomy({profile:{avatar:"imagem:0"},economy:{coins:0,totalEarned:0}});
+const intelligentNine=workerContext.__applyIntelligentTrainingReward(intelligentEconomy,"intelligent-claim-0001",9);
+const intelligentOne=workerContext.__applyIntelligentTrainingReward(intelligentEconomy,"intelligent-claim-0002",1);
+const intelligentDuplicate=workerContext.__applyIntelligentTrainingReward(intelligentEconomy,"intelligent-claim-0002",1);
+check(intelligentNine.coinsAdded===0&&intelligentEconomy.intelligentTrainingProgress===0&&intelligentOne.coinsAdded===5&&
+  intelligentEconomy.coins===5&&intelligentEconomy.intelligentTrainingProgress===0&&intelligentDuplicate.alreadyClaimed,
+  "O treino inteligente não acumula 9+1 questões ou permite duplicar moedas.");
+const errorReward=workerContext.__applyErrorTrainingReward(intelligentEconomy,"error-claim-0001");
+const errorRewardDuplicate=workerContext.__applyErrorTrainingReward(intelligentEconomy,"error-claim-0001");
+check(errorReward.coinsAdded===10&&errorRewardDuplicate.alreadyClaimed&&errorRewardDuplicate.coinsAdded===0&&
+  intelligentEconomy.coins===15&&intelligentEconomy.totalEarned===15,
+  "Treine seus erros não concede exatamente 10 moedas uma única vez por conclusão.");
 const cycleRewardBranch=trainingRewardBranch.slice(0,trainingRewardBranch.indexOf('} else if (body.type === "training_questions")'));
 check(!cycleRewardBranch.includes("economy.coins +=")&&!cycleRewardBranch.includes("economy.totalEarned +="),
   "O treinamento ainda concede moedas somente por completar o ciclo.");
@@ -182,8 +201,11 @@ check(html.includes('id="profileGameSfxVolume"')&&html.includes("GAME_SFX_VOLUME
  "O volume separado do modo jogo não está configurado com 4% por padrão.");
 check(html.includes("function previewGameSfxVolume()")&&html.includes("playUiSound(name,'game',true)")&&html.includes("function resetProfileGameSfxVolume()"),
  "A prévia ou a redefinição do volume do modo jogo está ausente.");
-check(html.includes("playFeedback(!!entry.correct,entry.mode==='training'?'game':'interface')")&&html.includes("playUiSound('verify','game')")&&html.includes("playUiSound('click','game')"),
+check(html.includes("playFeedback(!!entry.correct,String(entry.mode||'').includes('training')?'game':'interface')")&&html.includes("playUiSound('verify','game')")&&html.includes("playUiSound('click','game')"),
  "Os efeitos de Verificar, Acertei, Errei e Tive dificuldade não estão ligados ao canal do modo jogo.");
+check(html.includes("function playCelebrationSound()")&&html.includes("if(achievement||/parabéns/i.test(String(message)))playCelebrationSound()")&&
+  html.includes("pauseTrainingQuestionClock();\n playCelebrationSound();"),
+ "As notificações de parabéns e a tela de ciclo concluído precisam tocar o som de comemoração.");
 check(html.includes("profile.gameSfxVolume=gameSfxVolumeLevel"),
  "O volume do modo jogo não é salvo no perfil e na nuvem.");
 check(html.includes("A música geral fica pausada nesta tela")&&html.includes("breve prévia da trilha")&&
@@ -260,7 +282,18 @@ check(html.includes("Último salvamento: "), "O perfil não mostra o rótulo do 
 check(html.includes("sessionCompletedQuestionCount++")&&html.includes("claimGameReward('training_questions'")&&
   html.includes("correctCount:hits")&&html.includes("completedQuestions:sessionCompletedQuestionCount")&&
   html.includes("a cada 10 questões acertadas"),
-  "O treino não solicita a recompensa com base somente nas questões acertadas.");
+  "O treino comum e o modo dificuldades não solicitam a recompensa com base somente nos acertos.");
+check(html.includes('id="startIntelligentTraining"')&&html.includes('id="startErrorTraining"')&&
+  html.includes('id="startDifficultyTraining"')&&html.includes("function getIntelligentTrainingFacts()")&&
+  html.includes("function getErrorTrainingFacts()")&&html.includes("function getDifficultyTrainingFacts()"),
+  "As três modalidades inteligentes, de erros e dificuldades não estão disponíveis.");
+check(html.includes("questionCount:sessionCompletedQuestionCount")&&html.includes("intelligent_training_questions")&&
+  html.includes("error_training_complete")&&html.includes("errorTrainingCorrectStreak")&&
+  html.includes("item.errorTrainingResolved=item.errorTrainingCorrectStreak>=2")&&
+  html.includes("item.errorTrainingResolved=false"),
+  "A contagem acumulada do treino inteligente ou a sequência de dois acertos nos erros está incompleta.");
+check(html.includes("item.accuracy<.90")&&html.includes("difficultyTrainingBelow90Percent")===false,
+  "O filtro de dificuldades precisa ser estritamente inferior a 90% e não esconder a modalidade.");
 check(html.includes("function exitAdventureStageAndSave()")&&html.includes("function exitChallengeMatchAndSave()")&&
   html.includes("function exitTournamentMatchAndSave()")&&html.includes("await saveProgressNow('Treinamento')")&&
   html.includes("await saveProgressNow('Desafio')")&&html.includes("await saveProgressNow('Torneio')"),
