@@ -471,7 +471,7 @@ async function testViewport(name, viewport, mobile = false) {
     try{
       const trainingBefore=getErrorTrainingFacts('training').map(item=>item.wrong);
       const tournamentBefore=getErrorTrainingFacts('tournament').map(item=>item.wrong);
-      updateReviewTrainingButton();
+      originalUpdate();
       const regularCardVisible=!document.querySelector("#errorTrainingCard").classList.contains("hidden");
       const tournamentCardVisible=!document.querySelector("#tournamentErrorTrainingCard").classList.contains("hidden");
       const allSkillsBefore=collectLearningFacts().find(item=>item.a===2&&item.b===3);
