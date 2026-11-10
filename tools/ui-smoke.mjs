@@ -948,7 +948,7 @@ const rewardDeliveryEnd=html.indexOf("async function retryPendingGameRewards",re
 const rewardDelivery=html.slice(rewardDeliveryStart,rewardDeliveryEnd);
 check(html.includes("function showCoinRewardNotification(coinsAdded,item={})")&&
   html.includes(".game-reward-toast.coin-reward-notification{position:fixed")&&
-  html.includes("pointer-events:none")&&html.includes("10 acertos acumulados")&&
+  html.includes("pointer-events:none")&&html.includes("(batches*10)")&&html.includes("acertos acumulados")&&
   html.includes("playPrizeCelebrationMusic();")&&
   rewardDelivery.includes("if(newTitles.length)")&&
   rewardDelivery.includes("showPrizeCelebration({")&&
