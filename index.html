@@ -1194,7 +1194,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  <button id="navChallenge" type="button">⚔️ Desafio</button>
  <button id="navTournament" type="button">🏁 Torneio</button>
  <button id="navCommunity" type="button">🌐 Comunidade</button>
- <button id="navShop" type="button">🛍️ Loja</button>
+ <button id="navShop" type="button">🛒 Loja</button>
 </nav>
 
 <div id="modeHub" class="mode-hub">
@@ -1454,7 +1454,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 
 <section id="shopScreen" class="community-ranking hidden" aria-labelledby="shopTitle">
  <div class="community-heading">
-  <div><span class="music-kicker">🪙 ECONOMIA DO JOGO</span><h2 id="shopTitle">🛍️ Loja de avatares</h2><p class="shop-intro">Use suas moedas para comprar imagens e GIFs animados. Depois da compra, o avatar ficará disponível em Meu perfil.</p></div>
+  <div><span class="music-kicker">🪙 ECONOMIA DO JOGO</span><h2 id="shopTitle">🛒 Loja de avatares</h2><p class="shop-intro">Use suas moedas para comprar imagens e GIFs animados. Depois da compra, o avatar ficará disponível em Meu perfil.</p></div>
   <div class="shop-wallet"><i class="coin-symbol" aria-hidden="true"></i> Saldo: <strong id="shopCoins">0</strong></div>
  </div>
  <p class="shop-intro">Imagens: <b>100 moedas</b> cada · GIFs animados: <b>1.500 moedas</b> cada. Os itens abaixo são apresentados para compra, sem cadeados.</p>
@@ -1481,8 +1481,8 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 <button id="verify" class="verify" data-sfx="verify">Verificar</button>
 <div id="judge" class="judge hidden">
 <button id="right" class="yes">✓ Acertei</button>
-<button id="markDifficulty" class="difficulty-mark" type="button">⚑ Tive dificuldade</button>
 <button id="wrong" class="no">✕ Errei</button>
+<button id="markDifficulty" class="difficulty-mark" type="button">⚑ Tive dificuldade</button>
 </div>
 </div>
 <div class="bottom"><button id="stop" class="stop">Encerrar jogo e ver resultados</button></div>
@@ -2233,7 +2233,7 @@ async function purchaseAvatar(key){
   if(result.newAchievements?.length){
    const names=result.newAchievements.map(a=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===a)?.title||a);
    showGameRewardToast('🏆 Nova conquista: '+names.join(', '));
-  }else showGameRewardToast(result.alreadyOwned?'🎨 Avatar já adquirido!':'🛍️ Avatar comprado!');
+  }else showGameRewardToast(result.alreadyOwned?'🎨 Avatar já adquirido!':'🛒 Avatar comprado!');
  }catch(error){
   if(message)message.textContent=error.message||'Não foi possível comprar este avatar.';
  }
@@ -2545,6 +2545,14 @@ async function loadCommunityRecords(force=false){
  if(requestId===communityCacheRequest)communityCacheAt=Date.now();
  return communityCache;
 }
+function formatCommunityDisplayName(value){
+ const normalized=String(value||'').trim().replace(/\\s+/g,' ').toLocaleLowerCase('pt-BR');
+ if(!normalized)return '';
+ return normalized.split(/(\\s+|-)/).map(part=>{
+  if(!part||/^\\s+$/.test(part)||part==='-')return part;
+  return part.charAt(0).toLocaleUpperCase('pt-BR')+part.slice(1);
+ }).join('');
+}
 function communityStatsFromRecord(record){
  const profile=record.profile&&typeof record.profile==='object'?record.profile:{};
  const economy=record.economy&&typeof record.economy==='object'?record.economy:{};
@@ -2565,7 +2573,7 @@ function communityStatsFromRecord(record){
  const featuredTitles=Array.isArray(profile.featuredTitles)?profile.featuredTitles:(Array.isArray(record.featuredTitles)?record.featuredTitles:[]);
  return {
   username:record.username,
-  displayName:record.displayName||profile.displayName||record.username,
+  displayName:formatCommunityDisplayName(record.displayName||profile.displayName||record.username),
   avatar:normalizeAvatarKey(record.avatar||profile.avatar),
   correct,wrong,attempts:Number(record.attempts)||correct+wrong,timeMs,
   titles,medals,
@@ -5326,6 +5334,7 @@ document.addEventListener('keydown',event=>{
  if(!(field instanceof HTMLElement)||!field.matches('input:not([type="password"]),textarea,[contenteditable="true"]'))return;
  if(field.matches('input[type="range"],input[type="checkbox"],input[type="radio"]'))return;
  if(['Tab','Shift','Escape','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key))return;
+ if(field.matches('#loginUsername,#registerUsername'))return;
  playUiSound('key');
 },true);
 </script>
