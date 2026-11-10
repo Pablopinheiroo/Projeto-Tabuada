@@ -2507,7 +2507,6 @@ function trackActiveStudyTime(){
  profilesData[activeProfile].studyTimeMs=studyTimeBaseMs+pendingActiveMs;
  persistProfiles();
  savePendingActiveTime();
- if(pendingActiveMs>=ACTIVE_TIME_SYNC_MS)scheduleCloudSave();
 }
 function startActiveTimeTracking(){
  if(activeTimeTimer!==null)clearInterval(activeTimeTimer);
@@ -2516,24 +2515,18 @@ function startActiveTimeTracking(){
 }
 function stopActiveTimeTracking(){
  if(activeTimeTimer!==null){
-  // Registra o intervalo final antes de encerrar a sessão.
   trackActiveStudyTime();
   clearInterval(activeTimeTimer);activeTimeTimer=null;
  }
  savePendingActiveTime();
 }
-function scheduleCloudSave(immediate=false){
- if(!activeProfile||!remoteUserData||!cloudTokenReady())return;
- if(immediate){flushCloudSave(true);return;}
- if(pendingActiveMs<ACTIVE_TIME_SYNC_MS)return;
- if(lastCloudSaveAttemptAt&&Date.now()-lastCloudSaveAttemptAt<5*60*1000)return;
- flushCloudSave(false);
-}
-async function flushCloudSave(force=false){
+async function flushCloudSave(force=true){
  if(!activeProfile||!remoteUserData||!cloudTokenReady())return false;
- if(!force&&pendingActiveMs<ACTIVE_TIME_SYNC_MS)return false;
- if(cloudSyncBusy){cloudSyncQueued=true;return false;}
- if(!force&&lastCloudSaveAttemptAt&&Date.now()-lastCloudSaveAttemptAt<5*60*1000)return false;
+ if(cloudSyncBusy){
+  if(!force)return false;
+  await new Promise(resolve=>cloudSyncWaiters.push(resolve));
+  return flushCloudSave(true);
+ }
  lastCloudSaveAttemptAt=Date.now();
  cloudSyncBusy=true;
  try{
@@ -2545,7 +2538,6 @@ async function flushCloudSave(force=false){
    remoteUserSha=newSha;
    remoteUserData=payload;
    studyTimeBaseMs=Math.max(0,Number(payload.profile.studyTimeMs)||studyTimeBaseMs);
-   // O tempo usado enquanto a requisição estava em andamento continua pendente.
    pendingActiveMs=Math.max(0,pendingActiveMs-savedActiveMs);
    if(profilesData[username])profilesData[username].studyTimeMs=studyTimeBaseMs+pendingActiveMs;
    savePendingActiveTime(username);
@@ -2555,7 +2547,7 @@ async function flushCloudSave(force=false){
    communityCacheAt=0;
    updateProfileLastSavedAt();
    const status=$('profileStatus');
-   if(status)status.textContent='Dados sincronizados. Próximo salvamento automático após mais 30 minutos de uso.';
+   if(status)status.textContent='Dados sincronizados com sua conta.';
   }
   return true;
  }catch(error){
@@ -2565,8 +2557,29 @@ async function flushCloudSave(force=false){
   return false;
  }finally{
   cloudSyncBusy=false;
-  if(cloudSyncQueued){cloudSyncQueued=false;scheduleCloudSave();}
+  const waiters=cloudSyncWaiters.splice(0);
+  waiters.forEach(resolve=>resolve());
  }
+}
+async function saveProgressNow(context='Progresso do jogo',{refreshCommunity=true}={}){
+ if(activeTimeTimer!==null)trackActiveStudyTime();
+ persistProfiles();saveHistory();
+ if(!activeProfile||!remoteUserData||!cloudTokenReady()){
+  const status=$('profileStatus');
+  if(status)status.textContent=context+' salvo neste aparelho. Entre na conta para sincronizar com a comunidade.';
+  return false;
+ }
+ const saved=await flushCloudSave(true);
+ if(saved){
+  communityCacheAt=0;
+  if(refreshCommunity)await renderCommunityRanking();
+  const status=$('profileStatus');
+  if(status)status.textContent='✓ '+context+' salvo e sincronizado com a comunidade.';
+ }else{
+  const status=$('profileStatus');
+  if(status)status.textContent='⚠️ '+context+' guardado neste aparelho, mas não foi possível sincronizar agora.';
+ }
+ return saved;
 }
 function communityUpdatedAtMs(record){
  const value=record?.updatedAt||record?.profile?.updatedAt||null;
