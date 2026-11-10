@@ -266,7 +266,7 @@ check(html.includes('id="communitySection"')&&html.includes("function setMainCon
  "O menu não controla a exibição exclusiva das seções Loja, Comunidade e modalidades.");
 check(html.includes("function pauseTrainingQuestionClock()")&&html.includes("function resumeTrainingQuestionClock()")&&
   html.includes("pauseTrainingQuestionClock();")&&html.includes("questionClockPaused?0:performance.now()")&&
-  html.includes("data-dismiss-prize")&&html.includes("function showPrizeCelebration(")&&
+  html.includes("data-close-prize")&&html.includes("function showPrizeCelebration(")&&
   !html.includes("setTimeout(()=>overlay.remove(),5200)"),
  "A comemoração de prêmios precisa ficar aberta até a pessoa fechar, sem desaparecer sozinha.");check(html.includes("deck.push({a:current.a,b:current.b});")&&
   html.includes("sessionSkipped++;")&&html.includes("position++;")&&html.includes("next();saveCheckpoint();"),
