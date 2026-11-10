@@ -2466,9 +2466,11 @@ function mergeLocalHistorySnapshots(currentValue,incomingValue){
   if(!previous||attemptCount(item)>attemptCount(previous)){
    questions[key]=item;
   }else if(attemptCount(item)===attemptCount(previous)){
-   const incomingTime=Date.parse(item.updatedAt||item.lastAt||'')||0;
-   const currentTime=Date.parse(previous.updatedAt||previous.lastAt||'')||0;
-   if(incomingTime>currentTime)questions[key]=item;
+   const incomingTime=Date.parse(item.updatedAt||item.lastAt||item.lastDifficultyAt||'')||0;
+   const currentTime=Date.parse(previous.updatedAt||previous.lastAt||previous.lastDifficultyAt||'')||0;
+   const incomingFlags=Number(item.difficultyFlags)||0;
+   const currentFlags=Number(previous.difficultyFlags)||0;
+   if(incomingTime>currentTime||incomingFlags>currentFlags)questions[key]=item;
   }
  }
  const sessions=new Map();
