@@ -765,6 +765,13 @@ async function testViewport(name, viewport, mobile = false) {
     (await page.locator("#gameRewardToast").textContent()).includes("Primeiro Ciclo")&&
     await page.locator("#gameRewardToast").evaluate(el=>el.classList.contains("achievement-congrats")),
     name+": a conquista não mostrou o alerta de parabenização destacado.");
+  const toastBounds=await page.locator("#gameRewardToast").evaluate(el=>{
+    const rect=el.getBoundingClientRect();
+    return {left:rect.left,right:rect.right,width:rect.width,center:rect.left+rect.width/2,viewport:innerWidth};
+  });
+  check(toastBounds.left>=-1&&toastBounds.right<=toastBounds.viewport+1&&
+    Math.abs(toastBounds.center-toastBounds.viewport/2)<=1,
+    name+": a notificação de parabéns ficou descentralizada ou ultrapassou a tela ("+JSON.stringify(toastBounds)+").");
   await page.evaluate(()=>{
     if(rewardToastTimer!==null)clearTimeout(rewardToastTimer);
     rewardToastTimer=null;
@@ -772,6 +779,25 @@ async function testViewport(name, viewport, mobile = false) {
     document.querySelector("#gameRewardToast").classList.remove("achievement-congrats");
     document.querySelector("#setup").classList.remove("hidden");
   });
+  await page.evaluate(()=>{
+    sessionAnswers=[{a:2,b:3,correct:true,timeMs:1200},{a:3,b:4,correct:false,timeMs:1800}];
+    hits=1;misses=1;sessionSkipped=1;sessionQuestionTimeMs=4200;
+    trainingModeType='errors';errorTrainingCompleted=true;
+    showTrainingExitCelebration();
+  });
+  const exitCardBounds=await page.locator(".training-exit-card").evaluate(el=>{
+    const rect=el.getBoundingClientRect();
+    return {left:rect.left,right:rect.right,top:rect.top,bottom:rect.bottom,width:rect.width,height:rect.height,
+      centerX:rect.left+rect.width/2,centerY:rect.top+rect.height/2,viewportWidth:innerWidth,viewportHeight:innerHeight};
+  });
+  check(exitCardBounds.width<=exitCardBounds.viewportWidth-20&&
+    exitCardBounds.left>=-1&&exitCardBounds.right<=exitCardBounds.viewportWidth+1&&
+    Math.abs(exitCardBounds.centerX-exitCardBounds.viewportWidth/2)<=2&&
+    exitCardBounds.top>=-1&&exitCardBounds.bottom<=exitCardBounds.viewportHeight+1&&
+    exitCardBounds.height<=exitCardBounds.viewportHeight+1,
+    name+": a tela de parabenização do resultado não ficou centralizada no celular ("+JSON.stringify(exitCardBounds)+").");
+  await page.locator("[data-dismiss-exit-result]").click();
+  await page.evaluate(()=>{trainingModeType='standard';errorTrainingCompleted=false;});
 
   const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && soundtrackAudio && !soundtrackAudio.paused));
   await page.locator("#openProfileOptions").click();
