@@ -443,6 +443,12 @@ async function testViewport(name, viewport, mobile = false) {
     await page.locator("#profileScreen").evaluate(el => el.classList.contains("hidden")),
     name + ": voltar das estatísticas não retornou ao menu principal.");
   await page.locator("#openProfile").click();
+  check(await page.locator("#backFromProfileTop").isVisible(),name+": o botão Voltar ao jogo não aparece no início de Meu perfil.");
+  const profileTopOrder=await page.evaluate(()=>({button:document.querySelector("#backFromProfileTop").getBoundingClientRect().top,title:document.querySelector("#profileMainPanel h2").getBoundingClientRect().top}));
+  check(profileTopOrder.button<profileTopOrder.title,name+": o botão Voltar ao jogo não está acima do título Meu perfil.");
+  await page.locator("#backFromProfileTop").click();
+  check(await page.locator("#profileScreen").evaluate(el=>el.classList.contains("hidden"))&&!(await page.locator("#setup").evaluate(el=>el.classList.contains("hidden"))),name+": o botão superior não retornou ao jogo.");
+  await page.locator("#openProfile").click();
   await page.waitForTimeout(250);
   await page.evaluate(()=>{
     gameEconomy={version:1,coins:2400,totalEarned:3000,trainingCycles:30,completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0','imagem:1','gif:2'],achievements:{}};
