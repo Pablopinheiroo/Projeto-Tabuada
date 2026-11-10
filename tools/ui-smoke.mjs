@@ -85,6 +85,13 @@ check(workerSource.includes("invalidateCommunitySummaryCache()")&&
   "O cache público da comunidade não é invalidado ou marcado com a versão dos dados.");
 check(workerSource.includes("mergeHistorySnapshots(")&&workerSource.includes("body.baseSha"),
   "A API não protege o histórico contra snapshots antigos.");
+check(workerSource.includes('const WORKER_BUILD_ID = "2026-11-10-community-presence-and-prize-celebrations-v1"')&&
+  workerSource.includes("PRESENCE_MIN_WRITE_INTERVAL_MS")&&
+  workerSource.includes('if (route === "/api/presence" && request.method === "POST")')&&
+  workerSource.includes("profile: { ...profile, lastOnlineAt }")&&
+  workerSource.includes("lastOnlineAt: typeof profile.lastOnlineAt")&&
+  workerSource.includes("lastOnlinePresence: true"),
+  "A API precisa registrar e devolver a última presença da comunidade, com proteção contra gravações excessivas.");
 const workerTestSource=workerSource.replace("export default {","globalThis.__workerDefault = {");
 const workerContext={Date,Set,Map,Object,Array,Number,String,Math,RegExp,JSON,TextEncoder,TextDecoder,Uint8Array,Response,Headers,URL};
 vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;globalThis.__normalizeGameEconomy=normalizeGameEconomy;globalThis.__applyTrainingCorrectReward=applyTrainingCorrectReward;globalThis.__applyIntelligentTrainingReward=applyIntelligentTrainingReward;globalThis.__applyErrorTrainingReward=applyErrorTrainingReward;",workerContext);
@@ -337,6 +344,24 @@ check(html.includes("challenge-standing-card")&&html.includes("challenge-standin
   html.includes("challenge-standing-name")&&html.includes("data-position")&&
   html.includes("rankIcon=place===1"),
   "Os resultados do duelo precisam destacar claramente o nome e a posição de cada participante.");
+check(html.includes("function formatCommunityLastOnline(value)")&&
+  html.includes('class="community-last-online"')&&html.includes("lastOnlineAt:record.lastOnlineAt||profile.lastOnlineAt||null")&&
+  html.includes("function startPresenceTracking()")&&html.includes("sendPresencePing(true)")&&
+  html.includes("setInterval(()=>sendPresencePing(false),120_000)")&&html.includes("apiRequest('/api/presence'"),
+  "A comunidade precisa exibir a última vez online e atualizar a presença da conta ativa.");
+check(html.includes("function renderChallengeList()")&&html.includes("challenge-card-facts")&&
+  html.includes("challenge-preview-head")&&html.includes("challenge-preview-row")&&
+  html.includes("Ver classificação final")&&html.includes("Ver prévia da classificação")&&
+  html.includes(".challenge-card-facts")&&html.includes(".challenge-preview-body"),
+  "A consulta dos desafios precisa separar informações principais e prévia do ranking em cartões legíveis.");
+check(html.includes("function showPrizeCelebration(")&&html.includes("function playPrizeCelebrationMusic()")&&
+  html.includes("prize-celebration-overlay")&&html.includes("melody=[72,76,79,84")&&
+  html.includes("if(result.newAchievements?.length||Number(result.coinsAdded)>0)")&&
+  html.includes("earnedChallengeMedalIds(nextStats)")&&html.includes("PREMIAÇÃO DO TORNEIO"),
+  "Prêmios, moedas, medalhas e títulos precisam usar uma tela única com música própria ao serem conquistados.");
+const trainingCycleCode=html.slice(html.indexOf("function showTrainingCycleCelebration("),html.indexOf("function makeRound()",html.indexOf("function showTrainingCycleCelebration(")));
+check(trainingCycleCode&&!trainingCycleCode.includes("showPrizeCelebration(")&&!trainingCycleCode.includes("playCelebrationSound()"),
+  "Concluir um ciclo sem ganhar prêmio não deve abrir uma comemoração de recompensa.");
 const explicitSaveContract = {
   timedAutosaveRemoved: true,
   saveTrainingOnExit: true,
