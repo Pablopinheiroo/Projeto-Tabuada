@@ -2344,26 +2344,37 @@ function profileLearningStats(){
  }).filter(row=>Number.isInteger(row.a)&&row.a>=1&&row.a<=20&&Number.isInteger(row.b)&&row.b>=1&&row.b<=10&&row.attempts>0);
  const totals=rows.reduce((sum,row)=>({attempts:sum.attempts+row.attempts,correct:sum.correct+row.correct,wrong:sum.wrong+row.wrong,timeMs:sum.timeMs+row.totalTimeMs}),{attempts:0,correct:0,wrong:0,timeMs:0});
  const average=totals.attempts?totals.timeMs/totals.attempts:0;
- const modes={training:{label:'Treino',attempts:0,correct:0,wrong:0,timeMs:0},adventure:{label:'Aventura',attempts:0,correct:0,wrong:0,timeMs:0},challenge:{label:'Desafio',attempts:0,correct:0,wrong:0,timeMs:0},tournament:{label:'Torneio',attempts:0,correct:0,wrong:0,timeMs:0}};
+ const modeSources={
+  training:{label:'Treino',sources:['training','intelligent_training','difficulty_training','error_training']},
+  adventure:{label:'Modo jogo',sources:['adventure']},
+  challenge:{label:'Desafio',sources:['challenge']},
+  tournament:{label:'Torneio',sources:['tournament']},
+  tournamentReview:{label:'Revisão do torneio',sources:['tournament_error_training']},
+  legacy:{label:'Histórico sem divisão por modo',sources:[]}
+ };
+ const modes=Object.fromEntries(Object.entries(modeSources).map(([key,value])=>[key,{label:value.label,attempts:0,correct:0,wrong:0,timeMs:0}]));
  rows.forEach(row=>{
   if(row.modes){
-   for(const key of Object.keys(modes)){
-    const part=row.modes[key];if(!part)continue;
-    modes[key].attempts+=Math.max(0,Number(part.attempts)||0);
-    modes[key].correct+=Math.max(0,Number(part.correct)||0);
-    modes[key].wrong+=Math.max(0,Number(part.wrong)||0);
-    modes[key].timeMs+=Math.max(0,Number(part.totalTimeMs)||0);
+   for(const [key,definition] of Object.entries(modeSources)){
+    if(key==='legacy')continue;
+    for(const source of definition.sources){
+     const part=row.modes[source];if(!part)continue;
+     modes[key].attempts+=Math.max(0,Number(part.attempts)||0);
+     modes[key].correct+=Math.max(0,Number(part.correct)||0);
+     modes[key].wrong+=Math.max(0,Number(part.wrong)||0);
+     modes[key].timeMs+=Math.max(0,Number(part.totalTimeMs)||0);
+    }
    }
   }else{
-   modes.training.attempts+=row.attempts;modes.training.correct+=row.correct;modes.training.wrong+=row.wrong;modes.training.timeMs+=row.totalTimeMs;
+   modes.legacy.attempts+=row.attempts;modes.legacy.correct+=row.correct;modes.legacy.wrong+=row.wrong;modes.legacy.timeMs+=row.totalTimeMs;
   }
  });
  const modeAttempts=Object.values(modes).reduce((sum,item)=>sum+item.attempts,0);
  if(modeAttempts<totals.attempts){
   const gap=totals.attempts-modeAttempts;
-  modes.training.attempts+=gap;
-  modes.training.correct+=Math.max(0,totals.correct-Object.values(modes).reduce((sum,item)=>sum+item.correct,0));
-  modes.training.wrong+=Math.max(0,totals.wrong-Object.values(modes).reduce((sum,item)=>sum+item.wrong,0));
+  modes.legacy.attempts+=gap;
+  modes.legacy.correct+=Math.max(0,totals.correct-Object.values(modes).reduce((sum,item)=>sum+item.correct,0));
+  modes.legacy.wrong+=Math.max(0,totals.wrong-Object.values(modes).reduce((sum,item)=>sum+item.wrong,0));
  }
  const tableStats=Array.from({length:20},(_,index)=>{
   const table=index+1,items=rows.filter(row=>row.a===table);
@@ -3405,7 +3416,7 @@ function resetErrorTrainingPoolState(item,scope){
  return setErrorTrainingPoolState(item,scope,false);
 }
 function errorTrainingSourceScope(mode){
- if(mode==='training'||mode==='adventure')return 'training';
+ if(['training','intelligent_training','difficulty_training','error_training','adventure'].includes(mode))return 'training';
  if(mode==='tournament')return 'tournament';
  return null;
 }
@@ -5412,7 +5423,7 @@ function getDifficultyTrainingFacts(){
   .sort((a,b)=>a.accuracy-b.accuracy||b.wrong-a.wrong||b.attempts-a.attempts).slice(0,60);
 }
 function getErrorTrainingFacts(scope='training'){
- const sourceModes=scope==='tournament'?['tournament']:['training','adventure'];
+ const sourceModes=scope==='tournament'?['tournament']:['training','intelligent_training','difficulty_training','error_training','adventure'];
  return Object.entries(historyData.questions||{}).flatMap(([key,item])=>{
   if(!item||typeof item!=='object')return [];
   const modes=item.modes&&typeof item.modes==='object'?item.modes:{};
@@ -5439,8 +5450,8 @@ function updateReviewTrainingButton(){
  if(errorCard)errorCard.classList.toggle('hidden',!errors.length);
  if(errorButton){errorButton.disabled=!errors.length;errorButton.textContent=errors.length?'❌ Treinar '+errors.length+' conta(s) errada(s)':'❌ Nenhum erro pendente';}
  if(errorNote)errorNote.textContent=errors.length
-  ?'Inclui somente erros do Treinar normal e do Modo jogo. Erros de torneio, desafio e outras modalidades ficam separados. Cada conta precisa de dois acertos seguidos; ao concluir, ganhe 10 moedas.'
-  :'Nenhum erro pendente no Treinar normal ou no Modo jogo.';
+  ?'Inclui erros das modalidades do Treinar e do Modo jogo. Desafios não entram nesta lista, e os erros do Torneio ficam separados. Cada conta precisa de dois acertos seguidos; ao concluir, ganhe 10 moedas.'
+  :'Nenhum erro pendente nas modalidades do Treinar ou no Modo jogo.';
  const tournamentErrorCard=$('tournamentErrorTrainingCard'),tournamentErrorButton=$('startTournamentErrorTraining'),tournamentErrorNote=$('tournamentErrorTrainingSummary');
  if(tournamentErrorCard)tournamentErrorCard.classList.toggle('hidden',!tournamentErrors.length);
  if(tournamentErrorButton){tournamentErrorButton.disabled=!tournamentErrors.length;tournamentErrorButton.textContent=tournamentErrors.length?'🏆 Revisar '+tournamentErrors.length+' conta(s) do torneio':'🏆 Nenhum erro de torneio pendente';}
