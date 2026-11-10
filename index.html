@@ -2632,7 +2632,10 @@ async function saveProgressNow(context='Progresso do jogo',{refreshCommunity=tru
  const saved=await flushCloudSave(true);
  if(saved){
   communityCacheAt=0;
-  if(refreshCommunity)await renderCommunityRanking();
+  if(refreshCommunity){
+   try{await renderCommunityRanking();}
+   catch(error){console.warn('O salvamento foi concluído, mas a atualização visual da comunidade falhou:',error);}
+  }
   const status=$('profileStatus');
   if(status)status.textContent='✓ '+context+' salvo e sincronizado com a comunidade.';
  }else{
