@@ -87,40 +87,44 @@ check(workerSource.includes("mergeHistorySnapshots(")&&workerSource.includes("bo
   "A API não protege o histórico contra snapshots antigos.");
 const workerTestSource=workerSource.replace("export default {","globalThis.__workerDefault = {");
 const workerContext={Date,Set,Map,Object,Array,Number,String,Math,RegExp,JSON,TextEncoder,TextDecoder,Uint8Array,Response,Headers,URL};
-vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;globalThis.__normalizeGameEconomy=normalizeGameEconomy;globalThis.__applyTrainingQuestionReward=applyTrainingQuestionReward;",workerContext);
+vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;globalThis.__normalizeGameEconomy=normalizeGameEconomy;globalThis.__applyTrainingCorrectReward=applyTrainingCorrectReward;",workerContext);
 const normalizedEconomy=workerContext.__normalizeGameEconomy({
   profile:{avatar:"imagem:0"},
-  economy:{coins:15,totalEarned:20,trainingQuestionProgress:8,trainingQuestionClaimIds:["claim-1"]}
+  economy:{coins:15,totalEarned:20,trainingCorrectProgress:8,trainingCorrectClaimIds:["claim-1"],
+    trainingQuestionProgress:9,trainingQuestionClaimIds:["legacy-claim"]}
 });
-check(normalizedEconomy.trainingQuestionProgress===8&&normalizedEconomy.trainingQuestionClaimIds.includes("claim-1"),
-  "A economia do usuário não preserva as questões pendentes para a próxima recompensa de treinamento.");
+check(normalizedEconomy.trainingCorrectProgress===8&&normalizedEconomy.trainingCorrectClaimIds.includes("claim-1"),
+  "A economia do usuário não preserva as questões acertadas pendentes para a próxima recompensa.");
+check(normalizedEconomy.trainingCorrectProgress!==9,
+  "O progresso antigo de questões respondidas foi convertido incorretamente em questões acertadas.");
 const trainingRewardBranch=workerSource.slice(
   workerSource.indexOf('if (body.type === "training_cycle")'),
   workerSource.indexOf('} else if (body.type === "adventure_stage")')
 );
 check(trainingRewardBranch.includes('body.type === "training_questions"')&&
-  trainingRewardBranch.includes("applyTrainingQuestionReward(economy, claimId, questionCount)")&&
+  trainingRewardBranch.includes("applyTrainingCorrectReward(economy, claimId, correctCount)")&&
+  trainingRewardBranch.includes("body.correctCount")&&
   trainingRewardBranch.includes("mergeHistorySnapshots(record.data.history, body.history)"),
   "A API não usa a rotina de recompensa idempotente e preserva o histórico do treinamento.");
 const rewardEconomy=workerContext.__normalizeGameEconomy({
-  profile:{avatar:"imagem:0"},economy:{coins:0,totalEarned:0,trainingQuestionProgress:0}
+  profile:{avatar:"imagem:0"},economy:{coins:0,totalEarned:0,trainingCorrectProgress:0}
 });
-const rewardNine=workerContext.__applyTrainingQuestionReward(rewardEconomy,"training-claim-0001",9);
-const afterNine={coins:rewardEconomy.coins,progress:rewardEconomy.trainingQuestionProgress};
-const rewardOne=workerContext.__applyTrainingQuestionReward(rewardEconomy,"training-claim-0002",1);
-const afterOne={coins:rewardEconomy.coins,progress:rewardEconomy.trainingQuestionProgress};
-const rewardDuplicate=workerContext.__applyTrainingQuestionReward(rewardEconomy,"training-claim-0002",1);
-const afterDuplicate={coins:rewardEconomy.coins,progress:rewardEconomy.trainingQuestionProgress};
-const rewardTwenty=workerContext.__applyTrainingQuestionReward(rewardEconomy,"training-claim-0003",20);
-const afterTwenty={coins:rewardEconomy.coins,totalEarned:rewardEconomy.totalEarned,progress:rewardEconomy.trainingQuestionProgress};
+const rewardNine=workerContext.__applyTrainingCorrectReward(rewardEconomy,"training-correct-0001",9);
+const afterNine={coins:rewardEconomy.coins,progress:rewardEconomy.trainingCorrectProgress};
+const rewardOne=workerContext.__applyTrainingCorrectReward(rewardEconomy,"training-correct-0002",1);
+const afterOne={coins:rewardEconomy.coins,progress:rewardEconomy.trainingCorrectProgress};
+const rewardDuplicate=workerContext.__applyTrainingCorrectReward(rewardEconomy,"training-correct-0002",1);
+const afterDuplicate={coins:rewardEconomy.coins,progress:rewardEconomy.trainingCorrectProgress};
+const rewardTwenty=workerContext.__applyTrainingCorrectReward(rewardEconomy,"training-correct-0003",20);
+const afterTwenty={coins:rewardEconomy.coins,totalEarned:rewardEconomy.totalEarned,progress:rewardEconomy.trainingCorrectProgress};
 check(rewardNine.coinsAdded===0&&afterNine.progress===9&&afterNine.coins===0,
-  "As primeiras 9 questões não ficaram acumuladas para a próxima saída.");
+  "As primeiras 9 questões acertadas não ficaram acumuladas para a próxima saída.");
 check(rewardOne.coinsAdded===5&&afterOne.coins===5&&afterOne.progress===0,
-  "A décima questão não concedeu exatamente 5 moedas.");
+  "A décima questão acertada não concedeu exatamente 5 moedas.");
 check(rewardDuplicate.alreadyClaimed&&rewardDuplicate.coinsAdded===0&&afterDuplicate.coins===5,
   "Uma mesma sessão duplicada concedeu moedas mais de uma vez.");
 check(rewardTwenty.coinsAdded===10&&afterTwenty.coins===15&&afterTwenty.totalEarned===15,
-  "20 questões não concederam 10 moedas ou não preservaram o total ganho.");
+  "20 questões acertadas não concederam 10 moedas ou não preservaram o total ganho.");
 const cycleRewardBranch=trainingRewardBranch.slice(0,trainingRewardBranch.indexOf('} else if (body.type === "training_questions")'));
 check(!cycleRewardBranch.includes("economy.coins +=")&&!cycleRewardBranch.includes("economy.totalEarned +="),
   "O treinamento ainda concede moedas somente por completar o ciclo.");
@@ -254,8 +258,9 @@ check(html.includes("PENDING_PROFILE_SAVE_KEY")&&html.includes("mergeLocalHistor
   "Um salvamento que falhar não preserva as alterações locais até a próxima sincronização.");
 check(html.includes("Último salvamento: "), "O perfil não mostra o rótulo do último salvamento.");
 check(html.includes("sessionCompletedQuestionCount++")&&html.includes("claimGameReward('training_questions'")&&
-  html.includes("completedQuestions:sessionCompletedQuestionCount"),
-  "O treino não conta as questões concluídas ou não solicita a recompensa a cada 10 questões.");
+  html.includes("correctCount:hits")&&html.includes("completedQuestions:sessionCompletedQuestionCount")&&
+  html.includes("a cada 10 questões acertadas"),
+  "O treino não solicita a recompensa com base somente nas questões acertadas.");
 check(html.includes("function exitAdventureStageAndSave()")&&html.includes("function exitChallengeMatchAndSave()")&&
   html.includes("function exitTournamentMatchAndSave()")&&html.includes("await saveProgressNow('Treinamento')")&&
   html.includes("await saveProgressNow('Desafio')")&&html.includes("await saveProgressNow('Torneio')"),

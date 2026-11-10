@@ -1097,7 +1097,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
    <div class="wallet-stat"><span>🏁 CICLOS DE TREINO</span><strong id="profileTrainingCycles">0</strong></div>
    <div class="wallet-stat"><span>🗺️ FASES CONCLUÍDAS</span><strong id="profileCompletedStages">0/26</strong></div>
   </div>
-  <p class="economy-rules">Recompensas: <b>+5 moedas a cada 10 questões concluídas</b> no Treinamento (a contagem continua entre sessões) e <b>+50 moedas</b> na primeira conclusão de cada fase do Modo Jogo.</p>
+  <p class="economy-rules">Recompensas: <b>+5 moedas a cada 10 questões acertadas</b> no Treinamento (a contagem continua entre sessões) e <b>+50 moedas</b> na primeira conclusão de cada fase do Modo Jogo.</p>
   <h3 class="achievement-title challenge-profile-title">⚔️ Histórico de desafios <span id="challengeMedalCount">0/11 medalhas</span></h3>
   <div class="wallet-grid challenge-profile-summary">
    <div class="wallet-stat"><span>🏆 VITÓRIAS</span><strong id="profileChallengeWins">0</strong></div>
@@ -1593,7 +1593,7 @@ let profileOptionsOpen=false,profileOptionsResumeMusic=false,sfxPreviewTimer=nul
 const LAST_TRACK_STORAGE_KEY='projetoTabuadaUltimaFaixaV2:';
 let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,questionClockPaused=false,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0,sessionCompletedQuestionCount=0,trainingSessionSaving=false;
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
-let gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,trainingQuestionProgress:0,trainingQuestionClaimIds:[],completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
+let gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,trainingCorrectProgress:0,trainingCorrectClaimIds:[],completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
 let rewardSyncBusy=false;
 let selectedChallengePlayers=new Set();
 let challengePlayerPage=0;
@@ -1971,8 +1971,8 @@ function normalizeClientEconomy(value,currentAvatar='imagem:0'){
   version:1,coins:Math.max(0,Math.floor(Number(raw.coins)||0)),
   totalEarned:Math.max(0,Math.floor(Number(raw.totalEarned)||0)),
   trainingCycles:Math.max(0,Math.floor(Number(raw.trainingCycles)||0)),
-  trainingQuestionProgress:Math.max(0,Math.min(9,Math.floor(Number(raw.trainingQuestionProgress)||0))),
-  trainingQuestionClaimIds:Array.isArray(raw.trainingQuestionClaimIds)?raw.trainingQuestionClaimIds.filter(id=>typeof id==='string').slice(-500):[],
+  trainingCorrectProgress:Math.max(0,Math.min(9,Math.floor(Number(raw.trainingCorrectProgress)||0))),
+  trainingCorrectClaimIds:Array.isArray(raw.trainingCorrectClaimIds)?raw.trainingCorrectClaimIds.filter(id=>typeof id==='string').slice(-500):[],
   completedStages:Array.isArray(raw.completedStages)?raw.completedStages.map(Number).filter(n=>Number.isInteger(n)&&n>=1&&n<=26):[],
   perfectStages:Array.isArray(raw.perfectStages)?raw.perfectStages.map(Number).filter(n=>Number.isInteger(n)&&n>=1&&n<=26):[],
   comboStages:Array.isArray(raw.comboStages)?raw.comboStages.map(Number).filter(n=>Number.isInteger(n)&&n>=1&&n<=26):[],
@@ -2283,7 +2283,7 @@ async function claimGameReward(type,payload){
  const body=type==='training_cycle'
   ?{type,claimId:payload.claimId,learningFromErrors:payload.learningFromErrors===true}
   :type==='training_questions'
-   ?{type,claimId:payload.claimId,questionCount:Math.max(0,Math.floor(Number(payload.questionCount)||0)),history:normalizeHistory(historyData)}
+   ?{type,claimId:payload.claimId,correctCount:Math.max(0,Math.floor(Number(payload.correctCount)||0)),history:normalizeHistory(historyData)}
    :{type,stageId:payload.stageId,...(type==='adventure_stage'?{...(payload.adventureProgress?{adventureProgress:payload.adventureProgress}:{}),history:normalizeHistory(historyData)}:{})};
  const key=type==='training_cycle'?'training:'+payload.claimId:
   type==='training_questions'?'training-questions:'+payload.claimId:'stage:'+payload.stageId;
@@ -2938,7 +2938,7 @@ async function logout(){
  sessionStorage.removeItem(API_TOKEN_KEY);
  activeProfile='';
  remoteUserData=null;remoteUserSha=null;historyData=loadHistory();
- gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,trainingQuestionProgress:0,trainingQuestionClaimIds:[],completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
+ gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,trainingCorrectProgress:0,trainingCorrectClaimIds:[],completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
  pendingActiveMs=0;studyTimeBaseMs=0;
  selectedRegisterAvatar='imagem:0';renderAvatarGrid('registerAvatarGrid',selectedRegisterAvatar,key=>{selectedRegisterAvatar=key;});refreshEconomyDisplay();
  $('setup').classList.add('hidden');$('report').classList.add('hidden');$('authScreen').classList.remove('hidden');
@@ -3142,13 +3142,13 @@ async function finishSession(){
  }
  showReport();
  let reward=null;
- if(sessionCompletedQuestionCount>0){
-  const claimId='training-questions-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
-  reward=await claimGameReward('training_questions',{claimId,questionCount:sessionCompletedQuestionCount});
+ if(hits>0){
+  const claimId='training-correct-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2));
+  reward=await claimGameReward('training_questions',{claimId,correctCount:hits});
  }
  const saved=await saveProgressNow('Treinamento');
  if(reward?.coinsAdded>0){
-  $('reportIntro').textContent+=' Você ganhou '+reward.coinsAdded+' moedas por questões concluídas.';
+  $('reportIntro').textContent+=' Você ganhou '+reward.coinsAdded+' moedas por questões acertadas.';
  }
  if(!saved&&activeProfile){
   $('reportIntro').textContent+=' O resultado ficou guardado neste aparelho e será sincronizado quando possível.';
@@ -4863,7 +4863,7 @@ function markCurrentQuestionDifficulty(){
 function showTrainingCycleCelebration(result,isReview,reviewComplete=false){
  pauseTrainingQuestionClock();
  document.querySelector('.training-celebration-overlay')?.remove();
- const rewardText='5 moedas a cada 10 questões concluídas, mesmo quando você encerra antes de completar o ciclo. O saldo é creditado ao salvar o treino.';
+ const rewardText='5 moedas a cada 10 questões acertadas, mesmo quando você encerra antes de completar o ciclo. A contagem continua entre sessões e o saldo é creditado ao salvar o treino.';
  const overlay=document.createElement('div');overlay.className='training-celebration-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-label','Ciclo de estudos concluído');
  overlay.innerHTML='<div class="training-celebration-confetti">'+Array.from({length:32},(_,i)=>'<i style="--n:'+i+'"></i>').join('')+'</div>'+
   '<div class="training-celebration-card"><button type="button" class="training-celebration-close" data-dismiss-celebration aria-label="Fechar tela de parabéns">×</button><div class="training-celebration-cup">🎉</div><span class="music-kicker">CICLO DE ESTUDOS CONCLUÍDO</span>'+
