@@ -580,6 +580,82 @@ async function testViewport(name, viewport, mobile = false) {
     name+": ao limpar as escolhas, a prévia não voltou aos três títulos automáticos.");
   await page.locator("#backFromProfile").click();
 
+  await page.evaluate(()=>{
+    document.querySelector("#setup").classList.add("hidden");
+    document.querySelector("#game").classList.remove("hidden");
+    if(questionTimer!==null)clearInterval(questionTimer);
+    questionTimer=null;questionStartedAt=0;questionElapsedBeforeStart=0;questionClockPaused=false;
+    selected=[{n:2,mode:"normal"}];deck=[{a:2,b:3}];position=0;round=1;hits=0;misses=0;
+    roundCorrect=new Set();trainingRoundTarget=1;current={a:2,b:3};revealed=true;
+    currentQuestionTimeMs=125;currentQuestionTimeStopped=true;currentDifficultyMarked=false;
+    sessionAnswers=[];sessionSkipped=0;sessionQuestionTimeMs=0;sessionStartedAt=performance.now();
+    markCurrentQuestionDifficulty();
+  });
+  const difficultyRepeat=await page.evaluate(()=>({
+    deckLength:deck.length,position,current:{a:current?.a,b:current?.b},
+    skipped:sessionSkipped,time:sessionQuestionTimeMs,revealed
+  }));
+  check(difficultyRepeat.deckLength===2&&difficultyRepeat.position===1&&
+    difficultyRepeat.current.a===2&&difficultyRepeat.current.b===3&&
+    difficultyRepeat.skipped===1&&difficultyRepeat.time===125&&!difficultyRepeat.revealed,
+    name+": ao marcar dificuldade, a questão não avançou ou não foi colocada novamente no ciclo: "+JSON.stringify(difficultyRepeat));
+  await page.evaluate(()=>{
+    if(questionTimer!==null)clearInterval(questionTimer);
+    questionTimer=null;questionStartedAt=0;questionElapsedBeforeStart=0;questionClockPaused=false;
+    current=null;document.querySelector("#game").classList.add("hidden");
+    document.querySelector("#setup").classList.remove("hidden");
+  });
+
+  await page.evaluate(()=>{
+    document.querySelector("#setup").classList.add("hidden");
+    document.querySelector("#game").classList.remove("hidden");
+    current={a:3,b:4};revealed=false;questionClockPaused=false;
+    questionStartedAt=0;questionElapsedBeforeStart=0;
+    beginQuestionClock();
+  });
+  await page.waitForTimeout(350);
+  await page.evaluate(()=>showTrainingCycleCelebration({coinsAdded:10},false,false));
+  const clockPausedBefore=await page.evaluate(()=>({
+    paused:questionClockPaused,timer:questionTimer===null,startedAt:questionStartedAt,elapsed:questionElapsedBeforeStart,
+    overlay:!!document.querySelector(".training-celebration-overlay"),
+    closeButtons:document.querySelectorAll(".training-celebration-close").length
+  }));
+  check(clockPausedBefore.paused&&clockPausedBefore.timer&&clockPausedBefore.startedAt===0&&
+    clockPausedBefore.overlay&&clockPausedBefore.closeButtons===1,
+    name+": o cronômetro continuou ativo ou faltou o botão de fechar na tela de parabéns: "+JSON.stringify(clockPausedBefore));
+  await page.waitForTimeout(350);
+  const clockPausedAfter=await page.evaluate(()=>questionElapsedBeforeStart);
+  check(Math.abs(clockPausedAfter-clockPausedBefore.elapsed)<1,
+    name+": o tempo do jogo continuou avançando enquanto a tela de parabéns estava aberta.");
+  await page.locator(".training-celebration-close").click();
+  const clockResumed=await page.evaluate(()=>({
+    paused:questionClockPaused,timer:questionTimer!==null,startedAt:questionStartedAt
+  }));
+  check(!clockResumed.paused&&clockResumed.timer&&clockResumed.startedAt>0,
+    name+": o cronômetro não voltou a funcionar depois de fechar a tela de parabéns.");
+  await page.waitForTimeout(250);
+  const clockAfterResume=await page.evaluate(()=>questionElapsedBeforeStart+Math.max(0,performance.now()-questionStartedAt));
+  check(clockAfterResume>clockPausedAfter,
+    name+": o cronômetro não retomou a contagem depois de fechar a tela.");
+  await page.evaluate(()=>{
+    if(questionTimer!==null)clearInterval(questionTimer);
+    questionTimer=null;questionStartedAt=0;questionElapsedBeforeStart=0;questionClockPaused=false;
+    current=null;document.querySelector("#game").classList.add("hidden");
+    showAchievementCongratulations(["training_first"]);
+  });
+  check(await page.locator("#gameRewardToast").isVisible()&&
+    (await page.locator("#gameRewardToast").textContent()).includes("Parabéns!")&&
+    (await page.locator("#gameRewardToast").textContent()).includes("Primeiro Ciclo")&&
+    await page.locator("#gameRewardToast").evaluate(el=>el.classList.contains("achievement-congrats")),
+    name+": a conquista não mostrou o alerta de parabenização destacado.");
+  await page.evaluate(()=>{
+    if(rewardToastTimer!==null)clearTimeout(rewardToastTimer);
+    rewardToastTimer=null;
+    document.querySelector("#gameRewardToast").classList.add("hidden");
+    document.querySelector("#gameRewardToast").classList.remove("achievement-congrats");
+    document.querySelector("#setup").classList.remove("hidden");
+  });
+
   const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && soundtrackAudio && !soundtrackAudio.paused));
   await page.locator("#openProfileOptions").click();
   check(!(await page.locator("#profileOptionsPanel").evaluate(el => el.classList.contains("hidden"))), name + ": a tela Opções não abriu.");
