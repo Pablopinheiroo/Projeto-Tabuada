@@ -279,8 +279,8 @@ check(html.includes("PENDING_PROFILE_SAVE_KEY")&&html.includes("mergeLocalHistor
   html.includes("markProfileSavePending(activeProfile)")&&html.includes("clearProfileSavePending(username)"),
   "Um salvamento que falhar não preserva as alterações locais até a próxima sincronização.");
 check(html.includes("Último salvamento: "), "O perfil não mostra o rótulo do último salvamento.");
-check(html.includes("sessionCompletedQuestionCount++")&&html.includes("claimGameReward('training_questions'")&&
-  html.includes("correctCount:hits")&&html.includes("completedQuestions:sessionCompletedQuestionCount")&&
+check(html.includes("sessionCompletedQuestionCount++")&&html.includes("queueTrainingSessionReward('training_questions'")&&
+  html.includes("correctCount:count")&&html.includes("completedQuestions:sessionCompletedQuestionCount")&&
   html.includes("a cada 10 questões acertadas"),
   "O treino comum e o modo dificuldades não solicitam a recompensa com base somente nos acertos.");
 check(html.includes('id="startIntelligentTraining"')&&html.includes('id="startErrorTraining"')&&
