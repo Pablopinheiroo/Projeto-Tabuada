@@ -750,11 +750,26 @@ async function testViewport(name, viewport, mobile = false) {
   });
   const mainSections=["modeHub","trainingModePanel","adventureMapView","adventureIntroView","adventurePlayView","adventureResultView","challengeModeView","tournamentModeView","communitySection","shopScreen"];
   const getVisibleMainSections=()=>page.evaluate(ids=>Object.fromEntries(ids.map(id=>[id,!document.getElementById(id).classList.contains("hidden")])),mainSections);
+  const assertMusicMenuMinimized=async(label)=>{
+    const state=await page.evaluate(()=>{
+      const box=document.querySelector("#siteMusicBox");
+      const toggle=document.querySelector("#musicMenuToggle");
+      const controls=document.querySelector("#musicControls");
+      return {
+        visible:!!box&&!box.classList.contains("hidden")&&box.getClientRects().length>0,
+        expanded:toggle?.getAttribute("aria-expanded")==="true",
+        controlsHidden:!!controls&&controls.classList.contains("hidden")
+      };
+    });
+    check(state.visible&&!state.expanded&&state.controlsHidden,
+      name+": o menu de música deve ficar visível e minimizado em "+label+": "+JSON.stringify(state));
+  };
   const assertVisibleSections=async(expected,label)=>{
     const actual=await getVisibleMainSections();
     const visible=Object.keys(actual).filter(id=>actual[id]).sort();
     const wanted=[...expected].sort();
     check(JSON.stringify(visible)===JSON.stringify(wanted),name+": seções incorretas em "+label+": "+JSON.stringify(visible));
+    await assertMusicMenuMinimized(label);
   };
   await assertVisibleSections(["modeHub","communitySection"],"menu inicial");
   await page.locator("#navShop").click();
@@ -783,6 +798,8 @@ async function testViewport(name, viewport, mobile = false) {
   check(!(await page.locator("#challengeHomePanel").evaluate(el => el.classList.contains("hidden"))), name + ": menu inicial do Desafio não apareceu.");
   check((await page.locator("#musicCategoryKicker").textContent()).includes("DESAFIO"), name + ": música não mudou para Desafio.");
   await assertVisibleSections(["challengeModeView","communitySection"],"Desafio com Comunidade");
+  await page.evaluate(()=>{setMusicMenuExpanded(true);showChallengeSubPanel("challengePlayPanel");});
+  await assertMusicMenuMinimized("partida de Desafio");
   await page.locator("#backFromChallenge").click();
   await assertVisibleSections(["modeHub","communitySection"],"retorno do Desafio");
 
