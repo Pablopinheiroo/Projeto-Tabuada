@@ -3478,7 +3478,7 @@ function renderRanking(){
  };
  rows.sort(sorting[sort]||sorting.errors);
  const shown=rows.slice(0,30);
- $('rankingCaption').textContent='Detalhes do treinamento · '+rows.length+' conta(s) encontrada(s) · exibindo '+shown.length+' no ranking.';
+ $('rankingCaption').textContent='Habilidades gerais · todas as modalidades · '+rows.length+' conta(s) encontrada(s) · exibindo '+shown.length+' no ranking.';
  if(!shown.length){
   $('ranking').innerHTML='<div class="empty-ranking">Ainda não há dados para este filtro. Responda algumas questões para criar seu ranking.</div>';
   return;
