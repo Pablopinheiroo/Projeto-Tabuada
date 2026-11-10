@@ -421,6 +421,23 @@ const selectorRefs = [...inlineScripts[0].matchAll(/\$\(['"]([^'"]+)['"]\)/g)].m
 const missingIds = [...new Set(selectorRefs.filter(id => !ids.includes(id)))];
 check(missingIds.length === 0, "IDs usados no JavaScript e ausentes do HTML: " + missingIds.join(", "));
 
+const challengeStartCode=html.slice(html.indexOf("async function startChallengeGame(challenge,role){"),html.indexOf("\nfunction submitChallengeChoice(value){",html.indexOf("async function startChallengeGame(challenge,role){")));
+check(html.includes("function requestChallengeFullscreen()")&&html.includes("function enterChallengeMatchLock()")&&
+  html.includes("function leaveChallengeMatchLock()")&&html.includes("function challengeMatchKeyGuard(event)")&&
+  html.includes("body.challenge-match-active #setup>:not(#challengeModeView)")&&
+  html.includes("body.challenge-match-active #challengeQuitMatch{display:none!important}"),
+  "Durante o duelo só o quadro do jogo deve ficar visível, sem botão de saída ou navegação.");
+check(html.includes("function runChallengeStartCountdown()")&&
+  html.includes("value:'3'")&&html.includes("value:'2'")&&html.includes("value:'1'")&&html.includes("value:'VAI!'")&&
+  challengeStartCode.includes("await runChallengeStartCountdown();")&&
+  challengeStartCode.indexOf("await runChallengeStartCountdown();")<challengeStartCode.indexOf("await profileLoad;"),
+  "O duelo precisa mostrar 3, 2, 1 e VAI antes de iniciar o relógio da partida.");
+check(html.includes("const stake=raw!==''?Number(raw):0")&&
+  html.includes("const validIntegerStake=Number.isSafeInteger(stake)&&stake>=1")&&
+  html.includes("enoughOpponentBalance=!!player&&validIntegerStake&&stake<=playerCoins"),
+  "A validação de aposta deve reconhecer valores numéricos como 10 e comparar com os dois saldos.");
+
+
 const browser = await chromium.launch({ headless: true });
 const viewportResults = [];
 async function testViewport(name, viewport, mobile = false) {
@@ -561,6 +578,71 @@ async function testViewport(name, viewport, mobile = false) {
     null,
     { timeout: 30000 }
   );
+
+  const coinBetButtonState=await page.evaluate(()=>{
+    const oldMode=challengeBetMode,oldPlayers=challengePlayers,oldSelected=selectedChallengePlayers,oldCoins=gameEconomy.coins;
+    const input=document.querySelector("#challengeBetAmount"),button=document.querySelector("#challengeStartSelected");
+    try{
+      challengeBetMode=true;
+      gameEconomy.coins=85;
+      challengePlayers=[{username:"adversario_teste",coins:85}];
+      selectedChallengePlayers=new Set(["adversario_teste"]);
+      input.value="10";updateChallengeSelectedCount();
+      const tenCoins={disabled:button.disabled,max:input.max,message:document.querySelector("#challengeBetLimit").textContent};
+      input.value="86";updateChallengeSelectedCount();
+      const aboveBalance=button.disabled;
+      gameEconomy.coins=9;input.value="10";updateChallengeSelectedCount();
+      const ownBalanceInsufficient=button.disabled;
+      return {tenCoins,aboveBalance,ownBalanceInsufficient};
+    }finally{
+      challengeBetMode=oldMode;challengePlayers=oldPlayers;selectedChallengePlayers=oldSelected;gameEconomy.coins=oldCoins;
+      input.value="";updateChallengeSelectedCount();
+    }
+  });
+  check(!coinBetButtonState.tenCoins.disabled&&coinBetButtonState.tenCoins.max==="85"&&
+    coinBetButtonState.tenCoins.message.includes("válida")&&coinBetButtonState.aboveBalance&&
+    coinBetButtonState.ownBalanceInsufficient,
+    name+": o botão da aposta não liberou 10 moedas com saldos de 85/85, ou aceitou valor acima do saldo ("+JSON.stringify(coinBetButtonState)+").");
+  const challengeCountdownCheck=await page.evaluate(async()=>{
+    const oldCurrent=challengeCurrent,oldRender=renderChallengeQuestion,oldTimer=window.setInterval,oldClear=window.clearInterval,oldTimeout=window.setTimeout;
+    let rendered=false;
+    try{
+      challengeCurrent={id:"countdown-smoke"};
+      challengeMatchStarted=0;challengeMatchDeadline=0;
+      renderChallengeQuestion=()=>{rendered=true;};
+      window.setInterval=()=>12345;window.clearInterval=()=>{};
+      window.setTimeout=(callback)=>oldTimeout(callback,0);
+      const result=await runChallengeStartCountdown();
+      return {result,rendered,number:document.querySelector("#challengeStartCountdownNumber").textContent,
+        hidden:document.querySelector("#challengeStartCountdown").classList.contains("hidden"),
+        duration:challengeMatchDeadline-challengeMatchStarted};
+    }finally{
+      challengeCurrent=oldCurrent;renderChallengeQuestion=oldRender;window.setInterval=oldTimer;window.clearInterval=oldClear;window.setTimeout=oldTimeout;
+      if(challengeOverallTimer===12345)challengeOverallTimer=null;
+      document.querySelector("#challengeStartCountdown").classList.add("hidden");
+    }
+  });
+  check(challengeCountdownCheck.result&&challengeCountdownCheck.rendered&&challengeCountdownCheck.number==="VAI!"&&
+    challengeCountdownCheck.hidden&&challengeCountdownCheck.duration===50000,
+    name+": a contagem regressiva não terminou antes de iniciar os 50 segundos do duelo ("+JSON.stringify(challengeCountdownCheck)+").");
+  const challengeLockCheck=await page.evaluate(()=>{
+    enterChallengeMatchLock();
+    const result={
+      bodyLocked:document.body.classList.contains("challenge-match-active"),
+      setupPosition:getComputedStyle(document.querySelector("#setup")).position,
+      quitDisplay:getComputedStyle(document.querySelector("#challengeQuitMatch")).display
+    };
+    const event=new KeyboardEvent("keydown",{key:"Escape",bubbles:true,cancelable:true});
+    document.dispatchEvent(event);
+    result.escapeBlocked=event.defaultPrevented;
+    leaveChallengeMatchLock();
+    result.restored=!document.body.classList.contains("challenge-match-active");
+    return result;
+  });
+  check(challengeLockCheck.bodyLocked&&challengeLockCheck.setupPosition==="fixed"&&
+    challengeLockCheck.quitDisplay==="none"&&challengeLockCheck.escapeBlocked&&challengeLockCheck.restored,
+    name+": a tela exclusiva do duelo não bloqueou navegação/saída ou não restaurou a página no fim ("+JSON.stringify(challengeLockCheck)+").");
+
   check((await page.locator("#trackSelect").inputValue()) !== "0",
     name + ": a tela inicial repetiu a última faixa salva em vez de escolher outra.");
   const coinNotification=await page.evaluate(()=>{
