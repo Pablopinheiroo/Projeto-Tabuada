@@ -4115,7 +4115,9 @@ async function refreshChallengeData(){
   const recentWins=challengeItems.filter(item=>{
    if(item.status!=='completed'||!item.myResult||seenChallengeIds.has(item.id))return false;
    const winners=Array.isArray(item.winners)?item.winners:[];
-   return item.winner!=='empate'&&(item.winner===activeProfile||winners.includes(activeProfile));
+   const completedAt=Date.parse(item.completedAt||'');
+   const won=item.winner!=='empate'&&(item.winner===activeProfile||winners.includes(activeProfile));
+   return won&&Number.isFinite(completedAt)&&Date.now()-completedAt<10*60_000;
   });
   recentWins.forEach(item=>markChallengeResultSeen(item.id));
   if(newTitles.length||newMedals.length||recentWins.length){
