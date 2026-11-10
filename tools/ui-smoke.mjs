@@ -106,16 +106,20 @@ const rewardEconomy=workerContext.__normalizeGameEconomy({
   profile:{avatar:"imagem:0"},economy:{coins:0,totalEarned:0,trainingQuestionProgress:0}
 });
 const rewardNine=workerContext.__applyTrainingQuestionReward(rewardEconomy,"training-claim-0001",9);
+const afterNine={coins:rewardEconomy.coins,progress:rewardEconomy.trainingQuestionProgress};
 const rewardOne=workerContext.__applyTrainingQuestionReward(rewardEconomy,"training-claim-0002",1);
+const afterOne={coins:rewardEconomy.coins,progress:rewardEconomy.trainingQuestionProgress};
 const rewardDuplicate=workerContext.__applyTrainingQuestionReward(rewardEconomy,"training-claim-0002",1);
+const afterDuplicate={coins:rewardEconomy.coins,progress:rewardEconomy.trainingQuestionProgress};
 const rewardTwenty=workerContext.__applyTrainingQuestionReward(rewardEconomy,"training-claim-0003",20);
-check(rewardNine.coinsAdded===0&&rewardEconomy.trainingQuestionProgress===9,
+const afterTwenty={coins:rewardEconomy.coins,totalEarned:rewardEconomy.totalEarned,progress:rewardEconomy.trainingQuestionProgress};
+check(rewardNine.coinsAdded===0&&afterNine.progress===9&&afterNine.coins===0,
   "As primeiras 9 questões não ficaram acumuladas para a próxima saída.");
-check(rewardOne.coinsAdded===5&&rewardEconomy.coins===5&&rewardEconomy.trainingQuestionProgress===0,
+check(rewardOne.coinsAdded===5&&afterOne.coins===5&&afterOne.progress===0,
   "A décima questão não concedeu exatamente 5 moedas.");
-check(rewardDuplicate.alreadyClaimed&&rewardDuplicate.coinsAdded===0&&rewardEconomy.coins===15,
+check(rewardDuplicate.alreadyClaimed&&rewardDuplicate.coinsAdded===0&&afterDuplicate.coins===5,
   "Uma mesma sessão duplicada concedeu moedas mais de uma vez.");
-check(rewardTwenty.coinsAdded===10&&rewardEconomy.coins===15&&rewardEconomy.totalEarned===15,
+check(rewardTwenty.coinsAdded===10&&afterTwenty.coins===15&&afterTwenty.totalEarned===15,
   "20 questões não concederam 10 moedas ou não preservaram o total ganho.");
 const cycleRewardBranch=trainingRewardBranch.slice(0,trainingRewardBranch.indexOf('} else if (body.type === "training_questions")'));
 check(!cycleRewardBranch.includes("economy.coins +=")&&!cycleRewardBranch.includes("economy.totalEarned +="),
