@@ -384,6 +384,7 @@ check(html.includes("item.winner!=='empate'&&(item.winner===activeProfile||winne
   "Somente uma vitória recente e sem empate pode gerar a comemoração do duelo.");
 check(html.includes("function profileLearningStats()")&&html.includes("challenge:{label:'Desafio'")&&
   html.includes("tournamentReview:{label:'Rev. torneio'")&&html.includes("legacy:{label:'Histórico antigo'")&&
+  html.includes("rankingScope==='all'?'Habilidades gerais · todas as modalidades':'Resultado desta partida'")&&
   html.includes("function renderChallengeList()")&&html.includes("challenge-card-facts")&&
   html.includes("challenge-preview-head")&&html.includes("challenge-preview-row")&&
   html.includes("Ver classificação final")&&html.includes("Ver prévia da classificação")&&
@@ -520,8 +521,8 @@ async function testViewport(name, viewport, mobile = false) {
   check(separatedErrorPools.trainingAfterChallenge===0&&separatedErrorPools.tournamentAfterChallenge===1&&
     separatedErrorPools.tournamentAfterResolved===0,
     name+": um erro no Desafio alterou indevidamente os treinos separados, ou a revisão do Torneio não ficou independente.");
-  check(separatedErrorPools.modeBreakdown.training.attempts===5&&separatedErrorPools.modeBreakdown.challenge.attempts===6&&
-    separatedErrorPools.modeBreakdown.challenge.wrong===5&&separatedErrorPools.modeBreakdown.tournament.attempts===4&&
+  check(separatedErrorPools.modeBreakdown.training.attempts===5&&separatedErrorPools.modeBreakdown.challenge.attempts===8&&
+    separatedErrorPools.modeBreakdown.challenge.wrong===7&&separatedErrorPools.modeBreakdown.tournament.attempts===4&&
     separatedErrorPools.modeBreakdown.tournamentReview.attempts===1,
     name+": o painel geral não mostrou corretamente todas as modalidades, incluindo Desafio e revisão de erros do Torneio.");
   const clickActionTiming = await page.evaluate(() => {
