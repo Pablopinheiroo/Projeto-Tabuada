@@ -467,7 +467,7 @@ async function testViewport(name, viewport, mobile = false) {
         errorTrainingPools:{}
       }
     },sessions:[]};
-    saveHistory=()=>{};updateReviewTrainingButton=()=>{};playFeedback=()=>{};
+    saveHistory=()=>{};playFeedback=()=>{};
     try{
       const trainingBefore=getErrorTrainingFacts('training').map(item=>item.wrong);
       const tournamentBefore=getErrorTrainingFacts('tournament').map(item=>item.wrong);
@@ -509,7 +509,7 @@ async function testViewport(name, viewport, mobile = false) {
     JSON.stringify(separatedErrorPools.tournamentBefore)==='[3]',
     name+": a lista de erros misturou modalidades; deve somar Treinar+Modo jogo separadamente do Torneio ("+JSON.stringify(separatedErrorPools)+").");
   check(separatedErrorPools.regularCardVisible&&separatedErrorPools.tournamentCardVisible,
-    name+": os dois cartões de revisão não apareceram quando existem erros nas respectivas modalidades.");
+    name+": os dois cartões de revisão não apareceram quando existem erros nas respectivas modalidades: "+JSON.stringify({training:separatedErrorPools.trainingBefore,tournament:separatedErrorPools.tournamentBefore,regular:separatedErrorPools.regularCardVisible,tournamentCard:separatedErrorPools.tournamentCardVisible}));
   check(separatedErrorPools.allSkillsBefore?.wrong===14&&separatedErrorPools.allSkillsBefore?.attempts===18&&
     separatedErrorPools.challengeOnlySkill?.wrong===2&&separatedErrorPools.challengeOnlySkill?.attempts===2&&
     !separatedErrorPools.challengeOnlyInTraining,
