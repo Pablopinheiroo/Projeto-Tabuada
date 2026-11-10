@@ -563,6 +563,30 @@ async function testViewport(name, viewport, mobile = false) {
   );
   check((await page.locator("#trackSelect").inputValue()) !== "0",
     name + ": a tela inicial repetiu a última faixa salva em vez de escolher outra.");
+  const coinNotification=await page.evaluate(()=>{
+    const originalMusic=playPrizeCelebrationMusic;
+    playPrizeCelebrationMusic=()=>{};
+    try{
+      showCoinRewardNotification(5,{type:"training_questions"});
+      const toast=document.querySelector("#gameRewardToast");
+      const style=getComputedStyle(toast);
+      const result={
+        text:toast.textContent,
+        visible:!toast.classList.contains("hidden"),
+        position:style.position,
+        pointerEvents:style.pointerEvents,
+        overlayCount:document.querySelectorAll(".prize-celebration-overlay").length
+      };
+      toast.classList.add("hidden");
+      toast.classList.remove("coin-reward-notification");
+      if(rewardToastTimer!==null)clearTimeout(rewardToastTimer);
+      rewardToastTimer=null;
+      return result;
+    }finally{playPrizeCelebrationMusic=originalMusic;}
+  });
+  check(coinNotification.visible&&coinNotification.position==="fixed"&&coinNotification.pointerEvents==="none"&&
+    coinNotification.overlayCount===0&&coinNotification.text.includes("10 acertos acumulados"),
+    name+": a recompensa em moedas não apareceu como notificação compacta sem bloquear a partida ("+JSON.stringify(coinNotification)+").");
   const homeOverflow = await page.evaluate(() => ({
     viewport: window.innerWidth,
     document: document.documentElement.scrollWidth,
@@ -889,6 +913,14 @@ async function testViewport(name, viewport, mobile = false) {
     claimGameReward=async(type,payload)=>{requests.push({type,...payload});return {coinsAdded:5};};
     try{
       trainingModeType='standard';sessionRewardQueue=Promise.resolve();
+      sessionTrainingCorrectClaimed=0;sessionTrainingCorrectNext=10;hits=9;
+      checkTrainingSessionRewardMilestones();
+      const freshNineDidNotClaim=requests.length===0;
+      hits=10;checkTrainingSessionRewardMilestones();
+      await sessionRewardQueue;
+      const standardFresh=requests.map(item=>({type:item.type,count:item.correctCount}));
+      requests.length=0;
+      trainingModeType='standard';sessionRewardQueue=Promise.resolve();
       sessionTrainingCorrectClaimed=0;sessionTrainingCorrectNext=2;hits=1;
       checkTrainingSessionRewardMilestones();
       hits=2;checkTrainingSessionRewardMilestones();
@@ -904,13 +936,27 @@ async function testViewport(name, viewport, mobile = false) {
       sessionCompletedQuestionCount=11;checkTrainingSessionRewardMilestones();
       await sessionRewardQueue;
       const intelligent=requests.map(item=>({type:item.type,count:item.questionCount}));
-      return {standard,intelligent};
+      return {standardFresh,freshNineDidNotClaim,standard,intelligent};
     }finally{
       claimGameReward=original;trainingModeType='standard';sessionRewardQueue=Promise.resolve();
       sessionTrainingCorrectClaimed=0;sessionTrainingCorrectNext=10;
       sessionIntelligentQuestionsClaimed=0;sessionIntelligentQuestionsNext=10;sessionCompletedQuestionCount=0;
     }
   });
+const rewardDeliveryStart=html.indexOf("async function deliverPendingGameReward");
+const rewardDeliveryEnd=html.indexOf("async function retryPendingGameRewards",rewardDeliveryStart);
+const rewardDelivery=html.slice(rewardDeliveryStart,rewardDeliveryEnd);
+check(html.includes("function showCoinRewardNotification(coinsAdded,item={})")&&
+  html.includes(".game-reward-toast.coin-reward-notification{position:fixed")&&
+  html.includes("pointer-events:none")&&html.includes("10 acertos acumulados")&&
+  html.includes("playPrizeCelebrationMusic();")&&
+  rewardDelivery.includes("if(newTitles.length)")&&
+  rewardDelivery.includes("showPrizeCelebration({")&&
+  rewardDelivery.includes("showCoinRewardNotification(coinsAdded,item)"),
+  "Recompensas de moedas devem aparecer como notificação fixa e não bloqueante; medalhas/títulos continuam com tela de comemoração.");
+  check(liveRewardMilestones.freshNineDidNotClaim&&JSON.stringify(liveRewardMilestones.standardFresh)===JSON.stringify([
+    {type:'training_questions',count:10}
+  ]),name+": o treino comum precisa esperar o décimo acerto quando não existe saldo anterior ("+JSON.stringify({freshNineDidNotClaim:liveRewardMilestones.freshNineDidNotClaim,standardFresh:liveRewardMilestones.standardFresh})+").");
   check(JSON.stringify(liveRewardMilestones.standard)===JSON.stringify([
     {type:'training_questions',count:2},{type:'training_questions',count:10}
   ]),name+": 5 moedas não foram solicitadas no décimo acerto acumulado ou o lote seguinte não voltou a contar 10 ("+JSON.stringify(liveRewardMilestones.standard)+").");
