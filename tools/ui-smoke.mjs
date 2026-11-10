@@ -348,8 +348,9 @@ check(html.includes("function formatCommunityLastOnline(value)")&&
   html.includes("if(result.sha)remoteUserSha=result.sha;")&&html.includes("profilesData[username].lastOnlineAt=result.lastOnlineAt;")&&
   workerSource.includes("updatedAt: updated.updatedAt"),
   "A comunidade precisa exibir a última vez online, atualizar a presença e manter o SHA remoto sincronizado.");
-check(html.includes("item.winner!=='empate'&&(item.winner===activeProfile||winners.includes(activeProfile))"),
-  "Um empate não pode ser apresentado como vitória individual.");
+check(html.includes("item.winner!=='empate'&&(item.winner===activeProfile||winners.includes(activeProfile))")&&
+  html.includes("Date.now()-completedAt<10*60_000"),
+  "Somente uma vitória recente e sem empate pode gerar a comemoração do duelo.");
 check(html.includes("function renderChallengeList()")&&html.includes("challenge-card-facts")&&
   html.includes("challenge-preview-head")&&html.includes("challenge-preview-row")&&
   html.includes("Ver classificação final")&&html.includes("Ver prévia da classificação")&&
