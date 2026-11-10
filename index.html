@@ -2617,8 +2617,16 @@ async function purchaseAvatar(key){
   const confirmation=result.alreadyOwned?'Este avatar já está na sua coleção.':'Compra realizada! O avatar agora está disponível em Meu perfil.';
   if($('shopMessage'))$('shopMessage').textContent=confirmation;
   if($('profileMessage'))$('profileMessage').textContent=confirmation;
-  if(result.newAchievements?.length)showAchievementCongratulations(result.newAchievements);
-  else showGameRewardToast(result.alreadyOwned?'🎨 Avatar já adquirido!':'🛒 Avatar comprado!');
+  if(!result.alreadyOwned){
+   const avatarIndex=Number(String(key).split(':')[1]);
+   const avatarName=key.startsWith('gif:')?GIF_AVATARS[avatarIndex]?.name:AVATARS[avatarIndex]?.name;
+   const newTitles=(result.newAchievements||[]).map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||String(id));
+   showPrizeCelebration({
+    icon:'🎨',kicker:'NOVO ITEM DESBLOQUEADO',title:'Novo avatar na sua coleção!',
+    description:'Você desbloqueou um novo visual para o seu perfil.',
+    items:[avatarName||'Novo avatar',...newTitles]
+   });
+  }else if(result.newAchievements?.length)showAchievementCongratulations(result.newAchievements);
  }catch(error){
   if(message)message.textContent=error.message||'Não foi possível comprar este avatar.';
  }
