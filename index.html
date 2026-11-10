@@ -4344,11 +4344,18 @@ function completeErrorTraining(){
 function next(){
  if(position>=deck.length){
   if(trainingModeType==='errors'){
-   const remaining=getErrorTrainingFacts();
-   if(remaining.length){
-    deck.push(...remaining.map(item=>({a:item.a,b:item.b})));
+   if(round===0){
+    round=1;roundCorrect=new Set();
+    deck=shuffle(errorTrainingFacts.map(item=>({a:item.a,b:item.b})));
+    trainingRoundTarget=new Set(deck.map(item=>item.a+'x'+item.b)).size;
+    position=0;
    }else{
-    completeErrorTraining();return;
+    const remaining=getErrorTrainingFacts();
+    if(remaining.length){
+     deck.push(...remaining.map(item=>({a:item.a,b:item.b})));
+    }else{
+     completeErrorTraining();return;
+    }
    }
   }else{
    const completed=round>0&&trainingRoundTarget>0&&roundCorrect.size>=trainingRoundTarget;
@@ -4433,13 +4440,15 @@ function judge(ok){
    const item=historyData.questions[key];
    item.errorTrainingCorrectStreak=Math.min(2,Math.max(0,Number(item.errorTrainingCorrectStreak)||0)+1);
    item.errorTrainingResolved=item.errorTrainingCorrectStreak>=2;
-   if(!item.errorTrainingResolved)deck.push({...current});
+   if(item.errorTrainingResolved)roundCorrect.add(key);
+   else{roundCorrect.delete(key);deck.push({...current});}
    saveHistory();updateReviewTrainingButton();
   }
  }else{
   misses++;
   if(trainingModeType==='errors'){
    const item=historyData.questions[key];item.errorTrainingCorrectStreak=0;item.errorTrainingResolved=false;
+   roundCorrect.delete(key);
    deck.push({...current});saveHistory();updateReviewTrainingButton();
   }else deck.push({...current});
   $('answer').classList.add('wrong');
@@ -4952,6 +4961,7 @@ function markCurrentQuestionDifficulty(){
  if(trainingModeType==='errors'){
   item.errorTrainingCorrectStreak=0;
   item.errorTrainingResolved=false;
+  roundCorrect.delete(key);
  }
  currentDifficultyMarked=true;saveHistory();
  sessionCompletedQuestionCount++;
