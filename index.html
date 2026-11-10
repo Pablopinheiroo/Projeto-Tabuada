@@ -1140,7 +1140,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 
  </div>
 <section id="profileStatsPanel" class="profile-stats-panel hidden" aria-label="Estatísticas pessoais">
-  <div class="profile-subscreen-heading"><div><span class="music-kicker">PAINEL DE DESEMPENHO</span><h2>Seu mapa de aprendizagem</h2><p class="hint">Os gráficos usam seu histórico privado de treinamento, aventura, desafios e torneios.</p></div><button id="closeProfileStats" class="secondary" type="button">← Menu principal</button></div>
+  <div class="profile-subscreen-heading"><div><span class="music-kicker">PAINEL DE DESEMPENHO</span><h2>Seu mapa de aprendizagem</h2><p class="hint">Os gráficos usam seu histórico privado de treinamento, aventura, desafios e torneios.</p></div><button id="closeProfileStats" class="secondary" type="button">← Voltar ao jogo</button></div>
   <div id="profileStatsOverview" class="profile-stats-overview"></div>
   <div class="profile-stats-chart-grid">
    <article class="stats-chart-card stats-radar-card"><h3>🕸️ Domínio das tabuadas · 1 a 20</h3><p>Quanto maior a área preenchida, maior seu domínio registrado em cada tabuada.</p><div id="profileStatsRadar" class="stats-radar"></div><small class="stats-chart-note">Tabuadas sem questões respondidas aparecem sem domínio medido.</small></article>
@@ -1155,7 +1155,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
   <p class="stats-data-note">A análise considera erros, acertos e tempo médio por resposta. Os dados antigos continuam preservados; a separação por modo fica mais completa conforme você joga cada modalidade após esta atualização.</p>
  </section>
  <section id="profileOptionsPanel" class="profile-options-panel hidden" aria-label="Opções do jogo">
-  <div class="profile-subscreen-heading"><div><span class="music-kicker">PREFERÊNCIAS</span><h2>⚙️ Opções</h2><p class="hint">A música geral fica pausada nesta tela. Ao mover uma barra, você ouvirá somente a prévia correspondente àquela configuração.</p></div><button id="closeProfileOptions" class="secondary" type="button">← Menu principal</button></div>
+  <div class="profile-subscreen-heading"><div><span class="music-kicker">PREFERÊNCIAS</span><h2>⚙️ Opções</h2><p class="hint">A música geral fica pausada nesta tela. Ao mover uma barra, você ouvirá somente a prévia correspondente àquela configuração.</p></div><button id="closeProfileOptions" class="secondary" type="button">← Voltar ao jogo</button></div>
   <section class="profile-audio-settings" aria-label="Volume da música">
    <h3>🎵 Volume da música</h3>
    <p>Controla as trilhas de fundo e também o volume máximo da música dos desafios. Ao mover esta barra, uma breve prévia da trilha toca no volume escolhido.</p>
@@ -3211,6 +3211,8 @@ function closeProfileScreen(resumeMusic=soundOn){
  setMusicCategory('principal',!!resumeMusic);
  $('profileScreen').classList.add('hidden');
  $('setup').classList.remove('hidden');
+ setMainContentSections({hub:true,community:true});
+ $('modeHub').scrollIntoView({behavior:'smooth',block:'start'});
  refreshProfileIdentity();
  renderCommunityRanking();
 }
