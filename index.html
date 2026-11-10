@@ -1064,6 +1064,94 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 @keyframes badgeInfoAppear{from{opacity:0;transform:translateY(4px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(prefers-reduced-motion:reduce){.badge-info-popover{animation:none}}
 .training-celebration-close{position:absolute;top:9px;right:10px;display:grid;place-items:center;width:34px;height:34px;min-height:34px;padding:0;border:1px solid #7188a7;border-radius:10px;background:#1d3555;color:#fff;font-size:1.35rem;font-weight:950;line-height:1}
+
+/* Comunidade: presença e cartões de desafios mais claros */
+.community-last-online{display:block;margin-top:2px;color:#58718c;font-size:.68rem;font-weight:750;line-height:1.25}
+.community-last-online::first-letter{color:#16a34a}
+.challenge-list{gap:13px}
+.challenge-list-card{display:grid;grid-template-columns:minmax(0,1fr);align-items:stretch;gap:12px;padding:14px;border:1px solid #37577c;border-radius:16px;background:linear-gradient(145deg,#0e213b,#172441 58%,#211d3d);box-shadow:0 7px 18px #0206172b;color:#eaf4ff}
+.challenge-card-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;min-width:0}
+.challenge-card-heading-copy{display:grid;gap:4px;min-width:0}
+.challenge-card-kicker{color:#67e8f9;font-size:.64rem;font-weight:950;letter-spacing:.1em}
+.challenge-card-heading-copy>strong{color:#f8fbff;font-size:.92rem;line-height:1.3;overflow-wrap:anywhere}
+.challenge-card-heading-copy>small{color:#a9bfdc;font-size:.71rem;line-height:1.35}
+.challenge-list-card .challenge-status-pill{width:auto;max-width:48%;padding:6px 9px;border-color:#45668d;background:#102d4b;color:#d9edff;font-size:.64rem;line-height:1.3;text-align:center;white-space:normal}
+.challenge-card-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.challenge-card-facts>div{display:grid;align-content:center;gap:5px;min-width:0;padding:9px 8px;border:1px solid #304b6d;border-radius:11px;background:#0a1a30}
+.challenge-card-facts small{color:#91aac9;font-size:.57rem;font-weight:900;letter-spacing:.04em;line-height:1.2}
+.challenge-card-facts strong{color:#f5f9ff;font-size:.79rem;line-height:1.25;overflow-wrap:anywhere}
+.challenge-card-facts>div:first-child strong{color:#67e8f9}
+.challenge-card-progress{height:6px;margin-top:-5px;overflow:hidden;border-radius:999px;background:#293e5d}
+.challenge-card-progress span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#22d3ee,#a78bfa);transition:width .2s ease}
+.challenge-bet-summary{display:grid;grid-template-columns:auto repeat(2,minmax(0,1fr));align-items:center;gap:9px;padding:10px;border:1px solid #806b42;border-radius:12px;background:linear-gradient(110deg,#392d1a,#262141);color:#fde68a}
+.challenge-bet-summary>.coin-symbol{width:23px;height:23px}
+.challenge-bet-summary>span{display:grid;gap:3px;min-width:0}
+.challenge-bet-summary small{color:#d7c69e;font-size:.56rem;font-weight:900;line-height:1.2}
+.challenge-bet-summary strong{color:#fff3c4;font-size:.76rem;overflow-wrap:anywhere}
+.challenge-provisional{min-width:0;border:1px solid #355477;border-radius:12px;background:#0a192e;overflow:hidden}
+.challenge-provisional>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 12px;color:#d8f4ff;font-size:.75rem;font-weight:900;cursor:pointer;list-style:none}
+.challenge-provisional>summary::-webkit-details-marker{display:none}
+.challenge-provisional>summary::after{content:"＋";flex:0 0 auto;color:#67e8f9;font-size:1rem}
+.challenge-provisional[open]>summary::after{content:"−"}
+.challenge-provisional>summary small{color:#91aac9;font-size:.62rem;font-weight:700;text-align:right}
+.challenge-preview-body{display:grid;gap:8px;padding:0 10px 10px}
+.challenge-preview-body>p{margin:0;padding:9px 10px;border-radius:8px;background:#122a45;color:#adc4df;font-size:.68rem;line-height:1.4}
+.challenge-preview-head,.challenge-preview-row{display:grid;grid-template-columns:48px minmax(0,1fr) 58px 53px;align-items:center;gap:7px}
+.challenge-preview-head{padding:0 8px;color:#7894b6;font-size:.55rem;font-weight:950;letter-spacing:.04em}
+.challenge-preview-row{min-width:0;padding:8px;border:1px solid #2b4565;border-radius:9px;background:#10213a}
+.challenge-preview-row.is-played{border-color:#3d607e;background:#122b47}
+.challenge-preview-row.is-pending{opacity:.76}
+.challenge-preview-place{display:grid;place-items:center;min-height:27px;border-radius:8px;background:#1b3a5d;color:#e2f3ff;font-size:.72rem;font-weight:950}
+.challenge-preview-person{display:grid;gap:2px;min-width:0}
+.challenge-preview-person strong{color:#f1f7ff;font-size:.7rem;overflow-wrap:anywhere}
+.challenge-preview-person small{color:#8fa9ca;font-size:.59rem}
+.challenge-preview-points{color:#67e8f9;font-size:.74rem;text-align:center}
+.challenge-preview-time{color:#b3c8e1;font-size:.62rem;text-align:right;font-variant-numeric:tabular-nums}
+.challenge-card-footer{display:flex;justify-content:flex-end;gap:8px;min-width:0}
+.challenge-card-footer .challenge-action-button{min-height:42px;max-width:100%;padding:9px 14px;border:1px solid #398cb0;border-radius:10px;background:linear-gradient(110deg,#15516c,#214b78);color:#effcff;font-size:.76rem;font-weight:900;white-space:normal}
+.challenge-card-footer .challenge-action-button:disabled{opacity:.45}
+.challenge-card-footer .challenge-list-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.challenge-card-footer .challenge-list-actions button{min-height:42px;border-radius:10px}
+@media(max-width:560px){
+ .challenge-list-card{padding:11px;gap:10px}
+ .challenge-card-heading{flex-direction:column;align-items:stretch}
+ .challenge-list-card .challenge-status-pill{max-width:none;align-self:flex-start}
+ .challenge-card-facts{gap:5px}
+ .challenge-card-facts>div{padding:8px 6px}
+ .challenge-card-facts small{font-size:.53rem}
+ .challenge-card-facts strong{font-size:.72rem}
+ .challenge-preview-head,.challenge-preview-row{grid-template-columns:39px minmax(0,1fr) 48px 43px;gap:5px}
+ .challenge-preview-head{font-size:.5rem}
+ .challenge-preview-row{padding:7px 6px}
+ .challenge-preview-person strong{font-size:.64rem}
+ .challenge-preview-time{font-size:.57rem}
+ .challenge-provisional>summary{align-items:flex-start;flex-direction:column}
+ .challenge-provisional>summary small{text-align:left}
+ .challenge-card-footer{justify-content:stretch}
+ .challenge-card-footer .challenge-action-button{width:100%}
+ .challenge-card-footer .challenge-list-actions{width:100%}
+ .challenge-card-footer .challenge-list-actions button{flex:1}
+}
+
+/* Tela única e música própria para conquistas e prêmios */
+.prize-celebration-overlay{position:fixed;inset:0;z-index:20000;display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:100vw;height:100vh;height:100dvh;padding:max(18px,env(safe-area-inset-top)) 14px max(18px,env(safe-area-inset-bottom));overflow-y:auto;background:radial-gradient(circle at 50% 35%,#25436ccc 0,#071326f5 65%);backdrop-filter:blur(7px);animation:prizeOverlayIn .2s ease-out}
+.prize-celebration-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.prize-celebration-confetti i{position:absolute;top:-12px;left:calc((var(--n)*37 + 5)%100*1%);width:7px;height:13px;border-radius:2px;background:hsl(calc(var(--n)*29),85%,65%);transform:rotate(calc(var(--n)*31deg));animation:prizeConfettiFall 2.7s ease-in infinite;animation-delay:calc(var(--n)*-.08s)}
+.prize-celebration-card{position:relative;z-index:1;display:grid;justify-items:center;gap:12px;width:min(440px,100%);max-height:calc(100dvh - 36px);box-sizing:border-box;margin:auto;padding:25px 20px 21px;border:1px solid #e3bc5b;border-radius:22px;background:linear-gradient(150deg,#182f4c,#252044 70%,#422b26);box-shadow:0 24px 70px #0009,0 0 0 4px #fbbf2420;color:#f8fafc;text-align:center;overflow-y:auto}
+.prize-celebration-close{position:absolute;top:9px;right:10px;display:grid;place-items:center;width:36px;height:36px;border:1px solid #6981a0;border-radius:50%;background:#10233d;color:#f8fafc;font-size:1.3rem}
+.prize-celebration-icon{display:grid;place-items:center;width:82px;height:82px;border:1px solid #f6d47b;border-radius:25px;background:linear-gradient(145deg,#75501b,#3b315a);box-shadow:0 0 0 7px #fbbf241a;font-size:2.8rem;animation:prizeCupPop .45s cubic-bezier(.2,.8,.2,1.2)}
+.prize-celebration-kicker{color:#fde68a;font-size:.66rem;font-weight:950;letter-spacing:.14em}
+.prize-celebration-card h2{margin:0;color:#fff7d6;font-size:clamp(1.35rem,5vw,1.8rem);line-height:1.15}
+.prize-celebration-card>p{max-width:340px;margin:0;color:#d6e2f2;font-size:.85rem;line-height:1.5}
+.prize-celebration-items{display:grid;gap:7px;width:100%;margin:3px 0;padding:0;list-style:none}
+.prize-celebration-items li{padding:9px 11px;border:1px solid #53688a;border-radius:10px;background:#0d2039;color:#f6e9c2;font-size:.79rem;font-weight:850;line-height:1.35}
+.prize-celebration-card .primary{width:100%;min-height:45px;margin:0;border:1px solid #f4ca63;background:linear-gradient(110deg,#8a5b18,#6f477b);color:#fff9e8;font-weight:950}
+@keyframes prizeOverlayIn{from{opacity:0}to{opacity:1}}
+@keyframes prizeCupPop{0%{transform:scale(.65) rotate(-12deg);opacity:.3}100%{transform:scale(1) rotate(0);opacity:1}}
+@keyframes prizeConfettiFall{0%{transform:translateY(-8vh) rotate(0);opacity:0}12%{opacity:1}100%{transform:translateY(110vh) rotate(540deg);opacity:0}}
+@media(max-width:420px){.prize-celebration-card{padding:23px 15px 17px;border-radius:18px}.prize-celebration-icon{width:72px;height:72px;font-size:2.4rem}}
+@media(prefers-reduced-motion:reduce){.prize-celebration-overlay,.prize-celebration-icon,.prize-celebration-confetti i{animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -2340,8 +2428,44 @@ function renderProfileLearningStats(){
 }
 
 let rewardToastTimer=null;
+function playPrizeCelebrationMusic(){
+ if(document.hidden||profileOptionsOpen||!soundOn||!ensureAudio())return;
+ const schedule=()=>{
+  if(!audioContext||document.hidden||!soundOn)return;
+  const start=audioContext.currentTime+.045;
+  const melody=[72,76,79,84,83,79,81,84,88,86,84,79];
+  melody.forEach((note,index)=>{
+   const at=start+index*.16;
+   const duration=index===melody.length-1?.48:.2;
+   playNote(midiToHz(note),at,duration,index%3===0?'triangle':'sine',.055);
+   if(index===0||index===4||index===8)playNote(midiToHz(note-12),at,duration*1.2,'triangle',.018);
+  });
+  [0,4,8].forEach(index=>playNote(midiToHz([60,64,67][index/4]),start+index*.16,.42,'sine',.018));
+ };
+ if(audioContext.state==='suspended')audioContext.resume().then(schedule).catch(()=>{});
+ else schedule();
+}
+function showPrizeCelebration({icon='🏆',kicker='CONQUISTA DESBLOQUEADA',title='Parabéns!',description='',items=[]}={}){
+ document.querySelector('.prize-celebration-overlay')?.remove();
+ const lines=(Array.isArray(items)?items:[]).filter(Boolean).slice(0,6);
+ const overlay=document.createElement('div');
+ overlay.className='prize-celebration-overlay';
+ overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
+ overlay.setAttribute('aria-label',title);
+ overlay.innerHTML='<div class="prize-celebration-confetti" aria-hidden="true">'+Array.from({length:28},(_,index)=>'<i style="--n:'+index+'"></i>').join('')+'</div>'+
+  '<div class="prize-celebration-card"><button type="button" class="prize-celebration-close" aria-label="Fechar aviso">×</button>'+
+  '<div class="prize-celebration-icon" aria-hidden="true">'+icon+'</div><span class="prize-celebration-kicker">'+escapeHtml(kicker)+'</span>'+
+  '<h2>'+escapeHtml(title)+'</h2><p>'+escapeHtml(description)+'</p>'+
+  (lines.length?'<ul class="prize-celebration-items">'+lines.map(line=>'<li>'+escapeHtml(line)+'</li>').join('')+'</ul>':'')+
+  '<button type="button" class="primary" data-close-prize>Continuar</button></div>';
+ const close=()=>overlay.remove();
+ overlay.querySelectorAll('.prize-celebration-close,[data-close-prize]').forEach(button=>button.addEventListener('click',close));
+ overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
+ document.addEventListener('keydown',function onEscape(event){if(event.key==='Escape'&&overlay.isConnected){close();document.removeEventListener('keydown',onEscape);}});
+ document.body.appendChild(overlay);
+ playPrizeCelebrationMusic();
+}
 function showGameRewardToast(message,achievement=false){
- if(achievement||/parabéns/i.test(String(message)))playCelebrationSound();
  const toast=$('gameRewardToast');if(!toast)return;
  toast.textContent=message;
  toast.classList.toggle('achievement-congrats',!!achievement);
@@ -2355,7 +2479,11 @@ function showGameRewardToast(message,achievement=false){
 function showAchievementCongratulations(ids,extra=''){
  const names=(Array.isArray(ids)?ids:[]).map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||String(id));
  if(!names.length)return;
- showGameRewardToast('🎉 Parabéns! Você conquistou: '+names.join(', ')+(extra?' · '+extra:''),true);
+ showPrizeCelebration({
+  icon:'🏅',kicker:'NOVO TÍTULO CONQUISTADO',title:names.length===1?'Parabéns! Novo título!':'Novas conquistas desbloqueadas!',
+  description:'Você recebeu uma nova conquista no Projeto Tabuada.',
+  items:[...names,...(extra?[extra]:[])]
+ });
 }
 function readPendingGameRewards(){
  try{const list=JSON.parse(localStorage.getItem(PENDING_REWARDS_KEY)||'[]');return Array.isArray(list)?list:[];}catch{return [];}
@@ -2368,9 +2496,17 @@ async function deliverPendingGameReward(item){
  if(result.sha)remoteUserSha=result.sha;
  if(result.updatedAt&&remoteUserData)remoteUserData.updatedAt=result.updatedAt;
  updateProfileLastSavedAt();
- if(result.newAchievements?.length){
-  showAchievementCongratulations(result.newAchievements,result.coinsAdded>0?'🪙 +'+Number(result.coinsAdded).toLocaleString('pt-BR')+' moedas':'');
- }else if(result.coinsAdded>0)showGameRewardToast('🎉 Parabéns! +'+result.coinsAdded+' moedas!',true);
+ if(result.newAchievements?.length||Number(result.coinsAdded)>0){
+  const newTitles=(result.newAchievements||[]).map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||String(id));
+  const coinsAdded=Math.max(0,Number(result.coinsAdded)||0);
+  showPrizeCelebration({
+   icon:newTitles.length?'🏅':'🪙',
+   kicker:newTitles.length?'RECOMPENSA E CONQUISTA':'RECOMPENSA CONQUISTADA',
+   title:newTitles.length?'Parabéns! Você conquistou!':'Parabéns! Você ganhou moedas!',
+   description:'Sua recompensa foi confirmada e adicionada à sua conta.',
+   items:[...newTitles,...(coinsAdded>0?['+'+coinsAdded.toLocaleString('pt-BR')+' moedas']:[])]
+  });
+ }
  saveClientEconomyCache();refreshEconomyDisplay();renderAchievementShelf();renderAvatarShop();
  if($('profileAvatarGrid')&&!$('profileScreen').classList.contains('hidden')){
   renderAvatarGrid('profileAvatarGrid',selectedProfileAvatar,key=>{selectedProfileAvatar=key;});
@@ -2724,6 +2860,32 @@ function startActiveTimeTracking(){
  lastActiveTick=Date.now();
  activeTimeTimer=setInterval(trackActiveStudyTime,15_000);
 }
+let presenceTimer=null,presenceBusy=false,lastPresencePingAt=0;
+async function sendPresencePing(force=false){
+ if(!activeProfile||!cloudTokenReady()||presenceBusy)return false;
+ const now=Date.now();
+ if(!force&&now-lastPresencePingAt<110_000)return false;
+ presenceBusy=true;
+ try{
+  const result=await apiRequest('/api/presence',{method:'POST',body:{}});
+  lastPresencePingAt=now;
+  const communityRecord=Array.isArray(communityCache)?communityCache.find(item=>item.username===activeProfile):null;
+  if(communityRecord&&result.lastOnlineAt)communityRecord.lastOnlineAt=result.lastOnlineAt;
+  return true;
+ }catch(error){
+  if(!error.sessionExpired)console.warn('Não foi possível atualizar a última presença:',error);
+  return false;
+ }finally{presenceBusy=false;}
+}
+function startPresenceTracking(){
+ if(presenceTimer!==null)clearInterval(presenceTimer);
+ lastPresencePingAt=0;
+ sendPresencePing(true);
+ presenceTimer=setInterval(()=>sendPresencePing(false),120_000);
+}
+function stopPresenceTracking(){
+ if(presenceTimer!==null){clearInterval(presenceTimer);presenceTimer=null;}
+}
 function stopActiveTimeTracking(){
  if(activeTimeTimer!==null){
   trackActiveStudyTime();
@@ -2865,6 +3027,21 @@ function formatCommunityDisplayName(value){
   return part.charAt(0).toLocaleUpperCase('pt-BR')+part.slice(1);
  }).join('');
 }
+function formatCommunityLastOnline(value){
+ const timestamp=Date.parse(value||'');
+ if(!Number.isFinite(timestamp)||timestamp<=0)return 'Atividade ainda não registrada';
+ const elapsed=Math.max(0,Date.now()-timestamp);
+ if(elapsed<6*60_000){
+  const minutes=Math.floor(elapsed/60_000);
+  return minutes<1?'🟢 Online agora':'🟢 Online há '+minutes+' min';
+ }
+ if(elapsed<60*60_000)return 'Visto por último há '+Math.floor(elapsed/60_000)+' min';
+ if(elapsed<24*60*60_000){
+  const hours=Math.floor(elapsed/3_600_000),minutes=Math.floor((elapsed%3_600_000)/60_000);
+  return 'Visto por último há '+hours+'h'+(minutes?' '+minutes+'min':'');
+ }
+ return 'Visto por último em '+new Date(timestamp).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
 function communityStatsFromRecord(record){
  const profile=record.profile&&typeof record.profile==='object'?record.profile:{};
  const economy=record.economy&&typeof record.economy==='object'?record.economy:{};
@@ -2885,6 +3062,7 @@ function communityStatsFromRecord(record){
  const featuredTitles=Array.isArray(profile.featuredTitles)?profile.featuredTitles:(Array.isArray(record.featuredTitles)?record.featuredTitles:[]);
  return {
   username:record.username,
+  lastOnlineAt:record.lastOnlineAt||profile.lastOnlineAt||null,
   displayName:formatCommunityDisplayName(record.displayName||profile.displayName||record.username),
   avatar:normalizeAvatarKey(record.avatar||profile.avatar),
   correct,wrong,attempts:Number(record.attempts)||correct+wrong,timeMs,
@@ -2956,6 +3134,7 @@ async function renderCommunityRanking(){
       '<img class="community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt="">'+
       '<div class="community-rank-identity">'+
        '<div class="community-rank-name-row"><strong class="community-rank-display-title">'+escapeHtml(user.displayName)+'</strong><span class="community-wallet-pill"><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</span></div>'+
+       '<small class="community-last-online">'+escapeHtml(formatCommunityLastOnline(user.lastOnlineAt))+'</small>'+
       '</div>'+
      '</div>'+
      '<div class="community-rank-public-stats"><span><strong>✓ '+user.correct.toLocaleString('pt-BR')+'</strong><small>Acertos</small></span><span><strong>✕ '+user.wrong.toLocaleString('pt-BR')+'</strong><small>Erros</small></span><span><strong>⏱️ '+formatStudyTimeCompact(user.timeMs)+'</strong><small>Tempo estudado</small></span></div>'+
@@ -3034,6 +3213,7 @@ function enterApp(username){
  $('authScreen').classList.add('hidden');$('game').classList.add('hidden');$('report').classList.add('hidden');$('setup').classList.remove('hidden');
  selectProfile();renderCommunityRanking();refreshEconomyDisplay();renderChallengeProfileStats();updateReviewTrainingButton();
  startActiveTimeTracking();
+ startPresenceTracking();
  setTimeout(retryPendingGameRewards,800);
  refreshChallengeData();startChallengePolling();refreshTournamentDashboard();
 }
@@ -3082,6 +3262,7 @@ async function handleLogin(event){
 
 async function logout(){
  if(!$('game').classList.contains('hidden')){alert('Encerre ou salve a partida antes de sair da conta.');return;}
+ stopPresenceTracking();
  stopActiveTimeTracking();
  await retryPendingGameRewards();
  await flushCloudSave(true);
@@ -3787,17 +3968,42 @@ function updateChallengeBadge(pendingCount=0){
 }
 function renderChallengeList(){
  const box=$('challengeList');if(!box)return;
- if(!challengeItems.length){box.innerHTML='<div class="community-empty">Você ainda não recebeu nem enviou desafios. Escolha um modo e convide alguém!</div>';return;}
+ if(!challengeItems.length){
+  box.innerHTML='<div class="community-empty">Você ainda não recebeu nem enviou desafios. Escolha um modo e convide alguém!</div>';
+  return;
+ }
  box.innerHTML=challengeItems.map(item=>{
   const participants=challengeParticipants(item),others=participants.filter(name=>name!==activeProfile);
   const results=item.results||{},mine=item.myResult,completed=item.status==='completed';
-  const scores=mine?(mine.score+'/10 pontos'):'Sua partida ainda não foi realizada';
-  const side=item.challenger===activeProfile?'Você desafiou':'Desafio recebido',names=others.map(name=>'@'+name).join(', ');
-  const level=item.mode==='custom'?'Personalizado · '+item.tables.map(n=>'Tabuada '+n).join(', '):'Patente · '+item.levelName;
-  const done=participants.filter(name=>!!results[name]).length,played=done+'/'+participants.length+' participantes já jogaram';
-  const provisional=participants.map(username=>{const result=results[username];return {username,played:!!result,score:Math.max(0,Number(result?.score)||0),totalMs:Math.max(0,Number(result?.totalMs)||0),submittedAt:result?.submittedAt||''};})
-   .sort((a,b)=>{if(a.played!==b.played)return a.played?-1:1;return b.score-a.score||a.totalMs-b.totalMs||String(a.submittedAt).localeCompare(String(b.submittedAt))||a.username.localeCompare(b.username);});
-  const rows=provisional.map((entry,index)=>{const previous=provisional[index-1];const position=entry.played&&previous?.played&&entry.score===previous.score&&entry.totalMs===previous.totalMs?previous.position:index+1;entry.position=position;return '<div class="challenge-provisional-row '+(entry.played?'played':'pending')+'"><strong>'+(entry.played?'#'+position:'—')+'</strong><span>@'+escapeHtml(entry.username)+'</span><b>'+(entry.played?entry.score+'/10':'Aguardando')+'</b><small>'+(entry.played?formatDuration(entry.totalMs):'')+'</small></div>';}).join('');
+  const side=item.challenger===activeProfile?'DESAFIO ENVIADO':'DESAFIO RECEBIDO';
+  const names=others.map(name=>'@'+name).join(', ')||'Participantes do grupo';
+  const tables=Array.isArray(item.tables)?item.tables:[];
+  const level=item.mode==='custom'
+   ?'Personalizado · '+tables.map(number=>'Tabuada '+number).join(', ')
+   :'Patente · '+(item.levelName||'Desafio');
+  const done=participants.filter(name=>!!results[name]).length;
+  const progress=participants.length?Math.round(done/participants.length*100):0;
+  const provisional=participants.map(username=>{
+   const result=results[username];
+   return {username,played:!!result,score:Math.max(0,Number(result?.score)||0),totalMs:Math.max(0,Number(result?.totalMs)||0),submittedAt:result?.submittedAt||''};
+  }).sort((a,b)=>{
+   if(a.played!==b.played)return a.played?-1:1;
+   return b.score-a.score||a.totalMs-b.totalMs||String(a.submittedAt).localeCompare(String(b.submittedAt))||a.username.localeCompare(b.username);
+  });
+  let position=0,previous=null;
+  const rows=provisional.map(entry=>{
+   if(entry.played){
+    if(!previous||entry.score!==previous.score||entry.totalMs!==previous.totalMs)position++;
+    previous=entry;
+   }
+   const place=entry.played?position:'—';
+   return '<div class="challenge-preview-row '+(entry.played?'is-played':'is-pending')+'">'+
+    '<span class="challenge-preview-place">'+(entry.played?'#'+place:'—')+'</span>'+
+    '<span class="challenge-preview-person"><strong>@'+escapeHtml(entry.username)+'</strong><small>'+(entry.played?'Partida concluída':'Aguardando jogar')+'</small></span>'+
+    '<strong class="challenge-preview-points">'+(entry.played?entry.score+'/10':'—')+'</strong>'+
+    '<small class="challenge-preview-time">'+(entry.played?formatDuration(entry.totalMs):'')+'</small>'+
+   '</div>';
+  }).join('');
   let action='Jogar desafio',disabled=!!mine&&!completed,actions='';
   if(item.betMode&&item.status==='pending_acceptance'){
    if(item.recipient===activeProfile)actions='<span class="challenge-list-actions"><button type="button" data-challenge-accept="'+item.id+'">Aceitar</button><button type="button" data-challenge-reject="'+item.id+'" class="challenge-reject">Rejeitar</button></span>';
@@ -3806,10 +4012,27 @@ function renderChallengeList(){
   else if(item.status==='rejected'){action='Convite recusado';disabled=true;}
   else if(completed){action='Ver resultado';disabled=false;}
   else if(mine){action='Aguardando participantes';disabled=true;}
-  const betInfo=item.betMode?'<small><i class="coin-symbol" aria-hidden="true"></i> Aposta: '+Number(item.stake||0).toLocaleString('pt-BR')+' moedas de cada pessoa · prêmio: '+(Number(item.stake||0)*2).toLocaleString('pt-BR')+' moedas</small>':'';
-  const playButton=actions||(item.status==='rejected'?'<button type="button" disabled>Convite recusado</button>':'<button type="button" data-challenge-play="'+item.id+'" '+(disabled?'disabled':'')+'>'+action+'</button>');
-  const partial='<details class="challenge-provisional"><summary>'+(completed?'Ver classificação final':'Consultar prévia do ranking · '+done+'/'+participants.length)+'</summary><p class="small">'+(completed?'Resultado oficial, todos concluíram.':'Prévia provisória, que pode mudar quando os demais participantes jogarem.')+'</p>'+rows+'</details>';
-  return '<article class="challenge-list-card"><div class="challenge-list-meta"><strong>⚔️ '+escapeHtml(side)+' · '+escapeHtml(names)+'</strong><small>'+escapeHtml(level)+' · '+scores+'</small>'+betInfo+'<small>'+escapeHtml(played)+'</small><span class="challenge-status-pill">'+escapeHtml(challengeResultLabel(item))+'</span></div>'+partial+playButton+'</article>';
+  const betInfo=item.betMode
+   ?'<div class="challenge-bet-summary"><i class="coin-symbol" aria-hidden="true"></i><span><small>APOSTA POR PARTICIPANTE</small><strong>'+Number(item.stake||0).toLocaleString('pt-BR')+' moedas</strong></span><span><small>PRÊMIO TOTAL</small><strong>'+Number(Number(item.stake||0)*2).toLocaleString('pt-BR')+' moedas</strong></span></div>'
+   :'';
+  const playButton=actions||(item.status==='rejected'
+   ?'<button type="button" class="challenge-action-button" disabled>Convite recusado</button>'
+   :'<button type="button" class="challenge-action-button" data-challenge-play="'+item.id+'" '+(disabled?'disabled':'')+'>'+action+'</button>');
+  const summary=completed?'Ver classificação final':'Ver prévia da classificação';
+  const explanation=completed?'Resultado definitivo: todos os participantes terminaram.':'Prévia provisória: a ordem pode mudar quando os demais participantes jogarem.';
+  const resultText=mine?mine.score+'/10 pontos':'Você ainda não jogou';
+  return '<article class="challenge-list-card">'+
+   '<header class="challenge-card-heading"><div class="challenge-card-heading-copy"><span class="challenge-card-kicker">'+side+'</span><strong>⚔️ '+escapeHtml(names)+'</strong><small>'+escapeHtml(level)+'</small></div><span class="challenge-status-pill">'+escapeHtml(challengeResultLabel(item))+'</span></header>'+
+   '<div class="challenge-card-facts">'+
+    '<div><small>SEU RESULTADO</small><strong>'+escapeHtml(resultText)+'</strong></div>'+
+    '<div><small>PARTICIPANTES</small><strong>'+done+'/'+participants.length+'</strong></div>'+
+    '<div><small>ANDAMENTO</small><strong>'+progress+'%</strong></div>'+
+   '</div>'+
+   '<div class="challenge-card-progress" role="progressbar" aria-label="Participantes que já jogaram" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+progress+'"><span style="width:'+progress+'%"></span></div>'+
+   betInfo+
+   '<details class="challenge-provisional"><summary><span>📊 '+summary+'</span><small>'+done+' de '+participants.length+' partidas concluídas</small></summary><div class="challenge-preview-body"><p>'+explanation+'</p><div class="challenge-preview-head"><span>POSIÇÃO</span><span>PARTICIPANTE</span><span>PONTOS</span><span>TEMPO</span></div>'+rows+'</div></details>'+
+   '<footer class="challenge-card-footer">'+playButton+'</footer>'+
+  '</article>';
  }).join('');
 }
 
@@ -3829,11 +4052,21 @@ async function handleBetChallengeResponse(id,decision){
   buttons.forEach(button=>button.disabled=false);
  }
 }
+function earnedChallengeMedalIds(stats){
+ return Object.entries(stats?.levels||{}).filter(([,level])=>Number(level?.wins)>=10).map(([id])=>id);
+}
 async function refreshChallengeData(){
  if(!activeProfile||!cloudTokenReady())return;
  try{
+  const previousProfile=profilesData[activeProfile]||{};
+  const previousStats=previousProfile.challengeStats||{};
+  const previousEconomy=gameEconomy;
+  const previousCoins=Math.max(0,Number(previousEconomy.coins)||0);
+  const previousAchievementIds=new Set(Object.keys(previousEconomy.achievements||{}));
+  const previousMedalIds=new Set(earnedChallengeMedalIds(previousStats));
   const result=await apiRequest('/api/challenges');
   challengeItems=Array.isArray(result.items)?result.items:[];
+  const nextStats=result.challengeStats||previousStats;
   if(result.challengeStats){
    profilesData[activeProfile]=profilesData[activeProfile]||{};
    profilesData[activeProfile].challengeStats=result.challengeStats;
@@ -3844,6 +4077,33 @@ async function refreshChallengeData(){
    saveClientEconomyCache();
    renderAchievementShelf();
    refreshEconomyDisplay();
+  }
+  const newTitles=Object.keys(gameEconomy.achievements||{}).filter(id=>!previousAchievementIds.has(id));
+  const newMedals=earnedChallengeMedalIds(nextStats).filter(id=>!previousMedalIds.has(id));
+  const addedCoins=Math.max(0,(Number(gameEconomy.coins)||0)-previousCoins);
+  const seenChallengeIds=new Set(getSeenChallengeResults());
+  const recentWins=challengeItems.filter(item=>{
+   if(item.status!=='completed'||!item.myResult||seenChallengeIds.has(item.id))return false;
+   const winners=Array.isArray(item.winners)?item.winners:[];
+   const won=item.winner===activeProfile||winners.includes(activeProfile);
+   const completedAt=Date.parse(item.completedAt||'');
+   return won&&Number.isFinite(completedAt)&&Date.now()-completedAt<10*60_000;
+  });
+  recentWins.forEach(item=>markChallengeResultSeen(item.id));
+  if(newTitles.length||newMedals.length||addedCoins>0||recentWins.length){
+   const lines=[
+    ...recentWins.map(()=> 'Vitória em duelo confirmada!'),
+    ...newMedals.map(id=>'Medalha conquistada: '+(CHALLENGE_PRESETS_UI.find(level=>level.id===id)?.name||id)),
+    ...newTitles.map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||String(id)),
+    ...(addedCoins>0?['+'+addedCoins.toLocaleString('pt-BR')+' moedas']:[])
+   ];
+   showPrizeCelebration({
+    icon:newMedals.length?'🏅':newTitles.length?'✨':recentWins.length?'🏆':'🪙',
+    kicker:'VITÓRIA E RECOMPENSAS',
+    title:recentWins.length?'Parabéns pela vitória!':'Você conquistou uma recompensa!',
+    description:'Sua conquista foi confirmada no seu perfil.',
+    items:lines
+   });
   }
   renderChallengeList();
   renderChallengeProfileStats();
@@ -4248,8 +4508,16 @@ function renderTournamentFinalNotice(notice){
  const seenKey='projetoTabuadaTorneioAvisoV1_'+activeProfile+'_'+notice.month;
  if(!localStorage.getItem(seenKey)){
   const newAchievements=notice.award?.newAchievements||[];
-  if(newAchievements.length)showAchievementCongratulations(newAchievements,'🏆 Torneio: '+place);
-  else showGameRewardToast('🏆 Torneio '+name+': você ficou em '+place+'!');
+  const awardRank=Number(notice.award?.rank)||Number(notice.position)||0;
+  if(notice.award||newAchievements.length){
+   showPrizeCelebration({
+    icon:awardRank>0&&awardRank<=3?'🏆':'🎖️',
+    kicker:'PREMIAÇÃO DO TORNEIO',
+    title:'Parabéns! Você foi premiado!',
+    description:'Sua colocação no torneio mensal foi reconhecida.',
+    items:[(awardRank?awardRank+'º lugar · ':'')+name+' · '+place,...(notice.award?.frame?['Moldura conquistada: '+notice.award.frame]:[]),...newAchievements.map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||String(id))]
+   });
+  }
   localStorage.setItem(seenKey,'1');
  }
  if(notice.award){
@@ -5175,23 +5443,11 @@ function showTrainingExitCelebration(){
 }
 function showTrainingCycleCelebration(result,isReview,reviewComplete=false){
  pauseTrainingQuestionClock();
- playCelebrationSound();
- document.querySelector('.training-celebration-overlay')?.remove();
- const rewardText='5 moedas a cada 10 questões acertadas, mesmo quando você encerra antes de completar o ciclo. A contagem continua entre sessões e o saldo é creditado ao salvar o treino.';
- const overlay=document.createElement('div');overlay.className='training-celebration-overlay';overlay.setAttribute('role','dialog');overlay.setAttribute('aria-label','Ciclo de estudos concluído');
- overlay.innerHTML='<div class="training-celebration-confetti">'+Array.from({length:32},(_,i)=>'<i style="--n:'+i+'"></i>').join('')+'</div>'+
-  '<div class="training-celebration-card"><button type="button" class="training-celebration-close" data-dismiss-celebration aria-label="Fechar tela de parabéns">×</button><div class="training-celebration-cup">🎉</div><span class="music-kicker">CICLO DE ESTUDOS CONCLUÍDO</span>'+
-  '<h2>Parabéns! Ciclo completo!</h2><p>'+(isReview?'Você está aprendendo com seus erros e fortalecendo suas contas difíceis.':'Você concluiu mais um ciclo de estudos!')+'</p>'+
-  '<div class="training-celebration-coins"><i class="coin-symbol" aria-hidden="true"></i><strong>'+escapeHtml(rewardText)+'</strong></div>'+
-  '<button type="button" class="primary" data-dismiss-celebration>'+(reviewComplete?'Ver meu resultado':'Continuar estudando')+'</button></div>';
- document.body.appendChild(overlay);
- const dismiss=()=>{
-  overlay.remove();
-  if(reviewComplete){
-   finishSession().finally(()=>{trainingReviewMode=false;trainingModeType='standard';});
-  }else resumeTrainingQuestionClock();
- };
- overlay.querySelectorAll('[data-dismiss-celebration]').forEach(button=>button.addEventListener('click',dismiss));
+ if(reviewComplete){
+  finishSession().finally(()=>{trainingReviewMode=false;trainingModeType='standard';});
+  return;
+ }
+ resumeTrainingQuestionClock();
 }
 
 function makeRound(){
@@ -6014,6 +6270,13 @@ document.addEventListener('keydown',event=>{
  if(field.matches('#loginUsername,#registerUsername'))return;
  playUiSound('key');
 },true);
+
+document.addEventListener('visibilitychange',()=>{
+ if(!activeProfile)return;
+ if(document.hidden)sendPresencePing(true);
+ else sendPresencePing(true);
+});
+window.addEventListener('pagehide',()=>{if(activeProfile)sendPresencePing(true);});
 </script>
 </body>
 </html>
