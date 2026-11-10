@@ -2879,10 +2879,21 @@ async function sendPresencePing(force=false){
  if(!force&&now-lastPresencePingAt<110_000)return false;
  presenceBusy=true;
  try{
+  const username=activeProfile;
   const result=await apiRequest('/api/presence',{method:'POST',body:{}});
   lastPresencePingAt=now;
-  const communityRecord=Array.isArray(communityCache)?communityCache.find(item=>item.username===activeProfile):null;
-  if(communityRecord&&result.lastOnlineAt)communityRecord.lastOnlineAt=result.lastOnlineAt;
+  if(result.sha)remoteUserSha=result.sha;
+  if(result.lastOnlineAt){
+   profilesData[username]=profilesData[username]||{};
+   profilesData[username].lastOnlineAt=result.lastOnlineAt;
+   persistProfiles();
+   if(remoteUserData?.username===username){
+    remoteUserData.profile={...(remoteUserData.profile||{}),lastOnlineAt:result.lastOnlineAt};
+    if(result.updatedAt)remoteUserData.updatedAt=result.updatedAt;
+   }
+   const communityRecord=Array.isArray(communityCache)?communityCache.find(item=>item.username===username):null;
+   if(communityRecord)communityRecord.lastOnlineAt=result.lastOnlineAt;
+  }
   return true;
  }catch(error){
   if(!error.sessionExpired)console.warn('Não foi possível atualizar a última presença:',error);
