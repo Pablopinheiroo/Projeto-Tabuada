@@ -366,6 +366,13 @@ check(html.includes("if(!result.alreadyOwned){")&&html.includes("NOVO ITEM DESBL
 const trainingCycleCode=html.slice(html.indexOf("function showTrainingCycleCelebration("),html.indexOf("function makeRound()",html.indexOf("function showTrainingCycleCelebration(")));
 check(trainingCycleCode&&!trainingCycleCode.includes("showPrizeCelebration(")&&!trainingCycleCode.includes("playCelebrationSound()"),
   "Concluir um ciclo sem ganhar prêmio não deve abrir uma comemoração de recompensa.");
+const trainingExitCode=html.slice(html.indexOf("function showTrainingExitCelebration("),html.indexOf("function makeRound()",html.indexOf("function showTrainingExitCelebration(")));
+check(trainingExitCode.includes("RESULTADO DA PARTIDA")&&trainingExitCode.includes("Treino finalizado")&&
+  !trainingExitCode.includes("playCelebrationSound()")&&!trainingExitCode.includes("showPrizeCelebration("),
+  "O fim de um treino comum deve mostrar somente o resultado, sem música ou comemoração de prêmio.");
+check(prizeModalCode.includes("const resumeGameClock=")&&prizeModalCode.includes("pauseTrainingQuestionClock()")&&
+  prizeModalCode.includes("resumeTrainingQuestionClock()"),
+  "A tela de prêmio deve pausar o cronômetro da questão e retomá-lo ao ser fechada.");
 const explicitSaveContract = {
   timedAutosaveRemoved: true,
   saveTrainingOnExit: true,
