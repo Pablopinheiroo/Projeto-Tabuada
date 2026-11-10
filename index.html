@@ -1136,7 +1136,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 /* Tela única e música própria para conquistas e prêmios */
 .prize-celebration-overlay{position:fixed;inset:0;z-index:20000;display:flex;align-items:center;justify-content:center;box-sizing:border-box;width:100vw;height:100vh;height:100dvh;padding:max(18px,env(safe-area-inset-top)) 14px max(18px,env(safe-area-inset-bottom));overflow-y:auto;background:radial-gradient(circle at 50% 35%,#25436ccc 0,#071326f5 65%);backdrop-filter:blur(7px);animation:prizeOverlayIn .2s ease-out}
 .prize-celebration-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none}
-.prize-celebration-confetti i{position:absolute;top:-12px;left:calc((var(--n)*37 + 5)%100*1%);width:7px;height:13px;border-radius:2px;background:hsl(calc(var(--n)*29),85%,65%);transform:rotate(calc(var(--n)*31deg));animation:prizeConfettiFall 2.7s ease-in infinite;animation-delay:calc(var(--n)*-.08s)}
+.prize-celebration-confetti i{position:absolute;top:-12px;width:7px;height:13px;border-radius:2px;animation:prizeConfettiFall 2.7s ease-in infinite}
 .prize-celebration-card{position:relative;z-index:1;display:grid;justify-items:center;gap:12px;width:min(440px,100%);max-height:calc(100dvh - 36px);box-sizing:border-box;margin:auto;padding:25px 20px 21px;border:1px solid #e3bc5b;border-radius:22px;background:linear-gradient(150deg,#182f4c,#252044 70%,#422b26);box-shadow:0 24px 70px #0009,0 0 0 4px #fbbf2420;color:#f8fafc;text-align:center;overflow-y:auto}
 .prize-celebration-close{position:absolute;top:9px;right:10px;display:grid;place-items:center;width:36px;height:36px;border:1px solid #6981a0;border-radius:50%;background:#10233d;color:#f8fafc;font-size:1.3rem}
 .prize-celebration-icon{display:grid;place-items:center;width:82px;height:82px;border:1px solid #f6d47b;border-radius:25px;background:linear-gradient(145deg,#75501b,#3b315a);box-shadow:0 0 0 7px #fbbf241a;font-size:2.8rem;animation:prizeCupPop .45s cubic-bezier(.2,.8,.2,1.2)}
@@ -2436,7 +2436,7 @@ function playPrizeCelebrationMusic(){
   const melody=[72,76,79,84,83,79,81,84,88,86,84,79];
   melody.forEach((note,index)=>{
    const at=start+index*.16;
-   const duration=index===melody.length-1?.48:.2;
+   const duration=index===melody.length-1 ? 0.48 : 0.2;
    playNote(midiToHz(note),at,duration,index%3===0?'triangle':'sine',.055);
    if(index===0||index===4||index===8)playNote(midiToHz(note-12),at,duration*1.2,'triangle',.018);
   });
@@ -2452,16 +2452,20 @@ function showPrizeCelebration({icon='🏆',kicker='CONQUISTA DESBLOQUEADA',title
  overlay.className='prize-celebration-overlay';
  overlay.setAttribute('role','dialog');overlay.setAttribute('aria-modal','true');
  overlay.setAttribute('aria-label',title);
- overlay.innerHTML='<div class="prize-celebration-confetti" aria-hidden="true">'+Array.from({length:28},(_,index)=>'<i style="--n:'+index+'"></i>').join('')+'</div>'+
+ overlay.innerHTML='<div class="prize-celebration-confetti" aria-hidden="true">'+Array.from({length:28},(_,index)=>'<i style="left:'+((index*37)%100)+'%;transform:rotate('+(index*31%360)+'deg);background:hsl('+(index*29%360)+',85%,65%);animation-delay:-'+(index*.08).toFixed(2)+'s"></i>').join('')+'</div>'+
   '<div class="prize-celebration-card"><button type="button" class="prize-celebration-close" aria-label="Fechar aviso">×</button>'+
   '<div class="prize-celebration-icon" aria-hidden="true">'+icon+'</div><span class="prize-celebration-kicker">'+escapeHtml(kicker)+'</span>'+
   '<h2>'+escapeHtml(title)+'</h2><p>'+escapeHtml(description)+'</p>'+
   (lines.length?'<ul class="prize-celebration-items">'+lines.map(line=>'<li>'+escapeHtml(line)+'</li>').join('')+'</ul>':'')+
   '<button type="button" class="primary" data-close-prize>Continuar</button></div>';
- const close=()=>overlay.remove();
+ const onEscape=event=>{if(event.key==='Escape'&&overlay.isConnected)close();};
+ const close=()=>{
+  overlay.remove();
+  document.removeEventListener('keydown',onEscape);
+ };
  overlay.querySelectorAll('.prize-celebration-close,[data-close-prize]').forEach(button=>button.addEventListener('click',close));
  overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
- document.addEventListener('keydown',function onEscape(event){if(event.key==='Escape'&&overlay.isConnected){close();document.removeEventListener('keydown',onEscape);}});
+ document.addEventListener('keydown',onEscape);
  document.body.appendChild(overlay);
  playPrizeCelebrationMusic();
 }
