@@ -155,6 +155,10 @@ check(!html.includes("Biblioteca com 100 trilhas gratuitas")&&!html.includes('cl
  "A descrição longa da biblioteca musical ainda aparece.");
 check(html.includes('id="musicMenuToggle" type="button" aria-expanded="false"')&&html.includes('class="music-controls hidden" id="musicControls"')&&html.includes("setMusicMenuExpanded(false)"),
  "O player musical não inicia minimizado ou não volta minimizado ao atualizar a página.");
+check(html.includes('id="badgeInfoPopover"')&&html.includes("function openBadgeInfoPopover(trigger)")&&html.includes("function closeBadgeInfoPopover(restoreFocus=true)")&&html.includes("data-badge-info-trigger")&&html.includes("data-badge-info-close"),
+ "O balão de informações de conquistas e títulos ou seus controles de fechamento estão ausentes.");
+check(html.includes(".wallet-inline>span:first-child{display:inline-flex;align-items:center")&&html.includes(".community-coins-metric strong{display:flex;align-items:center"),
+ "O alinhamento vertical das moedas no perfil ou na comunidade está ausente.");
 check(!html.includes("Perfil pronto. Escolha as tabuadas e inicie um novo treino.")&&html.includes("$('profileStatus').textContent='';"),
  "A descrição de perfil pronto ainda aparece para um perfil sem progresso.");
 check(html.includes("playUiSound('select')")&&html.includes("playUiSound(value===null?'timeout':'select')"),
@@ -508,14 +512,47 @@ async function testViewport(name, viewport, mobile = false) {
   check(!profileReturnState.profileScreenHidden&&!profileReturnState.profileMainHidden,
     name+": o perfil não abriu novamente após retornar ao menu: "+JSON.stringify(profileReturnState));
   await page.evaluate(()=>{
-    gameEconomy.achievements={training_first:true,training_5:true,training_25:true,adventure_first:true};
+    gameEconomy.achievements={training_first:new Date("2026-11-08T10:00:00.000Z").toISOString(),training_5:true,training_25:true,adventure_first:true};
     profilesData[activeProfile].featuredTitles=[];
+    profilesData[activeProfile].featuredAwards=["achievement:training_first","medal:recruta","award:2026-10"];
+    profilesData[activeProfile].challengeStats={total:{wins:12},levels:{recruta:{wins:12}}};
+    profilesData[activeProfile].tournamentAwards={"2026-10":{rank:2,score:42,difficulty:"Fácil",frame:"Prata"}};
+    renderAchievementShelf();
+    renderChallengeProfileStats();
+    renderFeaturedAwardsEditor();
     renderProfileFeaturedTitlesEditor();
   });
   check(await page.locator("#featuredTitlesEditor input[name='featuredTitle']").count()===4,
     name+": o perfil não listou os quatro títulos desbloqueados para escolha.");
   check(await page.locator("#profileFeaturedTitlesDisplay .profile-featured-title-chip").count()===3,
     name+": a prévia automática não mostrou três títulos quando nenhum foi escolhido.");
+  await page.locator("#achievementShelf .achievement-card.unlocked").first().click();
+  check(await page.locator("#badgeInfoPopover").isVisible()&&
+    (await page.locator("#badgeInfoPopoverTitle").textContent()).includes("Primeiro Ciclo")&&
+    (await page.locator("#badgeInfoPopoverText").textContent()).includes("Conclua seu primeiro ciclo"),
+    name+": clicar em uma conquista do Meu perfil não mostrou a descrição de aquisição.");
+  await page.locator("#badgeInfoPopoverClose").click();
+  check(await page.locator("#badgeInfoPopover").evaluate(el=>el.classList.contains("hidden")),
+    name+": o botão X não fechou o balão de conquista.");
+  await page.locator("#profileFeaturedTitlesDisplay .profile-featured-title-chip").first().click();
+  check(await page.locator("#badgeInfoPopover").isVisible()&&
+    (await page.locator("#badgeInfoPopoverText").textContent()).includes("Conclua seu primeiro ciclo"),
+    name+": clicar em um título de Meu perfil não mostrou como foi adquirido.");
+  await page.locator("body").evaluate(el=>el.click());
+  check(await page.locator("#badgeInfoPopover").evaluate(el=>el.classList.contains("hidden")),
+    name+": clicar fora do balão não o fechou.");
+  await page.locator("#challengeMedalShelf .achievement-card.unlocked").first().click();
+  check((await page.locator("#badgeInfoPopoverText").textContent()).includes("10 desafios no nível Recruta"),
+    name+": a medalha do perfil não explicou a condição de 10 vitórias.");
+  await page.locator("#badgeInfoPopoverClose").click();
+  await page.locator("#tournamentAwardShelf .achievement-card.unlocked").first().click();
+  check((await page.locator("#badgeInfoPopoverText").textContent()).includes("42/50 pontos"),
+    name+": a premiação do torneio não mostrou a explicação de aquisição.");
+  await page.locator("#badgeInfoPopoverClose").click();
+  await page.locator("#profileFeaturedDisplay .profile-featured-badge").first().click();
+  check(await page.locator("#badgeInfoPopover").isVisible(),
+    name+": os destaques selecionados de Meu perfil não abriram o balão.");
+  await page.locator("#badgeInfoPopoverClose").click();
   await page.locator("#featuredTitlesEditor input[name='featuredTitle']").nth(0).check();
   await page.locator("#featuredTitlesEditor input[name='featuredTitle']").nth(1).check();
   await page.locator("#featuredTitlesEditor input[name='featuredTitle']").nth(2).check();
@@ -661,7 +698,10 @@ async function testViewport(name, viewport, mobile = false) {
       correct: 120, wrong: 5, timeMs: 123456,
       coins: 130, totalEarned: 250, challengeTotal: 2,
       challengeWins: 1, challengeLosses: 1, challengeDraws: 0,
-      titles: ["Primeiro Ciclo","Explorador","Disciplina","A Jornada Começa"], medals: [], awards: [], featuredAwards: [],
+      titles: ["Primeiro Ciclo","Explorador","Disciplina","A Jornada Começa"],
+      medals: [{id:"recruta",name:"Recruta",wins:12}],
+      awards: [{month:"2026-10",difficulty:"Fácil",rank:2,score:42,frame:"Prata"}],
+      featuredAwards: ["achievement:training_first","medal:recruta","award:2026-10"],
       achievements: { training_first: true }, economy: { coins: 130, achievements: { training_first: true } }
     }];
     communityCacheAt = Date.now();
@@ -692,6 +732,11 @@ async function testViewport(name, viewport, mobile = false) {
     name+": sem escolhas, a comunidade não mostrou exatamente os três primeiros títulos conquistados.");
   const communityGridColumns=await page.locator(".community-profile-details").first().evaluate(element=>getComputedStyle(element).gridTemplateColumns.split(" ").length);
   check(communityGridColumns===1,name+": as seções do perfil público não estão organizadas uma abaixo da outra ("+communityGridColumns+").");
+  await page.locator(".community-rank-title-section .community-rank-title-chip").first().click();
+  check(await page.locator("#badgeInfoPopover").isVisible()&&
+    (await page.locator("#badgeInfoPopoverText").textContent()).includes("Conclua seu primeiro ciclo"),
+    name+": o título na comunidade não abriu o balão com a condição de aquisição.");
+  await page.locator("#badgeInfoPopoverClose").click();
 
   await page.locator(".community-rank-card").first().evaluate(element=>{element.open=true;});
   const challengePosition = await page.locator(".community-profile-details").first().evaluate(element => {
@@ -701,6 +746,32 @@ async function testViewport(name, viewport, mobile = false) {
       (challenge.compareDocumentPosition(metrics) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
   });
   check(challengePosition, name + ": os desafios não aparecem logo abaixo das estatísticas ao expandir o perfil.");
+  const ownCoinAlignment=await page.locator(".wallet-inline > span:first-child").evaluate(el=>{
+    const coin=el.querySelector(".coin-symbol").getBoundingClientRect(),value=el.querySelector("strong").getBoundingClientRect();
+    return Math.abs((coin.top+coin.height/2)-(value.top+value.height/2));
+  });
+  check(ownCoinAlignment<=1.5,name+": a moeda em Seu perfil não está centralizada na vertical com o valor ("+ownCoinAlignment+"px).");
+  const communityCoinAlignment=await page.locator(".community-coins-metric strong").first().evaluate(el=>{
+    const coin=el.querySelector(".coin-symbol").getBoundingClientRect(),value=el.getBoundingClientRect();
+    return Math.abs((coin.top+coin.height/2)-(value.top+value.height/2));
+  });
+  check(communityCoinAlignment<=1.5,name+": a moeda de Moedas disponíveis na comunidade não está centralizada ("+communityCoinAlignment+"px).");
+  const publicMedal=page.locator(".community-profile-details .community-rank-chip.medal").first();
+  await publicMedal.click();
+  check((await page.locator("#badgeInfoPopoverText").textContent()).includes("10 desafios no nível Recruta"),
+    name+": medalha do perfil público não explicou como foi conquistada.");
+  await page.locator("body").evaluate(el=>el.click());
+  check(await page.locator("#badgeInfoPopover").evaluate(el=>el.classList.contains("hidden")),
+    name+": o balão da comunidade não fechou ao clicar fora.");
+  const publicAward=page.locator(".community-profile-details .community-rank-chip.medal").nth(1);
+  await publicAward.click();
+  check((await page.locator("#badgeInfoPopoverText").textContent()).includes("42/50 pontos"),
+    name+": premiação da comunidade não explicou a posição e a pontuação.");
+  await page.locator("#badgeInfoPopoverClose").click();
+  await page.locator(".community-featured-badge").first().click();
+  check(await page.locator("#badgeInfoPopover").isVisible(),
+    name+": o destaque selecionado do perfil público não abriu o balão.");
+  await page.locator("#badgeInfoPopoverClose").click();
   await page.screenshot({ path: "artifacts/" + name + "-comunidade.png", fullPage: true });
   // Confere que o cache mantém a versão mais recente em caso de resposta atrasada ou data empatada.
   await page.evaluate(()=>{
