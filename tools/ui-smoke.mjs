@@ -273,7 +273,7 @@ check(html.includes("function pauseTrainingQuestionClock()")&&html.includes("fun
  "Marcar Tive dificuldade deve avançar e colocar a mesma conta novamente no ciclo.");
 check(html.includes("function showAchievementCongratulations(ids,extra='')")&&
   html.includes("NOVO TÍTULO CONQUISTADO")&&html.includes("showPrizeCelebration({")&&
-  html.includes("showAchievementCongratulations(result.newAchievements"),
+  html.includes("description:'Você recebeu uma nova conquista no Projeto Tabuada.'"),
  "A tela de comemoração por novos títulos precisa informar a conquista recebida.");check(!html.includes('id="shopBackToGame"')&&!html.includes("$('shopBackToGame').addEventListener")&&
   html.includes("topReturn.classList.toggle('hidden',shop)"),
  "A Loja ainda possui mais de uma opção de Voltar ao jogo.");
@@ -364,7 +364,7 @@ check(html.includes("function showPrizeCelebration(")&&html.includes("function p
   html.includes("earnedChallengeMedalIds(nextStats)")&&html.includes("PREMIAÇÃO DO TORNEIO"),
   "Prêmios, moedas, medalhas e títulos precisam usar uma tela única com música própria ao serem conquistados.");
 check(html.includes("if(!result.alreadyOwned){")&&html.includes("NOVO ITEM DESBLOQUEADO")&&
-  html.includes("Novo avatar na sua coleção!")&&html.includes("newTitles=["),
+  html.includes("Novo avatar na sua coleção!")&&html.includes("const newTitles=(result.newAchievements||[])"),
   "Um avatar realmente desbloqueado deve receber comemoração, sem confundir isso com uma compra repetida.");
 const trainingCycleCode=html.slice(html.indexOf("function showTrainingCycleCelebration("),html.indexOf("function makeRound()",html.indexOf("function showTrainingCycleCelebration(")));
 check(trainingCycleCode&&!trainingCycleCode.includes("showPrizeCelebration(")&&!trainingCycleCode.includes("playCelebrationSound()"),
@@ -664,6 +664,10 @@ async function testViewport(name, viewport, mobile = false) {
     await page.locator("#avatarShopGrid .shop-avatar-card.owned").count()===3&&
     (await page.locator("#shopCoins").textContent()).trim()==="2.300",
     name+": o avatar comprado não passou para a coleção e o saldo não foi atualizado.");
+  check(await page.locator(".prize-celebration-overlay").isVisible()&&
+    (await page.locator(".prize-celebration-card h2").textContent()).includes("Novo avatar"),
+    name+": desbloquear um avatar não mostrou sua comemoração personalizada.");
+  await page.locator(".prize-celebration-overlay [data-close-prize]").click();
   await page.evaluate(()=>{
     document.querySelector("#profileScreen").classList.add("hidden");
     document.querySelector("#setup").classList.remove("hidden");
