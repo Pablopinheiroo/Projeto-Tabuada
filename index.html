@@ -73,7 +73,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .rank-cell small{color:#64748b;font-size:.7rem}
 .rank-cell strong{font-size:.94rem}
 .rank-header{color:#64748b;font-size:.75rem;font-weight:750;padding:0 12px}
-.report-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.report-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.profile-top-actions{margin:0 0 14px}.profile-top-actions button{flex:0 1 210px;min-width:180px}
 .report-actions button{flex:1;min-width:150px}
 .secondary{background:#e2e8f0;color:#334155}
 .empty-ranking{padding:18px;border:1px dashed #cbd5e1;border-radius:13px;color:#64748b;text-align:center}
@@ -1061,6 +1061,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 
 <section id="profileScreen" class="panel hidden">
  <div id="profileMainPanel">
+ <div class="report-actions profile-top-actions"><button id="backFromProfileTop" class="secondary" type="button">← Voltar ao jogo</button></div>
  <h2>👤 Meu perfil</h2>
  <p class="hint">Personalize como você aparece no jogo.</p>
  <div class="profile-identity">
@@ -5182,6 +5183,7 @@ $('openProfile').addEventListener('click',()=>openProfileScreen());
 $('profileEditForm').addEventListener('submit',saveProfileEdits);
 $('changePasswordForm').addEventListener('submit',changePassword);
 $('backFromProfile').addEventListener('click',closeProfileScreen);
+$('backFromProfileTop').addEventListener('click',closeProfileScreen);
 $('openProfileStats').addEventListener('click',()=>openProfileScreen(true));
 $('openProfileOptions').addEventListener('click',()=>{openProfileScreen();showProfileOptions();});
 $('closeProfileStats').addEventListener('click',closeProfileStats);
