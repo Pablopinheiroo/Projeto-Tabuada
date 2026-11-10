@@ -2939,6 +2939,10 @@ function closeProfileOptions(){
  profileOptionsResumeMusic=false;
  $('profileOptionsPanel').classList.add('hidden');
  closeProfileScreen(resume);
+ if(resume&&soundOn&&soundtrackAudio&&soundtrackAudio.paused){
+  if(document.hidden)musicWasPlayingBeforeHide=true;
+  else playCurrentTrack();
+ }
 }
 function closeProfileStats(){
  closeProfileScreen();
