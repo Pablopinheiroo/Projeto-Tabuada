@@ -2446,7 +2446,10 @@ function playPrizeCelebrationMusic(){
  else schedule();
 }
 function showPrizeCelebration({icon='🏆',kicker='CONQUISTA DESBLOQUEADA',title='Parabéns!',description='',items=[]}={}){
- document.querySelector('.prize-celebration-overlay')?.remove();
+ const existingOverlay=document.querySelector('.prize-celebration-overlay');
+ if(existingOverlay)existingOverlay.querySelector('[data-close-prize]')?.click();
+ const resumeGameClock=!questionClockPaused&&!$('game').classList.contains('hidden')&&!!questionStartedAt&&!revealed&&!!current;
+ if(resumeGameClock)pauseTrainingQuestionClock();
  const lines=(Array.isArray(items)?items:[]).filter(Boolean).slice(0,6);
  const overlay=document.createElement('div');
  overlay.className='prize-celebration-overlay';
@@ -2462,6 +2465,7 @@ function showPrizeCelebration({icon='🏆',kicker='CONQUISTA DESBLOQUEADA',title
  const close=()=>{
   overlay.remove();
   document.removeEventListener('keydown',onEscape);
+  if(resumeGameClock)resumeTrainingQuestionClock();
  };
  overlay.querySelectorAll('.prize-celebration-close,[data-close-prize]').forEach(button=>button.addEventListener('click',close));
  overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
@@ -4107,22 +4111,18 @@ async function refreshChallengeData(){
   }
   const newTitles=Object.keys(gameEconomy.achievements||{}).filter(id=>!previousAchievementIds.has(id));
   const newMedals=earnedChallengeMedalIds(nextStats).filter(id=>!previousMedalIds.has(id));
-  const addedCoins=Math.max(0,(Number(gameEconomy.coins)||0)-previousCoins);
   const seenChallengeIds=new Set(getSeenChallengeResults());
   const recentWins=challengeItems.filter(item=>{
    if(item.status!=='completed'||!item.myResult||seenChallengeIds.has(item.id))return false;
    const winners=Array.isArray(item.winners)?item.winners:[];
-   const won=item.winner!=='empate'&&(item.winner===activeProfile||winners.includes(activeProfile));
-   const completedAt=Date.parse(item.completedAt||'');
-   return won&&Number.isFinite(completedAt)&&Date.now()-completedAt<10*60_000;
+   return item.winner!=='empate'&&(item.winner===activeProfile||winners.includes(activeProfile));
   });
   recentWins.forEach(item=>markChallengeResultSeen(item.id));
-  if(newTitles.length||newMedals.length||addedCoins>0||recentWins.length){
+  if(newTitles.length||newMedals.length||recentWins.length){
    const lines=[
-    ...recentWins.map(()=> 'Vitória em duelo confirmada!'),
+    ...recentWins.map(item=>'Vitória em duelo confirmada!'+(item.betMode&&item.betPaid?' · prêmio de '+(Number(item.stake)*2).toLocaleString('pt-BR')+' moedas':'') ),
     ...newMedals.map(id=>'Medalha conquistada: '+(CHALLENGE_PRESETS_UI.find(level=>level.id===id)?.name||id)),
-    ...newTitles.map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||String(id)),
-    ...(addedCoins>0?['+'+addedCoins.toLocaleString('pt-BR')+' moedas']:[])
+    ...newTitles.map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||String(id))
    ];
    showPrizeCelebration({
     icon:newMedals.length?'🏅':newTitles.length?'✨':recentWins.length?'🏆':'🪙',
@@ -5437,21 +5437,19 @@ function showTrainingExitCelebration(){
  const accuracy=answered?Math.round(hits/answered*100):0;
  const totalTime=sessionQuestionTimeMs;
  const completedErrors=trainingModeType==='errors'&&errorTrainingCompleted;
- const title=completedErrors?'Parabéns! Você treinou todos os seus erros!':
-  hits>0?'Parabéns pelo seu treino!':'Treino encerrado!';
+ const title=completedErrors?'Treino de erros concluído':'Treino finalizado';
  const detail=completedErrors
-  ?'Você conseguiu resolver todos os erros pendentes com dois acertos seguidos em cada conta.'
+  ?'Todos os erros pendentes foram resolvidos com dois acertos seguidos em cada conta.'
   :answered
-   ?'Seu resultado foi salvo. Veja abaixo o desempenho desta partida e o ranking das contas.'
+   ?'Seu resultado foi salvo. Confira o desempenho desta partida e o ranking das contas.'
    :'Sua partida foi encerrada. O resultado desta sessão está disponível abaixo.';
  const overlay=document.createElement('div');
  overlay.className='training-celebration-overlay';
  overlay.setAttribute('role','dialog');
  overlay.setAttribute('aria-modal','true');
- overlay.setAttribute('aria-label','Parabéns e resultado do treino');
- overlay.innerHTML='<div class="training-celebration-confetti">'+Array.from({length:28},(_,i)=>'<i style="--n:'+i+'"></i>').join('')+'</div>'+
-  '<div class="training-celebration-card training-exit-card"><div class="training-celebration-cup">🎉</div>'+
-  '<span class="music-kicker">PARTIDA FINALIZADA</span><h2>'+escapeHtml(title)+'</h2><p>'+escapeHtml(detail)+'</p>'+
+ overlay.setAttribute('aria-label','Resultado do treino');
+ overlay.innerHTML='<div class="training-celebration-card training-exit-card"><div class="training-celebration-cup">📊</div>'+
+  '<span class="music-kicker">RESULTADO DA PARTIDA</span><h2>'+escapeHtml(title)+'</h2><p>'+escapeHtml(detail)+'</p>'+
   '<div class="training-exit-results">'+
    '<div class="training-exit-result"><span>Acertos</span><strong>'+hits+'</strong></div>'+
    '<div class="training-exit-result"><span>Erros</span><strong>'+misses+'</strong></div>'+
@@ -5460,7 +5458,6 @@ function showTrainingExitCelebration(){
   '</div><p class="training-exit-answered">Questões classificadas: <strong>'+answered+'</strong> · Sem classificação: <strong>'+sessionSkipped+'</strong></p>'+
   '<button type="button" class="primary" data-dismiss-exit-result>Ver resultado completo</button></div>';
  document.body.appendChild(overlay);
- playCelebrationSound();
  const dismiss=()=>{
   overlay.remove();
   const report=$('report');
