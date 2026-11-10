@@ -14,7 +14,8 @@ const AVATAR_GIF_COUNT = 12;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
 const CHALLENGE_PLAYER_METADATA_MAX = 45;
-const WORKER_BUILD_ID = "2026-11-10-intelligent-error-difficulty-training-v1";
+const WORKER_BUILD_ID = "2026-11-10-community-presence-and-prize-celebrations-v1";
+const PRESENCE_MIN_WRITE_INTERVAL_MS = 4 * 60 * 1000;
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
 const CHALLENGE_DIRECTORY = "desafios/partidas";
@@ -1157,7 +1158,8 @@ function communitySummary(record) {
     challengeLosses: Number(total.losses) || 0,
     challengeDraws: Number(total.draws) || 0,
     challengeTotal: (Number(total.wins) || 0) + (Number(total.losses) || 0) + (Number(total.draws) || 0),
-    tournamentFrame: profile.tournamentFrame || null
+    tournamentFrame: profile.tournamentFrame || null,
+    lastOnlineAt: typeof profile.lastOnlineAt === "string" && Number.isFinite(Date.parse(profile.lastOnlineAt)) ? profile.lastOnlineAt : null
   };
 }
 async function loadCommunitySummaries(env) {
@@ -1371,7 +1373,7 @@ async function handleApi(request, env, origin) {
           ok: false,
           service: "Projeto Tabuada API",
           buildId: WORKER_BUILD_ID,
-          features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, trainingCoinsPerTenCorrectAnswers: true, trainingCorrectProgress: true, intelligentTrainingRewards: true, intelligentTrainingProgress: true, errorTrainingRewards: true, difficultyTrainingBelow90Percent: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true },
+          features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, trainingCoinsPerTenCorrectAnswers: true, trainingCorrectProgress: true, intelligentTrainingRewards: true, intelligentTrainingProgress: true, errorTrainingRewards: true, difficultyTrainingBelow90Percent: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true, lastOnlinePresence: true, awardCelebrations: true },
           githubSecretConfigured: false,
           githubConnected: false
         }, 503, origin);
@@ -1472,6 +1474,11 @@ async function handleApi(request, env, origin) {
         "O ranking foi consultado muitas vezes. Aguarde um minuto e tente novamente.", origin);
       if (limited) return limited;
     }
+    if (route === "/api/presence" && request.method === "POST") {
+      const limited = await rateLimitResponse(env.GAME_ACTION_LIMITER, username + ":presence",
+        "A atualização de presença foi solicitada muitas vezes. Aguarde um pouco.", origin);
+      if (limited) return limited;
+    }
     if ((route === "/api/me/password" && request.method === "POST") ||
         (route === "/api/me" && request.method === "PUT")) {
       const limited = await rateLimitResponse(env.PROFILE_WRITE_LIMITER, username + ":profile-write",
@@ -1488,6 +1495,26 @@ async function handleApi(request, env, origin) {
       const limited = await rateLimitResponse(env.GAME_ACTION_LIMITER, username + ":tournament",
         "Muitas consultas ou tentativas no torneio. Aguarde um minuto e tente novamente.", origin);
       if (limited) return limited;
+    }
+
+    if (route === "/api/presence" && request.method === "POST") {
+      const record = await readUser(username, env);
+      if (!record) return json({ error: "A conta não foi encontrada." }, 404, origin);
+      const profile = record.data.profile && typeof record.data.profile === "object"
+        ? record.data.profile : {};
+      const previousAt = Date.parse(profile.lastOnlineAt || "");
+      const now = Date.now();
+      if (Number.isFinite(previousAt) && previousAt > 0 && now - previousAt < PRESENCE_MIN_WRITE_INTERVAL_MS) {
+        return json({ ok: true, lastOnlineAt: new Date(previousAt).toISOString(), updated: false }, 200, origin);
+      }
+      const lastOnlineAt = new Date(now).toISOString();
+      const updated = {
+        ...record.data,
+        profile: { ...profile, lastOnlineAt },
+        updatedAt: lastOnlineAt
+      };
+      const sha = await writeUser(username, updated, record.sha, env);
+      return json({ ok: true, lastOnlineAt, updated: true, sha }, 200, origin);
     }
 
     if (route === "/api/challenges/players" && request.method === "GET") {
@@ -1951,7 +1978,10 @@ async function handleApi(request, env, origin) {
           ...(incomingProfile.tournamentAwards || {}),
           ...(currentProfile.tournamentAwards || {})
         },
-        tournamentFrame: currentProfile.tournamentFrame || incomingProfile.tournamentFrame
+        tournamentFrame: currentProfile.tournamentFrame || incomingProfile.tournamentFrame,
+        lastOnlineAt: Date.parse(currentProfile.lastOnlineAt || "") >= Date.parse(incomingProfile.lastOnlineAt || "")
+          ? currentProfile.lastOnlineAt || incomingProfile.lastOnlineAt || null
+          : incomingProfile.lastOnlineAt
       };
       const audioKeys = ["musicVolume", "sfxVolume", "gameSfxVolume", "audioPreferencesSavedAt"];
       for (const key of audioKeys) {
