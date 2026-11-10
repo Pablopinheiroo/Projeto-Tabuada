@@ -287,7 +287,7 @@ check(html.includes('id="startIntelligentTraining"')&&html.includes('id="startEr
   html.includes('id="startDifficultyTraining"')&&html.includes("function getIntelligentTrainingFacts()")&&
   html.includes("function getErrorTrainingFacts()")&&html.includes("function getDifficultyTrainingFacts()"),
   "As três modalidades inteligentes, de erros e dificuldades não estão disponíveis.");
-check(html.includes("questionCount:sessionCompletedQuestionCount")&&html.includes("intelligent_training_questions")&&
+check(html.includes("const remainder=sessionCompletedQuestionCount-sessionIntelligentQuestionsClaimed")&&html.includes("intelligent_training_questions")&&
   html.includes("error_training_complete")&&html.includes("errorTrainingCorrectStreak")&&
   html.includes("item.errorTrainingResolved=item.errorTrainingCorrectStreak>=2")&&
   html.includes("item.errorTrainingResolved=false")&&
