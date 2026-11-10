@@ -392,7 +392,7 @@ check(html.includes("function profileLearningStats()")&&html.includes("challenge
   "A consulta dos desafios precisa separar informações principais e prévia do ranking em cartões legíveis.");
 check(html.includes("function showPrizeCelebration(")&&html.includes("function playPrizeCelebrationMusic()")&&
   html.includes("prize-celebration-overlay")&&html.includes("melody=[72,76,79,84")&&
-  html.includes("if(result.newAchievements?.length||Number(result.coinsAdded)>0)")&&
+  html.includes("if(newTitles.length)")&&html.includes("showCoinRewardNotification(coinsAdded,item)")&&
   html.includes("earnedChallengeMedalIds(nextStats)")&&html.includes("PREMIAÇÃO DO TORNEIO"),
   "Prêmios, moedas, medalhas e títulos precisam usar uma tela única com música própria ao serem conquistados.");
 check(html.includes("if(!result.alreadyOwned){")&&html.includes("NOVO ITEM DESBLOQUEADO")&&
