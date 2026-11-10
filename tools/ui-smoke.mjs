@@ -332,12 +332,16 @@ check(html.includes("const remainder=hits-sessionTrainingCorrectClaimed")&&
 check(!html.includes("item.errorTrainingResolved")&&!html.includes("item.errorTrainingCorrectStreak")&&
   html.includes("trainingModeType!=='errors'&&trainingModeType!=='tournamentErrors'"),
   "Os dois treinos de erros não podem compartilhar estado, nem conceder moedas por acertos como treino normal.");
-check(html.includes("function showTrainingExitCelebration()")&&html.includes("data-dismiss-exit-result")&&
-  html.includes("training-exit-results")&&html.includes("Ver resultado completo"),
-  "Ao encerrar a partida, deve aparecer uma tela de parabéns com acertos, erros, precisão e tempo.");
+check(html.includes("function showTrainingExitCelebration()")&&html.includes("data-exit-close")&&
+  html.includes("data-exit-menu")&&html.includes("data-open-training-report")&&
+  html.includes("PARTIDA FINALIZADA")&&html.includes("TREINO COMPLETO")&&
+  html.includes("Parabéns pelo seu treino!")&&html.includes("Seu resultado foi salvo. Veja abaixo o desempenho desta partida e o ranking das contas.")&&
+  html.includes("showReport(false)")&&html.includes("function showReport(display=true)"),
+  "Ao finalizar o treino, a tela deve oferecer somente voltar aos modos ou abrir o resultado quando solicitado.");
 check((html.match(/training-celebration-overlay\{position:fixed;inset:0;z-index:9999;display:flex/g)||[]).length===2&&
   html.includes("width:100vw;height:100vh;height:100dvh")&&
-  html.includes("training-exit-results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))")&&
+  html.includes(".training-exit-close{position:absolute;top:9px;right:10px")&&
+  html.includes(".training-exit-actions{display:grid;gap:10px;margin-top:22px}")&&
   html.includes(".game-reward-toast.achievement-congrats{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;z-index:10001;box-sizing:border-box")&&
   html.includes("transform:translateX(-50%);box-shadow:0 15px 42px #020617cc,0 0 0 3px #fbbf2422;animation:achievementRewardPop"),
   "A tela de parabéns e a notificação precisam ficar centralizadas e caber na largura/altura do celular.");
@@ -1128,10 +1132,33 @@ check(html.includes("function showCoinRewardNotification(coinsAdded,item={})")&&
     Math.abs(exitCardBounds.centerX-exitCardBounds.viewportWidth/2)<=2&&
     exitCardBounds.top>=-1&&exitCardBounds.bottom<=exitCardBounds.viewportHeight+1&&
     exitCardBounds.height<=exitCardBounds.viewportHeight+1,
-    name+": a tela de resultado não ficou centralizada no celular ("+JSON.stringify(exitCardBounds)+").");
-  await page.locator("[data-dismiss-exit-result]").click();
+    name+": a tela de conclusão não ficou centralizada no celular ("+JSON.stringify(exitCardBounds)+").");
+  check(await page.locator("#report").evaluate(el=>el.classList.contains("hidden")),
+    name+": o resultado do treino apareceu sem o usuário tocar no botão.");
+  await page.locator("[data-open-training-report]").click();
+  check(!(await page.locator("#report").evaluate(el=>el.classList.contains("hidden")))&&
+    await page.locator("#setup").evaluate(el=>el.classList.contains("hidden")),
+    name+": o botão Resultado do treino não abriu a página de resultados.");
+  await page.evaluate(()=>{
+    trainingModeType='errors';errorTrainingCompleted=true;
+    showTrainingExitCelebration();
+  });
+  await page.locator("[data-exit-menu]").click();
+  check(!(await page.locator("#setup").evaluate(el=>el.classList.contains("hidden")))&&
+    !(await page.locator("#modeHub").evaluate(el=>el.classList.contains("hidden")))&&
+    await page.locator("#trainingModePanel").evaluate(el=>el.classList.contains("hidden"))&&
+    await page.locator("#report").evaluate(el=>el.classList.contains("hidden")),
+    name+": Voltar ao menu inicial não retornou aos modos de jogo.");
+  await page.evaluate(()=>{
+    trainingModeType='standard';errorTrainingCompleted=false;
+    showTrainingExitCelebration();
+  });
+  await page.locator("[data-exit-close]").click();
+  check(!(await page.locator("#setup").evaluate(el=>el.classList.contains("hidden")))&&
+    !(await page.locator("#modeHub").evaluate(el=>el.classList.contains("hidden")))&&
+    await page.locator("#trainingModePanel").evaluate(el=>el.classList.contains("hidden")),
+    name+": o X não fechou o aviso e retornou ao menu inicial.");
   await page.evaluate(()=>{trainingModeType='standard';errorTrainingCompleted=false;});
-
   const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && soundtrackAudio && !soundtrackAudio.paused));
   await page.locator("#openProfileOptions").click();
   check(!(await page.locator("#profileOptionsPanel").evaluate(el => el.classList.contains("hidden"))), name + ": a tela Opções não abriu.");
