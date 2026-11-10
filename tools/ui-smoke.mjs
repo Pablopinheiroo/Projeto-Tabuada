@@ -809,28 +809,37 @@ async function testViewport(name, viewport, mobile = false) {
   });
   await page.waitForTimeout(350);
   await page.evaluate(()=>showTrainingCycleCelebration({coinsAdded:10},false,false));
+  const ordinaryCycle=await page.evaluate(()=>({
+    paused:questionClockPaused,timer:questionTimer!==null,startedAt:questionStartedAt,
+    prizeOverlay:!!document.querySelector(".prize-celebration-overlay"),
+    resultOverlay:!!document.querySelector(".training-celebration-overlay")
+  }));
+  check(!ordinaryCycle.paused&&ordinaryCycle.timer&&ordinaryCycle.startedAt>0&&
+    !ordinaryCycle.prizeOverlay&&!ordinaryCycle.resultOverlay,
+    name+": concluir um ciclo sem receber prêmio não pode abrir comemoração nem parar o cronômetro: "+JSON.stringify(ordinaryCycle));
+  await page.evaluate(()=>showPrizeCelebration({title:"Prêmio de teste",description:"Teste de pausa do cronômetro."}));
   const clockPausedBefore=await page.evaluate(()=>({
     paused:questionClockPaused,timer:questionTimer===null,startedAt:questionStartedAt,elapsed:questionElapsedBeforeStart,
-    overlay:!!document.querySelector(".training-celebration-overlay"),
-    closeButtons:document.querySelectorAll(".training-celebration-close").length
+    overlay:!!document.querySelector(".prize-celebration-overlay"),
+    closeButtons:document.querySelectorAll(".prize-celebration-overlay .prize-celebration-close").length
   }));
   check(clockPausedBefore.paused&&clockPausedBefore.timer&&clockPausedBefore.startedAt===0&&
     clockPausedBefore.overlay&&clockPausedBefore.closeButtons===1,
-    name+": o cronômetro continuou ativo ou faltou o botão de fechar na tela de parabéns: "+JSON.stringify(clockPausedBefore));
+    name+": receber um prêmio não pausou o cronômetro ou não mostrou o botão de fechar: "+JSON.stringify(clockPausedBefore));
   await page.waitForTimeout(350);
   const clockPausedAfter=await page.evaluate(()=>questionElapsedBeforeStart);
   check(Math.abs(clockPausedAfter-clockPausedBefore.elapsed)<1,
-    name+": o tempo do jogo continuou avançando enquanto a tela de parabéns estava aberta.");
-  await page.locator(".training-celebration-close").click();
+    name+": o tempo do jogo continuou avançando enquanto a tela de prêmio estava aberta.");
+  await page.locator(".prize-celebration-overlay .prize-celebration-close").click();
   const clockResumed=await page.evaluate(()=>({
     paused:questionClockPaused,timer:questionTimer!==null,startedAt:questionStartedAt
   }));
   check(!clockResumed.paused&&clockResumed.timer&&clockResumed.startedAt>0,
-    name+": o cronômetro não voltou a funcionar depois de fechar a tela de parabéns.");
+    name+": o cronômetro não voltou a funcionar depois de fechar a tela de prêmio.");
   await page.waitForTimeout(250);
   const clockAfterResume=await page.evaluate(()=>questionElapsedBeforeStart+Math.max(0,performance.now()-questionStartedAt));
   check(clockAfterResume>clockPausedAfter,
-    name+": o cronômetro não retomou a contagem depois de fechar a tela.");
+    name+": o cronômetro não retomou a contagem depois de fechar a tela de prêmio.");
   await page.evaluate(()=>{
     if(questionTimer!==null)clearInterval(questionTimer);
     questionTimer=null;questionStartedAt=0;questionElapsedBeforeStart=0;questionClockPaused=false;
