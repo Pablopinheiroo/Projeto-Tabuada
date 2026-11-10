@@ -194,6 +194,20 @@ check(html.includes("Comprar · '+price.toLocaleString('pt-BR')+' moedas")&&!htm
 check(html.includes('id="communitySection"')&&html.includes("function setMainContentSections(")&&
   html.includes("function showCommunityOnly()")&&html.includes("function showShopOnly()"),
  "O menu não controla a exibição exclusiva das seções Loja, Comunidade e modalidades.");
+check(html.includes("function pauseTrainingQuestionClock()")&&html.includes("function resumeTrainingQuestionClock()")&&
+  html.includes("pauseTrainingQuestionClock();")&&html.includes("questionClockPaused?0:performance.now()")&&
+  html.includes("data-dismiss-celebration")&&!html.includes("setTimeout(()=>overlay.remove(),5200)"),
+ "A tela de parabéns precisa pausar o cronômetro até ser fechada, sem desaparecer sozinha.");
+check(html.includes("deck.push({a:current.a,b:current.b});")&&
+  html.includes("sessionSkipped++;")&&html.includes("position++;")&&html.includes("next();saveCheckpoint();"),
+ "Marcar Tive dificuldade deve avançar e colocar a mesma conta novamente no ciclo.");
+check(html.includes("function showAchievementCongratulations(ids,extra='')")&&
+  html.includes("🎉 Parabéns! Você conquistou:")&&html.includes("achievement-congrats")&&
+  html.includes("showAchievementCongratulations(result.newAchievements"),
+ "O alerta de parabéns por novas conquistas está ausente.");
+check(!html.includes('id="shopBackToGame"')&&!html.includes("$('shopBackToGame').addEventListener")&&
+  html.includes("topReturn.classList.toggle('hidden',shop)"),
+ "A Loja ainda possui mais de uma opção de Voltar ao jogo.");
 check(html.includes("const ACTIVE_TIME_SYNC_MS=30*60*1000;"), "O salvamento automático não está configurado para 30 minutos.");
 check(logoutCode.length>0&&!logoutCode.includes("flushCloudSave(true)"), "Sair da conta ainda força um salvamento antes dos 30 minutos.");
 check(html.includes("pendingActiveMs>0?loadHistory():remoteHistory"), "O login não preserva o histórico local que ainda não foi sincronizado.");
