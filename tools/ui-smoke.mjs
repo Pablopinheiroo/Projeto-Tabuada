@@ -429,7 +429,7 @@ async function testViewport(name, viewport, mobile = false) {
     const originalSave=saveHistory,originalUpdate=updateReviewTrainingButton,originalFeedback=playFeedback;
     historyData={questions:{
       "2x3":{
-        a:2,b:3,attempts:18,correct:10,wrong:8,totalTimeMs:18000,
+        a:2,b:3,attempts:18,correct:4,wrong:14,totalTimeMs:18000,
         modes:{
           training:{attempts:2,correct:1,wrong:1,totalTimeMs:2000},
           adventure:{attempts:3,correct:1,wrong:2,totalTimeMs:3000},
