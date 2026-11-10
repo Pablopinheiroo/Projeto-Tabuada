@@ -1157,6 +1157,45 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .training-exit-card{border-color:#385a7c;background:linear-gradient(145deg,#102b49,#172c47)}
 .training-exit-card .training-celebration-cup{animation:none}
 .training-exit-card .training-exit-result strong{color:#67e8f9}
+
+/* Painel único e compacto para ordem e seleção das tabuadas. */
+.training-setup-card{display:grid;gap:11px;margin:0 0 14px;padding:13px;border:1px solid #3d638d;border-radius:17px;background:linear-gradient(145deg,#0c2039,#17284a 60%,#241e45);box-shadow:0 8px 22px #02061740;color:#eaf4ff}
+.training-global-mode{display:grid;gap:8px;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;color:#eaf4ff}
+.training-order-heading{display:flex;align-items:center;gap:9px}
+.training-order-icon{display:grid;place-items:center;flex:0 0 34px;width:34px;height:34px;border:1px solid #3d83a9;border-radius:10px;background:linear-gradient(145deg,#164e63,#233b70);color:#a5f3fc;font-size:1.15rem;font-weight:950}
+.training-order-heading>div{display:grid;gap:1px;min-width:0}
+.training-order-heading strong{color:#f3f8ff;font-size:.9rem;font-weight:950}
+.training-order-heading small{color:#a9bfdc;font-size:.67rem;line-height:1.25}
+.training-order-field{display:grid;grid-template-columns:minmax(92px,.34fr) minmax(0,1fr);align-items:center;gap:8px;min-width:0;color:#d6e5f8;font-size:.75rem;font-weight:850}
+.training-order-select-wrap{position:relative;display:block;min-width:0}
+.training-order-select-wrap:after{content:"⌄";position:absolute;right:12px;top:50%;transform:translateY(-55%);color:#a5f3fc;font-size:1.1rem;font-weight:950;pointer-events:none}
+.training-global-mode select{appearance:none;-webkit-appearance:none;display:block;width:100%;max-width:none;min-height:40px;padding:8px 38px 8px 11px;border:1px solid #4e79a7;border-radius:10px;background:linear-gradient(120deg,#142f52,#1a355c);color:#f8fbff;font:inherit;font-size:.8rem;font-weight:850;box-shadow:inset 0 1px #ffffff12;cursor:pointer;transition:border-color .16s ease,box-shadow .16s ease,background .16s ease}
+.training-global-mode select:hover{border-color:#67e8f9;background:linear-gradient(120deg,#183b61,#203e68)}
+.training-global-mode select:focus-visible{outline:3px solid #67e8f9;outline-offset:2px;border-color:#67e8f9;box-shadow:0 0 0 4px #22d3ee22}
+.training-global-mode select option{background:#10233d;color:#f8fbff}
+.training-global-mode p.training-order-hint{display:flex;align-items:flex-start;gap:6px;margin:0;color:#b8cbe4;font-size:.68rem;line-height:1.3;max-width:none}
+.training-order-hint:before{content:"ⓘ";flex:0 0 auto;color:#67e8f9;font-weight:950}
+.training-order-save{display:flex;align-items:center;justify-content:center;gap:7px;justify-self:start;width:auto;min-width:180px;min-height:37px;padding:7px 13px;border:1px solid #4387ad;border-radius:10px;background:linear-gradient(110deg,#164e63,#1d4771);color:#ecfeff;font:inherit;font-size:.76rem;font-weight:900;box-shadow:0 4px 10px #02061744;cursor:pointer;transition:filter .15s ease,transform .15s ease,border-color .15s ease}
+.training-order-save:hover{filter:brightness(1.13);border-color:#67e8f9}
+.training-order-save:active{transform:translateY(1px)}
+.training-order-save:focus-visible{outline:3px solid #67e8f9;outline-offset:2px}
+.training-global-mode p.training-order-status{min-height:0;margin:-3px 0 0;color:#9fb8d7;font-size:.66rem;line-height:1.25;max-width:none}
+.training-global-mode p.training-order-status.is-saved{color:#86efac}
+.training-tables-section{display:grid;gap:9px;padding-top:10px;border-top:1px solid #385779}
+.training-tables-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.training-tables-heading strong{color:#f3f8ff;font-size:.86rem;font-weight:950}
+.training-tables-heading small{color:#a9bfdc;font-size:.67rem;line-height:1.3}
+.training-tables-section .tables{margin-top:0;gap:8px;grid-template-columns:repeat(auto-fit,minmax(min(100%,215px),1fr))}
+.training-tables-section .table-row{padding:9px 10px;border-color:#365477;border-radius:11px;background:linear-gradient(120deg,#132743,#172b49)}
+@media(max-width:560px){
+ .training-setup-card{gap:9px;padding:10px;border-radius:15px}
+ .training-order-field{grid-template-columns:1fr;gap:5px}
+ .training-order-save{width:100%;min-width:0;min-height:36px}
+ .training-tables-section{gap:8px;padding-top:9px}
+ .training-tables-heading{align-items:flex-start;flex-direction:column;gap:2px}
+ .training-tables-section .tables{grid-template-columns:minmax(0,1fr);gap:7px}
+}
+
 </style>
 </head>
 <body>
@@ -1523,13 +1562,14 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 <div id="trainingModePanel" class="mode-view hidden">
  <div class="mode-view-heading"><div><span class="music-kicker">📘 TREINO LIVRE</span><h2>Escolha as tabuadas</h2></div><button id="backToModeHubTraining" class="secondary compact-back" type="button">← Modos</button></div>
  <p class="hint">Marque as tabuadas e defina a ordem das questões.</p>
+ <div class="training-setup-card" aria-label="Configuração da ordem e seleção das tabuadas">
  <div class="training-global-mode" aria-labelledby="trainingOrderTitle">
   <div class="training-order-heading">
    <span class="training-order-icon" aria-hidden="true">↕</span>
-   <div><strong id="trainingOrderTitle">Ordem das questões</strong><small>Escolha como as contas vão aparecer no treinamento.</small></div>
+   <div><strong id="trainingOrderTitle">Ordem das questões</strong><small>Defina a sequência das contas.</small></div>
   </div>
   <label class="training-order-field" for="trainingGlobalMode">
-   <span>Modo de organização</span>
+   <span>Organização</span>
    <span class="training-order-select-wrap">
     <select id="trainingGlobalMode">
      <option value="individual">Escolher por tabuada (individual)</option>
@@ -1538,11 +1578,15 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
     </select>
    </span>
   </label>
-  <p id="trainingGlobalModeHint" class="training-order-hint">No modo individual, cada tabuada pode ter sua própria ordem.</p>
+  <p id="trainingGlobalModeHint" class="training-order-hint">Cada tabuada pode ter sua própria ordem.</p>
   <button id="saveTrainingDefinition" class="training-order-save" type="button">💾 Salvar definição</button>
-  <p id="trainingDefinitionStatus" class="training-order-status" role="status" aria-live="polite">Escolha a ordem e salve para manter essa preferência nos próximos treinos.</p>
+  <p id="trainingDefinitionStatus" class="training-order-status" role="status" aria-live="polite">Salve para manter esta preferência.</p>
  </div>
- <div id="tables" class="tables"></div>
+ <div class="training-tables-section" aria-labelledby="trainingTablesTitle">
+  <div class="training-tables-heading"><strong id="trainingTablesTitle">Tabuadas</strong><small>Marque as que deseja praticar.</small></div>
+  <div id="tables" class="tables"></div>
+ </div>
+ </div>
  <button id="start" class="primary">▶ Iniciar treinamento livre</button>
  <div class="review-training-card"><div><span class="music-kicker">SEU TREINO INTELIGENTE</span><h3>🧠 Treino inteligente</h3><p id="reviewTrainingSummary" class="hint">Treino adaptado com contas erradas, difíceis ou demoradas. A cada 10 questões treinadas, ganhe 5 moedas; o restante acumula.</p></div><button id="startIntelligentTraining" class="review-training-button" type="button">Iniciar treino inteligente</button></div>
  <div id="errorTrainingCard" class="review-training-card hidden"><div><span class="music-kicker">REVISÃO DE ERROS</span><h3>❌ Treine seus erros</h3><p id="errorTrainingSummary" class="hint">Resolva cada conta errada com dois acertos seguidos. Ao concluir todos os erros pendentes, ganhe 10 moedas.</p></div><button id="startErrorTraining" class="review-training-button" type="button">Treinar meus erros</button></div>
