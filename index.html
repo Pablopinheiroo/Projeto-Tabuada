@@ -2431,7 +2431,7 @@ function mergeCommunityRecord(current,incoming){
  if(!current)return incoming;
  if(!incoming)return current;
  const currentTime=communityUpdatedAtMs(current),incomingTime=communityUpdatedAtMs(incoming);
- const newest=incomingTime>=currentTime?incoming:current;
+ const newest=incomingTime>currentTime?incoming:current;
  const older=newest===incoming?current:incoming;
  const maxValue=key=>Math.max(0,Number(current[key])||0,Number(incoming[key])||0);
  const unionValues=(a,b,keyFn)=>{

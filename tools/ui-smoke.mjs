@@ -95,6 +95,12 @@ check(mergedHistory.questions["2x3"].attempts===12&&mergedHistory.questions["4x5
   "A ponderação de histórico permitiu que um snapshot antigo reduzisse o progresso mais novo.");
 check(mergedHistory.sessions.length===2,
   "A união dos históricos não preservou as sessões distintas.");
+const tiedHistory=workerContext.__mergeHistorySnapshots(
+  {questions:{"9x9":{a:9,b:9,attempts:5,correct:4,wrong:1,totalTimeMs:5000,lastAt:"2026-11-09T10:00:00Z"}},sessions:[]},
+  {questions:{"9x9":{a:9,b:9,attempts:5,correct:3,wrong:2,totalTimeMs:6000,lastAt:"2026-11-10T10:00:00Z"}},sessions:[]}
+);
+check(tiedHistory.questions["9x9"].correct===4&&tiedHistory.questions["9x9"].wrong===1,
+  "Um snapshot antigo, com a mesma quantidade de tentativas, substituiu o registro atual.");
 
 const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(match => match[1]);
@@ -602,6 +608,20 @@ async function testViewport(name, viewport, mobile = false) {
   });
   check(challengePosition, name + ": os desafios não aparecem logo abaixo das estatísticas ao expandir o perfil.");
   await page.screenshot({ path: "artifacts/" + name + "-comunidade.png", fullPage: true });
+  // Confere que o cache mantém a versão mais recente em caso de resposta atrasada ou data empatada.
+  await page.evaluate(()=>{
+    const newest={username:"weighted_user",displayName:"Nome novo",updatedAt:"2026-11-09T10:00:00.000Z",
+      correct:18,wrong:4,attempts:22,timeMs:60000,titles:["Primeiro Ciclo","Explorador"],featuredTitles:["adventure_5"],featuredAwards:[]};
+    const older={username:"weighted_user",displayName:"Nome antigo",updatedAt:"2026-11-08T10:00:00.000Z",
+      correct:10,wrong:3,attempts:13,timeMs:30000,titles:["Primeiro Ciclo"],featuredTitles:[],featuredAwards:[]};
+    communityCache=[newest];
+    const merged=mergeCommunityRecords([older])[0];
+    if(merged.displayName!=="Nome novo"||merged.correct!==18||merged.wrong!==4||
+      merged.featuredTitles.length!==1||merged.titles.length!==2)throw new Error("O cache do ranking regrediu dados públicos.");
+    const tied=mergeCommunityRecords([{...older,displayName:"Nome empatado",updatedAt:newest.updatedAt}])[0];
+    if(tied.displayName!=="Nome novo"||tied.correct!==18)throw new Error("Uma data empatada substituiu a versão atual do perfil.");
+    communityCache=[];
+  });
   // Duas respostas chegam fora de ordem: a resposta antiga não pode sobrescrever a nova.
   await page.evaluate(async()=>{
     const originalApiRequest=window.apiRequest;

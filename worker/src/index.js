@@ -401,18 +401,12 @@ function historyAttemptCount(item) {
   const wrong = Math.max(0, Number(item?.wrong) || 0);
   return Math.max(attempts, correct + wrong);
 }
-function historyLastAt(item) {
-  const value = Date.parse(item?.lastAt || "");
-  return Number.isFinite(value) ? value : 0;
-}
 function chooseNewerQuestionSnapshot(current, incoming) {
   if (!current) return incoming;
   if (!incoming) return current;
   const currentAttempts = historyAttemptCount(current);
   const incomingAttempts = historyAttemptCount(incoming);
-  if (incomingAttempts > currentAttempts) return incoming;
-  if (currentAttempts > incomingAttempts) return current;
-  return historyLastAt(incoming) >= historyLastAt(current) ? incoming : current;
+  return incomingAttempts > currentAttempts ? incoming : current;
 }
 function historySessionKey(session) {
   if (session && typeof session.id === "string" && session.id) return "id:" + session.id;
@@ -1850,7 +1844,7 @@ async function handleApi(request, env, origin) {
       const incomingGeneralAt = parseTime(incomingProfile.updatedAt);
       const incomingAudioAt = parseTime(incomingProfile.audioPreferencesSavedAt);
       const currentAudioAt = parseTime(currentProfile.audioPreferencesSavedAt);
-      const mayApplyProfile = baseMatches || (incomingPublicAt > 0 && incomingPublicAt >= currentPublicAt);
+      const mayApplyProfile = baseMatches || (incomingPublicAt > 0 && incomingPublicAt > currentPublicAt);
       const mayApplyAudio = baseMatches || incomingAudioAt > currentAudioAt || (!currentAudioAt && incomingAudioAt > 0);
       const mergedProfile = {
         ...currentProfile,
