@@ -4066,9 +4066,9 @@ async function createBetChallengeForPlayer(recipients){
  }
 }
 async function createChallengeForPlayers(recipients){
- requestChallengeFullscreen();
  const config=getChallengeConfig();
  if(!config)return;
+ requestChallengeFullscreen();
  const players=[...new Set(recipients)].filter(name=>name!==activeProfile);
  if(players.length<1||players.length>4){$('challengePlayersStatus').textContent='Selecione de 1 a 4 adversários.';return;}
  $('challengePlayersStatus').textContent='Criando o desafio para '+players.length+' participante(s)...';
@@ -4080,6 +4080,7 @@ async function createChallengeForPlayers(recipients){
   challengeItems=[challengeCurrent,...challengeItems.filter(item=>item.id!==challengeCurrent.id)];
   await startChallengeGame(challengeCurrent,'challenger');
  }catch(error){
+  exitRequestedChallengeFullscreen();
   $('challengePlayersStatus').textContent='Não foi possível criar o desafio: '+siteErrorMessage(error);
   updateChallengeSelectedCount();
  }
@@ -4246,6 +4247,7 @@ async function handleBetChallengeResponse(id,decision){
    if(accepted&&accepted.status==='accepted')await startChallengeGame(accepted,'recipient');
   }else $('challengeListStatus').textContent='Convite rejeitado. Nenhuma moeda foi retirada.';
  }catch(error){
+  if(decision==='accept')exitRequestedChallengeFullscreen();
   $('challengeListStatus').textContent='Não foi possível responder ao convite: '+siteErrorMessage(error);
   buttons.forEach(button=>button.disabled=false);
  }
@@ -4447,6 +4449,11 @@ function requestChallengeFullscreen(){
   const request=document.documentElement.requestFullscreen({navigationUI:'hide'});
   if(request&&typeof request.catch==='function')request.catch(()=>{});
  }catch(error){/* A tela exclusiva por CSS continua funcionando. */}
+}
+function exitRequestedChallengeFullscreen(){
+ if(document.fullscreenElement&&document.exitFullscreen){
+  try{const result=document.exitFullscreen();if(result&&typeof result.catch==='function')result.catch(()=>{});}catch{}
+ }
 }
 function challengeMatchPopGuard(){
  if(!challengeMatchLockActive)return;
