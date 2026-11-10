@@ -183,12 +183,13 @@ check(html.indexOf('<button id="right"')<html.indexOf('<button id="wrong"')&&
 check(html.includes('<button id="navShop" type="button">🛒 Loja</button>')&&
   html.includes('id="shopTitle">🛒 Loja de avatares</h2>')&&!html.includes("🛍️"),
  "O ícone da Loja não usa o cesto de compras.");
-check(html.includes('<button id="navShop" type="button">🛍️ Loja</button>')&&html.includes('id="shopScreen"')&&html.includes('id="avatarShopGrid"'),
- "O botão Loja ou a tela de compras de avatares está ausente.");
 check(html.includes("const isProfile=containerId==='profileAvatarGrid';")&&html.includes(".filter(item=>!isProfile||item.isOwned)")&&html.includes("function renderAvatarShop()")&&html.includes("/api/game/shop"),
  "O perfil não está limitado aos avatares adquiridos ou a Loja perdeu a compra com moedas.");
 check(html.includes("Comprar · '+price.toLocaleString('pt-BR')+' moedas")&&!html.includes("Loja de avatares <small class=\"shop-rules\""),
  "Os avatares bloqueados continuam aparecendo no editor do perfil em vez de ficarem na Loja.");
+check(html.includes('id="communitySection"')&&html.includes("function setMainContentSections(")&&
+  html.includes("function showCommunityOnly()")&&html.includes("function showShopOnly()"),
+ "O menu não controla a exibição exclusiva das seções Loja, Comunidade e modalidades.");
 check(html.includes("const ACTIVE_TIME_SYNC_MS=30*60*1000;"), "O salvamento automático não está configurado para 30 minutos.");
 check(logoutCode.length>0&&!logoutCode.includes("flushCloudSave(true)"), "Sair da conta ainda força um salvamento antes dos 30 minutos.");
 check(html.includes("pendingActiveMs>0?loadHistory():remoteHistory"), "O login não preserva o histórico local que ainda não foi sincronizado.");
@@ -731,26 +732,51 @@ async function testViewport(name, viewport, mobile = false) {
     name+": os acertos e erros públicos foram substituídos por valores de uma resposta antiga.");
 
 
+  const mainSections=["modeHub","trainingModePanel","adventureMapView","adventureIntroView","adventurePlayView","adventureResultView","challengeModeView","tournamentModeView","communitySection","shopScreen"];
+  const getVisibleMainSections=()=>page.evaluate(ids=>Object.fromEntries(ids.map(id=>[id,!document.getElementById(id).classList.contains("hidden")])),mainSections);
+  const assertVisibleSections=async(expected,label)=>{
+    const actual=await getVisibleMainSections();
+    const visible=Object.keys(actual).filter(id=>actual[id]).sort();
+    const wanted=[...expected].sort();
+    check(JSON.stringify(visible)===JSON.stringify(wanted),name+": seções incorretas em "+label+": "+JSON.stringify(visible));
+  };
+  await assertVisibleSections(["modeHub","communitySection"],"menu inicial");
+  await page.locator("#navShop").click();
+  await assertVisibleSections(["shopScreen"],"Loja");
+  await page.locator("#navCommunity").click();
+  await assertVisibleSections(["communitySection"],"Comunidade");
+  await page.locator("#topReturnToGame").click();
+  await assertVisibleSections(["modeHub","communitySection"],"Voltar ao jogo");
+
   await page.locator("#openTrainingMode").click();
   check(!(await page.locator("#trainingModePanel").evaluate(el => el.classList.contains("hidden"))), name + ": botão Treinamento não abriu a modalidade.");
   check((await page.locator("#musicCategoryKicker").textContent()).includes("TREINAMENTO"), name + ": música não mudou para Treinamento.");
+  await assertVisibleSections(["trainingModePanel"],"Treinamento");
   await page.locator("#backToModeHubTraining").click();
+  await assertVisibleSections(["modeHub","communitySection"],"retorno do Treinamento");
+
   await page.locator("#openAdventureMode").click();
   check(!(await page.locator("#adventureMapView").evaluate(el => el.classList.contains("hidden"))), name + ": botão Modo Jogo não abriu o mapa da aventura.");
   check((await page.locator("#musicCategoryKicker").textContent()).includes("MODO JOGO"), name + ": música não mudou para Modo Jogo.");
+  await assertVisibleSections(["adventureMapView"],"Modo Jogo");
   await page.locator("#backToModeHubMap").click();
+  await assertVisibleSections(["modeHub","communitySection"],"retorno do Modo Jogo");
 
   await page.locator("#openChallengeMode").click();
   check(!(await page.locator("#challengeModeView").evaluate(el => el.classList.contains("hidden"))), name + ": botão Desafio não abriu a modalidade.");
   check(!(await page.locator("#challengeHomePanel").evaluate(el => el.classList.contains("hidden"))), name + ": menu inicial do Desafio não apareceu.");
   check((await page.locator("#musicCategoryKicker").textContent()).includes("DESAFIO"), name + ": música não mudou para Desafio.");
+  await assertVisibleSections(["challengeModeView","communitySection"],"Desafio com Comunidade");
   await page.locator("#backFromChallenge").click();
+  await assertVisibleSections(["modeHub","communitySection"],"retorno do Desafio");
 
   await page.locator("#openTournamentMode").click();
   check(!(await page.locator("#tournamentModeView").evaluate(el => el.classList.contains("hidden"))), name + ": botão Torneio não abriu a modalidade.");
   check(!(await page.locator("#tournamentHomePanel").evaluate(el => el.classList.contains("hidden"))), name + ": menu inicial do Torneio não apareceu.");
   check((await page.locator("#musicCategoryKicker").textContent()).includes("TORNEIO"), name + ": música não mudou para Torneio.");
+  await assertVisibleSections(["tournamentModeView","communitySection"],"Torneio com Comunidade");
   await page.locator("#backFromTournament").click();
+  await assertVisibleSections(["modeHub","communitySection"],"retorno do Torneio");
 
   const finalOverflow = await page.evaluate(() => ({
     viewport: window.innerWidth,
