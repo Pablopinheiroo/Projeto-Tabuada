@@ -2239,7 +2239,11 @@ async function purchaseAvatar(key){
  }
 }
 function validClientAvatarKey(value){
- return typeof value==='string'&&/^(imagem|gif):\\d+$/.test(value)&&(()=>{const [kind,raw]=value.split(':');const index=Number(raw);return Number.isInteger(index)&&index>=0&&index<(kind==='gif'?GIF_AVATARS.length:AVATARS.length);})();
+ if(typeof value!=='string')return false;
+ const match=value.match(/^(imagem|gif):(\d+)$/);
+ if(!match)return false;
+ const index=Number(match[2]);
+ return Number.isInteger(index)&&index>=0&&index<(match[1]==='gif'?GIF_AVATARS.length:AVATARS.length);
 }
 
 function makeSalt(){return [...crypto.getRandomValues(new Uint8Array(16))].map(b=>b.toString(16).padStart(2,'0')).join('')}
