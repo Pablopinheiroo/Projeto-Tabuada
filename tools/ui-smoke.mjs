@@ -292,8 +292,9 @@ check(html.includes("questionCount:sessionCompletedQuestionCount")&&html.include
   html.includes("item.errorTrainingResolved=item.errorTrainingCorrectStreak>=2")&&
   html.includes("item.errorTrainingResolved=false"),
   "A contagem acumulada do treino inteligente ou a sequência de dois acertos nos erros está incompleta.");
-check(html.includes("item.accuracy<.90")&&html.includes("difficultyTrainingBelow90Percent")===false,
-  "O filtro de dificuldades precisa ser estritamente inferior a 90% e não esconder a modalidade.");
+check(html.includes("getDifficultyTrainingFacts()")&&html.includes("item.accuracy<.90")&&
+  workerSource.includes("difficultyTrainingBelow90Percent: true"),
+  "O modo de dificuldades precisa usar percentual estritamente inferior a 90% e estar declarado na API.");
 check(html.includes("function exitAdventureStageAndSave()")&&html.includes("function exitChallengeMatchAndSave()")&&
   html.includes("function exitTournamentMatchAndSave()")&&html.includes("await saveProgressNow('Treinamento')")&&
   html.includes("await saveProgressNow('Desafio')")&&html.includes("await saveProgressNow('Torneio')"),
