@@ -1200,6 +1200,37 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  .training-tables-section .tables{grid-template-columns:minmax(0,1fr);gap:7px}
 }
 
+
+/* Duelo em tela exclusiva: somente o quadro da partida fica visível. */
+body.challenge-match-active{overflow:hidden!important;background:#050d1b!important}
+body.challenge-match-active main{width:100%;max-width:none;min-height:100dvh;margin:0;padding:0}
+body.challenge-match-active .brand,
+body.challenge-match-active #gameRewardToast,
+body.challenge-match-active #badgeInfoPopover,
+body.challenge-match-active #siteMusicBox{display:none!important}
+body.challenge-match-active #setup{position:fixed!important;inset:0!important;z-index:30000!important;display:block!important;width:100vw!important;max-width:none!important;height:100dvh!important;min-height:100dvh!important;max-height:100dvh!important;box-sizing:border-box!important;margin:0!important;padding:clamp(10px,2.5vw,24px)!important;border:0!important;border-radius:0!important;overflow-y:auto!important;background:radial-gradient(circle at 50% 15%,#1b385e 0,#0a172b 55%,#050d1b 100%)!important;box-shadow:none!important}
+body.challenge-match-active #setup>:not(#challengeModeView){display:none!important}
+body.challenge-match-active #challengeModeView{display:block!important;position:relative;width:min(760px,100%)!important;max-width:760px!important;margin:0 auto!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+body.challenge-match-active #challengeModeView>:not(#challengePlayPanel):not(#challengeResultPanel){display:none!important}
+body.challenge-match-active #challengePlayPanel,
+body.challenge-match-active #challengeResultPanel{width:100%;max-width:760px;box-sizing:border-box;margin:0 auto;padding:clamp(12px,2.5vw,22px);border:1px solid #42638f;border-radius:22px;background:linear-gradient(145deg,#10233d,#111c36 58%,#211c40);box-shadow:0 18px 55px #0008}
+body.challenge-match-active #challengeQuitMatch{display:none!important}
+body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-right:0}
+.challenge-start-countdown{position:fixed;inset:0;z-index:31000;display:grid;place-items:center;box-sizing:border-box;padding:20px;background:#050d1bf2;backdrop-filter:blur(8px)}
+.challenge-start-countdown-card{display:grid;justify-items:center;gap:10px;width:min(340px,88vw);padding:28px 22px;border:1px solid #56a1d2;border-radius:24px;background:linear-gradient(145deg,#123a5c,#1d2850 62%,#3a2050);box-shadow:0 20px 70px #000a,0 0 0 5px #38bdf822;color:#f8fbff;text-align:center}
+.challenge-start-countdown-card span{color:#a5f3fc;font-size:.72rem;font-weight:950;letter-spacing:.18em}
+.challenge-start-countdown-card strong{display:block;min-height:1.05em;color:#fff;font-size:clamp(5.5rem,25vw,9rem);font-weight:1000;line-height:1;text-shadow:0 0 30px #67e8f9aa}
+.challenge-start-countdown-card strong.countdown-writing{animation:challengeCountdownWrite .65s cubic-bezier(.15,.8,.2,1) both}
+.challenge-start-countdown-card small{color:#c4d6ef;font-size:.82rem;font-weight:700}
+@keyframes challengeCountdownWrite{0%{opacity:0;transform:scale(.48) translateY(18px);filter:blur(7px);clip-path:inset(0 100% 0 0)}55%{opacity:1;filter:blur(0);clip-path:inset(0 0 0 0)}100%{opacity:1;transform:scale(1) translateY(0);filter:blur(0);clip-path:inset(0 0 0 0)}}
+@media(max-width:560px){
+ body.challenge-match-active #setup{padding:8px!important}
+ body.challenge-match-active #challengePlayPanel,
+ body.challenge-match-active #challengeResultPanel{padding:11px;border-radius:16px}
+ body.challenge-match-active #challengePlayPanel .challenge-question-card{padding:15px 10px}
+}
+@media(prefers-reduced-motion:reduce){.challenge-start-countdown-card strong.countdown-writing{animation:none}}
+
 </style>
 </head>
 <body>
@@ -1477,6 +1508,9 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  </div>
 
  <div id="challengePlayPanel" class="hidden">
+  <div id="challengeStartCountdown" class="challenge-start-countdown hidden" role="status" aria-live="assertive" aria-label="Contagem regressiva para o duelo">
+   <div class="challenge-start-countdown-card"><span id="challengeStartCountdownLabel">PREPARE-SE</span><strong id="challengeStartCountdownNumber">3</strong><small>O duelo vai começar</small></div>
+  </div>
   <div class="challenge-play-top"><div><span class="music-kicker">DUELO EM ANDAMENTO</span><h2 id="challengeOpponentTitle">Desafio</h2><p id="challengePlayMeta" class="hint"></p></div><div class="challenge-live-badge">● AO VIVO</div><button id="challengeQuitMatch" class="secondary compact-back" type="button">← Sair do desafio e salvar</button></div>
   <div id="challengeParticipantProfiles" class="challenge-participant-profiles" aria-label="Participantes do desafio"></div>
   <div class="challenge-countdown-grid">
@@ -1882,6 +1916,7 @@ const CHALLENGE_MUSIC=[
 ];
 const CHALLENGE_SEEN_KEY="projetoTabuadaDesafiosVistosV1";
 let challengeItems=[],challengePlayers=[],challengeSetupMode="custom",challengeCurrent=null,challengeRole="",challengeQuestions=[],challengeAnswerLog=[],challengeQuestionIndex=0,challengeQuestionStarted=0,challengeQuestionTimer=null,challengeOverallTimer=null,challengeMusicTimer=null,challengeMatchStarted=0,challengeMatchDeadline=0,challengeQuestionLocked=false,challengeLocalScore=0,challengeVolumeLimit=100,challengePollTimer=null,challengeMusicActive=false,challengeBetMode=false,challengeMusicRequest=0,challengeSynthInterval=null,challengeSynthStep=0;
+let challengeCountdownToken=0,challengeMatchLockActive=false;
 const AUTH_USERS_KEY='projetoTabuadaUsuariosV1';
 const AUTH_SESSION_KEY='projetoTabuadaSessaoV1';
 let authUsers={};
@@ -3918,6 +3953,7 @@ function getChallengeConfig(){
  return {mode:'preset',levelId,musicTrack};
 }
 async function loadChallengePlayers(){
+ if(challengeBetMode)await refreshChallengeData();
  if(challengeBetMode&&(Number(gameEconomy.coins)||0)<1){openBetChallengeOptions();return;}
  showChallengeSubPanel('challengePlayersPanel');
  $('challengeBetBox').classList.toggle('hidden',!challengeBetMode);
@@ -3946,13 +3982,28 @@ function updateChallengeSelectedCount(){
  let validBet=true;
  if(challengeBetMode){
   const player=challengePlayers.find(item=>selectedChallengePlayers.has(item.username));
-  const maxStake=player?Math.min(Number(gameEconomy.coins)||0,Number(player.coins)||0):0;
+  const ownCoins=Math.max(0,Number(gameEconomy.coins)||0);
+  const playerCoins=player?Math.max(0,Number(player.coins)||0):0;
+  const maxStake=player?Math.min(ownCoins,playerCoins):0;
   const input=$('challengeBetAmount');
   if(input)input.max=String(maxStake);
-  if($('challengeBetLimit'))$('challengeBetLimit').textContent=player?'Limite permitido: 1 a '+maxStake.toLocaleString('pt-BR')+' moedas. Seu saldo: '+(Number(gameEconomy.coins)||0).toLocaleString('pt-BR')+' · saldo do adversário: '+(Number(player.coins)||0).toLocaleString('pt-BR')+'.':'Selecione uma pessoa. Seu saldo atual é '+(Number(gameEconomy.coins)||0).toLocaleString('pt-BR')+' moedas.';
   const raw=String(input?.value||'').trim();
-  const stake=/^\\d+$/.test(raw)?Number(raw):0;
-  validBet=(Number(gameEconomy.coins)||0)>=1&&!!player&&Number.isSafeInteger(stake)&&stake>=1&&stake<=maxStake;
+  const stake=raw!==''?Number(raw):0;
+  const validIntegerStake=Number.isSafeInteger(stake)&&stake>=1;
+  const enoughOwnBalance=validIntegerStake&&stake<=ownCoins;
+  const enoughOpponentBalance=!!player&&validIntegerStake&&stake<=playerCoins;
+  validBet=!!player&&validIntegerStake&&enoughOwnBalance&&enoughOpponentBalance;
+  if($('challengeBetLimit')){
+   $('challengeBetLimit').textContent=!player
+    ?'Selecione uma pessoa para consultar o limite da aposta. Seu saldo: '+ownCoins.toLocaleString('pt-BR')+' moedas.'
+    :!validIntegerStake
+     ?'Digite uma quantidade inteira de moedas para liberar o início do desafio.'
+     :!enoughOwnBalance
+      ?'Seu saldo é de '+ownCoins.toLocaleString('pt-BR')+' moedas. Reduza o valor da aposta.'
+      :!enoughOpponentBalance
+       ?'A pessoa selecionada tem '+playerCoins.toLocaleString('pt-BR')+' moedas. Reduza o valor da aposta.'
+       :'✓ Aposta de '+stake.toLocaleString('pt-BR')+' moedas válida. Os dois participantes têm saldo suficiente.';
+  }
  }
  if($('challengeStartSelected'))$('challengeStartSelected').disabled=count<1||count>limit||!validBet;
 }
@@ -3995,7 +4046,7 @@ async function createBetChallengeForPlayer(recipients){
  const config=getChallengeConfig();if(!config)return;
  const players=[...new Set(recipients)].filter(name=>name!==activeProfile);
  const raw=String($('challengeBetAmount').value||'').trim();
- const stake=/^\d+$/.test(raw)?Number(raw):0;
+ const stake=raw!==''?Number(raw):0;
  const player=players.length===1?challengePlayers.find(item=>item.username===players[0]):null;
  const maxStake=player?Math.min(Number(gameEconomy.coins)||0,Number(player.coins)||0):0;
  if(players.length!==1){$('challengePlayersStatus').textContent='Escolha apenas uma pessoa para desafiar valendo moedas.';return;}
@@ -4015,6 +4066,7 @@ async function createBetChallengeForPlayer(recipients){
  }
 }
 async function createChallengeForPlayers(recipients){
+ requestChallengeFullscreen();
  const config=getChallengeConfig();
  if(!config)return;
  const players=[...new Set(recipients)].filter(name=>name!==activeProfile);
@@ -4182,6 +4234,7 @@ function renderChallengeList(){
 }
 
 async function handleBetChallengeResponse(id,decision){
+ if(decision==='accept')requestChallengeFullscreen();
  const buttons=$('challengeList').querySelectorAll('[data-challenge-accept="'+id+'"],[data-challenge-reject="'+id+'"]');
  buttons.forEach(button=>button.disabled=true);
  $('challengeListStatus').textContent=decision==='accept'?'Confirmando a aposta e verificando os dois saldos...':'Registrando a rejeição do convite...';
@@ -4388,7 +4441,73 @@ function renderChallengeParticipantProfiles(challenge,profiles){
   return '<div class="challenge-participant-chip"><img src="'+avatar+'" alt="Avatar de '+escapeHtml(displayName)+'"><span>'+escapeHtml(displayName)+(isMe?'<small>Você</small>':'<small>@'+escapeHtml(username)+'</small>')+'</span></div>';
  }).join('');
 }
+function requestChallengeFullscreen(){
+ if(document.fullscreenElement||!document.documentElement.requestFullscreen)return;
+ try{
+  const request=document.documentElement.requestFullscreen({navigationUI:'hide'});
+  if(request&&typeof request.catch==='function')request.catch(()=>{});
+ }catch(error){/* A tela exclusiva por CSS continua funcionando. */}
+}
+function challengeMatchPopGuard(){
+ if(!challengeMatchLockActive)return;
+ try{history.pushState({challengeMatchLock:true},'',location.href);}catch{}
+}
+function challengeMatchKeyGuard(event){
+ if(!challengeMatchLockActive)return;
+ const blocked=event.key==='Escape'||event.key==='Backspace'||event.key==='F5'||
+  (event.altKey&&(event.key==='ArrowLeft'||event.key==='ArrowRight'))||
+  ((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='r');
+ if(blocked){event.preventDefault();event.stopPropagation();}
+}
+function challengeMatchUnloadGuard(event){
+ if(!challengeMatchLockActive)return;
+ event.preventDefault();event.returnValue='';
+}
+function enterChallengeMatchLock(){
+ challengeMatchLockActive=true;
+ document.body.classList.add('challenge-match-active');
+ try{history.pushState({challengeMatchLock:true},'',location.href);}catch{}
+ window.addEventListener('popstate',challengeMatchPopGuard);
+ document.addEventListener('keydown',challengeMatchKeyGuard,true);
+ window.addEventListener('beforeunload',challengeMatchUnloadGuard);
+}
+function leaveChallengeMatchLock(){
+ challengeMatchLockActive=false;
+ document.body.classList.remove('challenge-match-active');
+ window.removeEventListener('popstate',challengeMatchPopGuard);
+ document.removeEventListener('keydown',challengeMatchKeyGuard,true);
+ window.removeEventListener('beforeunload',challengeMatchUnloadGuard);
+ if(document.fullscreenElement&&document.exitFullscreen){
+  try{const result=document.exitFullscreen();if(result&&typeof result.catch==='function')result.catch(()=>{});}catch{}
+ }
+}
+async function runChallengeStartCountdown(){
+ const overlay=$('challengeStartCountdown'),number=$('challengeStartCountdownNumber'),label=$('challengeStartCountdownLabel');
+ if(!overlay||!number||!label)throw new Error('A contagem regressiva do duelo não foi carregada.');
+ const token=++challengeCountdownToken;
+ const sequence=[{value:'3',label:'PREPARE-SE',delay:760},{value:'2',label:'PREPARE-SE',delay:760},{value:'1',label:'PREPARE-SE',delay:760},{value:'VAI!',label:'É AGORA',delay:430}];
+ overlay.classList.remove('hidden');
+ for(const step of sequence){
+  if(token!==challengeCountdownToken||!challengeCurrent)return false;
+  label.textContent=step.label;
+  number.textContent=step.value;
+  number.classList.remove('countdown-writing');
+  void number.offsetWidth;
+  number.classList.add('countdown-writing');
+  await new Promise(resolve=>setTimeout(resolve,step.delay));
+ }
+ if(token!==challengeCountdownToken||!challengeCurrent)return false;
+ overlay.classList.add('hidden');
+ challengeMatchStarted=performance.now();
+ challengeMatchDeadline=challengeMatchStarted+50_000;
+ renderChallengeQuestion();
+ if(challengeOverallTimer!==null)clearInterval(challengeOverallTimer);
+ challengeOverallTimer=setInterval(updateChallengeClocks,100);
+ return true;
+}
 async function startChallengeGame(challenge,role){
+ stopChallengeTimers();
+ challengeCountdownToken++;
  challengeCurrent=challenge;
  challengeRole=role;
  challengeQuestions=createChallengeQuestions(challenge.seed,challenge.tables,challenge.optionCount);
@@ -4396,8 +4515,9 @@ async function startChallengeGame(challenge,role){
  challengeQuestionIndex=0;
  challengeQuestionLocked=false;
  challengeLocalScore=0;
- challengeMatchStarted=performance.now();
- challengeMatchDeadline=challengeMatchStarted+50_000;
+ challengeMatchStarted=0;
+ challengeMatchDeadline=0;
+ enterChallengeMatchLock();
  $('challengeHomePanel').classList.add('hidden');
  $('challengeConfigPanel').classList.add('hidden');
  $('challengePlayersPanel').classList.add('hidden');
@@ -4412,7 +4532,7 @@ async function startChallengeGame(challenge,role){
   return {username,displayName:cached.displayName||local.displayName||username,avatar:cached.avatar||local.avatar||'imagem:0'};
  });
  $('challengeParticipantProfiles').innerHTML='<small class="hint">Sincronizando as fotos de perfil...</small>';
-  const track=(musicTrackCollections.desafio||[])[challenge.musicTrack]||CHALLENGE_MUSIC[challenge.musicTrack]||CHALLENGE_MUSIC[0];
+ const track=(musicTrackCollections.desafio||[])[challenge.musicTrack]||CHALLENGE_MUSIC[challenge.musicTrack]||CHALLENGE_MUSIC[0];
  $('challengeMusicTitle').textContent='🎵 '+track.name;
  $('challengeMusicRule').textContent=role==='recipient'?'Música escolhida pelo desafiante. Ela está bloqueada para você.':'Você escolheu esta música. Todos os adversários ouvirão a mesma trilha.';
  showMusicMenuMinimized();
@@ -4422,23 +4542,23 @@ async function startChallengeGame(challenge,role){
  $('challengeVolume').min='0';
  applyChallengeVolume(role==='recipient'?30:100);
  $('challengePlayStatus').textContent=role==='recipient'?'Você recebeu este duelo. Boa sorte!':'Você enviou o desafio. Agora faça sua partida!';
-  updateChallengeMusicToggle(false);
-  startChallengeMusic(challenge.musicTrack).then(playing=>{
-   if(challengeCurrent?.id!==challenge.id)return;
-   updateChallengeMusicToggle(playing);
-   if(!playing)$('challengePlayStatus').textContent='O navegador bloqueou a música. Toque em “Ativar música” para começar a trilha do duelo.';
-  });
- challengeOverallTimer=setInterval(updateChallengeClocks,100);
- renderChallengeQuestion();
- try{
-  const fresh=await apiRequest('/api/challenges/'+challenge.id+'/players');
+ updateChallengeMusicToggle(false);
+ startChallengeMusic(challenge.musicTrack).then(playing=>{
+  if(challengeCurrent?.id!==challenge.id)return;
+  updateChallengeMusicToggle(playing);
+  if(!playing)$('challengePlayStatus').textContent='O navegador bloqueou a música. Toque em “Ativar música” para começar a trilha do duelo.';
+ });
+ const profileLoad=apiRequest('/api/challenges/'+challenge.id+'/players').then(fresh=>{
   if(Array.isArray(fresh.players))renderChallengeParticipantProfiles(challenge,fresh.players);
   else renderChallengeParticipantProfiles(challenge,cachedProfiles);
- }catch(error){
+ }).catch(error=>{
   if(error.sessionExpired)return;
   renderChallengeParticipantProfiles(challenge,cachedProfiles);
- }
+ });
+ await runChallengeStartCountdown();
+ await profileLoad;
 }
+
 function submitChallengeChoice(value){
  if(challengeQuestionLocked||!challengeCurrent)return;
  playUiSound(value===null?'timeout':'select');
@@ -4471,6 +4591,7 @@ function submitChallengeChoice(value){
  renderChallengeQuestion(previousText);
 }
 async function exitChallengeMatchAndSave(){
+ if(challengeMatchLockActive)return false;
  if(!challengeCurrent){showChallengeSubPanel('challengeHomePanel');return false;}
  stopChallengeTimers();
  stopChallengeMusic();
@@ -4591,6 +4712,7 @@ async function openChallengeFromList(id){
   return;
  }
  const role=item.challenger===activeProfile?'challenger':'recipient';
+ requestChallengeFullscreen();
  await startChallengeGame(item,role);
 }
 function handleChallengeVisibility(){
@@ -6383,6 +6505,7 @@ $('challengeVolume').addEventListener('input',event=>applyChallengeVolume(event.
 $('challengeQuitMatch').addEventListener('click',exitChallengeMatchAndSave);
 $('tournamentQuitMatch').addEventListener('click',exitTournamentMatchAndSave);
 $('challengeResultBack').addEventListener('click',async()=>{
+ leaveChallengeMatchLock();
  showChallengeSubPanel('challengeHomePanel');
  await refreshChallengeData();
 });
