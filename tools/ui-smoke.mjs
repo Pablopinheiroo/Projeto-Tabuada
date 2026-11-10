@@ -460,8 +460,16 @@ async function testViewport(name, viewport, mobile = false) {
       return window.__originalPlayUiSound(name,channel,optionPreview);
     };
   });
+  const beforeInterfacePreview=await page.evaluate(()=>window.__previewCalls);
   await page.locator("#profileSfxVolume").evaluate(element=>{element.value="55";element.dispatchEvent(new Event("input",{bubbles:true}));});
+  await page.waitForFunction(previous=>window.__previewCalls>previous,beforeInterfacePreview,{timeout:3000});
+  check(await page.locator("#soundtrackAudio").evaluate(el=>el.paused),
+    name+": a música de fundo tocou junto com a prévia da interface.");
+  const beforeGamePreview=await page.evaluate(()=>window.__gamePreviewCalls);
   await page.locator("#profileGameSfxVolume").evaluate(element=>{element.value="45";element.dispatchEvent(new Event("input",{bubbles:true}));});
+  await page.waitForFunction(previous=>window.__gamePreviewCalls>=previous+4,beforeGamePreview,{timeout:4000});
+  check(await page.locator("#soundtrackAudio").evaluate(el=>el.paused),
+    name+": a música de fundo tocou junto com a prévia do modo jogo.");
   await page.locator("#profileMusicVolume").evaluate(element=>{element.value="43";element.dispatchEvent(new Event("input",{bubbles:true}));});
   check((await page.locator("#profileSfxVolumeValue").textContent()).trim()==="55%",name+": o volume dos efeitos da interface não atualizou.");
   check((await page.locator("#profileGameSfxVolumeValue").textContent()).trim()==="45%",name+": o volume dos efeitos do modo jogo não atualizou.");
@@ -509,8 +517,6 @@ async function testViewport(name, viewport, mobile = false) {
   await page.locator("#profileMusicVolume").evaluate(element=>{element.value="43";element.dispatchEvent(new Event("input",{bubbles:true}));});
   for(const id of ["#resetProfileMusicVolume","#resetProfileSfxVolume","#resetProfileGameSfxVolume"])
     check(await page.locator(id).isVisible(),name+": os botões de reset deveriam reaparecer após sair do padrão.");
-  const gamePreviewCallsBeforeSecondAdjust=await page.evaluate(()=>window.__gamePreviewCalls);
-  await page.waitForFunction(previous=>window.__gamePreviewCalls>previous,gamePreviewCallsBeforeSecondAdjust,{timeout:4000});
   await page.locator("#saveProfileAudioPreferences").click();
   await page.waitForFunction(()=>window.__audioPreferenceWrites===1,null,{timeout:5000});
   const savedAudioProfile=await page.evaluate(()=>({

@@ -4832,7 +4832,7 @@ function playUiSound(name,channel='interface',optionPreview=false){
   const buffer=uiSfxBuffers.get(src);
   if(buffer){
    if(audioContext&&audioContext.state==='suspended'){
-    audioContext.resume().then(()=>playUiSfxBuffer(buffer,channel)).catch(()=>{});
+    audioContext.resume().then(()=>playUiSfxBuffer(buffer,channel,optionPreview)).catch(()=>{});
     return;
    }
    if(playUiSfxBuffer(buffer,channel,optionPreview))return;
