@@ -210,9 +210,10 @@ check(html.includes("function previewGameSfxVolume()")&&html.includes("playUiSou
  "A prévia ou a redefinição do volume do modo jogo está ausente.");
 check(html.includes("playFeedback(!!entry.correct,String(entry.mode||'').includes('training')?'game':'interface')")&&html.includes("playUiSound('verify','game')")&&html.includes("playUiSound('click','game')"),
  "Os efeitos de Verificar, Acertei, Errei e Tive dificuldade não estão ligados ao canal do modo jogo.");
-check(html.includes("function playCelebrationSound()")&&html.includes("if(achievement||/parabéns/i.test(String(message)))playCelebrationSound()")&&
-  html.includes("pauseTrainingQuestionClock();\n playCelebrationSound();"),
- "As notificações de parabéns e a tela de ciclo concluído precisam tocar o som de comemoração.");
+check(html.includes("function playCelebrationSound()")&&
+  html.includes("function playPrizeCelebrationMusic()")&&html.includes("function showPrizeCelebration(")&&
+  html.includes("showPrizeCelebration({")&&html.includes("melody=[72,76,79,84,83,79,81,84,88,86,84,79]"),
+ "Somente prêmios e conquistas devem abrir a comemoração com a música personalizada.");
 check(html.includes("profile.gameSfxVolume=gameSfxVolumeLevel"),
  "O volume do modo jogo não é salvo no perfil e na nuvem.");
 check(html.includes("A música geral fica pausada nesta tela")&&html.includes("breve prévia da trilha")&&
