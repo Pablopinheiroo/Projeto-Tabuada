@@ -343,6 +343,14 @@ const finishSessionSource=html.slice(html.indexOf("async function finishSession(
 check(finishSessionSource.indexOf("const exitOverlay=showTrainingExitCelebration()")>=0&&
   finishSessionSource.indexOf("const exitOverlay=showTrainingExitCelebration()")<finishSessionSource.indexOf("await sessionRewardQueue"),
   "A confirmação precisa aparecer antes de aguardar recompensas e sincronização.");
+const errorFinishSource=html.slice(html.indexOf("function completeErrorTraining()"),html.indexOf("function next()",html.indexOf("function completeErrorTraining()")));
+check(errorFinishSource.indexOf("queueTrainingSessionReward('error_training_complete'")>=0&&
+  errorFinishSource.indexOf("queueTrainingSessionReward('error_training_complete'")<errorFinishSource.indexOf("finishSession().finally("),
+  "Concluir a revisão de erros deve mostrar a confirmação sem esperar a recompensa.");
+const roundFinishSource=html.slice(html.indexOf("function next()"),html.indexOf("function start()",html.indexOf("function next()")));
+check(roundFinishSource.includes("queueTrainingSessionReward('training_cycle'")&&
+  roundFinishSource.indexOf("queueTrainingSessionReward('training_cycle'")<roundFinishSource.indexOf("finishSession().finally("),
+  "Concluir o treino inteligente deve mostrar a confirmação sem esperar a recompensa do ciclo.");
 const verifySource=html.slice(html.indexOf("function verify()"),html.indexOf("function judge(ok)",html.indexOf("function verify()")));
 const judgeSource=html.slice(html.indexOf("function judge(ok)"),html.indexOf("const ADVENTURE_WORLDS",html.indexOf("function judge(ok)")));
 check(verifySource.includes("$('equation').textContent=String(answer)")&&
