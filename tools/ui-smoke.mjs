@@ -209,7 +209,7 @@ check(html.includes("assets/gift-animation.gif")&&
   "A comunidade deve manter o cartão antigo, mostrar apenas o presente animado sem fundo, abrir o formulário em balão flutuante e manter a presença normal.");
 check(html.includes("👤 MEU PERFIL")&&
   html.includes('id="navProfile" type="button">👤 Meu perfil')&&
-  html.includes('aria-label="Abrir opções do perfil"><span class="profile-actions-chevron"')&&
+  html.includes('<summary class="profile-card-summary" aria-label="Expandir ou recolher opções do perfil">')&&html.includes('class="profile-actions-chevron"')&&
   !html.includes("Mais opções do perfil")&&
   html.includes(".mode-hub-heading-simple .music-kicker{")&&
   html.includes("color:#eaf7ff;")&&
