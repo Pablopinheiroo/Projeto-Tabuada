@@ -97,6 +97,14 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .profile-identity strong{display:block;max-width:100%;color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-size:clamp(1.12rem,3.8vw,1.5rem);font-weight:900;line-height:1.18;letter-spacing:-.035em;text-shadow:0 2px 14px #020617aa;overflow-wrap:anywhere}
 .profile-identity small{display:block;margin-top:5px;color:#b9d5f1;font-size:.78rem;font-weight:600;line-height:1.35;overflow-wrap:anywhere}
 .profile-identity small span{color:#67e8f9;font-weight:800}
+.profile-actions-disclosure{position:relative;margin-top:10px;border:1px solid #397da7;border-radius:12px;background:#0b2038;overflow:hidden}
+.profile-actions-disclosure>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;color:#dff7ff;font-size:.88rem;font-weight:900;cursor:pointer;list-style:none}
+.profile-actions-disclosure>summary::-webkit-details-marker{display:none}
+.profile-actions-disclosure>summary:after{content:"＋";color:#67e8f9;font-size:1.1rem}
+.profile-actions-disclosure[open]>summary:after{content:"−"}
+.profile-actions-disclosure[open]>.profile-actions{padding:0 10px 4px}
+.profile-actions-disclosure[open]>.profile-status{padding:0 10px}
+.profile-actions-disclosure[open]>.profile-last-saved{padding:0 10px 7px}
 .profile-actions{position:relative;display:flex;gap:8px;flex-wrap:wrap}
 .profile-actions .music-button{flex:1 1 145px;min-width:0}
 .profile-status{text-align:left;margin:10px 2px 0!important;color:#b9d5f1!important}
@@ -304,6 +312,8 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 /* Central de modos e aventura de multiplicacao */
 .mode-hub{margin:20px 0 4px;padding:18px;border:1px solid #34577e;border-radius:19px;background:linear-gradient(145deg,#101f3a,#171b3b 62%,#251a46);box-shadow:0 14px 34px #02061755}
 .mode-hub-heading{text-align:center;margin:0 0 15px}
+.mode-hub-heading-simple{margin:2px 0 19px;text-align:center}
+.mode-hub-heading-simple .music-kicker{display:block;color:#eaf7ff;font-size:clamp(1.2rem,3.8vw,1.55rem);font-weight:950;letter-spacing:.13em;line-height:1.25;text-align:center}
 .mode-hub-heading h2{margin:5px 0 4px;font-size:1.2rem}
 .mode-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .mode-card{display:flex;align-items:flex-start;gap:13px;min-width:0;padding:16px;border:1px solid #3c668f;border-radius:16px;background:linear-gradient(145deg,#142e4d,#172044);color:#edf7ff;text-align:left;box-shadow:0 5px 0 #09152c,0 12px 25px #02061744;transition:transform .16s,border-color .16s,box-shadow .16s}
@@ -1438,21 +1448,23 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
  <div class="profile-identity"><img id="currentAvatar" alt="Avatar do perfil"><div class="profile-name-wrap"><strong id="currentDisplayName"></strong><small>Conta: <span id="currentUsername"></span></small></div></div>
  <div class="wallet-inline"><span><i class="coin-symbol" aria-hidden="true"></i> Moedas: <strong id="currentCoins">0</strong></span><span>🏆 Conquistas: <strong id="currentAchievementCount">0/21</strong></span></div>
  <input id="profileName" type="hidden">
- <div class="profile-actions">
-  <button id="openProfile" class="music-button" type="button">👤 Meu perfil</button>
-  <button id="saveProfile" class="music-button" type="button">💾 Salvar dados</button>
-  <button id="openProfileStats" class="music-button" type="button">📊 Minhas estatísticas</button>
-  <button id="openProfileOptions" class="music-button" type="button">⚙️ Opções</button>
-  <button id="logout" class="music-button" type="button">Sair da conta</button>
- </div>
- <p id="profileStatus" class="small profile-status">Progresso salvo</p>
- <strong id="profileLastSavedAt" class="profile-last-saved">Último salvamento: aguardando o primeiro envio.</strong>
+ <details id="profileActionsDisclosure" class="profile-actions-disclosure">
+  <summary>👤 Meu perfil</summary>
+  <div class="profile-actions">
+   <button id="saveProfile" class="music-button" type="button">💾 Salvar dados</button>
+   <button id="openProfileStats" class="music-button" type="button">📊 Minhas estatísticas</button>
+   <button id="openProfileOptions" class="music-button" type="button">⚙️ Opções</button>
+   <button id="logout" class="music-button" type="button">Sair da conta</button>
+  </div>
+  <p id="profileStatus" class="small profile-status">Progresso salvo</p>
+  <strong id="profileLastSavedAt" class="profile-last-saved">Último salvamento: aguardando o primeiro envio.</strong>
+ </details>
 </div>
 <nav class="main-quick-nav" aria-label="Atalhos principais">
  <button id="topReturnToGame" type="button">🎮 Voltar ao jogo</button>
  <button id="navProfile" type="button">👤 Perfil</button>
+ <button id="navTraining" type="button">📘 Treinamento</button>
  <button id="navAdventure" type="button">🗺️ Modo jogo</button>
- <button id="navTraining" type="button">📘 Treinar</button>
  <button id="navChallenge" type="button">⚔️ Desafio</button>
  <button id="navTournament" type="button">🏁 Torneio</button>
  <button id="navCommunity" type="button">🌐 Comunidade</button>
@@ -1460,13 +1472,13 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
 </nav>
 
 <div id="modeHub" class="mode-hub">
- <div class="mode-hub-heading"><span class="music-kicker">ESCOLHA SUA JORNADA</span><h2>Como você quer aprender hoje?</h2><p class="hint">Você pode treinar livremente ou seguir uma aventura com fases e história.</p></div>
+ <div class="mode-hub-heading mode-hub-heading-simple"><span class="music-kicker">ESCOLHA SUA JORNADA</span></div>
  <div class="mode-cards">
-  <button id="openAdventureMode" class="mode-card adventure-card" type="button">
-   <span class="mode-card-icon">🗺️</span><span class="mode-card-copy"><strong>Modo Jogo</strong><small>Explore mundos, vença desafios, desbloqueie fases e avance até a tabuada do 20.</small><b>Entrar na aventura →</b></span>
-  </button>
   <button id="openTrainingMode" class="mode-card training-card" type="button">
    <span class="mode-card-icon">📘</span><span class="mode-card-copy"><strong>Treinamento</strong><small>Escolha as tabuadas, pratique no seu ritmo e acompanhe seus acertos.</small><b>Treino livre →</b></span>
+  </button>
+  <button id="openAdventureMode" class="mode-card adventure-card" type="button">
+   <span class="mode-card-icon">🗺️</span><span class="mode-card-copy"><strong>Modo Jogo</strong><small>Explore mundos, vença desafios, desbloqueie fases e avance até a tabuada do 20.</small><b>Entrar na aventura →</b></span>
   </button>
   <button id="openChallengeMode" class="mode-card challenge-card" type="button">
    <span class="mode-card-icon">⚔️</span><span class="mode-card-copy"><strong>Modo Desafio <em id="challengeBadge" class="challenge-badge hidden">0</em></strong><small>Convide até quatro participantes para um duelo de 10 questões e descubra quem consegue mais pontos.</small><b>Desafiar participantes →</b></span>
