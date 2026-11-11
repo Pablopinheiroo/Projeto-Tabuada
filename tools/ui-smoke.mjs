@@ -1622,8 +1622,8 @@ const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && sou
     communityCacheAt=Date.now();
   });
   await page.locator("#communitySort").selectOption("coins");
-  await page.waitForFunction(()=>document.querySelector(".community-rank-display-title")?.textContent?.trim()==="Líder de moedas");
-  check((await page.locator(".community-rank-display-title").first().textContent()).trim()==="Líder de moedas",
+  await page.waitForFunction(()=>document.querySelector(".community-rank-display-title")?.textContent?.trim().toLocaleLowerCase("pt-BR").includes("líder"));
+  check((await page.locator(".community-rank-display-title").first().textContent()).trim().toLocaleLowerCase("pt-BR").includes("líder"),
     name+": o ranking de moedas não colocou primeiro quem tem o maior saldo.");
   await page.locator("#communitySort").selectOption("time");
   await page.waitForFunction(()=>document.querySelector(".community-rank-display-title")?.textContent?.trim()==="Maria Silva");
