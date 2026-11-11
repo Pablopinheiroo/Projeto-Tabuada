@@ -3788,7 +3788,7 @@ async function renderCommunityRanking(){
     '<summary class="community-rank-summary">'+
      '<div class="community-rank-main">'+
       '<div class="community-rank-place">'+(place===1?'🥇':place===2?'🥈':place===3?'🥉':'#'+place)+'</div>'+
-      '<span class="'+frameShellClass(user.profileFrame||'')+' community-avatar-frame-shell"><img class="avatar-frame-avatar community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt=""></span>'+
+      '<span class="'+frameShellClass(user.profileFrame||'')+' community-avatar-frame-shell"><img class="avatar-frame-avatar community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt="">'+frameArtworkMarkup(user.profileFrame||'')+'</span>'+
       '<div class="community-rank-identity">'+
        '<div class="community-rank-name-row"><strong class="community-rank-display-title">'+escapeHtml(user.displayName)+'</strong><span class="community-wallet-pill"><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</span></div>'+
        '<small class="community-last-online">'+escapeHtml(formatCommunityLastOnline(user.lastOnlineAt))+'</small>'+
