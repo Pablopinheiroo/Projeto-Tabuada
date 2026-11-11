@@ -333,11 +333,23 @@ check(!html.includes("item.errorTrainingResolved")&&!html.includes("item.errorTr
   html.includes("trainingModeType!=='errors'&&trainingModeType!=='tournamentErrors'"),
   "Os dois treinos de erros não podem compartilhar estado, nem conceder moedas por acertos como treino normal.");
 check(html.includes("function showTrainingExitCelebration()")&&html.includes("data-exit-close")&&
-  html.includes("data-exit-menu")&&html.includes("data-open-training-report")&&
+  html.includes("data-exit-training")&&html.includes("data-open-training-report")&&
   html.includes("PARTIDA FINALIZADA")&&html.includes("TREINO COMPLETO")&&
-  html.includes("Parabéns pelo seu treino!")&&html.includes("Seu resultado foi salvo. Veja abaixo o desempenho desta partida e o ranking das contas.")&&
-  html.includes("showReport(false)")&&html.includes("function showReport(display=true)"),
-  "Ao finalizar o treino, a tela deve oferecer somente voltar aos modos ou abrir o resultado quando solicitado.");
+  html.includes("Parabéns pelo seu treino!")&&
+  html.includes("Resultado registrado neste aparelho. Sincronização em andamento...")&&
+  html.includes("showTrainingMode()")&&html.includes("showReport(false)")&&html.includes("function showReport(display=true)"),
+  "Ao finalizar o treino, a confirmação deve aparecer imediatamente e permitir voltar ao treino ou abrir o resultado.");
+const finishSessionSource=html.slice(html.indexOf("async function finishSession()"),html.indexOf("\nfunction profileSnapshot()",html.indexOf("async function finishSession()")));
+check(finishSessionSource.indexOf("const exitOverlay=showTrainingExitCelebration()")>=0&&
+  finishSessionSource.indexOf("const exitOverlay=showTrainingExitCelebration()")<finishSessionSource.indexOf("await sessionRewardQueue"),
+  "A confirmação precisa aparecer antes de aguardar recompensas e sincronização.");
+const verifySource=html.slice(html.indexOf("function verify()"),html.indexOf("function judge(ok)",html.indexOf("function verify()")));
+const judgeSource=html.slice(html.indexOf("function judge(ok)"),html.indexOf("const ADVENTURE_WORLDS",html.indexOf("function judge(ok)")));
+check(verifySource.includes("$('equation').textContent=String(answer)")&&
+  judgeSource.includes("$('equation').classList.add('correct')")&&
+  judgeSource.includes("$('equation').classList.add('wrong')")&&
+  !html.includes('id="answer"')&&!html.includes("$('answer')"),
+  "Ao verificar, somente o resultado deve substituir a conta no mesmo lugar do enunciado.");
 check((html.match(/training-celebration-overlay\{position:fixed;inset:0;z-index:9999;display:flex/g)||[]).length===2&&
   html.includes("width:100vw;height:100vh;height:100dvh")&&
   html.includes(".training-exit-close{position:absolute;top:9px;right:10px")&&
@@ -1168,6 +1180,18 @@ check(html.includes("function showCoinRewardNotification(coinsAdded,item={},newT
     name+": a tela de prêmio ficou descentralizada ou ultrapassou a tela ("+JSON.stringify(prizeCardBounds)+").");
   await page.locator(".prize-celebration-overlay [data-close-prize]").click();
   await page.evaluate(()=>document.querySelector("#setup").classList.remove("hidden"));
+  const answerReplacement=await page.evaluate(()=>{
+    if(questionTimer!==null){clearInterval(questionTimer);questionTimer=null;}
+    questionStartedAt=0;questionElapsedBeforeStart=0;questionClockPaused=false;
+    current={a:3,b:1};revealed=false;currentQuestionTimeStopped=false;
+    $('equation').textContent='3 × 1';$('equation').className='equation';
+    $('verify').classList.remove('hidden');$('judge').classList.add('hidden');
+    beginQuestionClock();verify();
+    return {question:$('equation').textContent,answerNode:!!$('answer'),
+      judgeVisible:!$('judge').classList.contains('hidden')};
+  });
+  check(answerReplacement.question==="3"&&!answerReplacement.answerNode&&answerReplacement.judgeVisible,
+    name+": verificar deveria trocar a conta por apenas o resultado no mesmo lugar: "+JSON.stringify(answerReplacement));
   await page.evaluate(()=>{
     sessionAnswers=[{a:2,b:3,correct:true,timeMs:1200},{a:3,b:4,correct:false,timeMs:1800}];
     hits=1;misses=1;sessionSkipped=1;sessionQuestionTimeMs=4200;
@@ -1195,23 +1219,50 @@ check(html.includes("function showCoinRewardNotification(coinsAdded,item={},newT
     trainingModeType='errors';errorTrainingCompleted=true;
     showTrainingExitCelebration();
   });
-  await page.locator("[data-exit-menu]").click();
+  await page.locator("[data-exit-training]").click();
   check(!(await page.locator("#setup").evaluate(el=>el.classList.contains("hidden")))&&
-    !(await page.locator("#modeHub").evaluate(el=>el.classList.contains("hidden")))&&
-    await page.locator("#trainingModePanel").evaluate(el=>el.classList.contains("hidden"))&&
+    await page.locator("#modeHub").evaluate(el=>el.classList.contains("hidden"))&&
+    !(await page.locator("#trainingModePanel").evaluate(el=>el.classList.contains("hidden")))&&
     await page.locator("#report").evaluate(el=>el.classList.contains("hidden")),
-    name+": Voltar ao menu inicial não retornou aos modos de jogo.");
+    name+": Retornar ao treino não abriu a tela de Treinar para decidir o próximo passo.");
   await page.evaluate(()=>{
     trainingModeType='standard';errorTrainingCompleted=false;
     showTrainingExitCelebration();
   });
   await page.locator("[data-exit-close]").click();
   check(!(await page.locator("#setup").evaluate(el=>el.classList.contains("hidden")))&&
-    !(await page.locator("#modeHub").evaluate(el=>el.classList.contains("hidden")))&&
-    await page.locator("#trainingModePanel").evaluate(el=>el.classList.contains("hidden")),
-    name+": o X não fechou o aviso e retornou ao menu inicial.");
-  await page.evaluate(()=>{trainingModeType='standard';errorTrainingCompleted=false;});
-  const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && soundtrackAudio && !soundtrackAudio.paused));
+    await page.locator("#modeHub").evaluate(el=>el.classList.contains("hidden"))&&
+    !(await page.locator("#trainingModePanel").evaluate(el=>el.classList.contains("hidden"))),
+    name+": o X não retornou à tela de Treinar.");
+  const immediateFinish=await page.evaluate(()=>{
+    const originalSave=saveProgressNow;
+    saveProgressNow=async()=>{await new Promise(resolve=>setTimeout(resolve,400));return true;};
+    if(questionTimer!==null){clearInterval(questionTimer);questionTimer=null;}
+    questionStartedAt=0;questionElapsedBeforeStart=0;questionClockPaused=false;
+    trainingSessionSaving=false;trainingModeType='standard';errorTrainingCompleted=false;
+    sessionStartedAt=performance.now();sessionAnswers=[{a:3,b:1,correct:true,timeMs:900}];
+    sessionSkipped=0;sessionQuestionTimeMs=900;sessionCompletedQuestionCount=1;
+    hits=1;misses=0;sessionTrainingCorrectClaimed=1;sessionRewardQueue=Promise.resolve();
+    window.__finishSessionDone=false;
+    window.__finishSessionPromise=finishSession().then(()=>{
+      saveProgressNow=originalSave;window.__finishSessionDone=true;
+    });
+    return {visible:!!document.querySelector(".training-celebration-overlay"),
+      status:document.querySelector("[data-exit-save-status]")?.textContent||""};
+  });
+  check(immediateFinish.visible&&immediateFinish.status.includes("Sincronização em andamento"),
+    name+": a confirmação não apareceu imediatamente enquanto o salvamento estava pendente.");
+  await page.waitForFunction(()=>window.__finishSessionDone===true,null,{timeout:4000});
+  check((await page.locator("[data-exit-save-status]").textContent()).includes("Resultado sincronizado"),
+    name+": o aviso não foi atualizado depois que a sincronização terminou.");
+  await page.locator("[data-exit-training]").click();
+  check(!(await page.locator("#trainingModePanel").evaluate(el=>el.classList.contains("hidden"))),
+    name+": depois de salvar, o botão não voltou à tela de Treinar.");
+  await page.evaluate(()=>{
+    trainingModeType='standard';errorTrainingCompleted=false;trainingSessionSaving=false;sessionStartedAt=0;
+  });
+  
+const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && soundtrackAudio && !soundtrackAudio.paused));
   await page.locator("#openProfileOptions").click();
   check(!(await page.locator("#profileOptionsPanel").evaluate(el => el.classList.contains("hidden"))), name + ": a tela Opções não abriu.");
   check(await page.locator("#siteMusicBox").evaluate(el => el.classList.contains("hidden")), name + ": o player musical ficou visível em Opções.");
