@@ -1951,6 +1951,7 @@ const CHALLENGE_MUSIC=[
 ];
 const CHALLENGE_SEEN_KEY="projetoTabuadaDesafiosVistosV1";
 const CHALLENGE_RECEIVED_SEEN_KEY="projetoTabuadaDesafiosRecebidosVistosV1";
+const CHALLENGE_WIN_NOTICE_KEY="projetoTabuadaAvisoVitoriaDesafioV1";
 let challengeItems=[],challengePlayers=[],challengeSetupMode="custom",challengeCurrent=null,challengeRole="",challengeQuestions=[],challengeAnswerLog=[],challengeQuestionIndex=0,challengeQuestionStarted=0,challengeQuestionTimer=null,challengeOverallTimer=null,challengeMusicTimer=null,challengeMatchStarted=0,challengeMatchDeadline=0,challengeQuestionLocked=false,challengeLocalScore=0,challengeVolumeLimit=100,challengePollTimer=null,challengeMusicActive=false,challengeBetMode=false,challengeMusicRequest=0,challengeSynthInterval=null,challengeSynthStep=0;
 let challengeCountdownToken=0,challengeMatchLockActive=false;
 const AUTH_USERS_KEY='projetoTabuadaUsuariosV1';
@@ -4252,7 +4253,9 @@ function updateChallengeBadge(){
  }
  for(const [id,count] of [
   ['challengeInboxReceivedBadge',counts.received],
-  ['challengeInboxResultsBadge',counts.results]
+  ['challengeReceivedGroupBadge',counts.received],
+  ['challengeInboxResultsBadge',counts.results],
+  ['challengeResultsGroupBadge',counts.results]
  ]){
   const element=$(id);
   if(!element)continue;
@@ -4427,13 +4430,19 @@ async function refreshChallengeData(){
   const newTitles=Object.keys(gameEconomy.achievements||{}).filter(id=>!previousAchievementIds.has(id));
   const newMedals=earnedChallengeMedalIds(nextStats).filter(id=>!previousMedalIds.has(id));
   const seenChallengeIds=new Set(getSeenChallengeResults());
+  const shownWinNotices=new Set((()=>{try{return JSON.parse(localStorage.getItem(CHALLENGE_WIN_NOTICE_KEY)||'{}')[activeProfile]||[]}catch{return []}})());
   const recentWins=challengeItems.filter(item=>{
-   if(item.status!=='completed'||!item.myResult||seenChallengeIds.has(item.id))return false;
+   if(item.status!=='completed'||!item.myResult||seenChallengeIds.has(item.id)||shownWinNotices.includes(item.id))return false;
    const winners=Array.isArray(item.winners)?item.winners:[];
    const completedAt=Date.parse(item.completedAt||'');
    const won=item.winner!=='empate'&&(item.winner===activeProfile||winners.includes(activeProfile));
    return won&&Number.isFinite(completedAt)&&Date.now()-completedAt<10*60_000;
   });
+  if(recentWins.length){
+   const allWinNotices=(()=>{try{return JSON.parse(localStorage.getItem(CHALLENGE_WIN_NOTICE_KEY)||'{}')}catch{return {}}})();
+   allWinNotices[activeProfile]=[...new Set([...(allWinNotices[activeProfile]||[]),...recentWins.map(item=>item.id)])].slice(-300);
+   try{localStorage.setItem(CHALLENGE_WIN_NOTICE_KEY,JSON.stringify(allWinNotices));}catch{}
+  }
   if(newTitles.length||newMedals.length||recentWins.length){
    const lines=[
     ...recentWins.map(item=>'Vitória em duelo confirmada!'+(item.betMode&&item.betPaid?' · prêmio de '+(Number(item.stake)*2).toLocaleString('pt-BR')+' moedas':'') ),
@@ -6698,6 +6707,11 @@ $('challengePlayersList').addEventListener('change',event=>{
 $('challengeStartSelected').addEventListener('click',()=>challengeBetMode?createBetChallengeForPlayer([...selectedChallengePlayers]):createChallengeForPlayers([...selectedChallengePlayers]));
 $('challengeBetAmount').addEventListener('input',updateChallengeSelectedCount);
 $('challengeList').addEventListener('click',event=>{
+ const resultCard=event.target.closest('[data-challenge-result-card]');
+ if(resultCard&&!event.target.closest('button,summary,input,a')){
+  openChallengeFromList(resultCard.dataset.challengeResultCard);
+  return;
+ }
  const receivedCard=event.target.closest('[data-challenge-received-card]');
  if(receivedCard){
   const id=receivedCard.dataset.challengeReceivedCard;
