@@ -9,6 +9,7 @@ on:
       - "worker/src/**"
       - "worker/wrangler.toml"
       - "tools/ui-smoke.mjs"
+      - "tools/tournament-cycle.test.mjs"
       - ".github/workflows/ui-validation.yml"
   workflow_dispatch:
 
@@ -36,6 +37,9 @@ jobs:
 
       - name: Validar sintaxe do Worker
         run: node --input-type=module --check < worker/src/index.js
+
+      - name: Testar temporadas de 30 dias e questões sem repetição
+        run: node tools/tournament-cycle.test.mjs
 
       - name: Iniciar servidor local
         run: |
