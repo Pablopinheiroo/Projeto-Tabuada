@@ -481,7 +481,26 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .challenge-table-option{display:flex;align-items:center;gap:6px;padding:10px 8px;border:1px solid #3d5c80;border-radius:10px;background:#0c1a31;color:#e7f2ff;font-size:.82rem;font-weight:750}
 .challenge-table-option input{width:17px;height:17px;accent-color:#22d3ee}
 .challenge-search{width:100%;padding:12px;border:1px solid #43638b;border-radius:11px;background:#0b1730;color:#eff7ff;font:inherit}
-.challenge-player-list,.challenge-list{display:grid;gap:9px;margin-top:12px}
+.challenge-player-list,.challenge-list{display:grid;gap:12px;margin-top:12px}
+.challenge-inbox-shell{margin-top:18px;border:1px solid #385b80;border-radius:15px;background:linear-gradient(145deg,#101f38,#171d3c);overflow:hidden}
+.challenge-inbox-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 15px;color:#f1f7ff;font-weight:900;cursor:pointer;list-style:none}
+.challenge-inbox-summary::-webkit-details-marker{display:none}
+.challenge-inbox-summary:after{content:"＋";flex:0 0 auto;color:#67e8f9;font-size:1.25rem}
+.challenge-inbox-shell[open]>.challenge-inbox-summary:after{content:"−"}
+.challenge-inbox-summary-badges{display:flex;align-items:center;gap:7px;margin-left:auto}
+.challenge-inbox-summary-badges small{color:#9fb8d8;font-size:.68rem;font-weight:650}
+.challenge-list-groups{display:grid;gap:14px;padding:0 12px 13px}
+.challenge-list-group{min-width:0}
+.challenge-group-heading{display:flex;align-items:center;gap:8px;margin:0 0 8px;color:#e8f2ff;font-size:.9rem;font-weight:950}
+.challenge-group-heading small{color:#9fb8d8;font-size:.68rem;font-weight:650}
+.challenge-notification-badge{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:#dc2626;color:#fff;font-size:.68rem;font-weight:950;line-height:1;box-shadow:0 0 0 2px #111c36}
+.challenge-unread-dot{display:inline-block;width:9px;height:9px;flex:0 0 9px;margin-left:5px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px #ef444433;vertical-align:middle}
+.challenge-retry-box{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px;margin-top:10px;padding:10px;border:1px solid #9a6b3d;border-radius:11px;background:#342719}
+.challenge-retry-box label{display:grid;gap:5px;color:#fde7bd;font-size:.72rem;font-weight:850}
+.challenge-retry-box input{width:100%;min-width:0;padding:8px 9px;border:1px solid #9b7747;border-radius:8px;background:#171f32;color:#fff;font:inherit}
+.challenge-retry-box button{white-space:normal}
+.challenge-retry-note{grid-column:1/-1;color:#e8cda3;font-size:.68rem;line-height:1.4}
+@media(max-width:560px){.challenge-inbox-summary{align-items:flex-start;flex-wrap:wrap}.challenge-inbox-summary-badges{margin-left:0}.challenge-retry-box{grid-template-columns:1fr}.challenge-retry-box button{width:100%}}
 .challenge-player-card,.challenge-list-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px;border:1px solid #385b80;border-radius:13px;background:linear-gradient(110deg,#112642,#181d3c);color:#e8f2ff}
 .challenge-player-name{min-width:0;overflow-wrap:anywhere;font-weight:850}
 .challenge-player-card button,.challenge-list-card button{padding:9px 12px;background:#17466a;color:#e4faff;border:1px solid #398cb0;white-space:nowrap}
@@ -1462,9 +1481,18 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
    <button id="choosePresetChallenge" class="mode-card challenge-preset-card" type="button"><span class="mode-card-icon">🏅</span><span class="mode-card-copy"><strong>Patentes de duelo</strong><small>Escolha visualmente sua liga, do início da jornada até o nível extremo.</small><b>Escolher patente →</b></span></button>
    <button id="chooseBetChallenge" class="mode-card challenge-bet-card" type="button"><span class="mode-card-icon money-mode-icon"><i class="coin-symbol" aria-hidden="true"></i></span><span class="mode-card-copy"><strong>Desafio com aposta</strong><small>Aposte moedas contra uma pessoa. Ela precisa aceitar; quem vencer recebe o total apostado.</small><b>Desafiar valendo moedas →</b></span></button>
   </div>
-  <h3 class="challenge-section-title">📬 Desafios recebidos e enviados</h3>
-  <p id="challengeListStatus" class="small" style="text-align:left;margin:0 0 10px">Buscando seus desafios...</p>
-  <div id="challengeList" class="challenge-list"></div>
+  <details id="challengeInboxShell" class="challenge-inbox-shell">
+   <summary class="challenge-inbox-summary">
+    <span>📬 Desafios recebidos e enviados</span>
+    <span class="challenge-inbox-summary-badges">
+     <span id="challengeInboxReceivedBadge" class="challenge-notification-badge hidden" aria-label="Desafios recebidos não visualizados">0</span>
+     <span id="challengeInboxResultsBadge" class="challenge-notification-badge hidden" aria-label="Resultados não visualizados">0</span>
+     <small>Toque para abrir</small>
+    </span>
+   </summary>
+   <p id="challengeListStatus" class="small" style="text-align:left;margin:12px 0 10px">Buscando seus desafios...</p>
+   <div id="challengeList" class="challenge-list"></div>
+  </details>
  </div>
 
  <div id="challengeBetChoicePanel" class="hidden">
@@ -1922,6 +1950,7 @@ const CHALLENGE_MUSIC=[
  {name:"Duelo Decisivo",bpm:148,root:46,pattern:[0,7,12,17,15,12,10,7],wave:"sawtooth"}
 ];
 const CHALLENGE_SEEN_KEY="projetoTabuadaDesafiosVistosV1";
+const CHALLENGE_RECEIVED_SEEN_KEY="projetoTabuadaDesafiosRecebidosVistosV1";
 let challengeItems=[],challengePlayers=[],challengeSetupMode="custom",challengeCurrent=null,challengeRole="",challengeQuestions=[],challengeAnswerLog=[],challengeQuestionIndex=0,challengeQuestionStarted=0,challengeQuestionTimer=null,challengeOverallTimer=null,challengeMusicTimer=null,challengeMatchStarted=0,challengeMatchDeadline=0,challengeQuestionLocked=false,challengeLocalScore=0,challengeVolumeLimit=100,challengePollTimer=null,challengeMusicActive=false,challengeBetMode=false,challengeMusicRequest=0,challengeSynthInterval=null,challengeSynthStep=0;
 let challengeCountdownToken=0,challengeMatchLockActive=false;
 const AUTH_USERS_KEY='projetoTabuadaUsuariosV1';
@@ -4084,15 +4113,14 @@ async function createBetChallengeForPlayer(recipients){
  const maxStake=player?Math.min(Number(gameEconomy.coins)||0,Number(player.coins)||0):0;
  if(players.length!==1){$('challengePlayersStatus').textContent='Escolha apenas uma pessoa para desafiar valendo moedas.';return;}
  if(!Number.isSafeInteger(stake)||stake<1||stake>maxStake){$('challengePlayersStatus').textContent='Digite um valor inteiro entre 1 e '+maxStake+' moedas. Não use vírgulas.';return;}
- $('challengePlayersStatus').textContent='Enviando convite com aposta de '+stake+' moedas...';
+ $('challengePlayersStatus').textContent='Preparando sua partida com aposta de '+stake+' moedas...';
  $('challengeStartSelected').disabled=true;
  try{
   const result=await apiRequest('/api/challenges',{method:'POST',body:{...config,recipients:players,betMode:true,stake}});
   challengeCurrent=result.challenge;
   challengeItems=[challengeCurrent,...challengeItems.filter(item=>item.id!==challengeCurrent.id)];
-  showChallengeSubPanel('challengeHomePanel');
-  await refreshChallengeData();
-  $('challengeListStatus').textContent='Convite enviado. A pessoa precisa aceitar antes de qualquer moeda ser retirada.';
+  await startChallengeGame(challengeCurrent,'challenger');
+  $('challengeListStatus').textContent='Sua partida foi registrada. Depois dela, a pessoa receberá o convite para aceitar ou rejeitar a aposta.';
  }catch(error){
   $('challengePlayersStatus').textContent='Não foi possível enviar a aposta: '+siteErrorMessage(error);
   updateChallengeSelectedCount();
@@ -4160,6 +4188,7 @@ function challengeOtherPlayer(challenge){
  return challengeParticipants(challenge).filter(name=>name!==activeProfile);
 }
 function challengeResultLabel(challenge){
+  if(challenge.status==='challenger_playing')return 'Sua partida · convite ainda não enviado';
   if(challenge.status==='pending_acceptance')return challenge.recipient===activeProfile?'🪙 Convite recebido · aguardando sua resposta':'🪙 Aguardando resposta do adversário';
   if(challenge.status==='accepting')return '🪙 Confirmando a aposta...';
   if(challenge.status==='rejected')return 'Aposta rejeitada · nenhuma moeda retirada';
@@ -4175,6 +4204,7 @@ function challengeResultLabel(challenge){
 }
 
 
+
 function getSeenChallengeResults(){
  try{
   const data=JSON.parse(localStorage.getItem(CHALLENGE_SEEN_KEY)||'{}');
@@ -4185,37 +4215,71 @@ function markChallengeResultSeen(id){
  const all=(()=>{try{return JSON.parse(localStorage.getItem(CHALLENGE_SEEN_KEY)||'{}')}catch{return {}}})();
  const seen=Array.isArray(all[activeProfile])?all[activeProfile]:[];
  if(!seen.includes(id))seen.push(id);
- all[activeProfile]=seen.slice(-200);
+ all[activeProfile]=seen.slice(-300);
  try{localStorage.setItem(CHALLENGE_SEEN_KEY,JSON.stringify(all));}catch{}
 }
-function updateChallengeBadge(pendingCount=0){
- const seen=new Set(getSeenChallengeResults());
- const unreadResults=challengeItems.filter(item=>item.status==='completed'&&item.myResult&&!seen.has(item.id)).length;
- const count=Math.max(0,Number(pendingCount)||0)+unreadResults;
+function getSeenChallengeReceipts(){
+ try{
+  const data=JSON.parse(localStorage.getItem(CHALLENGE_RECEIVED_SEEN_KEY)||'{}');
+  return Array.isArray(data[activeProfile])?data[activeProfile]:[];
+ }catch{return [];}
+}
+function markChallengeReceiptSeen(id){
+ const all=(()=>{try{return JSON.parse(localStorage.getItem(CHALLENGE_RECEIVED_SEEN_KEY)||'{}')}catch{return {}}})();
+ const seen=Array.isArray(all[activeProfile])?all[activeProfile]:[];
+ if(!seen.includes(id))seen.push(id);
+ all[activeProfile]=seen.slice(-300);
+ try{localStorage.setItem(CHALLENGE_RECEIVED_SEEN_KEY,JSON.stringify(all));}catch{}
+}
+function challengeUnreadCounts(){
+ const resultSeen=new Set(getSeenChallengeResults());
+ const receiptSeen=new Set(getSeenChallengeReceipts());
+ const received=challengeItems.filter(item=>
+  item.challenger!==activeProfile&&item.status!=='completed'&&!receiptSeen.has(item.id)
+ ).length;
+ const results=challengeItems.filter(item=>
+  item.status==='completed'&&item.myResult&&!resultSeen.has(item.id)
+ ).length;
+ return {received,results};
+}
+function updateChallengeBadge(){
+ const counts=challengeUnreadCounts();
  const badge=$('challengeBadge');
- if(!badge)return;
- badge.textContent=count>99?'99+':String(count);
- badge.classList.toggle('hidden',count===0);
+ if(badge){
+  const total=counts.received+counts.results;
+  badge.textContent=total>99?'99+':String(total);
+  badge.classList.toggle('hidden',total===0);
+ }
+ for(const [id,count] of [
+  ['challengeInboxReceivedBadge',counts.received],
+  ['challengeInboxResultsBadge',counts.results]
+ ]){
+  const element=$(id);
+  if(!element)continue;
+  element.textContent=count>99?'99+':String(count);
+  element.classList.toggle('hidden',count===0);
+ }
 }
 function renderChallengeList(){
  const box=$('challengeList');if(!box)return;
- if(!challengeItems.length){
-  box.innerHTML='<div class="community-empty">Você ainda não recebeu nem enviou desafios. Escolha um modo e convide alguém!</div>';
-  return;
- }
- box.innerHTML=challengeItems.map(item=>{
+ const incomplete=challengeItems.filter(item=>item.status!=='completed');
+ const sent=incomplete.filter(item=>item.challenger===activeProfile);
+ const received=incomplete.filter(item=>item.challenger!==activeProfile);
+ const results=challengeItems.filter(item=>item.status==='completed'&&item.myResult);
+ const resultSeen=new Set(getSeenChallengeResults());
+ const receiptSeen=new Set(getSeenChallengeReceipts());
+ const renderCard=(item,side)=>{
   const participants=challengeParticipants(item),others=participants.filter(name=>name!==activeProfile);
-  const results=item.results||{},mine=item.myResult,completed=item.status==='completed';
-  const side=item.challenger===activeProfile?'DESAFIO ENVIADO':'DESAFIO RECEBIDO';
+  const values=item.results||{},mine=item.myResult,completed=item.status==='completed';
   const names=others.map(name=>'@'+name).join(', ')||'Participantes do grupo';
   const tables=Array.isArray(item.tables)?item.tables:[];
   const level=item.mode==='custom'
    ?'Personalizado · '+tables.map(number=>'Tabuada '+number).join(', ')
    :'Patente · '+(item.levelName||'Desafio');
-  const done=participants.filter(name=>!!results[name]).length;
+  const done=participants.filter(name=>!!values[name]).length;
   const progress=participants.length?Math.round(done/participants.length*100):0;
   const provisional=participants.map(username=>{
-   const result=results[username];
+   const result=values[username];
    return {username,played:!!result,score:Math.max(0,Number(result?.score)||0),totalMs:Math.max(0,Number(result?.totalMs)||0),submittedAt:result?.submittedAt||''};
   }).sort((a,b)=>{
    if(a.played!==b.played)return a.played?-1:1;
@@ -4239,21 +4303,36 @@ function renderChallengeList(){
   if(item.betMode&&item.status==='pending_acceptance'){
    if(item.recipient===activeProfile)actions='<span class="challenge-list-actions"><button type="button" data-challenge-accept="'+item.id+'">Aceitar</button><button type="button" data-challenge-reject="'+item.id+'" class="challenge-reject">Rejeitar</button></span>';
    else{action='Aguardando resposta';disabled=true;}
+  }else if(item.betMode&&item.status==='challenger_playing'){
+   action=mine?'Sua partida registrada':'Fazer minha partida';
+   disabled=!!mine;
   }else if(item.betMode&&item.status==='accepting'){action='Confirmando aposta';disabled=true;}
-  else if(item.status==='rejected'){action='Convite recusado';disabled=true;}
+  else if(item.status==='rejected'){action='Partida rejeitada';disabled=true;}
   else if(completed){action='Ver resultado';disabled=false;}
   else if(mine){action='Aguardando participantes';disabled=true;}
   const betInfo=item.betMode
    ?'<div class="challenge-bet-summary"><i class="coin-symbol" aria-hidden="true"></i><span><small>APOSTA POR PARTICIPANTE</small><strong>'+Number(item.stake||0).toLocaleString('pt-BR')+' moedas</strong></span><span><small>PRÊMIO TOTAL</small><strong>'+Number(Number(item.stake||0)*2).toLocaleString('pt-BR')+' moedas</strong></span></div>'
    :'';
-  const playButton=actions||(item.status==='rejected'
-   ?'<button type="button" class="challenge-action-button" disabled>Convite recusado</button>'
-   :'<button type="button" class="challenge-action-button" data-challenge-play="'+item.id+'" '+(disabled?'disabled':'')+'>'+action+'</button>');
+  const playButton=actions||
+   '<button type="button" class="challenge-action-button" data-challenge-play="'+item.id+'" '+(disabled?'disabled':'')+'>'+action+'</button>';
+  let retryControl='';
+  if(item.betMode&&item.status==='rejected'&&side==='sent'&&item.retryAvailable){
+   retryControl='<div class="challenge-retry-box">'+
+    '<label for="challengeRetryStake-'+item.id+'">🪙 Nova aposta (moedas)'+
+    '<input id="challengeRetryStake-'+item.id+'" type="number" min="1" step="1" inputmode="numeric" value="'+Number(item.stake||1)+'" autocomplete="off">'+
+    '</label><button type="button" data-challenge-retry="'+item.id+'">Desafiar novamente</button>'+
+    '<small class="challenge-retry-note">Será usado exatamente o resultado desta partida, com um novo convite. Esta é a única nova tentativa permitida para a mesma partida.</small></div>';
+  }else if(item.betMode&&item.status==='rejected'&&side==='sent'){
+   retryControl='<small class="challenge-retry-note">Esta partida já usou a nova tentativa. Para desafiar novamente, será necessário jogar outra partida.</small>';
+  }
+  const unread=side==='received'?!receiptSeen.has(item.id):side==='results'?!resultSeen.has(item.id):false;
+  const dot=unread?'<span class="challenge-unread-dot" aria-label="Ainda não visualizado"></span>':'';
   const summary=completed?'Ver classificação final':'Ver prévia da classificação';
   const explanation=completed?'Resultado definitivo: todos os participantes terminaram.':'Prévia provisória: a ordem pode mudar quando os demais participantes jogarem.';
   const resultText=mine?mine.score+'/10 pontos':'Você ainda não jogou';
-  return '<article class="challenge-list-card">'+
-   '<header class="challenge-card-heading"><div class="challenge-card-heading-copy"><span class="challenge-card-kicker">'+side+'</span><strong>⚔️ '+escapeHtml(names)+'</strong><small>'+escapeHtml(level)+'</small></div><span class="challenge-status-pill">'+escapeHtml(challengeResultLabel(item))+'</span></header>'+
+  const readAttr=side==='received'?' data-challenge-received-card="'+item.id+'"':side==='results'?' data-challenge-result-card="'+item.id+'"':'';
+  return '<article class="challenge-list-card"'+readAttr+'>'+
+   '<header class="challenge-card-heading"><div class="challenge-card-heading-copy"><span class="challenge-card-kicker">'+(side==='sent'?'DESAFIO ENVIADO':side==='received'?'DESAFIO RECEBIDO':'RESULTADO DO DESAFIO')+dot+'</span><strong>⚔️ '+escapeHtml(names)+'</strong><small>'+escapeHtml(level)+'</small></div><span class="challenge-status-pill">'+escapeHtml(challengeResultLabel(item))+'</span></header>'+
    '<div class="challenge-card-facts">'+
     '<div><small>SEU RESULTADO</small><strong>'+escapeHtml(resultText)+'</strong></div>'+
     '<div><small>PARTICIPANTES</small><strong>'+done+'/'+participants.length+'</strong></div>'+
@@ -4262,9 +4341,43 @@ function renderChallengeList(){
    '<div class="challenge-card-progress" role="progressbar" aria-label="Participantes que já jogaram" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+progress+'"><span style="width:'+progress+'%"></span></div>'+
    betInfo+
    '<details class="challenge-provisional"><summary><span>📊 '+summary+'</span><small>'+done+' de '+participants.length+' partidas concluídas</small></summary><div class="challenge-preview-body"><p>'+explanation+'</p><div class="challenge-preview-head"><span>POSIÇÃO</span><span>PARTICIPANTE</span><span>PONTOS</span><span>TEMPO</span></div>'+rows+'</div></details>'+
-   '<footer class="challenge-card-footer">'+playButton+'</footer>'+
+   '<footer class="challenge-card-footer">'+playButton+'</footer>'+retryControl+
   '</article>';
- }).join('');
+ };
+ const group=(title,badgeId,items,side,empty)=>{
+  const badgeIdText=badgeId||'';
+  const badge=badgeIdText?'<span id="'+badgeIdText+'" class="challenge-notification-badge hidden">0</span>':'';
+  const cards=items.map(item=>renderCard(item,side)).join('');
+  return '<section class="challenge-list-group"><h3 class="challenge-group-heading">'+title+badge+'</h3>'+
+   (cards||'<div class="community-empty">'+empty+'</div>')+'</section>';
+ };
+ box.innerHTML='<div class="challenge-list-groups">'+
+  group('📤 Desafios enviados','',sent,'sent','Você ainda não enviou desafios.')+
+  group('📥 Desafios recebidos','challengeReceivedGroupBadge',received,'received','Você não tem desafios recebidos.')+
+  group('🏆 Resultados','challengeResultsGroupBadge',results,'results','Seus resultados aparecerão aqui quando as partidas forem concluídas.')+
+ '</div>';
+ updateChallengeBadge();
+}
+
+async function retryChallengeFromCard(id){
+ const input=$('challengeRetryStake-'+id);
+ const raw=String(input?.value||'').trim();
+ const stake=raw!==''?Number(raw):0;
+ if(!Number.isSafeInteger(stake)||stake<1){
+  $('challengeListStatus').textContent='Informe um valor inteiro de pelo menos 1 moeda.';
+  input?.focus();return;
+ }
+ const button=$('challengeList').querySelector('[data-challenge-retry="'+id+'"]');
+ if(button)button.disabled=true;
+ $('challengeListStatus').textContent='Criando um novo convite com o mesmo resultado da partida...';
+ try{
+  await apiRequest('/api/challenges/'+id+'/retry',{method:'POST',body:{stake}});
+  await refreshChallengeData();
+  $('challengeListStatus').textContent='Novo convite enviado com o resultado da mesma partida. A pessoa verá um novo cartão.';
+ }catch(error){
+  $('challengeListStatus').textContent='Não foi possível desafiar novamente: '+siteErrorMessage(error);
+  if(button)button.disabled=false;
+ }
 }
 
 async function handleBetChallengeResponse(id,decision){
@@ -4274,6 +4387,7 @@ async function handleBetChallengeResponse(id,decision){
  $('challengeListStatus').textContent=decision==='accept'?'Confirmando a aposta e verificando os dois saldos...':'Registrando a rejeição do convite...';
  try{
   await apiRequest('/api/challenges/'+id+'/respond',{method:'POST',body:{decision}});
+  if(decision==='reject')markChallengeReceiptSeen(id);
   await refreshChallengeData();
   if(decision==='accept'){
    const accepted=challengeItems.find(item=>item.id===id);
@@ -4320,7 +4434,6 @@ async function refreshChallengeData(){
    const won=item.winner!=='empate'&&(item.winner===activeProfile||winners.includes(activeProfile));
    return won&&Number.isFinite(completedAt)&&Date.now()-completedAt<10*60_000;
   });
-  recentWins.forEach(item=>markChallengeResultSeen(item.id));
   if(newTitles.length||newMedals.length||recentWins.length){
    const lines=[
     ...recentWins.map(item=>'Vitória em duelo confirmada!'+(item.betMode&&item.betPaid?' · prêmio de '+(Number(item.stake)*2).toLocaleString('pt-BR')+' moedas':'') ),
@@ -4717,6 +4830,13 @@ function showChallengeResult(challenge){
    }).join('');
    $('challengeResultTime').textContent='Sua duração: '+formatDuration(mine?.totalMs||0);
    $('challengeResultStatus').textContent=challenge.betMode?(challenge.betPaid?(draw?'Houve empate. As moedas apostadas foram devolvidas aos dois participantes.':winner?'Você recebeu '+(Number(challenge.stake||0)*2).toLocaleString('pt-BR')+' moedas, o total da aposta.':'Você perdeu a aposta de '+Number(challenge.stake||0).toLocaleString('pt-BR')+' moedas.'):'Resultado salvo. O sistema está confirmando o pagamento ou a devolução da aposta; volte à lista para atualizar.'):'O resultado e o histórico foram salvos nos perfis dos participantes.';
+  }else if(challenge.betMode&&challenge.status==='pending_acceptance'&&mine){
+   $('challengeResultIcon').textContent='🪙';
+   $('challengeResultTitle').textContent='Sua partida foi registrada!';
+   $('challengeResultText').textContent='Você fez '+mine.score+'/10 pontos. Agora aguarde @'+escapeHtml(challenge.recipient)+' aceitar ou rejeitar o convite.';
+   $('challengeResultScores').innerHTML='<div class="challenge-score-box"><strong>'+mine.score+'/10</strong><small>Sua partida · registrada</small></div><div class="challenge-score-box"><strong>—</strong><small>@'+escapeHtml(challenge.recipient)+' · aguardando resposta</small></div>';
+   $('challengeResultTime').textContent='Seu tempo: '+formatDuration(mine.totalMs);
+   $('challengeResultStatus').textContent='Nenhuma moeda foi retirada. A aposta só será cobrada se a pessoa aceitar.';
   }else if(mine){
    const pending=participants.filter(name=>!results[name]);
    $('challengeResultIcon').textContent='⏳';
@@ -6578,6 +6698,17 @@ $('challengePlayersList').addEventListener('change',event=>{
 $('challengeStartSelected').addEventListener('click',()=>challengeBetMode?createBetChallengeForPlayer([...selectedChallengePlayers]):createChallengeForPlayers([...selectedChallengePlayers]));
 $('challengeBetAmount').addEventListener('input',updateChallengeSelectedCount);
 $('challengeList').addEventListener('click',event=>{
+ const receivedCard=event.target.closest('[data-challenge-received-card]');
+ if(receivedCard){
+  const id=receivedCard.dataset.challengeReceivedCard;
+  if(id&&!getSeenChallengeReceipts().includes(id)){
+   markChallengeReceiptSeen(id);
+   receivedCard.querySelector('.challenge-unread-dot')?.remove();
+   updateChallengeBadge();
+  }
+ }
+ const retry=event.target.closest('[data-challenge-retry]');
+ if(retry&&!retry.disabled){retryChallengeFromCard(retry.dataset.challengeRetry);return;}
  const accept=event.target.closest('[data-challenge-accept]');
  if(accept&&!accept.disabled){handleBetChallengeResponse(accept.dataset.challengeAccept,'accept');return;}
  const reject=event.target.closest('[data-challenge-reject]');
