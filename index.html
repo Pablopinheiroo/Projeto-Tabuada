@@ -1114,7 +1114,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 /* Comunidade: presença e cartões de desafios mais claros */
 .community-last-online{display:block;margin-top:2px;color:#58718c;font-size:.68rem;font-weight:750;line-height:1.25}
 .community-rank-card{position:relative}
-.community-rank-identity{padding-right:32px}
+.community-rank-identity{padding-right:40px}
 .community-gift-quick{position:absolute;top:5px;right:5px;z-index:5;display:grid;place-items:center;width:36px;height:36px;min-width:36px;margin:0;padding:0;border:0!important;border-radius:0;background:transparent!important;color:inherit;box-shadow:none!important;cursor:pointer;transition:transform .18s}
 .community-gift-quick:hover{transform:translateY(-2px);background:transparent!important;box-shadow:none!important;filter:none}
 .community-gift-quick img{display:block;width:38px;height:36px;object-fit:contain;filter:drop-shadow(0 3px 5px #0006);animation:communityGiftFloat 2.8s ease-in-out infinite}
@@ -1138,7 +1138,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .community-gift-popover-close{position:absolute;top:9px;right:9px;display:grid;place-items:center;width:30px;height:30px;min-height:30px;padding:0;border:1px solid #ffe0ad66;border-radius:50%;background:#251b2dcc;color:#fff;font-size:1.15rem;font-weight:900;line-height:1;cursor:pointer}
 .community-gift-popover .community-gift-form{padding:0;border:0;background:transparent}
 .community-gift-popover .community-gift-form-actions button{flex:1 1 100%}
-@keyframes communityGiftPopoverIn{from{opacity:0;transform:translateY(9px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes communityGiftPopoverIn{from{opacity:0}to{opacity:1}}
 @media(max-width:560px){.community-gift-popover{left:50%;right:auto;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(365px,calc(100vw - 22px))}}
 @media(prefers-reduced-motion:reduce){.community-gift-quick img{animation:none}.community-gift-popover{animation:none}}
 .gift-notification-stack{position:fixed;top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));z-index:12000;display:grid;gap:10px;width:min(390px,calc(100vw - 24px));pointer-events:none}
