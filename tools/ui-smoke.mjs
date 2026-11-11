@@ -170,6 +170,30 @@ check(tiedHistory.questions["9x9"].correct===4&&tiedHistory.questions["9x9"].wro
   "Um snapshot antigo, com a mesma quantidade de tentativas, substituiu o registro atual.");
 
 const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+const profileActionsStart=html.indexOf('<details id="profileActionsDisclosure"');
+const profileActionsEnd=html.indexOf('</details>',profileActionsStart);
+const profileActionsMarkup=profileActionsStart>=0&&profileActionsEnd>profileActionsStart?
+  html.slice(profileActionsStart,profileActionsEnd+10):"";
+const walletMarkup=html.indexOf('id="currentCoins"');
+check(profileActionsMarkup.includes('<summary>👤 Meu perfil</summary>')&&
+  !/^<details[^>]*\sopen(?:\s|>|=)/i.test(profileActionsMarkup)&&
+  profileActionsMarkup.includes('id="saveProfile"')&&
+  profileActionsMarkup.includes('id="openProfileStats"')&&
+  profileActionsMarkup.includes('id="openProfileOptions"')&&
+  profileActionsMarkup.includes('id="logout"')&&
+  profileActionsMarkup.includes('id="profileLastSavedAt"')&&
+  walletMarkup>=0&&walletMarkup<profileActionsStart,
+  "O painel do perfil deve mostrar identidade, moedas e conquistas, deixando ações e último salvamento dentro de uma seção minimizada.");
+const modeHubStart=html.indexOf('<div id="modeHub"');
+const modeHubEnd=html.indexOf('<div id="challengeModeView"',modeHubStart);
+const modeHubMarkup=modeHubStart>=0&&modeHubEnd>modeHubStart?html.slice(modeHubStart,modeHubEnd):"";
+const modeCardOrder=["id=\"openTrainingMode\"","id=\"openAdventureMode\"","id=\"openChallengeMode\"","id=\"openTournamentMode\""]
+  .map(id=>modeHubMarkup.indexOf(id));
+check(modeCardOrder.every((position,index)=>position>=0&&(index===0||position>modeCardOrder[index-1]))&&
+  modeHubMarkup.includes("ESCOLHA SUA JORNADA")&&
+  !modeHubMarkup.includes("Como você quer aprender hoje?")&&
+  !modeHubMarkup.includes("Você pode treinar livremente"),
+  "A jornada deve mostrar somente o título centralizado e os modos na ordem Treinamento, Modo Jogo, Desafio e Torneio.");
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(match => match[1]);
 const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
 check(duplicates.length === 0, "IDs HTML repetidos: " + [...new Set(duplicates)].join(", "));
