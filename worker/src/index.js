@@ -1408,7 +1408,7 @@ function previousMonthKey(month) {
 }
 function tournamentFilePath(seasonKey) {
   const key = String(seasonKey || "");
-  return /^\\d{4}-\\d{2}$/.test(key)
+  return /^\d{4}-\d{2}$/.test(key)
     ? "torneio-mensal-" + key + ".json"
     : "torneio-" + key + ".json";
 }
@@ -1517,7 +1517,7 @@ async function ensureTournamentBoard(season, env) {
   if (existing) return existing;
   const seasonData = typeof season === "string" ? null : season;
   const data = {
-    version: 2, seasonKey, month: /^\\d{4}-\\d{2}$/.test(seasonKey) ? seasonKey : null,
+    version: 2, seasonKey, month: /^\d{4}-\d{2}$/.test(seasonKey) ? seasonKey : null,
     startsAt: seasonData?.startsAt || null, endsAt: seasonData?.endsAt || null,
     createdAt: new Date().toISOString(),
     seeds: {
