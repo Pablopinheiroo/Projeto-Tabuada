@@ -1582,6 +1582,7 @@ const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && sou
   await page.evaluate(async () => {
     document.querySelector("#profileScreen").classList.add("hidden");
     document.querySelector("#setup").classList.remove("hidden");
+    setMainContentSections({community:true});
     communityCache = [{
       username: "maria_27", displayName: "Maria Silva",
       profile: { displayName: "Maria Silva", avatar: "imagem:0" },
