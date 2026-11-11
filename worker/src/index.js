@@ -1077,9 +1077,15 @@ async function retryRejectedBetChallenge(id, body, username, env) {
       retryChallengeId: null,
       retryStake: null
     };
-    await writeJsonFile(challengeFilePath(retryId), retryChallenge, null, env,
-      "Reenviar desafio com aposta " + retryId);
-    retryFile = await readJsonFile(challengeFilePath(retryId), env);
+    try {
+      await writeJsonFile(challengeFilePath(retryId), retryChallenge, null, env,
+        "Reenviar desafio com aposta " + retryId);
+    } catch (error) {
+      if (error.status !== 409 && error.status !== 422) throw error;
+      retryFile = await readJsonFile(challengeFilePath(retryId), env);
+      if (!retryFile?.data) throw error;
+    }
+    if (!retryFile?.data) retryFile = await readJsonFile(challengeFilePath(retryId), env);
   }
   const participants = Array.isArray(retryFile?.data?.participants) && retryFile.data.participants.length
     ? retryFile.data.participants : [retryFile?.data?.challenger, retryFile?.data?.recipient].filter(Boolean);
