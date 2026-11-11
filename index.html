@@ -1731,9 +1731,8 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
 </div>
 
 <div class="progress"><div id="bar"></div></div>
-<div class="question"><div class="label" id="counter">Rodada 1 · Questão 1</div><div class="equation" id="equation">2 × 3</div></div>
+<div class="question"><div class="label" id="counter">Rodada 1 · Questão 1</div><div class="equation" id="equation" aria-live="assertive" aria-atomic="true">2 × 3</div></div>
 <div id="questionTime" class="question-time">Tempo nesta questão: 00:00</div>
-<div id="answer" class="answer" aria-live="assertive"></div>
 <div class="actions">
 <button id="verify" class="verify" data-sfx="verify">Verificar</button>
 <div id="judge" class="judge hidden">
@@ -1884,7 +1883,7 @@ let soundOn=true,audioContext=null,masterGain=null,activeSounds=new Set(),curren
 let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueuePosition=0,musicStartPending=false,mainMusicTimer=null;
 let profileOptionsOpen=false,profileOptionsResumeMusic=false,sfxPreviewTimer=null,gameSfxPreviewTimers=[],optionMusicPreviewTimer=null,optionMusicPreviewActive=false,optionPreviewSources=new Set();
 const LAST_TRACK_STORAGE_KEY='projetoTabuadaUltimaFaixaV2:';
-let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,questionClockPaused=false,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0,sessionCompletedQuestionCount=0,trainingSessionSaving=false;
+let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,questionClockPaused=false,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0,sessionCompletedQuestionCount=0,trainingSessionSaving=false,trainingSessionGeneration=0;
 let sessionTrainingCorrectClaimed=0,sessionTrainingCorrectNext=10,sessionRewardQueue=Promise.resolve();
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
 let gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,trainingCorrectProgress:0,trainingCorrectClaimIds:[],intelligentTrainingProgress:0,intelligentTrainingClaimIds:[],errorTrainingClaimIds:[],completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
@@ -3655,54 +3654,76 @@ function showReport(display=true){
  renderRanking();
 }
 async function finishSession(){
- if(trainingSessionSaving)return false;
- trainingSessionSaving=true;
- if(questionStartedAt){
-  const unfinishedTime=endQuestionClock();sessionQuestionTimeMs+=unfinishedTime;sessionSkipped++;
- }else if(revealed&&currentQuestionTimeStopped){
-  sessionQuestionTimeMs+=currentQuestionTimeMs;sessionSkipped++;
-  currentQuestionTimeMs=0;currentQuestionTimeStopped=false;
- }
- if(sessionStartedAt){
-  const summary={
-   id:'training-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2)),
-   date:new Date().toISOString(),mode:trainingModeType==='standard'?'training':trainingModeType==='tournamentErrors'?'tournament_error_training':trainingModeType,answered:sessionAnswers.length,
-   completedQuestions:sessionCompletedQuestionCount,hits,misses,skipped:sessionSkipped,timeMs:sessionQuestionTimeMs
-  };
-  historyData.sessions.unshift(summary);
-  historyData.sessions=historyData.sessions.slice(0,300);
-  saveHistory();
- }
- questionClockPaused=false;
- if(activeProfile&&profilesData[activeProfile]){
-  profilesData[activeProfile].checkpoint=null;
-  profilesData[activeProfile].updatedAt=new Date().toISOString();
-  persistProfiles();
- }
- showReport(false);
- let queuedReward=null;
- if(trainingModeType!=='errors'&&trainingModeType!=='tournamentErrors'){
-  const remainder=hits-sessionTrainingCorrectClaimed;
-  if(remainder>0){
-   sessionTrainingCorrectClaimed+=remainder;
-   queuedReward=queueTrainingSessionReward('training_questions',{
-    claimId:newTrainingRewardClaimId('training-correct'),correctCount:remainder
-   });
+  if(trainingSessionSaving)return false;
+  trainingSessionSaving=true;
+  const finishingGeneration=trainingSessionGeneration;
+  const finishingMode=trainingModeType;
+  const finishingCompletedQuestions=sessionCompletedQuestionCount;
+  const hadActiveProfile=!!activeProfile;
+  if(questionStartedAt){
+   const unfinishedTime=endQuestionClock();sessionQuestionTimeMs+=unfinishedTime;sessionSkipped++;
+  }else if(revealed&&currentQuestionTimeStopped){
+   sessionQuestionTimeMs+=currentQuestionTimeMs;sessionSkipped++;
+   currentQuestionTimeMs=0;currentQuestionTimeStopped=false;
   }
- }
- await sessionRewardQueue;
- const reward=queuedReward?await queuedReward:null;
- const saved=await saveProgressNow('Treinamento');
- if(reward?.coinsAdded>0){
-  $('reportIntro').textContent+=' Você ganhou '+reward.coinsAdded+' moedas.';
- }else if(trainingModeType==='intelligent'&&sessionCompletedQuestionCount>0){
-  $('reportIntro').textContent+=' As questões treinadas foram somadas para a próxima recompensa de 5 moedas a cada 10 questões.';
- }
- if(!saved&&activeProfile){
-  $('reportIntro').textContent+=' O resultado ficou guardado neste aparelho e será sincronizado quando possível.';
- }
- showTrainingExitCelebration();
- return saved;
+  if(sessionStartedAt){
+   const summary={
+    id:'training-'+(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2)),
+    date:new Date().toISOString(),mode:trainingModeType==='standard'?'training':trainingModeType==='tournamentErrors'?'tournament_error_training':trainingModeType,answered:sessionAnswers.length,
+    completedQuestions:sessionCompletedQuestionCount,hits,misses,skipped:sessionSkipped,timeMs:sessionQuestionTimeMs
+   };
+   historyData.sessions.unshift(summary);
+   historyData.sessions=historyData.sessions.slice(0,300);
+   saveHistory();
+  }
+  questionClockPaused=false;
+  if(activeProfile&&profilesData[activeProfile]){
+   profilesData[activeProfile].checkpoint=null;
+   profilesData[activeProfile].updatedAt=new Date().toISOString();
+   persistProfiles();
+  }
+  showReport(false);
+  $('report').dataset.trainingSessionGeneration=String(finishingGeneration);
+  let queuedReward=null;
+  if(trainingModeType!=='errors'&&trainingModeType!=='tournamentErrors'){
+   const remainder=hits-sessionTrainingCorrectClaimed;
+   if(remainder>0){
+    sessionTrainingCorrectClaimed+=remainder;
+    queuedReward=queueTrainingSessionReward('training_questions',{
+     claimId:newTrainingRewardClaimId('training-correct'),correctCount:remainder
+    });
+   }
+  }
+  const exitOverlay=showTrainingExitCelebration();
+  try{await sessionRewardQueue;}catch(error){console.warn('Não foi possível concluir a fila de recompensas:',error);}
+  let reward=null;
+  if(queuedReward){
+   try{reward=await queuedReward;}catch(error){console.warn('Não foi possível confirmar a recompensa final do treino:',error);}
+  }
+  let saved=false;
+  try{saved=await saveProgressNow('Treinamento');}
+  catch(error){console.warn('Não foi possível sincronizar o resultado do treino:',error);}
+  if($('report').dataset.trainingSessionGeneration===String(finishingGeneration)){
+   if(reward?.coinsAdded>0){
+    $('reportIntro').textContent+=' Você ganhou '+reward.coinsAdded+' moedas.';
+   }else if(finishingMode==='intelligent'&&finishingCompletedQuestions>0){
+    $('reportIntro').textContent+=' As questões treinadas foram somadas para a próxima recompensa de 5 moedas a cada 10 questões.';
+   }
+   if(!saved&&hadActiveProfile){
+    $('reportIntro').textContent+=' O resultado ficou guardado neste aparelho e será sincronizado quando possível.';
+   }
+  }
+  if(exitOverlay?.isConnected){
+   const saveStatus=exitOverlay.querySelector('[data-exit-save-status]');
+   if(saveStatus){
+    saveStatus.textContent=saved
+     ?'✓ Resultado sincronizado com seu perfil.'
+     :hadActiveProfile
+      ?'Resultado registrado neste aparelho. A sincronização será tentada novamente quando possível.'
+      :'Resultado registrado neste aparelho. Entre na conta para sincronizar com a comunidade.';
+   }
+  }
+  return saved;
 }
 
 function profileSnapshot(){
@@ -5035,65 +5056,70 @@ function updateStats(){
  $('bar').style.width=(total?roundCorrect.size/total*100:0)+'%';
 }
 function completeErrorTraining(){
- if(errorTrainingCompleted)return;
- errorTrainingCompleted=true;
- pauseTrainingQuestionClock();
- const prefix=trainingModeType==='tournamentErrors'?'tournament-error-training-complete':'error-training-complete';
- const claimId=newTrainingRewardClaimId(prefix);
- queueTrainingSessionReward('error_training_complete',{claimId}).then(async()=>{
-  await finishSession();
-  trainingModeType='standard';trainingReviewMode=false;
-  updateReviewTrainingButton();
- });
+  if(errorTrainingCompleted)return;
+  errorTrainingCompleted=true;
+  pauseTrainingQuestionClock();
+  const completingGeneration=trainingSessionGeneration;
+  const prefix=trainingModeType==='tournamentErrors'?'tournament-error-training-complete':'error-training-complete';
+  const claimId=newTrainingRewardClaimId(prefix);
+  queueTrainingSessionReward('error_training_complete',{claimId}).then(async()=>{
+   await finishSession();
+   if(trainingSessionGeneration===completingGeneration){
+    trainingModeType='standard';trainingReviewMode=false;
+    updateReviewTrainingButton();
+   }
+  });
 }
 function next(){
- if(position>=deck.length){
-  if(trainingModeType==='errors'||trainingModeType==='tournamentErrors'){
-   if(round===0){
-    round=1;roundCorrect=new Set();
-    deck=shuffle(errorTrainingFacts.map(item=>({a:item.a,b:item.b})));
-    trainingRoundTarget=new Set(deck.map(item=>item.a+'x'+item.b)).size;
-    position=0;
-   }else{
-    const scope=trainingModeType==='tournamentErrors'?'tournament':'training';
-    const remaining=getErrorTrainingFacts(scope);
-    if(remaining.length){
-     deck.push(...remaining.map(item=>({a:item.a,b:item.b})));
+  if(position>=deck.length){
+   if(trainingModeType==='errors'||trainingModeType==='tournamentErrors'){
+    if(round===0){
+     round=1;roundCorrect=new Set();
+     deck=shuffle(errorTrainingFacts.map(item=>({a:item.a,b:item.b})));
+     trainingRoundTarget=new Set(deck.map(item=>item.a+'x'+item.b)).size;
+     position=0;
     }else{
-     completeErrorTraining();return;
-    }
-   }
-  }else{
-   const completed=round>0&&trainingRoundTarget>0&&roundCorrect.size>=trainingRoundTarget;
-   if(completed){
-    pauseTrainingQuestionClock();
-    const isReview=trainingReviewMode;
-    const claimId=crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);
-    claimGameReward('training_cycle',{claimId,learningFromErrors:isReview}).then(result=>{
-     const remaining=isReview?getCurrentReviewFacts():[];
-     showTrainingCycleCelebration(result,isReview,isReview&&remaining.length===0);
-    });
-    if(trainingReviewMode){
-     const remaining=getCurrentReviewFacts();
-     trainingReviewFacts=trainingModeType==='intelligent'?expandMistakeTrainingFacts(remaining):remaining.map(item=>({a:item.a,b:item.b}));
-     if(!trainingReviewFacts.length){
-      $('profileStatus').textContent='Parabéns! Todas as contas deste treino atingiram pelo menos 90% de acertos.';
-      return;
+     const scope=trainingModeType==='tournamentErrors'?'tournament':'training';
+     const remaining=getErrorTrainingFacts(scope);
+     if(remaining.length){
+      deck.push(...remaining.map(item=>({a:item.a,b:item.b})));
+     }else{
+      completeErrorTraining();return;
      }
     }
+   }else{
+    const completed=round>0&&trainingRoundTarget>0&&roundCorrect.size>=trainingRoundTarget;
+    if(completed){
+     pauseTrainingQuestionClock();
+     const isReview=trainingReviewMode;
+     const completingGeneration=trainingSessionGeneration;
+     const claimId=crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);
+     claimGameReward('training_cycle',{claimId,learningFromErrors:isReview}).then(result=>{
+      const remaining=isReview?getCurrentReviewFacts():[];
+      showTrainingCycleCelebration(result,isReview,isReview&&remaining.length===0,completingGeneration);
+     });
+     if(trainingReviewMode){
+      const remaining=getCurrentReviewFacts();
+      trainingReviewFacts=trainingModeType==='intelligent'?expandMistakeTrainingFacts(remaining):remaining.map(item=>({a:item.a,b:item.b}));
+      if(!trainingReviewFacts.length){
+       $('profileStatus').textContent='Parabéns! Todas as contas deste treino atingiram pelo menos 90% de acertos.';
+       return;
+      }
+     }
+    }
+    startRound();
    }
-   startRound();
   }
- }
- current=deck[position];
- revealed=false;currentQuestionTimeMs=0;currentQuestionTimeStopped=false;currentDifficultyMarked=false;
- $('equation').textContent=current.a+' × '+current.b;
- const modeLabel=trainingModeType==='errors'?'TREINE SEUS ERROS':trainingModeType==='tournamentErrors'?'REVISE OS ERROS DO TORNEIO':trainingModeType==='intelligent'?'TREINO INTELIGENTE':trainingModeType==='difficulties'?'MINHAS DIFICULDADES':'Rodada '+round;
- $('counter').textContent=modeLabel+' · Questão '+(position+1)+' de '+deck.length;
- $('answer').textContent='';$('answer').className='answer';
- $('verify').classList.remove('hidden');$('judge').classList.add('hidden');
- $('markDifficulty').disabled=false;$('markDifficulty').classList.remove('marked');$('markDifficulty').textContent='⚑ Tive dificuldade';
- updateStats();beginQuestionClock();
+  current=deck[position];
+  revealed=false;currentQuestionTimeMs=0;currentQuestionTimeStopped=false;currentDifficultyMarked=false;
+  $('equation').textContent=current.a+' × '+current.b;
+  $('equation').classList.remove('correct','wrong');
+  $('equation').setAttribute('aria-label',current.a+' vezes '+current.b);
+  const modeLabel=trainingModeType==='errors'?'TREINE SEUS ERROS':trainingModeType==='tournamentErrors'?'REVISE OS ERROS DO TORNEIO':trainingModeType==='intelligent'?'TREINO INTELIGENTE':trainingModeType==='difficulties'?'MINHAS DIFICULDADES':'Rodada '+round;
+  $('counter').textContent=modeLabel+' · Questão '+(position+1)+' de '+deck.length;
+  $('verify').classList.remove('hidden');$('judge').classList.add('hidden');
+  $('markDifficulty').disabled=false;$('markDifficulty').classList.remove('marked');$('markDifficulty').textContent='⚑ Tive dificuldade';
+  updateStats();beginQuestionClock();
 }
 function start(){
  showMusicMenuMinimized();
@@ -5118,6 +5144,7 @@ function start(){
    .map(r=>({n:Number(r.querySelector('input').value),mode:globalMode==='individual'?r.querySelector('select').value:globalMode}));
  }
  if(!selected.length){alert(trainingReviewMode?'Não há contas pendentes nesta modalidade.':'Selecione pelo menos uma tabuada para começar.');return;}
+ trainingSessionGeneration++;
  hits=0;misses=0;round=0;position=0;deck=[];roundCorrect=new Set();trainingRoundTarget=0;
  currentQuestionTimeMs=0;currentQuestionTimeStopped=false;currentDifficultyMarked=false;
  sessionAnswers=[];sessionSkipped=0;sessionQuestionTimeMs=0;sessionCompletedQuestionCount=0;trainingSessionSaving=false;sessionStartedAt=performance.now();
@@ -5131,12 +5158,15 @@ function start(){
  next();saveCheckpoint();
 }
 function verify(){
- if(revealed)return;
- playUiSound('verify','game');
- revealed=true;
- currentQuestionTimeMs=endQuestionClock();currentQuestionTimeStopped=true;
- $('answer').textContent=current.a+' × '+current.b+' = '+(current.a*current.b);
- $('verify').classList.add('hidden');$('judge').classList.remove('hidden');
+  if(revealed)return;
+  playUiSound('verify','game');
+  revealed=true;
+  currentQuestionTimeMs=endQuestionClock();currentQuestionTimeStopped=true;
+  const answer=current.a*current.b;
+  $('equation').textContent=String(answer);
+  $('equation').classList.remove('correct','wrong');
+  $('equation').setAttribute('aria-label','Resposta: '+answer);
+  $('verify').classList.add('hidden');$('judge').classList.remove('hidden');
 }
 function judge(ok){
  if(!revealed)return;
@@ -5150,7 +5180,7 @@ function judge(ok){
  const key=current.a+'x'+current.b;
  const errorScope=trainingModeType==='errors'?'training':trainingModeType==='tournamentErrors'?'tournament':null;
  if(ok){
-  hits++;roundCorrect.add(key);$('answer').classList.add('correct');
+  hits++;roundCorrect.add(key);$('equation').classList.add('correct');
   if(errorScope){
    const item=historyData.questions[key];
    const state=setErrorTrainingPoolState(item,errorScope,true);
@@ -5165,7 +5195,7 @@ function judge(ok){
    roundCorrect.delete(key);
    deck.push({...current});saveHistory();updateReviewTrainingButton();
   }else deck.push({...current});
-  $('answer').classList.add('wrong');
+  $('equation').classList.add('wrong');
  }
  checkTrainingSessionRewardMilestones();
  position++;currentQuestionTimeMs=0;currentQuestionTimeStopped=false;currentDifficultyMarked=false;
@@ -5724,63 +5754,68 @@ function markCurrentQuestionDifficulty(){
  next();saveCheckpoint();
 }
 function showTrainingExitCelebration(){
- document.querySelectorAll('.training-celebration-overlay').forEach(item=>item.remove());
- const answered=sessionAnswers.length;
- const completedErrors=(trainingModeType==='errors'||trainingModeType==='tournamentErrors')&&errorTrainingCompleted;
- const completedTournamentErrors=completedErrors&&trainingModeType==='tournamentErrors';
- const kicker=completedErrors?'TREINO COMPLETO':'PARTIDA FINALIZADA';
- const detail=completedErrors
-  ?(completedTournamentErrors
-   ?'Você concluiu a revisão de todos os erros registrados no Torneio mensal. Seu progresso foi salvo.'
-   :'Você concluiu a revisão de todos os erros do Treinar e do Modo jogo. Seu progresso foi salvo.')
-  :answered
-   ?'Seu resultado foi salvo. Veja abaixo o desempenho desta partida e o ranking das contas.'
-   :'Sua partida foi encerrada e o resultado desta sessão foi salvo.';
- const overlay=document.createElement('div');
- overlay.className='training-celebration-overlay';
- overlay.setAttribute('role','dialog');
- overlay.setAttribute('aria-modal','true');
- overlay.setAttribute('aria-label','Partida finalizada');
- overlay.innerHTML='<div class="training-celebration-card training-exit-card">'+
-  '<button type="button" class="training-exit-close" data-exit-close aria-label="Fechar e voltar ao menu inicial">×</button>'+
-  '<div class="training-celebration-cup">🎉</div>'+
-  '<span class="music-kicker">'+kicker+'</span><h2>Parabéns pelo seu treino!</h2><p>'+escapeHtml(detail)+'</p>'+
-  '<div class="training-exit-actions">'+
-   '<button type="button" class="secondary" data-exit-menu>Voltar ao menu inicial</button>'+
-   '<button type="button" class="primary" data-open-training-report>Resultado do treino</button>'+
-  '</div></div>';
- $('game').classList.add('hidden');
- $('setup').classList.add('hidden');
- $('report').classList.add('hidden');
- document.body.appendChild(overlay);
- const returnToModes=()=>{
-  overlay.remove();
-  $('report').classList.add('hidden');
+  document.querySelectorAll('.training-celebration-overlay').forEach(item=>item.remove());
+  const answered=sessionAnswers.length;
+  const completedErrors=(trainingModeType==='errors'||trainingModeType==='tournamentErrors')&&errorTrainingCompleted;
+  const completedTournamentErrors=completedErrors&&trainingModeType==='tournamentErrors';
+  const kicker=completedErrors?'TREINO COMPLETO':'PARTIDA FINALIZADA';
+  const detail=completedErrors
+   ?(completedTournamentErrors
+    ?'Você concluiu a revisão de todos os erros registrados no Torneio mensal.'
+    :'Você concluiu a revisão de todos os erros do Treinar e do Modo jogo.')
+   :answered
+    ?'Sua partida foi encerrada. Você pode consultar os resultados desta sessão quando desejar.'
+    :'Sua partida foi encerrada. Você pode voltar ao treino ou consultar os resultados.';
+  const overlay=document.createElement('div');
+  overlay.className='training-celebration-overlay';
+  overlay.setAttribute('role','dialog');
+  overlay.setAttribute('aria-modal','true');
+  overlay.setAttribute('aria-label','Partida finalizada');
+  overlay.innerHTML='<div class="training-celebration-card training-exit-card">'+
+   '<button type="button" class="training-exit-close" data-exit-close aria-label="Fechar e retornar ao treino">×</button>'+
+   '<div class="training-celebration-cup">🎉</div>'+
+   '<span class="music-kicker">'+kicker+'</span><h2>Parabéns pelo seu treino!</h2><p>'+escapeHtml(detail)+'</p>'+
+   '<p class="training-exit-save-status" data-exit-save-status aria-live="polite">Resultado registrado neste aparelho. Sincronização em andamento...</p>'+
+   '<div class="training-exit-actions">'+
+    '<button type="button" class="primary" data-exit-training>Retornar ao treino</button>'+
+    '<button type="button" class="secondary" data-open-training-report>Resultado do treino</button>'+
+   '</div></div>';
   $('game').classList.add('hidden');
-  $('setup').classList.remove('hidden');
-  showModeHub();
-  window.scrollTo({top:0,behavior:'smooth'});
- };
- const openReport=()=>{
-  overlay.remove();
-  const report=$('report');
-  if(report){
-   report.classList.remove('hidden');
-   report.scrollIntoView({behavior:'smooth',block:'start'});
-   report.querySelector('h2')?.focus({preventScroll:true});
+  $('setup').classList.add('hidden');
+  $('report').classList.add('hidden');
+  document.body.appendChild(overlay);
+  const returnToTraining=()=>{
+   overlay.remove();
+   $('report').classList.add('hidden');
+   $('game').classList.add('hidden');
+   $('setup').classList.remove('hidden');
+   showTrainingMode();
+   window.scrollTo({top:0,behavior:'smooth'});
+  };
+  const openReport=()=>{
+   overlay.remove();
+   const report=$('report');
+   if(report){
+    report.classList.remove('hidden');
+    report.scrollIntoView({behavior:'smooth',block:'start'});
+    report.querySelector('h2')?.focus({preventScroll:true});
+   }
+  };
+  overlay.querySelector('[data-exit-training]')?.addEventListener('click',returnToTraining);
+  overlay.querySelector('[data-exit-close]')?.addEventListener('click',returnToTraining);
+  overlay.querySelector('[data-open-training-report]')?.addEventListener('click',openReport);
+  return overlay;
+}
+function showTrainingCycleCelebration(result,isReview,reviewComplete=false,completingGeneration=trainingSessionGeneration){
+  // O ciclo continua normalmente. Recompensas e títulos aparecem apenas como aviso pequeno, sem abrir tela sobre o jogo.
+  if(reviewComplete){
+   finishSession().finally(()=>{
+    if(trainingSessionGeneration===completingGeneration){
+     trainingReviewMode=false;trainingModeType='standard';
+    }
+   });
   }
- };
- overlay.querySelector('[data-exit-menu]')?.addEventListener('click',returnToModes);
- overlay.querySelector('[data-exit-close]')?.addEventListener('click',returnToModes);
- overlay.querySelector('[data-open-training-report]')?.addEventListener('click',openReport);
 }
-function showTrainingCycleCelebration(result,isReview,reviewComplete=false){
- // O ciclo continua normalmente. Recompensas e títulos aparecem apenas como aviso pequeno, sem abrir tela sobre o jogo.
- if(reviewComplete){
-  finishSession().finally(()=>{trainingReviewMode=false;trainingModeType='standard';});
- }
-}
-
 function makeRound(){
  const allRandom=selected.every(t=>t.mode==='random');
  const questions=[];
