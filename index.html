@@ -2529,7 +2529,7 @@ function renderChallengeProfileStats(){
    const symbol=renderTournamentAwardIcon(place);
    const awardTitle=(award.difficulty||'Torneio')+' · '+tournamentSeasonKeyLabel(month);
    return '<article class="achievement-card challenge-medal unlocked"'+badgeInfoAttributes(awardTitle,tournamentAwardDescription({...award,rank:place},month))+'><span class="achievement-icon">'+symbol+'</span><div><strong>'+escapeHtml(awardTitle)+'</strong><p>'+place+'º lugar · '+award.score+'/50 pontos</p><small>'+escapeHtml(award.frame||'Participação')+'</small></div></article>';
-  }).join(''):'<div class="tournament-empty">Suas premiações mensais aparecerão aqui.</div>';
+  }).join(''):'<div class="tournament-empty">Suas premiações de cada temporada aparecerão aqui.</div>';
  }
 }
 
@@ -3530,7 +3530,7 @@ async function renderCommunityRanking(){
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">⭐ DESTAQUES ESCOLHIDOS</span><div class="community-profile-detail-chips">'+(featured||'<span class="community-profile-empty">Nenhum destaque selecionado.</span>')+'</div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏅 MEDALHAS DE NÍVEL</span><div class="community-profile-detail-chips">'+(medals||'<span class="community-profile-empty">Ainda não conquistou medalhas de nível.</span>')+'</div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">✨ CONQUISTAS</span><div class="community-profile-detail-chips">'+(achievementBadges||'<span class="community-profile-empty">Ainda não desbloqueou conquistas.</span>')+'</div></div>'+
-     '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏆 PREMIAÇÕES MENSAIS</span><div class="community-profile-detail-chips">'+(awards||'<span class="community-profile-empty">Nenhuma premiação mensal registrada.</span>')+'</div></div>'+
+     '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏆 PREMIAÇÕES DO TORNEIO</span><div class="community-profile-detail-chips">'+(awards||'<span class="community-profile-empty">Nenhuma premiação mensal registrada.</span>')+'</div></div>'+
     '</div>'+
    '</details>';
   }).join('');
