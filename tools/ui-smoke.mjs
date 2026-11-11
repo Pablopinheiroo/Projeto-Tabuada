@@ -487,7 +487,15 @@ check(html.includes('<details id="challengeInboxShell"')&&
   html.includes("group('📤 Desafios enviados'")&&html.includes("group('📥 Desafios recebidos'")&&
   !html.includes("group('🏆 Resultados'")&&
   html.includes('<details class="challenge-list-group">')&&html.includes("challengeReceivedGroupBadge"),
-  "A caixa de desafios deve ficar minimizada e, ao abrir, mostrar somente os dois subtópicos também minimizados: enviados e recebidos, com contagem de pendências e marcação individual dos itens.");
+  "A caixa de desafios deve ficar minimizada e, ao abrir, mostrar os três tópicos recolhidos: enviados, recebidos e Histórico de batalhas, preservando contagens e marcação individual dos itens.");
+check(html.includes("function challengeBattleHistoryStats(")&&
+  html.includes("function renderChallengeBattleHistoryGroup()")&&
+  html.includes("⚔️ Histórico de batalhas")&&
+  html.includes("Minhas vitórias:")&&html.includes("Vitórias do adversário:")&&
+  html.includes("challenge-battle-score")&&
+  html.includes("challenge.status!=='completed'")&&
+  html.includes("myScore>otherScore")&&html.includes("myTime<otherTime"),
+  "O Histórico de batalhas deve agrupar os desafios concluídos por adversário e contar vitórias/derrotas pelo placar e pelo tempo, sem incluir partidas pendentes.");
 check(html.includes("data-challenge-retry")&&html.includes("Nova aposta (moedas)")&&
   html.includes("Esta é a única nova tentativa permitida")&&
   html.includes("apiRequest('/api/challenges/'+id+'/retry'"),
