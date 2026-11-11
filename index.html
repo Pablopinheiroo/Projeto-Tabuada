@@ -4192,7 +4192,7 @@ function challengeResultLabel(challenge){
   if(challenge.status==='challenger_playing')return 'Sua partida · convite ainda não enviado';
   if(challenge.status==='pending_acceptance')return challenge.recipient===activeProfile?'🪙 Convite recebido · aguardando sua resposta':'🪙 Aguardando resposta do adversário';
   if(challenge.status==='accepting')return '🪙 Confirmando a aposta...';
-  if(challenge.status==='rejected')return 'Aposta rejeitada · nenhuma moeda retirada';
+  if(challenge.status==='rejected')return 'Partida rejeitada · nenhuma moeda retirada';
   if(challenge.status!=='completed'){
    const total=challengeParticipants(challenge).length;
    const done=Object.keys(challenge.results||{}).length;
@@ -4232,12 +4232,14 @@ function markChallengeReceiptSeen(id){
  all[activeProfile]=seen.slice(-300);
  try{localStorage.setItem(CHALLENGE_RECEIVED_SEEN_KEY,JSON.stringify(all));}catch{}
 }
+function isUnreadChallengeReceipt(item){
+ const requiresAction=['open','waiting_participants','pending_acceptance'];
+ return item.challenger!==activeProfile&&requiresAction.includes(item.status)&&
+  !getSeenChallengeReceipts().includes(item.id);
+}
 function challengeUnreadCounts(){
  const resultSeen=new Set(getSeenChallengeResults());
- const receiptSeen=new Set(getSeenChallengeReceipts());
- const received=challengeItems.filter(item=>
-  item.challenger!==activeProfile&&item.status!=='completed'&&!receiptSeen.has(item.id)
- ).length;
+ const received=challengeItems.filter(isUnreadChallengeReceipt).length;
  const results=challengeItems.filter(item=>
   item.status==='completed'&&item.myResult&&!resultSeen.has(item.id)
  ).length;
@@ -4270,7 +4272,6 @@ function renderChallengeList(){
  const received=incomplete.filter(item=>item.challenger!==activeProfile);
  const results=challengeItems.filter(item=>item.status==='completed'&&item.myResult);
  const resultSeen=new Set(getSeenChallengeResults());
- const receiptSeen=new Set(getSeenChallengeReceipts());
  const renderCard=(item,side)=>{
   const participants=challengeParticipants(item),others=participants.filter(name=>name!==activeProfile);
   const values=item.results||{},mine=item.myResult,completed=item.status==='completed';
@@ -4328,7 +4329,7 @@ function renderChallengeList(){
   }else if(item.betMode&&item.status==='rejected'&&side==='sent'){
    retryControl='<small class="challenge-retry-note">Esta partida já usou a nova tentativa. Para desafiar novamente, será necessário jogar outra partida.</small>';
   }
-  const unread=side==='received'?!receiptSeen.has(item.id):side==='results'?!resultSeen.has(item.id):false;
+  const unread=side==='received'?isUnreadChallengeReceipt(item):side==='results'?!resultSeen.has(item.id):false;
   const dot=unread?'<span class="challenge-unread-dot" aria-label="Ainda não visualizado"></span>':'';
   const summary=completed?'Ver classificação final':'Ver prévia da classificação';
   const explanation=completed?'Resultado definitivo: todos os participantes terminaram.':'Prévia provisória: a ordem pode mudar quando os demais participantes jogarem.';
