@@ -1527,7 +1527,7 @@ const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && sou
   await page.evaluate(()=>{
     document.querySelector("#profileScreen").classList.add("hidden");
     document.querySelector("#setup").classList.remove("hidden");
-    setMainContentSections({hub:true,community:true});
+    setMainContentSections({hub:true});
   });
   const mainSections=["modeHub","trainingModePanel","adventureMapView","adventureIntroView","adventurePlayView","adventureResultView","challengeModeView","tournamentModeView","communitySection","shopScreen"];
   const getVisibleMainSections=()=>page.evaluate(ids=>Object.fromEntries(ids.map(id=>[id,!document.getElementById(id).classList.contains("hidden")])),mainSections);
@@ -1552,7 +1552,7 @@ const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && sou
     check(JSON.stringify(visible)===JSON.stringify(wanted),name+": seções incorretas em "+label+": "+JSON.stringify(visible));
     await assertMusicMenuMinimized(label);
   };
-  await assertVisibleSections(["modeHub","communitySection"],"menu inicial");
+  await assertVisibleSections(["modeHub"],"menu inicial");
   await page.locator("#navShop").click();
   await assertVisibleSections(["shopScreen"],"Loja");
   const shopReturnButtons=await page.locator("button").evaluateAll(items=>items.filter(button=>
@@ -1562,7 +1562,7 @@ const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && sou
   await page.locator("#navCommunity").click();
   await assertVisibleSections(["communitySection"],"Comunidade");
   await page.locator("#topReturnToGame").click();
-  await assertVisibleSections(["modeHub","communitySection"],"Voltar ao jogo");
+  await assertVisibleSections(["modeHub"],"Voltar ao jogo");
 
   // Abrir o perfil a partir da Loja e voltar deve sempre levar à página inicial do jogo.
   await page.locator("#navShop").click();
@@ -1570,7 +1570,7 @@ const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && sou
   check(!(await page.locator("#profileScreen").evaluate(el=>el.classList.contains("hidden"))),
     name+": o atalho Meu perfil não abriu a tela do perfil a partir da Loja.");
   await page.locator("#backFromProfileTop").click();
-  await assertVisibleSections(["modeHub","communitySection"],"Voltar ao jogo pelo Meu perfil");
+  await assertVisibleSections(["modeHub"],"Voltar ao jogo pelo Meu perfil");
 
   // Estatísticas também devem sair para a página inicial, e não restaurar a Loja.
   await page.evaluate(()=>{
@@ -1584,7 +1584,7 @@ const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && sou
   check((await page.locator("#closeProfileStats").textContent()).includes("Voltar ao jogo"),
     name+": o botão das estatísticas não está identificado como Voltar ao jogo.");
   await page.locator("#closeProfileStats").click();
-  await assertVisibleSections(["modeHub","communitySection"],"Voltar ao jogo pelas Estatísticas");
+  await assertVisibleSections(["modeHub"],"Voltar ao jogo pelas Estatísticas");
 
   // Opções seguem a mesma regra, mesmo abertas depois da Loja.
   await page.evaluate(()=>{
@@ -1599,40 +1599,40 @@ const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && sou
   check((await page.locator("#closeProfileOptions").textContent()).includes("Voltar ao jogo"),
     name+": o botão de Opções não está identificado como Voltar ao jogo.");
   await page.locator("#closeProfileOptions").click();
-  await assertVisibleSections(["modeHub","communitySection"],"Voltar ao jogo pelas Opções");
+  await assertVisibleSections(["modeHub"],"Voltar ao jogo pelas Opções");
 
   await page.locator("#openTrainingMode").click();
   check(!(await page.locator("#trainingModePanel").evaluate(el => el.classList.contains("hidden"))), name + ": botão Treinamento não abriu a modalidade.");
   check((await page.locator("#musicCategoryKicker").textContent()).includes("TREINAMENTO"), name + ": música não mudou para Treinamento.");
   await assertVisibleSections(["trainingModePanel"],"Treinamento");
   await page.locator("#backToModeHubTraining").click();
-  await assertVisibleSections(["modeHub","communitySection"],"retorno do Treinamento");
+  await assertVisibleSections(["modeHub"],"retorno do Treinamento");
 
   await page.locator("#openAdventureMode").click();
   check(!(await page.locator("#adventureMapView").evaluate(el => el.classList.contains("hidden"))), name + ": botão Modo Jogo não abriu o mapa da aventura.");
   check((await page.locator("#musicCategoryKicker").textContent()).includes("MODO JOGO"), name + ": música não mudou para Modo Jogo.");
   await assertVisibleSections(["adventureMapView"],"Modo Jogo");
   await page.locator("#backToModeHubMap").click();
-  await assertVisibleSections(["modeHub","communitySection"],"retorno do Modo Jogo");
+  await assertVisibleSections(["modeHub"],"retorno do Modo Jogo");
 
   await page.locator("#openChallengeMode").click();
   check(!(await page.locator("#challengeModeView").evaluate(el => el.classList.contains("hidden"))), name + ": botão Desafio não abriu a modalidade.");
   check(!(await page.locator("#challengeHomePanel").evaluate(el => el.classList.contains("hidden"))), name + ": menu inicial do Desafio não apareceu.");
   check((await page.locator("#musicCategoryKicker").textContent()).includes("DESAFIO"), name + ": música não mudou para Desafio.");
-  await assertVisibleSections(["challengeModeView","communitySection"],"Desafio com Comunidade");
+  await assertVisibleSections(["challengeModeView"],"Desafio");
   await page.evaluate(()=>{setMusicMenuExpanded(true);showChallengeSubPanel("challengePlayPanel");});
   await assertMusicMenuMinimized("partida de Desafio");
   await page.evaluate(()=>showChallengeSubPanel("challengeHomePanel"));
   await page.locator("#backFromChallenge").click();
-  await assertVisibleSections(["modeHub","communitySection"],"retorno do Desafio");
+  await assertVisibleSections(["modeHub"],"retorno do Desafio");
 
   await page.locator("#openTournamentMode").click();
   check(!(await page.locator("#tournamentModeView").evaluate(el => el.classList.contains("hidden"))), name + ": botão Torneio não abriu a modalidade.");
   check(!(await page.locator("#tournamentHomePanel").evaluate(el => el.classList.contains("hidden"))), name + ": menu inicial do Torneio não apareceu.");
   check((await page.locator("#musicCategoryKicker").textContent()).includes("TORNEIO"), name + ": música não mudou para Torneio.");
-  await assertVisibleSections(["tournamentModeView","communitySection"],"Torneio com Comunidade");
+  await assertVisibleSections(["tournamentModeView"],"Torneio");
   await page.locator("#backFromTournament").click();
-  await assertVisibleSections(["modeHub","communitySection"],"retorno do Torneio");
+  await assertVisibleSections(["modeHub"],"retorno do Torneio");
 
   const finalOverflow = await page.evaluate(() => ({
     viewport: window.innerWidth,
