@@ -3508,8 +3508,12 @@ function openCommunityGiftPopover(recipient,displayName){
  const form=panel.querySelector('.community-gift-form');
  const input=form.querySelector('[data-gift-amount]');
  const recipientLabel=panel.querySelector('#communityGiftRecipient');
+ const previousRecipient=form.dataset.communityGiftForm;
+ if(previousRecipient!==recipient){
+  delete form.dataset.giftId;
+  delete form.dataset.giftAmount;
+ }
  form.dataset.communityGiftForm=recipient;
- delete form.dataset.giftId;
  form.reset();
  input.max=String(Math.max(0,Number(gameEconomy.coins)||0));
  if(recipientLabel)recipientLabel.textContent=displayName||('@'+recipient);
@@ -3544,10 +3548,15 @@ async function sendCommunityGift(recipient,form){
  if(button)button.disabled=true;
  if(status)status.textContent='Preparando seu presente...';
  try{
-  const giftId=form.dataset.giftId||createClientGiftId();
-  form.dataset.giftId=giftId;
+  let giftId=form.dataset.giftId;
+  if(!giftId||form.dataset.giftAmount!==String(amount)){
+   giftId=createClientGiftId();
+   form.dataset.giftId=giftId;
+   form.dataset.giftAmount=String(amount);
+  }
   const result=await apiRequest('/api/gifts/send',{method:'POST',body:{to:recipient,amount,giftId}});
   delete form.dataset.giftId;
+  delete form.dataset.giftAmount;
   if(Number.isSafeInteger(Number(result.coins)))syncCommunityGiftBalance(Number(result.coins));
   if(status)status.textContent='Presente enviado! Você enviou '+amount.toLocaleString('pt-BR')+' moedas para @'+recipient+'. 🎁';
   input.value='';
