@@ -2348,7 +2348,7 @@ function installProfileFrameStyles(){
   const speed=(3.8+(index%6)*.55).toFixed(2);
   rules.push('.avatar-frame-shell.frame-animated-'+(index+1)+'::before{background:conic-gradient(from '+(index*19)+'deg,'+frame.colors.join(',')+','+frame.colors[0]+');box-shadow:0 0 0 2px '+frame.colors[1]+',0 0 '+(8+(index%5)*2)+'px '+frame.colors[0]+';animation:profileFrameSpin '+speed+'s linear infinite}');
  });
- style.textContent=rules.join('\\n');document.head.appendChild(style);
+ style.textContent=rules.join('\n');document.head.appendChild(style);
 }
 function applyAvatarFrameShell(shellId,key,legacyTournamentFrame=''){
  const shell=$(shellId);if(!shell)return;shell.className=frameShellClass(key);
