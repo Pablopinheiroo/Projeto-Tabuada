@@ -1971,7 +1971,6 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
  <p id="shopMessage" class="auth-message" role="status" aria-live="polite"></p>
 </section>
 
-<div id="gameReturnFooter" class="game-return-footer hidden"><button id="bottomReturnToGame" type="button" class="secondary">↑ Voltar ao jogo</button></div>
 </section>
 
 <section id="game" class="panel hidden" aria-live="polite">
@@ -6070,10 +6069,7 @@ function setMainContentSections({hub=false,training=false,adventure=false,challe
   const element=$(id);
   if(element)element.classList.toggle('hidden',!visible);
  }
-  const topReturn=$('topReturnToGame');
-  if(topReturn)topReturn.classList.toggle('hidden',shop||adventure);
-  const shopReturnFooter=$('gameReturnFooter');
-  if(shopReturnFooter)shopReturnFooter.classList.toggle('hidden',!shop);
+  // O atalho principal de retorno permanece disponível em todas as modalidades.
 }
 function showCommunityOnly(){
  setMainContentSections({community:true});
@@ -7268,7 +7264,6 @@ $('navCommunity').addEventListener('click',showCommunityOnly);
 $('navShop').addEventListener('click',showShopOnly);
 function returnToGameHome(){showModeHub();$('modeHub').scrollIntoView({behavior:'smooth',block:'start'});}
 $('topReturnToGame').addEventListener('click',returnToGameHome);
-$('bottomReturnToGame').addEventListener('click',returnToGameHome);
 $('communitySort').addEventListener('change',()=>{communityPage=0;renderCommunityRanking();});
 $('communityPagination').addEventListener('click',event=>{
  const button=event.target.closest('[data-community-page]');if(!button||button.disabled)return;
