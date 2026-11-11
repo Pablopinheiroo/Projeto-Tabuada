@@ -16,12 +16,12 @@ assert.ok(helpersStart >= 0 && helpersEnd > helpersStart, "Não foi possível lo
 const isolatedSource = [
   source.slice(constantsStart, constantsEnd),
   source.slice(helpersStart, helpersEnd),
-  "globalThis.tournamentTest = { currentSaoPauloMonth, tournamentFilePath, tournamentCycleByIndex, currentTournamentCycle, buildTournamentQuestions };"
+  "globalThis.tournamentTest = { currentSaoPauloMonth, tournamentFilePath, tournamentCycleByIndex, currentTournamentCycle, buildTournamentQuestions, isTournamentSeasonKey, tournamentSeasonKeyLabel };"
 ].join("\n");
 
 const context = {};
 vm.runInNewContext(isolatedSource, context, { timeout: 5000 });
-const { currentTournamentCycle, tournamentCycleByIndex, tournamentFilePath, buildTournamentQuestions } = context.tournamentTest;
+const { currentTournamentCycle, tournamentCycleByIndex, tournamentFilePath, buildTournamentQuestions, isTournamentSeasonKey, tournamentSeasonKeyLabel } = context.tournamentTest;
 
 const firstSeasonStart = new Date("2026-11-11T03:00:00.000Z");
 const firstSeasonEnd = new Date("2026-12-11T03:00:00.000Z");
@@ -39,6 +39,11 @@ assert.equal(new Date(atRenewal.endsAt).getTime() - new Date(atRenewal.startsAt)
 assert.equal(tournamentCycleByIndex(2).key, "ciclo-0002");
 assert.equal(tournamentFilePath("2026-11"), "torneio-mensal-2026-11.json");
 assert.equal(tournamentFilePath("ciclo-0001"), "torneio-ciclo-0001.json");
+assert.equal(isTournamentSeasonKey("2026-11"), true, "A compatibilidade com prêmios mensais antigos foi perdida.");
+assert.equal(isTournamentSeasonKey("ciclo-0001"), true, "Prêmios de temporadas de 30 dias não foram reconhecidos.");
+assert.equal(isTournamentSeasonKey("ciclo-0001-extra"), false, "Uma chave inválida foi aceita como temporada.");
+assert.equal(tournamentSeasonKeyLabel("ciclo-0001"), "Temporada 2");
+assert.equal(tournamentSeasonKeyLabel("2026-11"), "novembro de 2026");
 
 const reports = {};
 for (const difficulty of ["easy", "medium", "hard"]) {
