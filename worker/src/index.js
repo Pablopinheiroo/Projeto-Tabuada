@@ -1987,7 +1987,20 @@ async function handleApi(request, env, origin) {
             difficulty: participation.difficulty,
             difficultyName: TOURNAMENT_PRESETS[participation.difficulty].name,
             position: ranking.position, total: ranking.total,
-              if (route === "/api/tournament/start" && request.method === "POST") {
+            score: participation.result.score, top10: ranking.top10, award
+          };
+        }
+      }
+      const latestUser = finalNotice ? await readUser(username, env) : userFile;
+      return json({
+        month: season.key,
+        season: tournamentSeasonPayload(season),
+        selectedDifficulty: latestUser?.data?.profile?.monthlyTournaments?.[season.key]?.difficulty || null,
+        rankings, finalNotice
+      }, 200, origin);
+    }
+
+    if (route === "/api/tournament/start" && request.method === "POST") {
       const body = await readJson(request);
       const difficulty = String(body.difficulty || "");
       const preset = TOURNAMENT_PRESETS[difficulty];
