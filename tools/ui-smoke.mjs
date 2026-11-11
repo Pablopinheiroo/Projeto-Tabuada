@@ -85,7 +85,7 @@ check(workerSource.includes("invalidateCommunitySummaryCache()")&&
   "O cache público da comunidade não é invalidado ou marcado com a versão dos dados.");
 check(workerSource.includes("mergeHistorySnapshots(")&&workerSource.includes("body.baseSha"),
   "A API não protege o histórico contra snapshots antigos.");
-check(workerSource.includes('const WORKER_BUILD_ID = "2026-11-11-tournament-30day-unique-facts-v2"')&&
+check(workerSource.includes('const WORKER_BUILD_ID = "2026-11-11-shop-profile-frames-v1"')&&
   workerSource.includes("PRESENCE_MIN_WRITE_INTERVAL_MS")&&
   workerSource.includes('if (route === "/api/presence" && request.method === "POST")')&&
   workerSource.includes("profile: { ...profile, lastOnlineAt }")&&
@@ -1072,7 +1072,7 @@ async function testViewport(name, viewport, mobile = false) {
   await page.locator("#openProfile").click();
   await page.waitForTimeout(250);
   await page.evaluate(()=>{
-    gameEconomy={version:1,coins:2400,totalEarned:3000,trainingCycles:30,completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0','imagem:1','gif:2'],achievements:{}};
+    gameEconomy={version:1,coins:2400,totalEarned:3000,trainingCycles:30,completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0','imagem:1','gif:2'],ownedFrames:['static:1','animated:2'],achievements:{}};
     selectedProfileAvatar='imagem:0';
     renderAvatarGrid('profileAvatarGrid',selectedProfileAvatar,key=>{selectedProfileAvatar=key;});
     renderAvatarShop();
@@ -1082,24 +1082,45 @@ async function testViewport(name, viewport, mobile = false) {
   check(await page.locator("#profileAvatarGrid .avatar-choice.locked").count()===0&&
     await page.locator("#profileAvatarGrid [data-avatar-buy]").count()===0,
     name+": ainda há avatares bloqueados ou para comprar dentro de Meu perfil.");
-  check(await page.locator("#avatarShopGrid .shop-avatar-card").count()===23,
-    name+": a Loja não listou os 23 avatares que antes ficavam bloqueados.");
-  check(await page.locator("#avatarShopGrid .shop-avatar-card.locked").count()===0&&
-    await page.locator("#avatarShopGrid [data-avatar-buy]").count()===21&&
+  await page.evaluate(()=>{
+    profilesData[activeProfile].profileFrame='';
+    selectedProfileFrame='';
+    renderProfileFrames();
+  });
+  check(await page.locator("#profileFrameGrid [data-profile-frame]").count()===3,
+    name+": Meu perfil deve permitir sem moldura e as duas molduras já adquiridas.");
+  await page.locator("#profileFrameGrid [data-profile-frame='animated:2']").click();
+  check((await page.locator("#profilePreviewAvatarFrame").getAttribute("class")).includes("frame-animated-2"),
+    name+": selecionar uma moldura animada não atualizou a prévia do perfil.");
+  check(await page.locator("#avatarShopGrid .shop-avatar-card").count()===63,
+    name+": a Loja não listou os 23 avatares e as 40 molduras.");
+  check(await page.locator("#avatarShopGrid [data-avatar-buy]").count()===21&&
+    await page.locator("#avatarShopGrid [data-frame-buy^='static:']").count()===20&&
+    await page.locator("#avatarShopGrid [data-frame-buy^='animated:']").count()===20&&
     await page.locator("#avatarShopGrid .shop-avatar-card.owned").count()===2,
-    name+": a Loja não separou corretamente itens adquiridos e itens à venda.");
+    name+": a Loja não separou corretamente avatares, molduras e itens adquiridos.");
+  check(await page.locator("#avatarShopGrid details.shop-catalog-disclosure").count()===4&&
+    await page.locator("#avatarShopGrid details[open]").count()===0&&
+    await page.locator("#avatarShopGrid .shop-preview-strip").count()===4,
+    name+": as quatro categorias da Loja devem iniciar recolhidas com uma linha de prévias.");
   check((await page.locator("#shopCoins").textContent()).trim()==="2.400",
     name+": o saldo de moedas não apareceu na Loja.");
-  await page.evaluate(async()=>{
-    const original=window.apiRequest;
+  await page.evaluate(()=>{
+    window.__originalShopApiRequest=window.apiRequest;
     window.__shopRequest=null;
     window.apiRequest=async(path,options)=>{
       if(path!=="/api/game/shop")throw new Error("Rota inesperada: "+path);
       window.__shopRequest={path,method:options.method,body:options.body};
       return {economy:{...gameEconomy,coins:gameEconomy.coins-100,ownedAvatars:[...gameEconomy.ownedAvatars,"imagem:2"]},sha:"shop-smoke-sha",newAchievements:[]};
     };
-    try{await purchaseAvatar("imagem:2");}finally{window.apiRequest=original;}
+    purchaseAvatar("imagem:2");
   });
+  check(await page.locator(".shop-confirmation-overlay").isVisible()&&
+    (await page.locator("#shopConfirmTitle").textContent()).includes("Deseja mesmo prosseguir?"),
+    name+": tocar em comprar deve pedir confirmação antes de gastar moedas.");
+  await page.locator("[data-shop-confirm]").click();
+  await page.waitForFunction(()=>!!window.__shopRequest&&!!document.querySelector(".prize-celebration-overlay"));
+  await page.evaluate(()=>{window.apiRequest=window.__originalShopApiRequest;});
   const shopPurchase=await page.evaluate(()=>window.__shopRequest);
   check(shopPurchase?.path==="/api/game/shop"&&shopPurchase?.method==="POST"&&shopPurchase?.body?.avatarKey==="imagem:2",
     name+": a compra não foi enviada ao servidor pela rota oficial da Loja.");
@@ -1108,8 +1129,9 @@ async function testViewport(name, viewport, mobile = false) {
     (await page.locator("#shopCoins").textContent()).trim()==="2.300",
     name+": o avatar comprado não passou para a coleção e o saldo não foi atualizado.");
   check(await page.locator(".prize-celebration-overlay").isVisible()&&
-    (await page.locator(".prize-celebration-card h2").textContent()).includes("Novo avatar"),
-    name+": desbloquear um avatar não mostrou sua comemoração personalizada.");
+    (await page.locator(".prize-celebration-card h2").textContent()).includes("Novo avatar")&&
+    await page.locator(".prize-celebration-item-image").getAttribute("src")==await page.evaluate(()=>avatarImage("imagem:2")),
+    name+": a comemoração precisa mostrar a imagem exata que foi comprada.");
   await page.locator(".prize-celebration-overlay [data-close-prize]").click();
   await page.evaluate(()=>{
     document.querySelector("#profileScreen").classList.add("hidden");
