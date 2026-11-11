@@ -1635,7 +1635,7 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
  </div>
  <button id="start" class="primary">▶ Iniciar treinamento livre</button>
  <div class="review-training-card"><div><span class="music-kicker">SEU TREINO INTELIGENTE</span><h3>🧠 Treino inteligente</h3><p id="reviewTrainingSummary" class="hint">Treino adaptado com contas erradas, difíceis ou demoradas. Ganhe 5 moedas a cada 10 acertos; erros e dificuldades ajudam no aprendizado, mas não contam para moedas.</p></div><button id="startIntelligentTraining" class="review-training-button" type="button">Iniciar treino inteligente</button></div>
- <div id="errorTrainingCard" class="review-training-card hidden"><div><span class="music-kicker">REVISÃO DE ERROS</span><h3>❌ Treine seus erros</h3><p id="errorTrainingSummary" class="hint">Resolva cada conta errada com dois acertos seguidos. Ao concluir todos os erros pendentes, ganhe 10 moedas.</p></div><button id="startErrorTraining" class="review-training-button" type="button">Treinar meus erros</button></div>
+ <div id="errorTrainingCard" class="review-training-card hidden"><div><span class="music-kicker">REVISÃO DE ERROS</span><h3>❌ Treine seus erros</h3><p id="errorTrainingSummary" class="hint">Mostra somente contas erradas no modo Treinar. Cada conta precisa de dois acertos seguidos para sair da lista. Ao concluir, o registro de revisão é limpo, mas as estatísticas são mantidas.</p></div><button id="startErrorTraining" class="review-training-button" type="button">Treinar meus erros</button></div>
  <div id="tournamentErrorTrainingCard" class="review-training-card hidden"><div><span class="music-kicker">REVISÃO DO TORNEIO</span><h3>🏆 Revisar erros do torneio</h3><p id="tournamentErrorTrainingSummary" class="hint">Treine somente as contas que você errou no Torneio mensal, sem misturar com outras modalidades.</p></div><button id="startTournamentErrorTraining" class="review-training-button" type="button">Revisar erros do torneio</button></div>
  <div class="review-training-card"><div><span class="music-kicker">ABAIXO DE 90% DE ACERTOS</span><h3>🎯 Treinar minhas dificuldades</h3><p id="difficultyTrainingSummary" class="hint">Aparecem as contas com menos de 90% de acertos. Esta modalidade continua disponível e concede 5 moedas a cada 10 acertos.</p></div><button id="startDifficultyTraining" class="review-training-button" type="button">Carregar minhas dificuldades</button></div>
  <p class="small">No modo normal, a tabuada segue de 1 a 10. No aleatório, a ordem muda.</p>
@@ -3540,7 +3540,9 @@ function resetErrorTrainingPoolState(item,scope){
  return setErrorTrainingPoolState(item,scope,false);
 }
 function errorTrainingSourceScope(mode){
- if(['training','intelligent_training','difficulty_training','error_training','adventure'].includes(mode))return 'training';
+ // Esta lista recebe somente erros cometidos no treino livre (Treinar).
+ // Treino inteligente, dificuldades, Modo jogo, Desafio e a própria revisão não entram nela.
+ if(mode==='training')return 'training';
  if(mode==='tournament')return 'tournament';
  return null;
 }
@@ -5687,7 +5689,7 @@ function getDifficultyTrainingFacts(){
   .sort((a,b)=>a.accuracy-b.accuracy||b.wrong-a.wrong||b.attempts-a.attempts).slice(0,60);
 }
 function getErrorTrainingFacts(scope='training'){
- const sourceModes=scope==='tournament'?['tournament']:['training','intelligent_training','difficulty_training','error_training','adventure'];
+ const sourceModes=scope==='tournament'?['tournament']:['training'];
  return Object.entries(historyData.questions||{}).flatMap(([key,item])=>{
   if(!item||typeof item!=='object')return [];
   const modes=item.modes&&typeof item.modes==='object'?item.modes:{};
@@ -5714,8 +5716,8 @@ function updateReviewTrainingButton(){
  if(errorCard)errorCard.classList.toggle('hidden',!errors.length);
  if(errorButton){errorButton.disabled=!errors.length;errorButton.textContent=errors.length?'❌ Treinar '+errors.length+' conta(s) errada(s)':'❌ Nenhum erro pendente';}
  if(errorNote)errorNote.textContent=errors.length
-  ?'Inclui erros das modalidades do Treinar e do Modo jogo. Desafios não entram nesta lista, e os erros do Torneio ficam separados. Cada conta precisa de dois acertos seguidos; ao concluir, ganhe 10 moedas.'
-  :'Nenhum erro pendente nas modalidades do Treinar ou no Modo jogo.';
+  ?'Mostra somente contas que você errou no modo Treinar. Erros do Treino inteligente, dificuldades, Modo jogo, Desafio e Torneio não entram aqui. Cada conta precisa de dois acertos seguidos; ao concluir, o registro de erro é limpo, mas as estatísticas continuam guardadas. Ganhe 10 moedas ao concluir.'
+  :'Nenhum erro pendente no modo Treinar. As estatísticas de acertos e erros continuam preservadas.';
  const tournamentErrorCard=$('tournamentErrorTrainingCard'),tournamentErrorButton=$('startTournamentErrorTraining'),tournamentErrorNote=$('tournamentErrorTrainingSummary');
  if(tournamentErrorCard)tournamentErrorCard.classList.toggle('hidden',!tournamentErrors.length);
  if(tournamentErrorButton){tournamentErrorButton.disabled=!tournamentErrors.length;tournamentErrorButton.textContent=tournamentErrors.length?'🏆 Revisar '+tournamentErrors.length+' conta(s) do torneio':'🏆 Nenhum erro de torneio pendente';}
