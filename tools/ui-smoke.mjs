@@ -1100,9 +1100,9 @@ async function testViewport(name, viewport, mobile = false) {
   check(await page.locator("#avatarShopGrid .shop-avatar-card").count()===63,
     name+": a Loja não listou os 23 avatares e as 40 molduras.");
   check(await page.locator("#avatarShopGrid [data-avatar-buy]").count()===21&&
-    await page.locator("#avatarShopGrid [data-frame-buy^='static:']").count()===20&&
-    await page.locator("#avatarShopGrid [data-frame-buy^='animated:']").count()===20&&
-    await page.locator("#avatarShopGrid .shop-avatar-card.owned").count()===2,
+    await page.locator("#avatarShopGrid [data-frame-buy^='static:']").count()===19&&
+    await page.locator("#avatarShopGrid [data-frame-buy^='animated:']").count()===19&&
+    await page.locator("#avatarShopGrid .shop-avatar-card.owned").count()===4,
     name+": a Loja não separou corretamente avatares, molduras e itens adquiridos.");
   check(await page.locator("#avatarShopGrid details.shop-catalog-disclosure").count()===4&&
     await page.locator("#avatarShopGrid details[open]").count()===0&&
