@@ -1315,6 +1315,46 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
 }
 @media(prefers-reduced-motion:reduce){.challenge-start-countdown-card strong.countdown-writing{animation:none}}
 
+
+/* Ajustes minimalistas da interface */
+.profile-actions-disclosure{
+ margin-top:5px;
+ border:0;
+ border-radius:0;
+ background:transparent;
+ overflow:visible;
+}
+.profile-actions-disclosure>summary{
+ justify-content:flex-end;
+ gap:0;
+ min-height:22px;
+ padding:1px 4px;
+ color:#9bb7d4;
+}
+.profile-actions-disclosure>summary:after{
+ display:none;
+ content:none;
+}
+.profile-actions-chevron{
+ display:inline-grid;
+ place-items:center;
+ width:25px;
+ height:22px;
+ border-radius:7px;
+ color:#a9bfd9;
+ font-size:1.15rem;
+ font-weight:700;
+ line-height:1;
+ transition:transform .16s ease,color .16s ease;
+}
+.profile-actions-disclosure[open] .profile-actions-chevron{transform:rotate(180deg)}
+.profile-actions-disclosure>summary:hover .profile-actions-chevron{color:#eaf7ff}
+.mode-hub-heading-simple .music-kicker{
+ color:#eaf7ff;
+ font-size:clamp(1.42rem,4.5vw,1.82rem);
+}
+#challengeListStatus:empty{display:none}
+
 </style>
 </head>
 <body>
@@ -1486,12 +1526,12 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
 
 <section id="setup" class="panel hidden">
 <div class="profile-box">
- <div class="profile-box-heading"><span>👤 SEU PERFIL</span><span class="profile-box-badge">PROGRESSO SALVO</span></div>
+ <div class="profile-box-heading"><span>👤 MEU PERFIL</span><span class="profile-box-badge">PROGRESSO SALVO</span></div>
  <div class="profile-identity"><img id="currentAvatar" alt="Avatar do perfil"><div class="profile-name-wrap"><strong id="currentDisplayName"></strong><small>Conta: <span id="currentUsername"></span></small></div></div>
  <div class="wallet-inline"><span><i class="coin-symbol" aria-hidden="true"></i> Moedas: <strong id="currentCoins">0</strong></span><span>🏆 Conquistas: <strong id="currentAchievementCount">0/21</strong></span></div>
  <input id="profileName" type="hidden">
  <details id="profileActionsDisclosure" class="profile-actions-disclosure">
-  <summary>⚙️ Mais opções do perfil</summary>
+  <summary aria-label="Abrir opções do perfil"><span class="profile-actions-chevron" aria-hidden="true">⌄</span></summary>
   <div class="profile-actions">
    <button id="openProfile" class="music-button" type="button">👤 Meu perfil</button>
    <button id="saveProfile" class="music-button" type="button">💾 Salvar dados</button>
@@ -1505,7 +1545,7 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
 </div>
 <nav class="main-quick-nav" aria-label="Atalhos principais">
  <button id="topReturnToGame" type="button">🎮 Voltar ao jogo</button>
- <button id="navProfile" type="button">👤 Perfil</button>
+ <button id="navProfile" type="button">👤 Meu perfil</button>
  <button id="navTraining" type="button">📘 Treinamento</button>
  <button id="navAdventure" type="button">🗺️ Modo jogo</button>
  <button id="navChallenge" type="button">⚔️ Desafio</button>
@@ -1549,7 +1589,7 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
      <small>Toque para abrir</small>
     </span>
    </summary>
-   <p id="challengeListStatus" class="small" style="text-align:left;margin:12px 0 10px">Buscando seus desafios...</p>
+   <p id="challengeListStatus" class="small" style="text-align:left;margin:12px 0 10px" aria-live="polite"></p>
    <div id="challengeList" class="challenge-list"></div>
   </details>
  </div>
@@ -1793,7 +1833,6 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
  </div>
  <div id="communityRanking" class="community-list"></div>
  <div id="communityPagination" class="list-pagination community-pagination" aria-label="Paginação da comunidade"></div>
- <p class="ranking-local-note community-list-note">Ranking compartilhado entre os participantes cadastrados. Os dados são lidos do repositório privado de dados.</p>
 </div>
 
 <section id="shopScreen" class="community-ranking hidden" aria-labelledby="shopTitle">
@@ -3437,8 +3476,6 @@ async function renderCommunityRanking(){
   }));
   const pager=$('communityPagination');
   pager.innerHTML=pages>1?'<button type="button" class="secondary" data-community-page="prev" '+(communityPage===0?'disabled':'')+'>← Anterior</button><span>Página '+(communityPage+1)+' de '+pages+' · '+users.length+' participantes</span><button type="button" class="secondary" data-community-page="next" '+(communityPage>=pages-1?'disabled':'')+'>Próxima →</button>':'';
-  const note=document.querySelector('.community-list-note');
-  if(note)note.textContent='Mostrando '+(first+1)+'–'+Math.min(first+pageUsers.length,users.length)+' de '+users.length+' participantes. As moedas aparecem ao lado do nome; clique no perfil para abrir mais informações.';
  }catch(error){
   if(renderId!==communityRenderRequest)return;
   box.innerHTML='<div class="community-empty">'+escapeHtml(siteErrorMessage(error))+'</div>';
@@ -4745,7 +4782,7 @@ async function refreshChallengeData(){
     if(!$('challengeResultPanel').classList.contains('hidden'))showChallengeResult(updated);
    }
   }
-  $('challengeListStatus').textContent='Atualizado em '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'. Os avisos são conferidos automaticamente.';
+  $('challengeListStatus').textContent='';
  }catch(error){
   if(error.sessionExpired)return;
   $('challengeListStatus').textContent='Não foi possível atualizar seus desafios: '+siteErrorMessage(error);
