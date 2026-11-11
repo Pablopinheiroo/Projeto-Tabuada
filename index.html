@@ -2600,7 +2600,7 @@ function frameArtworkMarkup(key){
   art=Array.from({length:15},(_,i)=>{const x=24+(i%5)*28,y=20+Math.floor(i/5)*29;return '<g transform="translate('+x+' '+y+')"><path d="M0 -11L10 -5V6L0 12L-10 6V-5Z" fill="'+(i%3===0?a:b)+'" fill-opacity=".7" stroke="'+c+'" stroke-width="2"/><path d="M0 -6V7" stroke="#fff8" stroke-width="1.2"/></g>'}).join('')+
    path('M21 16Q16 31 20 44Q24 50 31 43Q37 38 41 48Q45 58 53 47','none',a,4)+
    path('M107 11Q103 27 110 38Q117 49 123 38Q130 29 137 43','none',a,4)+
-   [frameSvgMotif('bee',39,[a,b,c]),frameSvgMotif('bee',124,[a,b,c])].join('')+
+   '<g transform="translate(39 39) scale(.72)">'+frameSvgMotif('bee',[a,b,c])+'</g><g transform="translate(124 103) scale(.72)">'+frameSvgMotif('bee',[a,b,c])+'</g>'+
    path('M26 128Q45 145 64 136M97 140Q119 126 139 136','none',b,4)+[pearl(64,136,2),pearl(98,140,2)].join('');
   break;
  case 'silver-laurel':
