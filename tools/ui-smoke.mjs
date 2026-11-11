@@ -101,14 +101,22 @@ check(workerSource.includes("async function writeUsersAtomically")&&
   workerSource.includes("communityCoinGifts: true"),
   "A API deve transferir moedas com gravação atômica dos dois saldos e guardar notificações de presentes.");
 check(html.includes("assets/gift-animation.gif")&&
-  html.includes("Presentear com moedas")&&
+  html.includes("aria-label=\"Presentear com moedas\"")&&
   html.includes("data-community-gift-launch")&&
+  html.includes("function ensureCommunityGiftPopover()")&&
+  html.includes("community-gift-popover hidden")&&
+  html.includes("Quantas moedas deseja enviar?")&&
+  html.includes("Saldo disponível: '+coins.toLocaleString('pt-BR')+' moedas.")&&
+  !html.includes("Seu saldo disponível:")&&
+  !html.includes("community-gift-action")&&
+  !html.includes("O valor será descontado do seu saldo")&&
+  !html.includes("No modo normal, a tabuada segue de 1 a 10.")&&
   html.includes("function pollGiftInbox()")&&
   html.includes("data-gift-toast-dismiss")&&
   !html.includes("community-presence-initial")&&
   !html.includes("community-presence-dot")&&
   !html.includes("community-last-online::first-letter"),
-  "A comunidade deve exibir o presente animado já na lista de participantes, a notificação fechável e a presença com texto normal, sem verde.");
+  "A comunidade deve manter o cartão antigo, mostrar apenas o presente animado sem fundo, abrir o formulário em balão flutuante e manter a presença normal.");
 const workerTestSource=workerSource.replace("export default {","globalThis.__workerDefault = {");
 const workerContext={Date,Set,Map,Object,Array,Number,String,Math,RegExp,JSON,TextEncoder,TextDecoder,Uint8Array,Response,Headers,URL};
 vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;globalThis.__normalizeGameEconomy=normalizeGameEconomy;globalThis.__applyTrainingCorrectReward=applyTrainingCorrectReward;globalThis.__applyIntelligentTrainingReward=applyIntelligentTrainingReward;globalThis.__applyErrorTrainingReward=applyErrorTrainingReward;",workerContext);
