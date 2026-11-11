@@ -675,6 +675,7 @@ async function testViewport(name, viewport, mobile = false) {
       const cleanupReappearsAfterTrainingMiss=getErrorTrainingFacts('training').some(value=>value.a===7&&value.b===7);
       // A conta 7×7 já foi validada acima; volta a ocultá-la para isolar o teste seguinte.
       setErrorTrainingPoolState(historyData.questions["7x7"],'training',true);
+      setErrorTrainingPoolState(historyData.questions["7x7"],'training',true);
       ['intelligent_training','difficulty_training','error_training','adventure','challenge'].forEach(mode=>{
         addAnswerToHistory({a:2,b:3,correct:false,timeMs:250,mode});
       });
