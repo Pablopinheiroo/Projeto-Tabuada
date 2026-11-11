@@ -3879,10 +3879,9 @@ function closeProfileScreen(resumeMusic=soundOn){
  setMusicCategory('principal',!!resumeMusic);
  $('profileScreen').classList.add('hidden');
  $('setup').classList.remove('hidden');
- setMainContentSections({hub:true,community:true});
+ setMainContentSections({hub:true});
  $('modeHub').scrollIntoView({behavior:'smooth',block:'start'});
  refreshProfileIdentity();
- renderCommunityRanking();
 }
 
 
@@ -3938,7 +3937,7 @@ function showChallengeSubPanel(name){
 function openChallengeMode(){
  challengeBetMode=false;
  setMusicCategory('desafio',true);
- setMainContentSections({challenge:true,community:true});
+ setMainContentSections({challenge:true});
  showMusicMenuMinimized();
  if(soundtrackAudio)soundtrackAudio.pause();
  clearMainMusicTimer();
@@ -4765,7 +4764,7 @@ function showTournamentSubPanel(id){
 }
 function openTournamentMode(){
  setMusicCategory('torneio',true);
- setMainContentSections({tournament:true,community:true});
+ setMainContentSections({tournament:true});
  showTournamentSubPanel('tournamentHomePanel');
  refreshTournamentDashboard();
 }
@@ -5310,6 +5309,7 @@ function setMainContentSections({hub=false,training=false,adventure=false,challe
 }
 function showCommunityOnly(){
  setMainContentSections({community:true});
+ renderCommunityRanking();
  $('communitySection').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function showShopOnly(){
@@ -5319,7 +5319,7 @@ function showShopOnly(){
 }
 function showModeHub(){
  setMusicCategory('principal',true);
- setMainContentSections({hub:true,community:true});
+ setMainContentSections({hub:true});
 }
 function showTrainingMode(){
  setMusicCategory('treinamento',true);
