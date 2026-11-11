@@ -271,10 +271,11 @@ check(modeCardOrder.every((position,index)=>position>=0&&(index===0||position>mo
   !modeHubMarkup.includes("Você pode treinar livremente"),
   "A jornada deve mostrar somente o título centralizado e os modos na ordem Treinamento, Modo Jogo, Desafio e Torneio.");
 check(html.includes('<div id="communitySection" class="community-ranking hidden">')&&
-  html.includes("if(topReturn)topReturn.classList.toggle('hidden',shop||adventure);")&&
-  html.includes('<div id="gameReturnFooter" class="game-return-footer hidden">')&&
-  html.includes("shopReturnFooter.classList.toggle('hidden',!shop);"),
-  "A Comunidade deve iniciar oculta e o atalho Voltar ao jogo deve desaparecer enquanto o Modo Jogo estiver aberto.");
+  html.includes('<button id="topReturnToGame" type="button">🎮 Voltar ao jogo</button>')&&
+  html.includes("O atalho principal de retorno permanece disponível em todas as modalidades.")&&
+  !html.includes("topReturn.classList.toggle('hidden'")&&!html.includes('id="gameReturnFooter"')&&
+  !html.includes('id="bottomReturnToGame"'),
+  "A Comunidade deve iniciar oculta e o botão principal Voltar ao jogo deve permanecer disponível, sem um segundo botão duplicado.");
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(match => match[1]);
 const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
 check(duplicates.length === 0, "IDs HTML repetidos: " + [...new Set(duplicates)].join(", "));
@@ -1789,23 +1790,16 @@ const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && sou
     const visible=Object.keys(actual).filter(id=>actual[id]).sort();
     const wanted=[...expected].sort();
     check(JSON.stringify(visible)===JSON.stringify(wanted),name+": seções incorretas em "+label+": "+JSON.stringify(visible));
+    const returnButton=page.locator("#topReturnToGame");
+    check(!(await returnButton.evaluate(el=>el.classList.contains("hidden")))&&
+      await returnButton.isVisible(),name+": o botão Voltar ao jogo sumiu em "+label+".");
     await assertMusicMenuMinimized(label);
   };
   await assertVisibleSections(["modeHub"],"menu inicial");
-  check(await page.locator("#gameReturnFooter").evaluate(el=>el.classList.contains("hidden")),
-    name + ": o botão Voltar ao jogo do rodapé aparece na página inicial.");
   await page.locator("#navShop").click();
   await assertVisibleSections(["shopScreen"],"Loja");
-  check(!(await page.locator("#gameReturnFooter").evaluate(el=>el.classList.contains("hidden"))),
-    name + ": o botão inferior de retorno não aparece na Loja.");
-  const shopReturnButtons=await page.locator("button").evaluateAll(items=>items.filter(button=>
-    button.getClientRects().length&&/Voltar ao jogo/i.test(button.textContent||"")).map(button=>button.id));
-  check(JSON.stringify(shopReturnButtons)===JSON.stringify(["bottomReturnToGame"]),
-    name+": a Loja deve ter uma única opção visível de Voltar ao jogo: "+JSON.stringify(shopReturnButtons));
   await page.locator("#navCommunity").click();
   await assertVisibleSections(["communitySection"],"Comunidade");
-  check(await page.locator("#gameReturnFooter").evaluate(el=>el.classList.contains("hidden")),
-    name + ": o botão Voltar ao jogo do rodapé aparece dentro da Comunidade.");
   check(!(await page.locator("#communitySection").evaluate(el=>el.classList.contains("hidden"))),
     name + ": a Comunidade não apareceu ao entrar no modo Comunidade.");
   await page.locator("#topReturnToGame").click();
@@ -1859,10 +1853,6 @@ const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && sou
   check(!(await page.locator("#adventureMapView").evaluate(el => el.classList.contains("hidden"))), name + ": botão Modo Jogo não abriu o mapa da aventura.");
   check((await page.locator("#musicCategoryKicker").textContent()).includes("MODO JOGO"), name + ": música não mudou para Modo Jogo.");
   await assertVisibleSections(["adventureMapView"],"Modo Jogo");
-  check(await page.locator("#topReturnToGame").evaluate(el=>el.classList.contains("hidden")),
-    name + ": o botão Voltar ao jogo continua aparecendo dentro do Modo Jogo.");
-  check(await page.locator("#gameReturnFooter").evaluate(el=>el.classList.contains("hidden")),
-    name + ": o botão Voltar ao jogo do rodapé aparece dentro do Modo Jogo.");
   await page.locator("#backToModeHubMap").click();
   await assertVisibleSections(["modeHub"],"retorno do Modo Jogo");
 
