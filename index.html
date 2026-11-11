@@ -4107,6 +4107,7 @@ function renderChallengePlayers(){
 }
 async function createBetChallengeForPlayer(recipients){
  const config=getChallengeConfig();if(!config)return;
+ requestChallengeFullscreen();
  const players=[...new Set(recipients)].filter(name=>name!==activeProfile);
  const raw=String($('challengeBetAmount').value||'').trim();
  const stake=raw!==''?Number(raw):0;
@@ -4323,7 +4324,7 @@ function renderChallengeList(){
   if(item.betMode&&item.status==='rejected'&&side==='sent'&&item.retryAvailable){
    retryControl='<div class="challenge-retry-box">'+
     '<label for="challengeRetryStake-'+item.id+'">🪙 Nova aposta (moedas)'+
-    '<input id="challengeRetryStake-'+item.id+'" type="number" min="1" step="1" inputmode="numeric" value="'+Number(item.stake||1)+'" autocomplete="off">'+
+    '<input id="challengeRetryStake-'+item.id+'" type="number" min="1" max="'+Math.max(0,Number(gameEconomy.coins)||0)+'" step="1" inputmode="numeric" value="'+Number(item.stake||1)+'" autocomplete="off">'+
     '</label><button type="button" data-challenge-retry="'+item.id+'">Desafiar novamente</button>'+
     '<small class="challenge-retry-note">Será usado exatamente o resultado desta partida, com um novo convite. Esta é a única nova tentativa permitida para a mesma partida.</small></div>';
   }else if(item.betMode&&item.status==='rejected'&&side==='sent'){
