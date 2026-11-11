@@ -297,10 +297,10 @@ check(html.includes('id="startIntelligentTraining"')&&html.includes('id="startEr
 check(html.includes("function getErrorTrainingPoolState(item,scope)")&&
   html.includes("function setErrorTrainingPoolState(item,scope,correct)")&&
   html.includes("function errorTrainingSourceScope(mode)")&&
-  html.includes("const sourceModes=scope==='tournament'?['tournament']:['training','intelligent_training','difficulty_training','error_training','adventure']")&&
+  html.includes("const sourceModes=scope==='tournament'?['tournament']:['training']")&&
   html.includes("trainingModeType==='tournamentErrors'?'tournament_error_training'")&&
   html.includes("trainingModeType==='errors'||trainingModeType==='tournamentErrors'"),
-  "Os erros precisam ter progresso separado por origem: Treinar/Modo jogo e Torneio.");
+  "A revisão deve usar somente erros do modo Treinar e manter o Torneio separado.");
 check(html.includes("const modes=item.modes&&typeof item.modes==='object'?item.modes:{}")&&
   html.includes("const wrong=sourceModes.reduce(")&&
   html.includes("const scope=errorTrainingSourceScope(mode);")&&
@@ -525,44 +525,55 @@ async function testViewport(name, viewport, mobile = false) {
       setErrorTrainingPoolState(item,'training',true);
       const trainingAfterResolved=getErrorTrainingFacts('training').length;
       const tournamentAfterTrainingResolved=getErrorTrainingFacts('tournament').length;
+      const allSkillsAfterResolved=collectLearningFacts().find(value=>value.a===2&&value.b===3);
       addAnswerToHistory({a:2,b:3,correct:false,timeMs:250,mode:'challenge'});
       const allSkillsAfterChallenge=collectLearningFacts().find(value=>value.a===2&&value.b===3);
       const trainingAfterChallenge=getErrorTrainingFacts('training').length;
       const tournamentAfterChallenge=getErrorTrainingFacts('tournament').length;
       setErrorTrainingPoolState(item,'tournament',true);
       setErrorTrainingPoolState(item,'tournament',true);
+      const modeBreakdown=profileLearningStats().modes;
+      ['intelligent_training','difficulty_training','error_training','adventure','challenge'].forEach(mode=>{
+        addAnswerToHistory({a:2,b:3,correct:false,timeMs:250,mode});
+      });
+      const trainingAfterOtherModeMisses=getErrorTrainingFacts('training').length;
+      addAnswerToHistory({a:2,b:3,correct:false,timeMs:250,mode:'training'});
+      const trainingAfterNewRegularMiss=getErrorTrainingFacts('training').map(value=>({a:value.a,b:value.b,wrong:value.wrong}));
       return {
         trainingBefore,tournamentBefore,regularCardVisible,tournamentCardVisible,
         allSkillsBefore:{wrong:allSkillsBefore?.wrong,attempts:allSkillsBefore?.attempts},
+        allSkillsAfterResolved:{wrong:allSkillsAfterResolved?.wrong,attempts:allSkillsAfterResolved?.attempts},
         challengeOnlySkill:{wrong:challengeOnlySkill?.wrong,attempts:challengeOnlySkill?.attempts},
         challengeOnlyInTraining,
         trainingAfterResolved,tournamentAfterTrainingResolved,
         allSkillsAfterChallenge:{wrong:allSkillsAfterChallenge?.wrong,attempts:allSkillsAfterChallenge?.attempts},
         trainingAfterChallenge,tournamentAfterChallenge,
         tournamentAfterResolved:getErrorTrainingFacts('tournament').length,
-        modeBreakdown:profileLearningStats().modes,
-        modes:item.modes
+        trainingAfterOtherModeMisses,trainingAfterNewRegularMiss,
+        modeBreakdown,modes:item.modes
       };
     }finally{
       historyData=originalHistory;saveHistory=originalSave;updateReviewTrainingButton=originalUpdate;playFeedback=originalFeedback;
     }
   });
-  check(JSON.stringify(separatedErrorPools.trainingBefore)==='[6]'&&
+  check(JSON.stringify(separatedErrorPools.trainingBefore)==='[1]'&&
     JSON.stringify(separatedErrorPools.tournamentBefore)==='[3]',
-    name+": a lista de erros misturou modalidades; deve somar Treinar+Modo jogo separadamente do Torneio ("+JSON.stringify(separatedErrorPools)+").");
+    name+": a lista deve conter somente erros do modo Treinar, sem misturar as outras modalidades ("+JSON.stringify(separatedErrorPools)+").");
   check(separatedErrorPools.regularCardVisible&&separatedErrorPools.tournamentCardVisible,
     name+": os dois cartões de revisão não apareceram quando existem erros nas respectivas modalidades: "+JSON.stringify({training:separatedErrorPools.trainingBefore,tournament:separatedErrorPools.tournamentBefore,regular:separatedErrorPools.regularCardVisible,tournamentCard:separatedErrorPools.tournamentCardVisible}));
   check(separatedErrorPools.allSkillsBefore?.wrong===14&&separatedErrorPools.allSkillsBefore?.attempts===18&&
     separatedErrorPools.challengeOnlySkill?.wrong===2&&separatedErrorPools.challengeOnlySkill?.attempts===2&&
     !separatedErrorPools.challengeOnlyInTraining,
     name+": o Desafio deve aparecer nas estatísticas gerais, mas não deve criar sugestões de treino.");
-  check(separatedErrorPools.trainingAfterResolved===0&&separatedErrorPools.tournamentAfterTrainingResolved===1,
-    name+": resolver os erros do Treinar afetou a lista de erros do Torneio.");
+  check(separatedErrorPools.trainingAfterResolved===0&&separatedErrorPools.tournamentAfterTrainingResolved===1&&
+    separatedErrorPools.allSkillsAfterResolved?.wrong===14&&separatedErrorPools.allSkillsAfterResolved?.attempts===18,
+    name+": limpar erros concluídos deveria ocultar somente a revisão pendente e preservar as estatísticas gerais.");
   check(separatedErrorPools.allSkillsAfterChallenge?.wrong===15&&separatedErrorPools.allSkillsAfterChallenge?.attempts===19,
     name+": uma resposta errada no Desafio não entrou nas estatísticas gerais de habilidade.");
   check(separatedErrorPools.trainingAfterChallenge===0&&separatedErrorPools.tournamentAfterChallenge===1&&
-    separatedErrorPools.tournamentAfterResolved===0,
-    name+": um erro no Desafio alterou indevidamente os treinos separados, ou a revisão do Torneio não ficou independente.");
+    separatedErrorPools.tournamentAfterResolved===0&&separatedErrorPools.trainingAfterOtherModeMisses===0&&
+    JSON.stringify(separatedErrorPools.trainingAfterNewRegularMiss)==='[{"a":2,"b":3,"wrong":2}]',
+    name+": somente um novo erro no modo Treinar deve recolocar a conta na revisão; erros de outras modalidades não devem.");
   check(separatedErrorPools.modeBreakdown.training.attempts===5&&separatedErrorPools.modeBreakdown.challenge.attempts===8&&
     separatedErrorPools.modeBreakdown.challenge.wrong===7&&separatedErrorPools.modeBreakdown.tournament.attempts===4&&
     separatedErrorPools.modeBreakdown.tournamentReview.attempts===1,
