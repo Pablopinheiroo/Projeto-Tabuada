@@ -129,6 +129,11 @@ check(html.includes("👤 MEU PERFIL")&&
   !html.includes("community-list-note")&&
   html.includes("#challengeListStatus:empty{display:none}"),
   "Perfil, seta de opções, título da jornada e textos de status não seguem o visual minimalista solicitado.");
+check(html.includes(".community-gift-popover{position:fixed;top:max(14px,env(safe-area-inset-top));")&&
+  html.includes("@media(max-width:560px){.community-gift-popover{top:max(12px,env(safe-area-inset-top));")&&
+  html.includes("max-height:min(72dvh,600px)")&&
+  !html.includes(".community-gift-popover{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:"),
+  "O balão de presentear deve ficar no topo, centralizado no celular e fora da área coberta pelo teclado.");
 const workerTestSource=workerSource.replace("export default {","globalThis.__workerDefault = {");
 const workerContext={Date,Set,Map,Object,Array,Number,String,Math,RegExp,JSON,TextEncoder,TextDecoder,Uint8Array,Response,Headers,URL};
 vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;globalThis.__normalizeGameEconomy=normalizeGameEconomy;globalThis.__applyTrainingCorrectReward=applyTrainingCorrectReward;globalThis.__applyIntelligentTrainingReward=applyIntelligentTrainingReward;globalThis.__applyErrorTrainingReward=applyErrorTrainingReward;",workerContext);
