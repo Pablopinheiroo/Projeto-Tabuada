@@ -4121,8 +4121,15 @@ async function createBetChallengeForPlayer(recipients){
   const result=await apiRequest('/api/challenges',{method:'POST',body:{...config,recipients:players,betMode:true,stake}});
   challengeCurrent=result.challenge;
   challengeItems=[challengeCurrent,...challengeItems.filter(item=>item.id!==challengeCurrent.id)];
-  await startChallengeGame(challengeCurrent,'challenger');
-  $('challengeListStatus').textContent='Sua partida foi registrada. Depois dela, a pessoa receberá o convite para aceitar ou rejeitar a aposta.';
+  if(challengeCurrent.status==='challenger_playing'){
+   await startChallengeGame(challengeCurrent,'challenger');
+   $('challengeListStatus').textContent='Sua partida foi registrada. Depois dela, a pessoa receberá o convite para aceitar ou rejeitar a aposta.';
+  }else{
+   // Compatibilidade enquanto o Worker ainda não recebeu a versão com partida antes do convite.
+   showChallengeSubPanel('challengeHomePanel');
+   await refreshChallengeData();
+   $('challengeListStatus').textContent='Convite enviado. A pessoa precisa aceitar antes de qualquer moeda ser retirada. A partida antes do convite será ativada após a atualização do servidor.';
+  }
  }catch(error){
   $('challengePlayersStatus').textContent='Não foi possível enviar a aposta: '+siteErrorMessage(error);
   updateChallengeSelectedCount();
@@ -4327,7 +4334,8 @@ function renderChallengeList(){
     '<input id="challengeRetryStake-'+item.id+'" type="number" min="1" max="'+Math.max(0,Number(gameEconomy.coins)||0)+'" step="1" inputmode="numeric" value="'+Number(item.stake||1)+'" autocomplete="off">'+
     '</label><button type="button" data-challenge-retry="'+item.id+'">Desafiar novamente</button>'+
     '<small class="challenge-retry-note">Será usado exatamente o resultado desta partida, com um novo convite. Esta é a única nova tentativa permitida para a mesma partida.</small></div>';
-  }else if(item.betMode&&item.status==='rejected'&&side==='sent'){
+  }else if(item.betMode&&item.status==='rejected'&&side==='sent'&&
+    (Number(item.retryCount)>=1||item.retryUsed===true)){
    retryControl='<small class="challenge-retry-note">Esta partida já usou a nova tentativa. Para desafiar novamente, será necessário jogar outra partida.</small>';
   }
   const unread=side==='received'?isUnreadChallengeReceipt(item):side==='results'?!resultSeen.has(item.id):false;
