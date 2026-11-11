@@ -374,6 +374,7 @@ check(html.includes('shop-catalog-disclosure')&&html.includes('Clique aqui para 
   html.includes('function frameArtworkMarkup(key)')&&html.includes('function frameMaterialPattern(material,colors)')&&
   html.includes('Anel de Carvalho')&&html.includes('Dança das Pétalas')&&
   html.includes('motion-petals')&&html.includes('framePetalFlutter')&&
+  html.includes("frameArtworkMarkup(user.profileFrame||'')")&&
   html.includes('Deseja mesmo prosseguir?')&&html.includes('data-shop-confirm')&&
   html.includes('imageSrc')&&html.includes('prize-celebration-item-image')&&
   html.includes('id="profileFrameGrid"')&&html.includes('profileFrame=selectedProfileFrame')&&
