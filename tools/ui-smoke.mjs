@@ -175,7 +175,8 @@ const profileActionsEnd=html.indexOf('</details>',profileActionsStart);
 const profileActionsMarkup=profileActionsStart>=0&&profileActionsEnd>profileActionsStart?
   html.slice(profileActionsStart,profileActionsEnd+10):"";
 const walletMarkup=html.indexOf('id="currentCoins"');
-check(profileActionsMarkup.includes('<summary>👤 Meu perfil</summary>')&&
+check(profileActionsMarkup.includes('<summary>⚙️ Mais opções do perfil</summary>')&&
+  profileActionsMarkup.includes('id="openProfile"')&&
   !/^<details[^>]*\sopen(?:\s|>|=)/i.test(profileActionsMarkup)&&
   profileActionsMarkup.includes('id="saveProfile"')&&
   profileActionsMarkup.includes('id="openProfileStats"')&&
