@@ -5062,8 +5062,9 @@ function completeErrorTraining(){
   const completingGeneration=trainingSessionGeneration;
   const prefix=trainingModeType==='tournamentErrors'?'tournament-error-training-complete':'error-training-complete';
   const claimId=newTrainingRewardClaimId(prefix);
-  queueTrainingSessionReward('error_training_complete',{claimId}).then(async()=>{
-   await finishSession();
+  // Enfileira a recompensa e mostra a conclusão antes de aguardar sua confirmação.
+  queueTrainingSessionReward('error_training_complete',{claimId});
+  finishSession().finally(()=>{
    if(trainingSessionGeneration===completingGeneration){
     trainingModeType='standard';trainingReviewMode=false;
     updateReviewTrainingButton();
@@ -5094,15 +5095,17 @@ function next(){
      const isReview=trainingReviewMode;
      const completingGeneration=trainingSessionGeneration;
      const claimId=crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);
-     claimGameReward('training_cycle',{claimId,learningFromErrors:isReview}).then(result=>{
-      const remaining=isReview?getCurrentReviewFacts():[];
-      showTrainingCycleCelebration(result,isReview,isReview&&remaining.length===0,completingGeneration);
-     });
+     queueTrainingSessionReward('training_cycle',{claimId,learningFromErrors:isReview});
      if(trainingReviewMode){
       const remaining=getCurrentReviewFacts();
       trainingReviewFacts=trainingModeType==='intelligent'?expandMistakeTrainingFacts(remaining):remaining.map(item=>({a:item.a,b:item.b}));
       if(!trainingReviewFacts.length){
        $('profileStatus').textContent='Parabéns! Todas as contas deste treino atingiram pelo menos 90% de acertos.';
+       finishSession().finally(()=>{
+        if(trainingSessionGeneration===completingGeneration){
+         trainingReviewMode=false;trainingModeType='standard';
+        }
+       });
        return;
       }
      }
