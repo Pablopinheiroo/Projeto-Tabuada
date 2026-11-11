@@ -641,7 +641,7 @@ function safeChallengeSummary(challenge, username) {
     retryCount: Math.max(0, Number(challenge.retryCount) || 0),
     retryUsed: challenge.retryUsed === true,
     retryAvailable: challenge.betMode === true && username === challenge.challenger &&
-      challenge.status === "rejected" && Number(challenge.retryCount) < 1 &&
+      challenge.status === "rejected" && Number(challenge.retryCount || 0) < 1 &&
       challenge.retryUsed !== true && !!challenge.results?.[challenge.challenger],
     myResult, otherResult: other ? (challenge.results?.[other] || null) : null
   };
