@@ -1327,37 +1327,58 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
 
 /* Ajustes minimalistas da interface */
 .profile-actions-disclosure{
- margin-top:5px;
+ margin:0;
  border:0;
  border-radius:0;
  background:transparent;
  overflow:visible;
 }
-.profile-actions-disclosure>summary{
- justify-content:flex-end;
- gap:0;
- min-height:22px;
- padding:1px 4px;
- color:#9bb7d4;
+.profile-actions-disclosure>.profile-card-summary{
+ display:block;
+ min-height:0;
+ padding:0;
+ color:inherit;
+ cursor:pointer;
+ list-style:none;
 }
-.profile-actions-disclosure>summary:after{
+.profile-actions-disclosure>.profile-card-summary::-webkit-details-marker{display:none}
+.profile-actions-disclosure>.profile-card-summary:after{
  display:none;
  content:none;
+}
+.profile-summary-wallet-row{
+ display:flex;
+ align-items:center;
+ gap:8px;
+ min-width:0;
+}
+.profile-summary-wallet-row .wallet-inline{
+ flex:1 1 auto;
+ min-width:0;
+ margin:0;
 }
 .profile-actions-chevron{
  display:inline-grid;
  place-items:center;
- width:25px;
- height:22px;
- border-radius:7px;
+ flex:0 0 26px;
+ width:26px;
+ height:26px;
+ border-radius:8px;
  color:#a9bfd9;
- font-size:1.15rem;
+ font-size:1.2rem;
  font-weight:700;
  line-height:1;
- transition:transform .16s ease,color .16s ease;
+ transition:transform .16s ease,color .16s ease,background .16s ease;
 }
 .profile-actions-disclosure[open] .profile-actions-chevron{transform:rotate(180deg)}
-.profile-actions-disclosure>summary:hover .profile-actions-chevron{color:#eaf7ff}
+.profile-actions-disclosure>.profile-card-summary:hover .profile-actions-chevron{color:#eaf7ff;background:#ffffff0c}
+.profile-actions-disclosure>.profile-card-summary:focus-visible{outline:2px solid #67e8f9;outline-offset:4px;border-radius:10px}
+@media(max-width:390px){
+ .profile-summary-wallet-row{gap:5px}
+ .profile-actions-chevron{flex-basis:23px;width:23px;height:24px}
+ .profile-summary-wallet-row .wallet-inline{padding:9px 10px;gap:7px;font-size:.78rem}
+ .wallet-inline strong{font-size:.98rem}
+}
 .mode-hub-heading-simple .music-kicker{
  color:#eaf7ff;
  font-size:clamp(1.42rem,4.5vw,1.82rem);
@@ -1535,12 +1556,16 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
 
 <section id="setup" class="panel hidden">
 <div class="profile-box">
- <div class="profile-box-heading"><span>👤 MEU PERFIL</span><span class="profile-box-badge">PROGRESSO SALVO</span></div>
- <div class="profile-identity"><img id="currentAvatar" alt="Avatar do perfil"><div class="profile-name-wrap"><strong id="currentDisplayName"></strong><small>Conta: <span id="currentUsername"></span></small></div></div>
- <div class="wallet-inline"><span><i class="coin-symbol" aria-hidden="true"></i> Moedas: <strong id="currentCoins">0</strong></span><span>🏆 Conquistas: <strong id="currentAchievementCount">0/21</strong></span></div>
  <input id="profileName" type="hidden">
  <details id="profileActionsDisclosure" class="profile-actions-disclosure">
-  <summary aria-label="Abrir opções do perfil"><span class="profile-actions-chevron" aria-hidden="true">⌄</span></summary>
+  <summary class="profile-card-summary" aria-label="Expandir ou recolher opções do perfil">
+   <div class="profile-box-heading"><span>👤 MEU PERFIL</span><span class="profile-box-badge">PROGRESSO SALVO</span></div>
+   <div class="profile-identity"><img id="currentAvatar" alt="Avatar do perfil"><div class="profile-name-wrap"><strong id="currentDisplayName"></strong><small>Conta: <span id="currentUsername"></span></small></div></div>
+   <div class="profile-summary-wallet-row">
+    <span class="profile-actions-chevron" aria-hidden="true">⌄</span>
+    <div class="wallet-inline"><span><i class="coin-symbol" aria-hidden="true"></i> Moedas: <strong id="currentCoins">0</strong></span><span>🏆 Conquistas: <strong id="currentAchievementCount">0/21</strong></span></div>
+   </div>
+  </summary>
   <div class="profile-actions">
    <button id="openProfile" class="music-button" type="button">👤 Meu perfil</button>
    <button id="saveProfile" class="music-button" type="button">💾 Salvar dados</button>
