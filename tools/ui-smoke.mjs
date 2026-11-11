@@ -520,6 +520,8 @@ async function testViewport(name, viewport, mobile = false) {
       const challengeOnlySkill=collectLearningFacts().find(item=>item.a===6&&item.b===7);
       const challengeOnlyInTraining=getIntelligentTrainingFacts().some(item=>item.a===6&&item.b===7)||
         getDifficultyTrainingFacts().some(item=>item.a===6&&item.b===7);
+      const nonStandardErrorSources=['intelligent_training','difficulty_training','error_training','adventure','challenge']
+        .map(mode=>errorTrainingSourceScope(mode));
       const item=historyData.questions["2x3"];
       setErrorTrainingPoolState(item,'training',true);
       setErrorTrainingPoolState(item,'training',true);
@@ -544,7 +546,7 @@ async function testViewport(name, viewport, mobile = false) {
         allSkillsBefore:{wrong:allSkillsBefore?.wrong,attempts:allSkillsBefore?.attempts},
         allSkillsAfterResolved:{wrong:allSkillsAfterResolved?.wrong,attempts:allSkillsAfterResolved?.attempts},
         challengeOnlySkill:{wrong:challengeOnlySkill?.wrong,attempts:challengeOnlySkill?.attempts},
-        challengeOnlyInTraining,
+        challengeOnlyInTraining,nonStandardErrorSources,
         trainingAfterResolved,tournamentAfterTrainingResolved,
         allSkillsAfterChallenge:{wrong:allSkillsAfterChallenge?.wrong,attempts:allSkillsAfterChallenge?.attempts},
         trainingAfterChallenge,tournamentAfterChallenge,
@@ -563,8 +565,9 @@ async function testViewport(name, viewport, mobile = false) {
     name+": os dois cartões de revisão não apareceram quando existem erros nas respectivas modalidades: "+JSON.stringify({training:separatedErrorPools.trainingBefore,tournament:separatedErrorPools.tournamentBefore,regular:separatedErrorPools.regularCardVisible,tournamentCard:separatedErrorPools.tournamentCardVisible}));
   check(separatedErrorPools.allSkillsBefore?.wrong===14&&separatedErrorPools.allSkillsBefore?.attempts===18&&
     separatedErrorPools.challengeOnlySkill?.wrong===2&&separatedErrorPools.challengeOnlySkill?.attempts===2&&
-    !separatedErrorPools.challengeOnlyInTraining,
-    name+": o Desafio deve aparecer nas estatísticas gerais, mas não deve criar sugestões de treino.");
+    !separatedErrorPools.challengeOnlyInTraining&&
+    separatedErrorPools.nonStandardErrorSources.every(scope=>scope===null),
+    name+": as estatísticas gerais devem continuar completas, mas os outros modos não podem alimentar a revisão de erros do Treinar.");
   check(separatedErrorPools.trainingAfterResolved===0&&separatedErrorPools.tournamentAfterTrainingResolved===1&&
     separatedErrorPools.allSkillsAfterResolved?.wrong===14&&separatedErrorPools.allSkillsAfterResolved?.attempts===18,
     name+": limpar erros concluídos deveria ocultar somente a revisão pendente e preservar as estatísticas gerais.");
