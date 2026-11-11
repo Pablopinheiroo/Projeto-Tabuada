@@ -95,6 +95,8 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .profile-identity .avatar-frame-shell{position:relative;isolation:isolate;display:inline-grid;place-items:center;flex:0 0 62px;width:62px;height:62px;border-radius:50%;box-sizing:border-box;background:transparent}
 .profile-identity .avatar-frame-shell.has-frame{flex-basis:76px;width:76px;height:76px;padding:6px}
 .profile-identity .avatar-frame-shell>img{position:relative;z-index:1;display:block;flex:none;width:100%;height:100%;border:2px solid #67dff5;border-radius:50%;object-fit:cover;background:#13223c;box-shadow:0 0 0 4px #22d3ee20,0 5px 14px #02061766}
+.avatar-frame-shell{position:relative;isolation:isolate;display:inline-grid;place-items:center;flex:0 0 62px;width:62px;height:62px;border-radius:50%;box-sizing:border-box;background:transparent;vertical-align:middle}
+.avatar-frame-shell>img{position:relative;z-index:1;display:block;flex:none;width:100%;height:100%;border-radius:50%;object-fit:cover}
 .avatar-frame-shell.has-frame::before{content:"";position:absolute;z-index:0;inset:0;border-radius:50%;background:linear-gradient(135deg,var(--frame-a),var(--frame-b),var(--frame-c));box-shadow:0 0 0 2px var(--frame-b),0 0 14px var(--frame-a)}
 .avatar-frame-shell.has-frame>img{border-color:var(--frame-c);box-shadow:0 0 0 2px #071426,0 4px 12px #02061788}
 .avatar-frame-shell.frame-animated::before{background:conic-gradient(from 0deg,var(--frame-a),var(--frame-b),var(--frame-c),var(--frame-a));animation:profileFrameSpin 4.8s linear infinite}
