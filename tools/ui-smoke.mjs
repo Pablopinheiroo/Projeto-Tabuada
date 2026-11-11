@@ -85,7 +85,7 @@ check(workerSource.includes("invalidateCommunitySummaryCache()")&&
   "O cache público da comunidade não é invalidado ou marcado com a versão dos dados.");
 check(workerSource.includes("mergeHistorySnapshots(")&&workerSource.includes("body.baseSha"),
   "A API não protege o histórico contra snapshots antigos.");
-check(workerSource.includes('const WORKER_BUILD_ID = "2026-11-11-community-coin-gifts-v1"')&&
+check(workerSource.includes('const WORKER_BUILD_ID = "2026-11-11-tournament-30day-unique-facts-v1"')&&
   workerSource.includes("PRESENCE_MIN_WRITE_INTERVAL_MS")&&
   workerSource.includes('if (route === "/api/presence" && request.method === "POST")')&&
   workerSource.includes("profile: { ...profile, lastOnlineAt }")&&
@@ -93,6 +93,20 @@ check(workerSource.includes('const WORKER_BUILD_ID = "2026-11-11-community-coin-
   workerSource.includes("lastOnlineAt: typeof profile.lastOnlineAt")&&
   workerSource.includes("lastOnlinePresence: true"),
   "A API precisa registrar e devolver a última presença da comunidade, com proteção contra gravações excessivas.");
+check(workerSource.includes("const TOURNAMENT_CYCLE_DURATION_MS = 30 * 24 * 60 * 60 * 1000;")&&
+  workerSource.includes('const TOURNAMENT_CYCLE_EPOCH_MS = Date.parse("2026-11-11T00:00:00-03:00");')&&
+  workerSource.includes("function currentTournamentCycle(date = new Date())")&&
+  workerSource.includes("const seenFacts = new Set();")&&
+  workerSource.includes("if (seenFacts.has(factKey)) continue;")&&
+  workerSource.includes("tournament30DayCycles: true")&&
+  workerSource.includes("tournamentUniqueMultiplications: true"),
+  "O torneio precisa renovar automaticamente a cada 30 dias e impedir multiplicações repetidas.");
+check(html.includes('id="tournamentRenewalStatus"')&&
+  html.includes("function renderTournamentSeasonStatus(season)")&&
+  html.includes("formatTournamentDateTime(season.renewsAt,true)")&&
+  html.includes("Ranking da temporada")&&
+  html.includes("uma dificuldade por temporada"),
+  "A tela do torneio não mostra a renovação da temporada de 30 dias.");
 check(workerSource.includes("async function writeUsersAtomically")&&
   workerSource.includes('route === "/api/gifts/send"')&&
   workerSource.includes('route === "/api/gifts/inbox"')&&
@@ -1821,6 +1835,17 @@ const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && sou
   check(!(await page.locator("#tournamentHomePanel").evaluate(el => el.classList.contains("hidden"))), name + ": menu inicial do Torneio não apareceu.");
   check((await page.locator("#musicCategoryKicker").textContent()).includes("TORNEIO"), name + ": música não mudou para Torneio.");
   await assertVisibleSections(["tournamentModeView"],"Torneio");
+  await page.evaluate(()=>renderTournamentSeasonStatus({
+    number:1,
+    startsAt:"2026-11-11T03:00:00.000Z",
+    endsAt:"2026-12-11T03:00:00.000Z",
+    renewsAt:"2026-12-11T03:00:00.000Z"
+  }));
+  const tournamentSeasonLabel=(await page.locator("#tournamentMonthStatus").textContent())||"";
+  const tournamentRenewalLabel=(await page.locator("#tournamentRenewalStatus").textContent())||"";
+  check(tournamentSeasonLabel.includes("11/11/2026")&&tournamentSeasonLabel.includes("11/12/2026")&&
+    tournamentRenewalLabel.includes("11/12/2026")&&tournamentRenewalLabel.includes("00:00"),
+    name+": a tela do torneio não mostra a data e hora exatas da renovação de 30 dias.");
   await page.locator("#backFromTournament").click();
   await assertVisibleSections(["modeHub"],"retorno do Torneio");
 
