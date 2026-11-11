@@ -5056,11 +5056,30 @@ function updateStats(){
  const total=trainingReviewMode?trainingRoundTarget:selected.length*10;
  $('bar').style.width=(total?roundCorrect.size/total*100:0)+'%';
 }
+function clearCompletedErrorTrainingPool(scope='training',facts=errorTrainingFacts){
+  // Limpa apenas a pendência da revisão. Os totais de tentativas, acertos e erros permanecem no histórico.
+  let cleared=0;
+  (Array.isArray(facts)?facts:[]).forEach(fact=>{
+   const key=Number(fact?.a)+'x'+Number(fact?.b);
+   const item=historyData.questions?.[key];
+   if(!item)return;
+   if(!item.errorTrainingPools||typeof item.errorTrainingPools!=='object')item.errorTrainingPools={};
+   item.errorTrainingPools[scope]={correctStreak:2,resolved:true};
+   cleared++;
+  });
+  if(cleared){
+   saveHistory();
+   updateReviewTrainingButton();
+  }
+  return cleared;
+}
 function completeErrorTraining(){
   if(errorTrainingCompleted)return;
   errorTrainingCompleted=true;
   pauseTrainingQuestionClock();
   const completingGeneration=trainingSessionGeneration;
+  const scope=trainingModeType==='tournamentErrors'?'tournament':'training';
+  clearCompletedErrorTrainingPool(scope,errorTrainingFacts);
   const prefix=trainingModeType==='tournamentErrors'?'tournament-error-training-complete':'error-training-complete';
   const claimId=newTrainingRewardClaimId(prefix);
   // Enfileira a recompensa e mostra a conclusão antes de aguardar sua confirmação.
