@@ -517,7 +517,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .shop-preview-strip{display:flex;align-items:center;gap:12px;min-width:0;max-width:100%;padding:2px 0}
 .shop-preview-thumb{position:relative;flex:0 0 68px;width:68px;height:68px;display:grid;place-items:center;border:1px solid #52708d;border-radius:14px;background:radial-gradient(circle,#1d3150,#0b172a 75%);overflow:visible}
 .shop-preview-thumb>img{width:58px;height:58px;object-fit:cover;border-radius:50%}
-.shop-expand-hint{display:block;color:#8edcf3;font-size:.78rem;font-weight:850;letter-spacing:.01em}
+.shop-expand-hint{display:block;color:#8edcf3;font-size:.78rem;font-weight:850;letter-spacing:.01em}.shop-expand-hint .hint-close{display:none}.shop-catalog-disclosure[open] .shop-expand-hint .hint-open{display:none}.shop-catalog-disclosure[open] .shop-expand-hint .hint-close{display:inline;color:#fcd34d}
 .shop-catalog-disclosure[open]>summary{border-bottom:1px solid #385477;background:#10223d}
 .shop-catalog-disclosure[open] .shop-catalog-heading small{color:#fcd34d}
 .shop-catalog-content{padding:12px}
@@ -2438,6 +2438,10 @@ function frameSvgMotif(kind,colors,animated=false){
   case 'root': return '<g class="frame-motif'+motion+'"><path d="M0 -13Q-5 -2 0 2Q-10 4 -12 13M0 2Q8 3 12 13M0 2V14" fill="none" stroke="'+b+'" stroke-width="3.2"/><path d="M-12 13L-7 10M12 13L7 10" stroke="'+a+'" stroke-width="2"/></g>';
   case 'planet': return '<g class="frame-motif'+motion+'"><circle r="8" fill="'+a+'" stroke="'+c+'" stroke-width="1.6"/><ellipse rx="15" ry="5" transform="rotate(-25)" fill="none" stroke="'+b+'" stroke-width="3"/><circle cx="-3" cy="-3" r="2" fill="#fff"/></g>';
   case 'spark': return '<g class="frame-motif'+motion+'"><path d="M0 -14L3 -3L13 0L3 3L0 14L-3 3L-13 0L-3 -3Z" fill="'+a+'" stroke="'+c+'" stroke-width="1.4"/><circle r="2" fill="#fff"/></g>';
+  case 'wing': return '<g class="frame-motif'+motion+'"><path d="M-1 12Q-20 6 -14 -13Q-3 -10 0 0Q5 -11 15 -13Q20 7 1 12L0 4Z" fill="'+a+'" stroke="'+c+'" stroke-width="1.7"/><path d="M0 9Q-9 1 -10 -8M0 8Q9 0 11 -8M0 10V-5" fill="none" stroke="'+b+'" stroke-width="1.6"/></g>';
+  case 'ember': return '<g class="frame-motif'+motion+'"><path d="M0 13Q-10 6 -3 -3Q-1 -7 0 -14Q9 -5 7 1Q14 -3 12 -7Q19 9 0 13Z" fill="'+a+'" stroke="'+c+'" stroke-width="1.4"/><path d="M0 9Q-5 3 1 -3Q7 4 0 9Z" fill="'+b+'"/></g>';
+  case 'circuit': return '<g class="frame-motif'+motion+'"><path d="M-12 -9H-3V-2H5V7H13M-12 8H-5V2" fill="none" stroke="'+a+'" stroke-width="2.5"/><circle cx="-12" cy="-9" r="3" fill="'+b+'" stroke="'+c+'"/><circle cx="13" cy="7" r="3" fill="'+b+'" stroke="'+c+'"/><circle cx="-12" cy="8" r="2.5" fill="'+a+'"/></g>';
+  case 'rivet': return '<g class="frame-motif'+motion+'"><circle r="9" fill="'+b+'" stroke="'+c+'" stroke-width="2"/><circle r="4.5" fill="none" stroke="'+a+'" stroke-width="1.5"/><path d="M-4 -4L4 4M4 -4L-4 4" stroke="'+c+'" stroke-width="1.3"/></g>';
   case 'wave': return '<g class="frame-motif'+motion+'"><path d="M-14 -5Q-7 -13 0 -5T14 -5M-14 2Q-7 -6 0 2T14 2M-12 9Q-5 1 2 9T14 9" fill="none" stroke="'+a+'" stroke-width="3"/><circle cx="10" cy="-10" r="2" fill="'+b+'"/></g>';
   default: return '<g class="frame-motif'+motion+'"><path d="M0 -13L4 -4L13 0L4 4L0 13L-4 4L-13 0L-4 -4Z" fill="'+a+'" stroke="'+c+'" stroke-width="1.6"/></g>';
  }
@@ -2547,7 +2551,7 @@ function renderAvatarShop(){
  const owned=new Set(Array.isArray(gameEconomy.ownedAvatars)?gameEconomy.ownedAvatars:['imagem:0']);
  const ownedFrames=new Set(Array.isArray(gameEconomy.ownedFrames)?gameEconomy.ownedFrames:[]);
  if($('shopCoins'))$('shopCoins').textContent=(Number(gameEconomy.coins)||0).toLocaleString('pt-BR');
- const disclosure=(title,preview,cards)=>'<details class="shop-catalog-disclosure"><summary><div class="shop-catalog-heading"><strong>'+title+'</strong><small>Ver catálogo</small></div><div class="shop-preview-strip">'+preview+'</div><span class="shop-expand-hint">Clique aqui para expandir ↓</span></summary><div class="shop-catalog-content">'+cards+'</div></details>';
+ const disclosure=(title,preview,cards)=>'<details class="shop-catalog-disclosure"><summary><div class="shop-catalog-heading"><strong>'+title+'</strong><small>Ver catálogo</small></div><div class="shop-preview-strip">'+preview+'</div><span class="shop-expand-hint"><span class="hint-open">Clique aqui para expandir ↓</span><span class="hint-close">Clique aqui para recolher ↑</span></span></summary><div class="shop-catalog-content">'+cards+'</div></details>';
  const avatarGroup=(list,kind,title)=>{
   const preview=list.slice(0,2).map((avatar,index)=>'<span class="shop-preview-thumb" title="'+escapeHtml(avatar.name)+'"><img src="'+escapeHtml(avatarImage(kind+':'+index))+'" alt=""></span>').join('');
   const cards=list.map((avatar,index)=>{
