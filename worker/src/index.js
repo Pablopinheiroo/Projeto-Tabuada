@@ -14,7 +14,7 @@ const AVATAR_GIF_COUNT = 12;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
 const CHALLENGE_PLAYER_METADATA_MAX = 45;
-const WORKER_BUILD_ID = "2026-11-11-community-coin-gifts-v1";
+const WORKER_BUILD_ID = "2026-11-11-tournament-30day-unique-facts-v1";
 const PRESENCE_MIN_WRITE_INTERVAL_MS = 4 * 60 * 1000;
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
@@ -27,6 +27,9 @@ const TOURNAMENT_PRESETS = {
 };
 const TOURNAMENT_SECONDS_PER_QUESTION = Object.freeze({ easy: 10, medium: 7, hard: 5 });
 const TOURNAMENT_MIN_VALID_SCORE = 30;
+const TOURNAMENT_CYCLE_DURATION_MS = 30 * 24 * 60 * 60 * 1000;
+// Primeira temporada começa em 11/11/2026 às 00:00 no horário de Brasília.
+const TOURNAMENT_CYCLE_EPOCH_MS = Date.parse("2026-11-11T00:00:00-03:00");
 const CHALLENGE_PRESETS = {
   recruta: { name: "Recruta", tables: [1, 2], options: 4 },
   aprendiz: { name: "Aprendiz", tables: [1, 2, 3, 4], options: 4 },
@@ -1403,8 +1406,51 @@ function previousMonthKey(month) {
   const date = new Date(Date.UTC(year, number - 2, 1));
   return date.getUTCFullYear() + "-" + String(date.getUTCMonth() + 1).padStart(2, "0");
 }
-function tournamentFilePath(month) {
-  return "torneio-mensal-" + month + ".json";
+function tournamentFilePath(seasonKey) {
+  const key = String(seasonKey || "");
+  return /^\\d{4}-\\d{2}$/.test(key)
+    ? "torneio-mensal-" + key + ".json"
+    : "torneio-" + key + ".json";
+}
+function tournamentMonthLabel(month) {
+  const [year, number] = String(month).split("-").map(Number);
+  return new Date(Date.UTC(year, number - 1, 1)).toLocaleDateString("pt-BR", {
+    month: "long", year: "numeric", timeZone: "UTC"
+  });
+}
+function tournamentCycleByIndex(index) {
+  const cycleIndex = Math.max(0, Math.floor(Number(index) || 0));
+  const startsAtDate = new Date(TOURNAMENT_CYCLE_EPOCH_MS + cycleIndex * TOURNAMENT_CYCLE_DURATION_MS);
+  const endsAtDate = new Date(startsAtDate.getTime() + TOURNAMENT_CYCLE_DURATION_MS);
+  const key = cycleIndex === 0
+    ? currentSaoPauloMonth(startsAtDate)
+    : "ciclo-" + String(cycleIndex).padStart(4, "0");
+  const dateLabel = date => new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit", month: "2-digit", year: "numeric", timeZone: "America/Sao_Paulo"
+  }).format(date);
+  return {
+    id: "ciclo-" + String(cycleIndex).padStart(4, "0"),
+    index: cycleIndex,
+    number: cycleIndex + 1,
+    key,
+    startsAt: startsAtDate.toISOString(),
+    endsAt: endsAtDate.toISOString(),
+    renewsAt: endsAtDate.toISOString(),
+    durationDays: 30,
+    label: dateLabel(startsAtDate) + " a " + dateLabel(endsAtDate)
+  };
+}
+function currentTournamentCycle(date = new Date()) {
+  const elapsed = date.getTime() - TOURNAMENT_CYCLE_EPOCH_MS;
+  const index = Math.max(0, Math.floor(elapsed / TOURNAMENT_CYCLE_DURATION_MS));
+  return tournamentCycleByIndex(index);
+}
+function tournamentSeasonPayload(season) {
+  return {
+    id: season.id, number: season.number, startsAt: season.startsAt,
+    endsAt: season.endsAt, renewsAt: season.renewsAt,
+    durationDays: season.durationDays, label: season.label
+  };
 }
 function tournamentRandom(seed) {
   let state = Number(seed) >>> 0;
@@ -1421,7 +1467,18 @@ function buildTournamentQuestions(seed, difficulty) {
   if (!preset) return [];
   const random = tournamentRandom(seed);
   const pool = [];
-  for (const table of preset.tables) for (let factor = 1; factor <= 10; factor++) pool.push({ a: table, b: factor });
+  const seenFacts = new Set();
+  for (const table of preset.tables) {
+    for (let factor = 1; factor <= 10; factor++) {
+      // Multiplicações invertidas (ex.: 4×7 e 7×4) contam como a mesma questão.
+      const low = Math.min(table, factor);
+      const high = Math.max(table, factor);
+      const factKey = low + "x" + high;
+      if (seenFacts.has(factKey)) continue;
+      seenFacts.add(factKey);
+      pool.push({ a: table, b: factor });
+    }
+  }
   for (let i = pool.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
@@ -1453,12 +1510,16 @@ function rankTournament(board, difficulty, username) {
   const position = entries.findIndex(item => item.username === username) + 1;
   return { difficulty, total: entries.length, top10: entries.slice(0, 10), position: position || null, own: position ? entries[position - 1] : null };
 }
-async function ensureTournamentBoard(month, env) {
-  const path = tournamentFilePath(month);
+async function ensureTournamentBoard(season, env) {
+  const seasonKey = typeof season === "string" ? season : season.key;
+  const path = tournamentFilePath(seasonKey);
   const existing = await readJsonFile(path, env);
   if (existing) return existing;
+  const seasonData = typeof season === "string" ? null : season;
   const data = {
-    version: 1, month, createdAt: new Date().toISOString(),
+    version: 2, seasonKey, month: /^\\d{4}-\\d{2}$/.test(seasonKey) ? seasonKey : null,
+    startsAt: seasonData?.startsAt || null, endsAt: seasonData?.endsAt || null,
+    createdAt: new Date().toISOString(),
     seeds: {
       easy: crypto.getRandomValues(new Uint32Array(1))[0] || 1,
       medium: crypto.getRandomValues(new Uint32Array(1))[0] || 2,
@@ -1467,7 +1528,7 @@ async function ensureTournamentBoard(month, env) {
     results: { easy: {}, medium: {}, hard: {} }
   };
   try {
-    const sha = await writeJsonFile(path, data, null, env, "Abrir torneio mensal " + month);
+    const sha = await writeJsonFile(path, data, null, env, "Abrir torneio da temporada " + seasonKey);
     return { data, sha };
   } catch (error) {
     if (error.status !== 409 && error.status !== 422) throw error;
@@ -1476,10 +1537,11 @@ async function ensureTournamentBoard(month, env) {
     return latest;
   }
 }
-async function updateTournamentBoard(month, difficulty, username, result, env) {
-  const path = tournamentFilePath(month);
+async function updateTournamentBoard(season, difficulty, username, result, env) {
+  const seasonKey = typeof season === "string" ? season : season.key;
+  const path = tournamentFilePath(seasonKey);
   for (let attempt = 0; attempt < 5; attempt++) {
-    const current = await ensureTournamentBoard(month, env);
+    const current = await ensureTournamentBoard(season, env);
     const data = current.data;
     data.results = data.results || { easy: {}, medium: {}, hard: {} };
     data.results[difficulty] = data.results[difficulty] || {};
@@ -1487,10 +1549,9 @@ async function updateTournamentBoard(month, difficulty, username, result, env) {
     if (previous && (Number(previous.score) || 0) >= TOURNAMENT_MIN_VALID_SCORE) {
       return { board: data, alreadySubmitted: true };
     }
-    // Results saved by the older version below 60% can be replaced after retry.
     data.results[difficulty][username] = result;
     try {
-      const sha = await writeJsonFile(path, data, current.sha, env, "Registrar resultado mensal de " + username);
+      const sha = await writeJsonFile(path, data, current.sha, env, "Registrar resultado da temporada de " + username);
       return { board: data, sha, alreadySubmitted: false };
     } catch (error) {
       if ((error.status !== 409 && error.status !== 422) || attempt === 4) throw error;
@@ -1560,7 +1621,7 @@ async function handleApi(request, env, origin) {
           ok: false,
           service: "Projeto Tabuada API",
           buildId: WORKER_BUILD_ID,
-          features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, trainingCoinsPerTenCorrectAnswers: true, trainingCorrectProgress: true, intelligentTrainingRewards: true, intelligentTrainingProgress: true, errorTrainingRewards: true, difficultyTrainingBelow90Percent: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true, lastOnlinePresence: true, awardCelebrations: true, communityCoinGifts: true },
+          features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, trainingCoinsPerTenCorrectAnswers: true, trainingCorrectProgress: true, intelligentTrainingRewards: true, intelligentTrainingProgress: true, errorTrainingRewards: true, difficultyTrainingBelow90Percent: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true, lastOnlinePresence: true, awardCelebrations: true, communityCoinGifts: true, tournament30DayCycles: true, tournamentUniqueMultiplications: true },
           githubSecretConfigured: false,
           githubConnected: false
         }, 503, origin);
@@ -1578,7 +1639,7 @@ async function handleApi(request, env, origin) {
         ok: true,
         service: "Projeto Tabuada API",
         buildId: WORKER_BUILD_ID,
-        features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, trainingCoinsPerTenCorrectAnswers: true, trainingCorrectProgress: true, intelligentTrainingRewards: true, intelligentTrainingProgress: true, errorTrainingRewards: true, difficultyTrainingBelow90Percent: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true, lastOnlinePresence: true, awardCelebrations: true, communityCoinGifts: true },
+        features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, trainingCoinsPerTenCorrectAnswers: true, trainingCorrectProgress: true, intelligentTrainingRewards: true, intelligentTrainingProgress: true, errorTrainingRewards: true, difficultyTrainingBelow90Percent: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true, lastOnlinePresence: true, awardCelebrations: true, communityCoinGifts: true, tournament30DayCycles: true, tournamentUniqueMultiplications: true },
         githubSecretConfigured: true,
         githubConnected: true,
         githubContentReadAccess: true
@@ -1903,74 +1964,67 @@ async function handleApi(request, env, origin) {
 
 
     if (route === "/api/tournament" && request.method === "GET") {
-      const month = currentSaoPauloMonth();
-      const previous = previousMonthKey(month);
+      const season = currentTournamentCycle();
+      const previousSeason = season.index > 0 ? tournamentCycleByIndex(season.index - 1) : null;
+      const legacyPreviousKey = previousMonthKey(currentSaoPauloMonth(new Date(TOURNAMENT_CYCLE_EPOCH_MS)));
+      const previousKey = previousSeason?.key || legacyPreviousKey;
+      const previousLabel = previousSeason?.label || tournamentMonthLabel(legacyPreviousKey);
       const [currentBoard, userFile] = await Promise.all([
-        ensureTournamentBoard(month, env), readUser(username, env)
+        ensureTournamentBoard(season, env), readUser(username, env)
       ]);
       const rankings = Object.keys(TOURNAMENT_PRESETS).map(difficulty =>
         rankTournament(currentBoard.data, difficulty, username)
       );
       let finalNotice = null;
       if (userFile) {
-        const previousBoard = await readJsonFile(tournamentFilePath(previous), env);
-        const participation = userFile.data.profile?.monthlyTournaments?.[previous];
+        const previousBoard = await readJsonFile(tournamentFilePath(previousKey), env);
+        const participation = userFile.data.profile?.monthlyTournaments?.[previousKey];
         if (previousBoard && participation?.difficulty && participation.result) {
           const ranking = rankTournament(previousBoard.data, participation.difficulty, username);
-          const award = await awardFinishedTournament(userFile, previous, previousBoard.data, env);
+          const award = await awardFinishedTournament(userFile, previousKey, previousBoard.data, env);
           finalNotice = {
-            month: previous, difficulty: participation.difficulty,
+            month: previousKey, seasonLabel: previousLabel,
+            difficulty: participation.difficulty,
             difficultyName: TOURNAMENT_PRESETS[participation.difficulty].name,
             position: ranking.position, total: ranking.total,
-            score: participation.result.score, top10: ranking.top10, award
-          };
-        }
-      }
-      const latestUser = finalNotice ? await readUser(username, env) : userFile;
-      return json({
-        month,
-        selectedDifficulty: latestUser?.data?.profile?.monthlyTournaments?.[month]?.difficulty || null,
-        rankings, finalNotice
-      }, 200, origin);
-    }
-
-    if (route === "/api/tournament/start" && request.method === "POST") {
+              if (route === "/api/tournament/start" && request.method === "POST") {
       const body = await readJson(request);
       const difficulty = String(body.difficulty || "");
       const preset = TOURNAMENT_PRESETS[difficulty];
       if (!preset) return json({ error: "Escolha uma dificuldade válida para o torneio." }, 400, origin);
-      const month = currentSaoPauloMonth();
+      const season = currentTournamentCycle();
+      const seasonKey = season.key;
       const file = await readUser(username, env);
       if (!file) return json({ error: "A conta não foi encontrada." }, 404, origin);
       const profile = file.data.profile && typeof file.data.profile === "object" ? file.data.profile : {};
       profile.monthlyTournaments = profile.monthlyTournaments || {};
-      let participation = profile.monthlyTournaments[month];
+      let participation = profile.monthlyTournaments[seasonKey];
       if (participation && participation.difficulty !== difficulty) {
         return json({ error: "Você já escolheu " + (TOURNAMENT_PRESETS[participation.difficulty]?.name || "uma dificuldade") +
-          " neste mês. Só é permitido participar de uma dificuldade por mês." }, 409, origin);
+          " nesta temporada. Só é permitido participar de uma dificuldade a cada 30 dias." }, 409, origin);
       }
       if (participation?.result) {
         if ((Number(participation.result.score) || 0) >= TOURNAMENT_MIN_VALID_SCORE) {
-          return json({ error: "Você já concluiu seu torneio deste mês." }, 409, origin);
+          return json({ error: "Você já concluiu seu torneio desta temporada." }, 409, origin);
         }
-        // A tentativa antiga abaixo de 60% não vale; libere a mesma prova para nova tentativa.
         delete participation.result;
-        profile.monthlyTournaments[month] = participation;
+        profile.monthlyTournaments[seasonKey] = participation;
         file.data.profile = profile;
         file.data.updatedAt = new Date().toISOString();
         await writeUser(username, file.data, file.sha, env);
       }
-      const board = await ensureTournamentBoard(month, env);
+      const board = await ensureTournamentBoard(season, env);
       if (!participation) {
         participation = { difficulty, attemptId: randomHex(16), startedAt: new Date().toISOString() };
-        profile.monthlyTournaments[month] = participation;
+        profile.monthlyTournaments[seasonKey] = participation;
         file.data.profile = profile;
         await writeUser(username, file.data, file.sha, env);
       }
       const questions = buildTournamentQuestions(board.data.seeds[difficulty], difficulty)
         .map(({ answer, ...question }) => question);
       return json({
-        month, difficulty, difficultyName: preset.name,
+        month: seasonKey, season: tournamentSeasonPayload(season), seasonKey,
+        difficulty, difficultyName: preset.name,
         attemptId: participation.attemptId,
         seed: board.data.seeds[difficulty],
         questions, questionCount: 50, secondsPerQuestion: TOURNAMENT_SECONDS_PER_QUESTION[difficulty],
@@ -1982,16 +2036,17 @@ async function handleApi(request, env, origin) {
       const body = await readJson(request);
       const difficulty = String(body.difficulty || "");
       if (!TOURNAMENT_PRESETS[difficulty]) return json({ error: "Dificuldade inválida." }, 400, origin);
-      const month = currentSaoPauloMonth();
+      const season = currentTournamentCycle();
+      const seasonKey = season.key;
       const file = await readUser(username, env);
-      const participation = file?.data?.profile?.monthlyTournaments?.[month];
+      const participation = file?.data?.profile?.monthlyTournaments?.[seasonKey];
       if (!participation || participation.difficulty !== difficulty || participation.attemptId !== body.attemptId) {
-        return json({ error: "Esta participação não corresponde ao torneio mensal iniciado nesta conta." }, 403, origin);
+        return json({ error: "Esta participação não corresponde à temporada de 30 dias iniciada nesta conta." }, 403, origin);
       }
-      if (participation.result) return json({ error: "Seu resultado deste mês já foi enviado." }, 409, origin);
+      if (participation.result) return json({ error: "Seu resultado desta temporada já foi enviado." }, 409, origin);
       const answers = Array.isArray(body.answers) ? body.answers : [];
       if (answers.length !== 50) return json({ error: "O torneio precisa ter exatamente 50 respostas." }, 400, origin);
-      const board = await ensureTournamentBoard(month, env);
+      const board = await ensureTournamentBoard(season, env);
       const questions = buildTournamentQuestions(board.data.seeds[difficulty], difficulty);
       const secondsPerQuestion = TOURNAMENT_SECONDS_PER_QUESTION[difficulty];
       const questionLimitMs = secondsPerQuestion * 1000;
@@ -2019,16 +2074,16 @@ async function handleApi(request, env, origin) {
         }, 422, origin);
       }
       const result = { score, totalMs: Math.round(totalMs), perfect: score === 50, completedAt: new Date().toISOString() };
-      const updatedBoard = await updateTournamentBoard(month, difficulty, username, result, env);
+      const updatedBoard = await updateTournamentBoard(season, difficulty, username, result, env);
       const storedResult = updatedBoard.board.results[difficulty][username];
       participation.result = storedResult;
-      file.data.profile.monthlyTournaments[month] = participation;
+      file.data.profile.monthlyTournaments[seasonKey] = participation;
       file.data.updatedAt = new Date().toISOString();
       await writeUser(username, file.data, file.sha, env);
       const ranking = rankTournament(updatedBoard.board, difficulty, username);
       return json({
         result: storedResult, position: ranking.position, total: ranking.total, top10: ranking.top10,
-        month, difficulty, perfect: result.perfect
+        month: seasonKey, season: tournamentSeasonPayload(season), difficulty, perfect: result.perfect
       }, 200, origin);
     }
 
