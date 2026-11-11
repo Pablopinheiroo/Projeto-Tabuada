@@ -428,6 +428,9 @@ check(workerSource.includes('status: betMode ? "challenger_playing" : "open"')&&
   workerSource.includes("async function retryRejectedBetChallenge")&&
   workerSource.includes("challengeRetryMatch")&&workerSource.includes("retryCount: 1"),
   "A API deve liberar primeiro a partida do desafiante, convidar o outro usuário após o resultado e limitar a uma nova tentativa por partida.");
+check(html.includes("if(challengeCurrent.status==='challenger_playing')")&&
+  html.includes("A partida antes do convite será ativada após a atualização do servidor."),
+  "A interface deve manter compatibilidade com o Worker antigo até a atualização do servidor, sem travar a partida de aposta.");
 check(html.includes("function showPrizeCelebration(")&&html.includes("function playPrizeCelebrationMusic()")&&
   html.includes("prize-celebration-overlay")&&html.includes("melody=[72,76,79,84")&&
   html.includes("if(newTitles.length)")&&html.includes("showCoinRewardNotification(coinsAdded,item)")&&
