@@ -14,7 +14,7 @@ const AVATAR_GIF_COUNT = 12;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
 const CHALLENGE_PLAYER_METADATA_MAX = 45;
-const WORKER_BUILD_ID = "2026-11-11-tournament-30day-unique-facts-v1";
+const WORKER_BUILD_ID = "2026-11-11-tournament-30day-unique-facts-v2";
 const PRESENCE_MIN_WRITE_INTERVAL_MS = 4 * 60 * 1000;
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
@@ -2396,6 +2396,13 @@ async function handleApi(request, env, origin) {
 }
 
 export default {
+  async scheduled(controller, env) {
+    const scheduledAt = new Date(Number(controller?.scheduledTime) || Date.now());
+    const season = currentTournamentCycle(scheduledAt);
+    await ensureTournamentBoard(season, env);
+    console.log("Temporada do torneio preparada:", season.key, "renovação:", season.renewsAt);
+  },
+
   async fetch(request, env) {
     const origin = request.headers.get("Origin") || "";
     if (request.method === "OPTIONS") {
