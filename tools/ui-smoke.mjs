@@ -370,7 +370,7 @@ check(prizeModalCode.includes("data-close-prize")&&prizeModalCode.includes("over
   html.includes("NOVO TÍTULO CONQUISTADO")&&html.includes("showPrizeCelebration({")&&
   html.includes("description:'Você recebeu uma nova conquista no Projeto Tabuada.'"),
  "A tela de comemoração por novos títulos precisa informar a conquista recebida.");check(!html.includes('id="shopBackToGame"')&&!html.includes("$('shopBackToGame').addEventListener")&&
-  html.includes("topReturn.classList.toggle('hidden',shop)"),
+  html.includes("topReturn.classList.toggle('hidden',shop||adventure)"),
  "A Loja ainda possui mais de uma opção de Voltar ao jogo.");
 check(html.includes("async function saveProgressNow(")&&!html.includes("ACTIVE_TIME_SYNC_MS")&&
   !html.includes("scheduleCloudSave")&&!html.includes("Próximo salvamento automático"),
