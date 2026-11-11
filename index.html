@@ -1389,6 +1389,39 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
 }
 #challengeListStatus:empty{display:none}
 
+
+/* Comunidade: ranking por saldo e títulos compactos em três colunas */
+.community-rank-titles{
+ display:grid!important;
+ grid-template-columns:repeat(3,minmax(0,1fr));
+ align-items:stretch;
+ gap:5px;
+ width:100%;
+}
+.community-rank-titles>.community-rank-title-chip{
+ display:grid!important;
+ grid-template-columns:17px minmax(0,1fr);
+ align-items:center;
+ justify-content:start;
+ gap:4px;
+ width:100%;
+ min-width:0;
+ min-height:36px;
+ padding:5px 6px!important;
+ border-radius:8px!important;
+ font-size:.62rem!important;
+ line-height:1.15;
+ text-align:left;
+ white-space:normal;
+ overflow-wrap:anywhere;
+ word-break:normal;
+}
+.community-rank-titles>.community-rank-title-chip .badge-art{
+ width:17px!important;
+ height:17px!important;
+ margin:0!important;
+}
+
 </style>
 </head>
 <body>
@@ -1867,7 +1900,7 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
 </div>
 <div id="communitySection" class="community-ranking hidden">
  <div class="community-heading"><div><span class="music-kicker">👥 Comunidade</span><h2>Ranking dos participantes</h2><p class="hint" style="margin:5px 0 0">Veja o tempo de estudo e as contas que mais exigem prática.</p></div>
-  <label class="ranking-sort">Ordenar por<select id="communitySort"><option value="time">Mais tempo estudado</option><option value="correct">Mais acertos</option><option value="wrong">Mais erros</option></select></label>
+  <label class="ranking-sort">Ordenar por<select id="communitySort"><option value="time">Mais tempo estudado</option><option value="correct">Mais acertos</option><option value="wrong">Mais erros</option><option value="coins">Mais moedas disponíveis</option></select></label>
  </div>
  <div id="communityRanking" class="community-list"></div>
  <div id="communityPagination" class="list-pagination community-pagination" aria-label="Paginação da comunidade"></div>
@@ -3428,7 +3461,7 @@ async function renderCommunityRanking(){
   if(renderId!==communityRenderRequest)return;
   const users=records.map(communityStatsFromRecord);
   const mode=$('communitySort')?.value||'time';
-  const sorters={time:(a,b)=>b.timeMs-a.timeMs||b.correct-a.correct,correct:(a,b)=>b.correct-a.correct||b.timeMs-a.timeMs,wrong:(a,b)=>b.wrong-a.wrong||b.timeMs-a.timeMs};
+  const sorters={time:(a,b)=>b.timeMs-a.timeMs||b.correct-a.correct,correct:(a,b)=>b.correct-a.correct||b.timeMs-a.timeMs,wrong:(a,b)=>b.wrong-a.wrong||b.timeMs-a.timeMs,coins:(a,b)=>b.coins-a.coins||b.totalEarned-a.totalEarned||b.correct-a.correct};
   users.sort(sorters[mode]||sorters.time);
   const pages=Math.max(1,Math.ceil(users.length/COMMUNITY_PAGE_SIZE));
   communityPage=Math.max(0,Math.min(pages-1,communityPage));
