@@ -49,6 +49,10 @@ namespace_id = "8731006"
 limit = 12
 period = 60
 
+[triggers]
+# 00:05 no horário de Brasília; garante a criação da nova temporada após 30 dias.
+crons = ["5 3 * * *"]
+
 [observability]
 enabled = false
 
