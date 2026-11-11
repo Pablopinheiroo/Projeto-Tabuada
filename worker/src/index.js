@@ -637,6 +637,12 @@ function safeChallengeSummary(challenge, username) {
     betMode: challenge.betMode === true, stake: challenge.betMode === true ? Number(challenge.stake) || 0 : 0,
     betPaid: challenge.betPaid === true, acceptedAt: challenge.acceptedAt || null,
     rejectedAt: challenge.rejectedAt || null, completedAt: challenge.completedAt || null,
+    retryOf: challenge.retryOf || null,
+    retryCount: Math.max(0, Number(challenge.retryCount) || 0),
+    retryUsed: challenge.retryUsed === true,
+    retryAvailable: challenge.betMode === true && username === challenge.challenger &&
+      challenge.status === "rejected" && Number(challenge.retryCount) < 1 &&
+      challenge.retryUsed !== true && !!challenge.results?.[challenge.challenger],
     myResult, otherResult: other ? (challenge.results?.[other] || null) : null
   };
 }
@@ -705,14 +711,15 @@ async function createChallenge(body, username, env) {
   const challenge = {
     id, challenger: username, recipient: recipients[0], participants,
     mode, levelId, levelName, tables, optionCount, musicTrack, seed, betMode, stake,
-    createdAt: new Date().toISOString(), results: {}, status: betMode ? "pending_acceptance" : "open",
-    winner: null, completedAt: null
+    createdAt: new Date().toISOString(), results: {}, status: betMode ? "challenger_playing" : "open",
+    winner: null, completedAt: null, retryOf: null, retryCount: 0, retryUsed: false
   };
   const sha = await writeJsonFile(
     challengeFilePath(id), challenge, null, env,
     "Criar desafio coletivo de " + username + " para " + recipients.join(", ")
   );
-  await Promise.all(participants.map(participant => appendChallengeIndex(participant, id, env)));
+  const indexedParticipants = betMode ? [username] : participants;
+  await Promise.all(indexedParticipants.map(participant => appendChallengeIndex(participant, id, env)));
   return { ...challenge, fileSha: sha };
 }
 async function ensureCompletedChallengeBetPaid(challenge, env) {
@@ -972,6 +979,114 @@ async function respondToBetChallenge(id, decision, username, env) {
   return safeChallengeSummary(latest.data, username);
 }
 
+
+async function retryRejectedBetChallenge(id, body, username, env) {
+  if (!/^[a-f0-9]{32}$/.test(id)) {
+    const error = new Error("Identificador do desafio inválido.");
+    error.status = 400;
+    throw error;
+  }
+  let originalFile = await readJsonFile(challengeFilePath(id), env);
+  if (!originalFile?.data) {
+    const error = new Error("Desafio não encontrado.");
+    error.status = 404;
+    throw error;
+  }
+  let original = originalFile.data;
+  if (original.betMode !== true || original.challenger !== username ||
+      original.status !== "rejected" || !original.results?.[username]) {
+    const error = new Error("Só é possível reenviar uma aposta rejeitada depois de concluir sua partida.");
+    error.status = 409;
+    throw error;
+  }
+
+  let retryId = original.retryChallengeId || null;
+  let stake = Number(original.retryStake) || 0;
+  if (!retryId) {
+    if (original.retryUsed === true || Number(original.retryCount) >= 1) {
+      const error = new Error("A nova tentativa desta partida já foi utilizada. Faça outra partida para desafiar novamente.");
+      error.status = 409;
+      throw error;
+    }
+    stake = body.stake;
+    if (!Number.isSafeInteger(stake) || stake < 1) {
+      const error = new Error("Informe uma aposta inteira de pelo menos 1 moeda.");
+      error.status = 400;
+      throw error;
+    }
+    const records = await Promise.all([readUser(username, env), readUser(original.recipient, env)]);
+    if (records.some(record => !record)) {
+      const error = new Error("Não foi possível localizar os dois perfis.");
+      error.status = 404;
+      throw error;
+    }
+    const maxStake = Math.min(
+      normalizeGameEconomy(records[0].data).coins,
+      normalizeGameEconomy(records[1].data).coins
+    );
+    if (stake > maxStake) {
+      const error = new Error("A aposta máxima permitida agora é de " + maxStake + " moedas. Ajuste o valor e tente novamente.");
+      error.status = 400;
+      throw error;
+    }
+
+    retryId = randomHex(16);
+    original.retryUsed = true;
+    original.retryChallengeId = retryId;
+    original.retryStake = stake;
+    original.retryRequestedAt = new Date().toISOString();
+    try {
+      await writeJsonFile(challengeFilePath(id), original, originalFile.sha, env,
+        "Reservar nova tentativa do desafio rejeitado " + id);
+    } catch (error) {
+      if (error.status !== 409 && error.status !== 422) throw error;
+      originalFile = await readJsonFile(challengeFilePath(id), env);
+      original = originalFile?.data;
+      if (!original?.retryChallengeId) throw error;
+      retryId = original.retryChallengeId;
+      stake = Number(original.retryStake) || 0;
+    }
+  }
+
+  let retryFile = await readJsonFile(challengeFilePath(retryId), env);
+  if (!retryFile?.data) {
+    const challengerResult = original.results?.[username];
+    if (!challengerResult || !Number.isSafeInteger(stake) || stake < 1) {
+      const error = new Error("Não foi possível recuperar a partida original para reenviar.");
+      error.status = 409;
+      throw error;
+    }
+    const retryChallenge = {
+      ...original,
+      id: retryId,
+      createdAt: new Date().toISOString(),
+      results: { [username]: challengerResult },
+      status: "pending_acceptance",
+      winner: null,
+      winners: [],
+      standings: [],
+      completedAt: null,
+      acceptedAt: null,
+      acceptingAt: null,
+      rejectedAt: null,
+      betPaid: false,
+      stake,
+      retryOf: id,
+      retryCount: 1,
+      retryUsed: false,
+      retryChallengeId: null,
+      retryStake: null
+    };
+    await writeJsonFile(challengeFilePath(retryId), retryChallenge, null, env,
+      "Reenviar desafio com aposta " + retryId);
+    retryFile = await readJsonFile(challengeFilePath(retryId), env);
+  }
+  const participants = Array.isArray(retryFile?.data?.participants) && retryFile.data.participants.length
+    ? retryFile.data.participants : [retryFile?.data?.challenger, retryFile?.data?.recipient].filter(Boolean);
+  await Promise.all(participants.map(participant => appendChallengeIndex(participant, retryId, env)));
+  return safeChallengeSummary(retryFile.data, username);
+}
+
 async function submitChallengeResult(id, body, username, env) {
   if (!/^[a-f0-9]{32}$/.test(id)) {
     const error = new Error("Identificador do desafio inválido.");
@@ -997,7 +1112,14 @@ async function submitChallengeResult(id, body, username, env) {
     error.status = 409;
     throw error;
   }
-  if (challenge.betMode === true && !["accepted", "waiting_participants", "completed"].includes(challenge.status)) { const error = new Error("Este desafio com aposta ainda aguarda a aceitação do adversário."); error.status = 409; throw error; }
+  const initialBetMatch = challenge.betMode === true &&
+    challenge.status === "challenger_playing" && username === challenge.challenger;
+  if (challenge.betMode === true && !initialBetMatch &&
+      !["accepted", "waiting_participants", "completed"].includes(challenge.status)) {
+    const error = new Error("Este desafio com aposta ainda aguarda a aceitação do adversário.");
+    error.status = 409;
+    throw error;
+  }
   const answers = Array.isArray(body.answers) ? body.answers : [];
   if (answers.length !== 10) {
     const error = new Error("O desafio precisa ter exatamente 10 respostas registradas.");
@@ -1053,7 +1175,15 @@ async function submitChallengeResult(id, body, username, env) {
     persistedChallenge = latest.data;
     persistedChallenge.results = persistedChallenge.results || {};
     persistedChallenge.results[username] = proposedResult;
-    finalizeChallengeRecord(persistedChallenge);
+    const firstBetResult = persistedChallenge.betMode === true &&
+      persistedChallenge.status === "challenger_playing" &&
+      username === persistedChallenge.challenger;
+    if (firstBetResult) {
+      persistedChallenge.status = "pending_acceptance";
+      persistedChallenge.invitedAt = new Date().toISOString();
+    } else {
+      finalizeChallengeRecord(persistedChallenge);
+    }
     try {
       sha = await writeJsonFile(
         challengeFilePath(id), persistedChallenge, latest.sha, env,
@@ -1069,6 +1199,11 @@ async function submitChallengeResult(id, body, username, env) {
     const error = new Error("Não foi possível salvar seu resultado. Atualize a lista e tente novamente.");
     error.status = 409;
     throw error;
+  }
+  if (persistedChallenge.betMode === true &&
+      persistedChallenge.status === "pending_acceptance" &&
+      persistedChallenge.results?.[persistedChallenge.challenger]) {
+    await appendChallengeIndex(persistedChallenge.recipient, id, env);
   }
   const isCompleted = persistedChallenge.status === "completed";
   if (isCompleted) {
@@ -1602,6 +1737,13 @@ async function handleApi(request, env, origin) {
       const body = await readJson(request);
       const result = await respondToBetChallenge(challengeRespondMatch[1], body.decision, username, env);
       return json({ challenge: result }, 200, origin);
+    }
+
+    const challengeRetryMatch = route.match(/^\\/api\\/challenges\\/([a-f0-9]{32})\\/retry$/);
+    if (challengeRetryMatch && request.method === "POST") {
+      const body = await readJson(request);
+      const challenge = await retryRejectedBetChallenge(challengeRetryMatch[1], body, username, env);
+      return json({ challenge }, 201, origin);
     }
 
     const challengeResultMatch = route.match(/^\/api\/challenges\/([a-f0-9]{32})\/result$/);
