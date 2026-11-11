@@ -371,6 +371,9 @@ check(html.includes(".avatar-frame-shell{position:relative;isolation:isolate;dis
  "As molduras precisam ficar ancoradas em cada miniatura, sem se espalhar pela página.");
 check(html.includes('shop-catalog-disclosure')&&html.includes('Clique aqui para expandir')&&
   html.includes('STATIC_PROFILE_FRAMES')&&html.includes('ANIMATED_PROFILE_FRAMES')&&
+  html.includes('function frameArtworkMarkup(key)')&&html.includes('function frameMaterialPattern(material,colors)')&&
+  html.includes('Anel de Carvalho')&&html.includes('Dança das Pétalas')&&
+  html.includes('motion-petals')&&html.includes('framePetalFlutter')&&
   html.includes('Deseja mesmo prosseguir?')&&html.includes('data-shop-confirm')&&
   html.includes('imageSrc')&&html.includes('prize-celebration-item-image')&&
   html.includes('id="profileFrameGrid"')&&html.includes('profileFrame=selectedProfileFrame')&&
@@ -1108,6 +1111,17 @@ async function testViewport(name, viewport, mobile = false) {
     await page.locator("#avatarShopGrid details[open]").count()===0&&
     await page.locator("#avatarShopGrid .shop-preview-strip").count()===4,
     name+": as quatro categorias da Loja devem iniciar recolhidas com uma linha de prévias.");
+  check(await page.locator("#avatarShopGrid .shop-preview-thumb").count()===8&&
+    await page.locator("#avatarShopGrid .shop-preview-thumb .avatar-frame-art").count()===4,
+    name+": cada categoria deve exibir apenas duas prévias de tamanho normal; as molduras precisam usar arte própria.");
+  await page.locator("#avatarShopGrid details.shop-catalog-disclosure").nth(2).locator("summary").click();
+  check(await page.locator("#avatarShopGrid details.shop-catalog-disclosure").nth(2).locator(".frame-shop-grid .shop-avatar-card").count()===20,
+    name+": expandir molduras estáticas deve revelar as 20 molduras personalizadas.");
+  await page.locator("#avatarShopGrid details.shop-catalog-disclosure").nth(2).locator("summary").click();
+  await page.locator("#avatarShopGrid details.shop-catalog-disclosure").nth(3).locator("summary").click();
+  check(await page.locator("#avatarShopGrid details.shop-catalog-disclosure").nth(3).locator(".frame-shop-grid .shop-avatar-card").count()===20,
+    name+": expandir molduras animadas deve revelar as 20 artes animadas.");
+  await page.locator("#avatarShopGrid details.shop-catalog-disclosure").nth(3).locator("summary").click();
   check((await page.locator("#shopCoins").textContent()).trim()==="2.400",
     name+": o saldo de moedas não apareceu na Loja.");
   await page.evaluate(()=>{
