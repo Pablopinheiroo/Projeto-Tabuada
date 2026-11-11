@@ -508,6 +508,16 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .challenge-group-summary-copy{display:flex;align-items:center;gap:8px;min-width:0}
 .challenge-group-summary small{color:#9fb8d8;font-size:.68rem;font-weight:650}
 .challenge-group-content{display:grid;gap:10px;padding:0 10px 10px}
+.challenge-battle-history-list{gap:8px}
+.challenge-battle-card{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:12px;padding:11px 12px;border:1px solid #385b80;border-radius:11px;background:linear-gradient(120deg,#10213b,#142642)}
+.challenge-battle-copy{display:grid;gap:7px;min-width:0}
+.challenge-battle-name{color:#f1f7ff;font-size:.9rem;font-weight:900;overflow-wrap:anywhere}
+.challenge-battle-counts{display:flex;flex-wrap:wrap;gap:5px 12px;color:#a9c1e5;font-size:.7rem;line-height:1.35}
+.challenge-battle-counts b{color:#e6f1ff;font-variant-numeric:tabular-nums}
+.challenge-battle-score{display:inline-flex;align-items:center;gap:5px;padding:7px 9px;border:1px solid #39729a;border-radius:9px;background:#0b1930;color:#67e8f9;font-size:1rem;font-weight:950;font-variant-numeric:tabular-nums;white-space:nowrap}
+.challenge-battle-score i{color:#a9c1e5;font-size:.8rem;font-style:normal}
+@media(max-width:380px){.challenge-battle-card{gap:7px;padding:10px}.challenge-battle-counts{gap:4px 8px;font-size:.66rem}.challenge-battle-score{padding:6px 7px;font-size:.9rem}}
+
 .challenge-notification-badge{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:#dc2626;color:#fff;font-size:.68rem;font-weight:950;line-height:1;box-shadow:0 0 0 2px #111c36}
 .challenge-unread-dot{display:inline-block;width:9px;height:9px;flex:0 0 9px;margin-left:5px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px #ef444433;vertical-align:middle}
 .challenge-retry-box{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px;margin-top:10px;padding:10px;border:1px solid #9a6b3d;border-radius:11px;background:#342719}
@@ -4520,6 +4530,64 @@ function challengeResultLabel(challenge){
 }
 
 
+function challengeBattleHistoryStats(items=challengeItems,username=activeProfile){
+ const rivals=new Map();
+ for(const challenge of Array.isArray(items)?items:[]){
+  if(!challenge||challenge.status!=='completed')continue;
+  const participants=challengeParticipants(challenge);
+  if(!participants.includes(username))continue;
+  const results=challenge.results&&typeof challenge.results==='object'?challenge.results:{};
+  const mine=results[username]||challenge.myResult;
+  if(!mine)continue;
+  const myScore=Math.max(0,Number(mine.score)||0);
+  const myTime=Math.max(0,Number(mine.totalMs)||0);
+  for(const rivalName of participants){
+   if(!rivalName||rivalName===username)continue;
+   const other=results[rivalName];
+   if(!other)continue;
+   const otherScore=Math.max(0,Number(other.score)||0);
+   const otherTime=Math.max(0,Number(other.totalMs)||0);
+   const record=rivals.get(rivalName)||{username:rivalName,wins:0,losses:0,draws:0};
+   if(myScore>otherScore||(myScore===otherScore&&myTime<otherTime))record.wins++;
+   else if(myScore<otherScore||(myScore===otherScore&&myTime>otherTime))record.losses++;
+   else record.draws++;
+   rivals.set(rivalName,record);
+  }
+ }
+ return [...rivals.values()].sort((a,b)=>
+  (b.wins+b.losses+b.draws)-(a.wins+a.losses+a.draws)||
+  a.username.localeCompare(b.username,'pt-BR')
+ );
+}
+function challengeOpponentDisplayName(username){
+ const publicProfile=(Array.isArray(communityCache)?communityCache:[]).find(item=>item.username===username);
+ const listedPlayer=(Array.isArray(challengePlayers)?challengePlayers:[]).find(item=>item.username===username);
+ return publicProfile?.displayName||listedPlayer?.displayName||username;
+}
+function renderChallengeBattleHistoryGroup(){
+ const records=challengeBattleHistoryStats();
+ const cards=records.map(record=>{
+  const name=challengeOpponentDisplayName(record.username);
+  return '<article class="challenge-battle-card">'+
+   '<div class="challenge-battle-copy">'+
+    '<strong class="challenge-battle-name">'+escapeHtml(name)+'</strong>'+
+    '<div class="challenge-battle-counts">'+
+     '<span>Minhas vitórias: <b>'+record.wins+'</b></span>'+
+     '<span>Vitórias do adversário: <b>'+record.losses+'</b></span>'+
+    '</div>'+
+   '</div>'+
+   '<strong class="challenge-battle-score">'+record.wins+' <i>×</i> '+record.losses+'</strong>'+
+  '</article>';
+ }).join('');
+ return '<details class="challenge-list-group challenge-battle-history-group">'+
+  '<summary class="challenge-group-summary"><span class="challenge-group-summary-copy">⚔️ Histórico de batalhas</span></summary>'+
+  '<div class="challenge-group-content challenge-battle-history-list">'+
+   (cards||'<div class="community-empty">Nenhuma batalha concluída ainda.</div>')+
+  '</div>'+
+ '</details>';
+}
+
+
 
 function getSeenChallengeResults(){
  try{
@@ -4672,6 +4740,7 @@ function renderChallengeList(){
  box.innerHTML='<div class="challenge-list-groups">'+
   group('📤 Desafios enviados','',sent,'sent','Você ainda não enviou desafios.')+
   group('📥 Desafios recebidos','challengeReceivedGroupBadge',received,'received','Você não tem desafios recebidos.')+
+  renderChallengeBattleHistoryGroup()+
  '</div>';
  updateChallengeBadge();
 }
