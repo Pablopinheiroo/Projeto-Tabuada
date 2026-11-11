@@ -85,7 +85,7 @@ check(workerSource.includes("invalidateCommunitySummaryCache()")&&
   "O cache público da comunidade não é invalidado ou marcado com a versão dos dados.");
 check(workerSource.includes("mergeHistorySnapshots(")&&workerSource.includes("body.baseSha"),
   "A API não protege o histórico contra snapshots antigos.");
-check(workerSource.includes('const WORKER_BUILD_ID = "2026-11-11-tournament-30day-unique-facts-v1"')&&
+check(workerSource.includes('const WORKER_BUILD_ID = "2026-11-11-tournament-30day-unique-facts-v2"')&&
   workerSource.includes("PRESENCE_MIN_WRITE_INTERVAL_MS")&&
   workerSource.includes('if (route === "/api/presence" && request.method === "POST")')&&
   workerSource.includes("profile: { ...profile, lastOnlineAt }")&&
@@ -101,12 +101,10 @@ check(workerSource.includes("const TOURNAMENT_CYCLE_DURATION_MS = 30 * 24 * 60 *
   workerSource.includes("tournament30DayCycles: true")&&
   workerSource.includes("tournamentUniqueMultiplications: true"),
   "O torneio precisa renovar automaticamente a cada 30 dias e impedir multiplicações repetidas.");
-check(html.includes('id="tournamentRenewalStatus"')&&
-  html.includes("function renderTournamentSeasonStatus(season)")&&
-  html.includes("formatTournamentDateTime(season.renewsAt,true)")&&
-  html.includes("Ranking da temporada")&&
-  html.includes("uma dificuldade por temporada"),
-  "A tela do torneio não mostra a renovação da temporada de 30 dias.");
+check(workerSource.includes("async scheduled(controller, env)")&&
+  workerSource.includes("await ensureTournamentBoard(season, env);")&&
+  fs.readFileSync(path.join(ROOT,"worker/wrangler.toml"),"utf8").includes('crons = ["5 3 * * *"]'),
+  "O Worker não prepara automaticamente o novo torneio pelo Cron Trigger diário.");
 check(workerSource.includes("async function writeUsersAtomically")&&
   workerSource.includes('route === "/api/gifts/send"')&&
   workerSource.includes('route === "/api/gifts/inbox"')&&
@@ -225,6 +223,12 @@ check(tiedHistory.questions["9x9"].correct===4&&tiedHistory.questions["9x9"].wro
   "Um snapshot antigo, com a mesma quantidade de tentativas, substituiu o registro atual.");
 
 const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+check(html.includes('id="tournamentRenewalStatus"')&&
+  html.includes("function renderTournamentSeasonStatus(season)")&&
+  html.includes("formatTournamentDateTime(season.renewsAt,true)")&&
+  html.includes("Ranking da temporada")&&
+  html.includes("uma dificuldade por temporada"),
+  "A tela do torneio não mostra a renovação da temporada de 30 dias.");
 const profileActionsStart=html.indexOf('<details id="profileActionsDisclosure"');
 const profileActionsEnd=html.indexOf('</details>',profileActionsStart);
 const profileActionsMarkup=profileActionsStart>=0&&profileActionsEnd>profileActionsStart?
