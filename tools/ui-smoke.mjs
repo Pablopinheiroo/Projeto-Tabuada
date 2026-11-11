@@ -535,6 +535,19 @@ async function testViewport(name, viewport, mobile = false) {
       setErrorTrainingPoolState(item,'tournament',true);
       setErrorTrainingPoolState(item,'tournament',true);
       const modeBreakdown=profileLearningStats().modes;
+      historyData.questions["7x7"]={
+        a:7,b:7,attempts:1,correct:0,wrong:1,totalTimeMs:1000,
+        modes:{training:{attempts:1,correct:0,wrong:1,totalTimeMs:1000}},
+        errorTrainingPools:{}
+      };
+      const cleanupStatsBefore=collectLearningFacts().find(value=>value.a===7&&value.b===7);
+      const clearedErrorCount=clearCompletedErrorTrainingPool('training',[{a:7,b:7}]);
+      const cleanupStatsAfter=collectLearningFacts().find(value=>value.a===7&&value.b===7);
+      const cleanupHiddenAfterFinish=!getErrorTrainingFacts('training').some(value=>value.a===7&&value.b===7);
+      addAnswerToHistory({a:7,b:7,correct:false,timeMs:250,mode:'adventure'});
+      const cleanupStillHiddenAfterOtherMode=!getErrorTrainingFacts('training').some(value=>value.a===7&&value.b===7);
+      addAnswerToHistory({a:7,b:7,correct:false,timeMs:250,mode:'training'});
+      const cleanupReappearsAfterTrainingMiss=getErrorTrainingFacts('training').some(value=>value.a===7&&value.b===7);
       ['intelligent_training','difficulty_training','error_training','adventure','challenge'].forEach(mode=>{
         addAnswerToHistory({a:2,b:3,correct:false,timeMs:250,mode});
       });
@@ -552,6 +565,9 @@ async function testViewport(name, viewport, mobile = false) {
         trainingAfterChallenge,tournamentAfterChallenge,
         tournamentAfterResolved:getErrorTrainingFacts('tournament').length,
         trainingAfterOtherModeMisses,trainingAfterNewRegularMiss,
+        clearedErrorCount,cleanupStatsBefore:{attempts:cleanupStatsBefore?.attempts,wrong:cleanupStatsBefore?.wrong},
+        cleanupStatsAfter:{attempts:cleanupStatsAfter?.attempts,wrong:cleanupStatsAfter?.wrong},
+        cleanupHiddenAfterFinish,cleanupStillHiddenAfterOtherMode,cleanupReappearsAfterTrainingMiss,
         modeBreakdown,modes:item.modes
       };
     }finally{
@@ -573,6 +589,12 @@ async function testViewport(name, viewport, mobile = false) {
     name+": limpar erros concluídos deveria ocultar somente a revisão pendente e preservar as estatísticas gerais.");
   check(separatedErrorPools.allSkillsAfterChallenge?.wrong===15&&separatedErrorPools.allSkillsAfterChallenge?.attempts===19,
     name+": uma resposta errada no Desafio não entrou nas estatísticas gerais de habilidade.");
+  check(separatedErrorPools.clearedErrorCount===1&&separatedErrorPools.cleanupHiddenAfterFinish&&
+    separatedErrorPools.cleanupStatsBefore?.wrong===1&&separatedErrorPools.cleanupStatsBefore?.attempts===1&&
+    separatedErrorPools.cleanupStatsAfter?.wrong===1&&separatedErrorPools.cleanupStatsAfter?.attempts===1,
+    name+": ao concluir a revisão, o erro deveria sair da lista sem apagar o histórico das estatísticas.");
+  check(separatedErrorPools.cleanupStillHiddenAfterOtherMode&&separatedErrorPools.cleanupReappearsAfterTrainingMiss,
+    name+": a conta revisada deveria voltar à lista somente depois de um novo erro no modo Treinar.");
   check(separatedErrorPools.trainingAfterChallenge===0&&separatedErrorPools.tournamentAfterChallenge===1&&
     separatedErrorPools.tournamentAfterResolved===0&&separatedErrorPools.trainingAfterOtherModeMisses===0&&
     JSON.stringify(separatedErrorPools.trainingAfterNewRegularMiss)==='[{"a":2,"b":3,"wrong":2}]',
