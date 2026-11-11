@@ -1031,7 +1031,6 @@ async function testViewport(name, viewport, mobile = false) {
   await page.locator("#profileActionsDisclosure .wallet-inline").click();
   check(await page.locator("#profileActionsDisclosure").evaluate(el=>el.open),
     name+": clicar no quadro de moedas/conquistas não expandiu as opções.");
-  await page.locator("#profileActionsDisclosure .profile-card-summary").click();
   await page.locator("#openProfileStats").click();
   check(!(await page.locator("#profileStatsPanel").evaluate(el => el.classList.contains("hidden"))), name + ": o botão Minhas estatísticas não abriu os gráficos.");
   check(await page.locator("#profileMainPanel").evaluate(el => el.classList.contains("hidden")), name + ": a tela principal do perfil não foi substituída pelas estatísticas.");
