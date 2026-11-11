@@ -2527,7 +2527,7 @@ function frameMaterialPattern(material,colors){
 }
 function frameArtworkMarkup(key){
  const frame=frameDefinition(key);if(!frame)return '';
- const [a,b,c]=frame.colors,animated=frame.type==='animated',design=frame.design||'wood-woven';
+ const [a,b,c]=frame.colors,d=c,animated=frame.type==='animated',design=frame.design||'wood-woven';
  const path=(d,fill='none',stroke=c,width=3,cls='')=>'<path class="'+cls+'" d="'+d+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+width+'" stroke-linecap="round" stroke-linejoin="round"/>';
  const ellipse=(x,y,rx,ry,fill=a,stroke=c,width=2,cls='')=>'<ellipse class="'+cls+'" cx="'+x+'" cy="'+y+'" rx="'+rx+'" ry="'+ry+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+width+'"/>';
  const circle=(x,y,r,fill=a,stroke=c,width=2,cls='')=>'<circle class="'+cls+'" cx="'+x+'" cy="'+y+'" r="'+r+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+width+'"/>';
