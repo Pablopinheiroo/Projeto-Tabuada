@@ -489,10 +489,15 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .challenge-inbox-shell[open]>.challenge-inbox-summary:after{content:"−"}
 .challenge-inbox-summary-badges{display:flex;align-items:center;gap:7px;margin-left:auto}
 .challenge-inbox-summary-badges small{color:#9fb8d8;font-size:.68rem;font-weight:650}
-.challenge-list-groups{display:grid;gap:14px;padding:0 12px 13px}
-.challenge-list-group{min-width:0}
-.challenge-group-heading{display:flex;align-items:center;gap:8px;margin:0 0 8px;color:#e8f2ff;font-size:.9rem;font-weight:950}
-.challenge-group-heading small{color:#9fb8d8;font-size:.68rem;font-weight:650}
+.challenge-list-groups{display:grid;gap:10px;padding:0 12px 13px}
+.challenge-list-group{min-width:0;border:1px solid #385b80;border-radius:12px;background:#0b192e;overflow:hidden}
+.challenge-group-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 13px;color:#e8f2ff;font-size:.88rem;font-weight:950;cursor:pointer;list-style:none}
+.challenge-group-summary::-webkit-details-marker{display:none}
+.challenge-group-summary:after{content:"＋";color:#67e8f9;font-size:1.1rem}
+.challenge-list-group[open]>.challenge-group-summary:after{content:"−"}
+.challenge-group-summary-copy{display:flex;align-items:center;gap:8px;min-width:0}
+.challenge-group-summary small{color:#9fb8d8;font-size:.68rem;font-weight:650}
+.challenge-group-content{display:grid;gap:10px;padding:0 10px 10px}
 .challenge-notification-badge{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:#dc2626;color:#fff;font-size:.68rem;font-weight:950;line-height:1;box-shadow:0 0 0 2px #111c36}
 .challenge-unread-dot{display:inline-block;width:9px;height:9px;flex:0 0 9px;margin-left:5px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px #ef444433;vertical-align:middle}
 .challenge-retry-box{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px;margin-top:10px;padding:10px;border:1px solid #9a6b3d;border-radius:11px;background:#342719}
@@ -1485,8 +1490,7 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
    <summary class="challenge-inbox-summary">
     <span>📬 Desafios recebidos e enviados</span>
     <span class="challenge-inbox-summary-badges">
-     <span id="challengeInboxReceivedBadge" class="challenge-notification-badge hidden" aria-label="Desafios recebidos não visualizados">0</span>
-     <span id="challengeInboxResultsBadge" class="challenge-notification-badge hidden" aria-label="Resultados não visualizados">0</span>
+     <span id="challengeInboxBadge" class="challenge-notification-badge hidden" aria-label="Pendências nos desafios">0</span>
      <small>Toque para abrir</small>
     </span>
    </summary>
@@ -4241,31 +4245,30 @@ function markChallengeReceiptSeen(id){
  try{localStorage.setItem(CHALLENGE_RECEIVED_SEEN_KEY,JSON.stringify(all));}catch{}
 }
 function isUnreadChallengeReceipt(item){
+ if(item.challenger===activeProfile)return false;
+ if(item.status==='completed')return !!item.myResult&&!getSeenChallengeResults().includes(item.id);
  const requiresAction=['open','waiting_participants','pending_acceptance'];
- return item.challenger!==activeProfile&&requiresAction.includes(item.status)&&
-  !getSeenChallengeReceipts().includes(item.id);
+ return requiresAction.includes(item.status)&&!getSeenChallengeReceipts().includes(item.id);
 }
 function challengeUnreadCounts(){
- const resultSeen=new Set(getSeenChallengeResults());
  const received=challengeItems.filter(isUnreadChallengeReceipt).length;
- const results=challengeItems.filter(item=>
-  item.status==='completed'&&item.myResult&&!resultSeen.has(item.id)
+ const unseenSentResults=challengeItems.filter(item=>
+  item.challenger===activeProfile&&item.status==='completed'&&item.myResult&&
+  !getSeenChallengeResults().includes(item.id)
  ).length;
- return {received,results};
+ return {received,total:received+unseenSentResults};
 }
 function updateChallengeBadge(){
  const counts=challengeUnreadCounts();
+ const total=counts.total;
  const badge=$('challengeBadge');
  if(badge){
-  const total=counts.received+counts.results;
   badge.textContent=total>99?'99+':String(total);
   badge.classList.toggle('hidden',total===0);
  }
  for(const [id,count] of [
-  ['challengeInboxReceivedBadge',counts.received],
-  ['challengeReceivedGroupBadge',counts.received],
-  ['challengeInboxResultsBadge',counts.results],
-  ['challengeResultsGroupBadge',counts.results]
+  ['challengeInboxBadge',total],
+  ['challengeReceivedGroupBadge',counts.received]
  ]){
   const element=$(id);
   if(!element)continue;
@@ -4275,10 +4278,8 @@ function updateChallengeBadge(){
 }
 function renderChallengeList(){
  const box=$('challengeList');if(!box)return;
- const incomplete=challengeItems.filter(item=>item.status!=='completed');
- const sent=incomplete.filter(item=>item.challenger===activeProfile);
- const received=incomplete.filter(item=>item.challenger!==activeProfile);
- const results=challengeItems.filter(item=>item.status==='completed'&&item.myResult);
+ const sent=challengeItems.filter(item=>item.challenger===activeProfile);
+ const received=challengeItems.filter(item=>item.challenger!==activeProfile);
  const resultSeen=new Set(getSeenChallengeResults());
  const renderCard=(item,side)=>{
   const participants=challengeParticipants(item),others=participants.filter(name=>name!==activeProfile);
@@ -4338,12 +4339,12 @@ function renderChallengeList(){
     (Number(item.retryCount)>=1||item.retryUsed===true)){
    retryControl='<small class="challenge-retry-note">Esta partida já usou a nova tentativa. Para desafiar novamente, será necessário jogar outra partida.</small>';
   }
-  const unread=side==='received'?isUnreadChallengeReceipt(item):side==='results'?!resultSeen.has(item.id):false;
+  const unread=completed?!resultSeen.has(item.id):(side==='received'&&isUnreadChallengeReceipt(item));
   const dot=unread?'<span class="challenge-unread-dot" aria-label="Ainda não visualizado"></span>':'';
   const summary=completed?'Ver classificação final':'Ver prévia da classificação';
   const explanation=completed?'Resultado definitivo: todos os participantes terminaram.':'Prévia provisória: a ordem pode mudar quando os demais participantes jogarem.';
   const resultText=mine?mine.score+'/10 pontos':'Você ainda não jogou';
-  const readAttr=side==='received'?' data-challenge-received-card="'+item.id+'"':side==='results'?' data-challenge-result-card="'+item.id+'"':'';
+  const readAttr=completed?' data-challenge-result-card="'+item.id+'"':side==='received'?' data-challenge-received-card="'+item.id+'"':'';
   return '<article class="challenge-list-card"'+readAttr+'>'+
    '<header class="challenge-card-heading"><div class="challenge-card-heading-copy"><span class="challenge-card-kicker">'+(side==='sent'?'DESAFIO ENVIADO':side==='received'?'DESAFIO RECEBIDO':'RESULTADO DO DESAFIO')+dot+'</span><strong>⚔️ '+escapeHtml(names)+'</strong><small>'+escapeHtml(level)+'</small></div><span class="challenge-status-pill">'+escapeHtml(challengeResultLabel(item))+'</span></header>'+
    '<div class="challenge-card-facts">'+
@@ -4358,16 +4359,16 @@ function renderChallengeList(){
   '</article>';
  };
  const group=(title,badgeId,items,side,empty)=>{
-  const badgeIdText=badgeId||'';
-  const badge=badgeIdText?'<span id="'+badgeIdText+'" class="challenge-notification-badge hidden">0</span>':'';
+  const badge=badgeId?'<span id="'+badgeId+'" class="challenge-notification-badge hidden">0</span>':'';
   const cards=items.map(item=>renderCard(item,side)).join('');
-  return '<section class="challenge-list-group"><h3 class="challenge-group-heading">'+title+badge+'</h3>'+
-   (cards||'<div class="community-empty">'+empty+'</div>')+'</section>';
+  return '<details class="challenge-list-group">'+
+   '<summary class="challenge-group-summary"><span class="challenge-group-summary-copy">'+title+'</span>'+badge+'</summary>'+
+   '<div class="challenge-group-content">'+(cards||'<div class="community-empty">'+empty+'</div>')+'</div>'+
+  '</details>';
  };
  box.innerHTML='<div class="challenge-list-groups">'+
   group('📤 Desafios enviados','',sent,'sent','Você ainda não enviou desafios.')+
   group('📥 Desafios recebidos','challengeReceivedGroupBadge',received,'received','Você não tem desafios recebidos.')+
-  group('🏆 Resultados','challengeResultsGroupBadge',results,'results','Seus resultados aparecerão aqui quando as partidas forem concluídas.')+
  '</div>';
  updateChallengeBadge();
 }
