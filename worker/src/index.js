@@ -1739,7 +1739,7 @@ async function handleApi(request, env, origin) {
       return json({ challenge: result }, 200, origin);
     }
 
-    const challengeRetryMatch = route.match(/^\\/api\\/challenges\\/([a-f0-9]{32})\\/retry$/);
+    const challengeRetryMatch = route.match(/^\/api\/challenges\/([a-f0-9]{32})\/retry$/);
     if (challengeRetryMatch && request.method === "POST") {
       const body = await readJson(request);
       const challenge = await retryRejectedBetChallenge(challengeRetryMatch[1], body, username, env);
