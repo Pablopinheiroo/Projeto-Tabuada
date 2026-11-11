@@ -102,11 +102,13 @@ check(workerSource.includes("async function writeUsersAtomically")&&
   "A API deve transferir moedas com gravação atômica dos dois saldos e guardar notificações de presentes.");
 check(html.includes("assets/gift-animation.gif")&&
   html.includes("Presentear com moedas")&&
+  html.includes("data-community-gift-launch")&&
   html.includes("function pollGiftInbox()")&&
   html.includes("data-gift-toast-dismiss")&&
-  html.includes("community-presence-initial")&&
-  html.includes("renderCommunityLastOnline(user.lastOnlineAt)"),
-  "A comunidade deve exibir o presente animado, a notificação fechável e as iniciais verdes em Visto/Atividade.");
+  !html.includes("community-presence-initial")&&
+  !html.includes("community-presence-dot")&&
+  !html.includes("community-last-online::first-letter"),
+  "A comunidade deve exibir o presente animado já na lista de participantes, a notificação fechável e a presença com texto normal, sem verde.");
 const workerTestSource=workerSource.replace("export default {","globalThis.__workerDefault = {");
 const workerContext={Date,Set,Map,Object,Array,Number,String,Math,RegExp,JSON,TextEncoder,TextDecoder,Uint8Array,Response,Headers,URL};
 vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;globalThis.__normalizeGameEconomy=normalizeGameEconomy;globalThis.__applyTrainingCorrectReward=applyTrainingCorrectReward;globalThis.__applyIntelligentTrainingReward=applyIntelligentTrainingReward;globalThis.__applyErrorTrainingReward=applyErrorTrainingReward;",workerContext);

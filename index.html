@@ -1112,9 +1112,10 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .training-celebration-close{position:absolute;top:9px;right:10px;display:grid;place-items:center;width:34px;height:34px;min-height:34px;padding:0;border:1px solid #7188a7;border-radius:10px;background:#1d3555;color:#fff;font-size:1.35rem;font-weight:950;line-height:1}
 
 /* Comunidade: presença e cartões de desafios mais claros */
-.community-last-online{display:flex;align-items:center;gap:4px;margin-top:3px;color:#58718c;font-size:.7rem;font-weight:750;line-height:1.25}
-.community-presence-initial{color:#16a34a!important;font-weight:1000}
-.community-presence-dot{display:inline-block;flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:#16a34a;box-shadow:0 0 0 3px #16a34a20}
+.community-last-online{display:block;margin-top:2px;color:#58718c;font-size:.68rem;font-weight:750;line-height:1.25}
+.community-gift-quick{display:inline-flex;align-items:center;gap:8px;width:max-content;max-width:100%;margin-top:7px;padding:5px 10px 5px 6px;border:1px solid #be8a4e;border-radius:999px;background:linear-gradient(115deg,#552b2d,#774020 58%,#59401e);color:#fff1bf;font-size:.72rem;font-weight:900;cursor:pointer;box-shadow:0 3px 10px #41200c24;transition:transform .18s,border-color .18s,box-shadow .18s}
+.community-gift-quick:hover{transform:translateY(-1px);border-color:#fcd34d;box-shadow:0 5px 14px #f59e0b26}
+.community-gift-quick img{width:38px;height:34px;flex:0 0 38px;object-fit:contain;filter:drop-shadow(0 3px 5px #0006);animation:communityGiftFloat 2.8s ease-in-out infinite}
 .community-gift-action{display:grid;gap:10px;margin-top:13px;padding:12px;border:1px solid #a66b32;border-radius:15px;background:radial-gradient(circle at 92% 0%,#6b3a1d66,transparent 42%),linear-gradient(130deg,#271d37,#37213b 58%,#3e2a1b);box-shadow:inset 0 1px #ffffff12}
 .community-gift-button{display:flex;align-items:center;gap:12px;width:100%;padding:8px;border:1px solid #be8a4e;border-radius:12px;background:linear-gradient(115deg,#552b2d,#774020 58%,#59401e);color:#fff5d9;text-align:left;cursor:pointer;transition:transform .18s,border-color .18s,box-shadow .18s}
 .community-gift-button:hover{transform:translateY(-2px);border-color:#fcd34d;box-shadow:0 7px 18px #f59e0b26}
@@ -1125,6 +1126,7 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .community-gift-button-arrow{margin-left:auto;color:#fcd34d;font-size:1.2rem;font-weight:950}
 @keyframes communityGiftFloat{0%,100%{transform:translateY(1px) rotate(-2deg)}50%{transform:translateY(-5px) rotate(2deg)}}
 .community-gift-form{display:grid;gap:9px;padding:11px;border:1px solid #91623f;border-radius:11px;background:#1d1d31}
+.community-gift-form.hidden{display:none}
 .community-gift-form label{display:grid;gap:6px;color:#ffe7bd;font-size:.78rem;font-weight:850}
 .community-gift-form input{width:100%;min-height:42px;padding:9px 11px;border:1px solid #94734e;border-radius:9px;background:#101b2e;color:#fff;font:inherit;font-size:1rem}
 .community-gift-form input:focus{outline:2px solid #fbbf24;outline-offset:1px}
@@ -3287,7 +3289,7 @@ function formatCommunityLastOnline(value){
  const elapsed=Math.max(0,Date.now()-timestamp);
  if(elapsed<6*60_000){
   const minutes=Math.floor(elapsed/60_000);
-  return minutes<1?'🟢 Online agora':'🟢 Online há '+minutes+' min';
+  return minutes<1?'Online agora':'Online há '+minutes+' min';
  }
  if(elapsed<60*60_000)return 'Visto por último há '+Math.floor(elapsed/60_000)+' min';
  if(elapsed<24*60*60_000){
@@ -3295,11 +3297,6 @@ function formatCommunityLastOnline(value){
   return 'Visto por último há '+hours+'h'+(minutes?' '+minutes+'min':'');
  }
  return 'Visto por último em '+new Date(timestamp).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-}
-function renderCommunityLastOnline(value){
- const text=formatCommunityLastOnline(value);
- if(text.startsWith('🟢 '))return '<span class="community-presence-dot" aria-hidden="true"></span>'+escapeHtml(text.slice(2));
- return '<span class="community-presence-initial">'+escapeHtml(text.charAt(0))+'</span>'+escapeHtml(text.slice(1));
 }
 function communityStatsFromRecord(record){
  const profile=record.profile&&typeof record.profile==='object'?record.profile:{};
@@ -3379,12 +3376,7 @@ async function renderCommunityRanking(){
    const titleSection='<div class="community-rank-title-section"><span class="community-title-label">TÍTULOS</span><div class="community-rank-titles">'+(titleBadges||'<span class="community-rank-no-titles">Ainda não conquistou títulos.</span>')+'</div></div>';
    const giftAction=user.username!==activeProfile
     ?'<section class="community-gift-action">'+
-      '<button type="button" class="community-gift-button" data-community-gift-toggle="'+escapeHtml(user.username)+'">'+
-       '<img src="assets/gift-animation.gif" alt="Presente animado">'+
-       '<span class="community-gift-button-copy"><strong>Presentear com moedas 🎁</strong><small>Envie um mimo para alegrar o dia de alguém.</small></span>'+
-       '<span class="community-gift-button-arrow" aria-hidden="true">›</span>'+
-      '</button>'+
-      '<form class="community-gift-form hidden" data-community-gift-form="'+escapeHtml(user.username)+'">'+
+      '<form class="community-gift-form" data-community-gift-form="'+escapeHtml(user.username)+'">'+
        '<label>Quantas moedas deseja enviar?'+
         '<input type="number" min="1" max="'+Math.max(0,Number(gameEconomy.coins)||0)+'" step="1" inputmode="numeric" required placeholder="Ex.: 50" data-gift-amount>'+
        '</label>'+
@@ -3411,7 +3403,8 @@ async function renderCommunityRanking(){
       '<img class="community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt="">'+
       '<div class="community-rank-identity">'+
        '<div class="community-rank-name-row"><strong class="community-rank-display-title">'+escapeHtml(user.displayName)+'</strong><span class="community-wallet-pill"><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</span></div>'+
-       '<small class="community-last-online">'+renderCommunityLastOnline(user.lastOnlineAt)+'</small>'+
+       '<small class="community-last-online">'+escapeHtml(formatCommunityLastOnline(user.lastOnlineAt))+'</small>'+
+       (user.username!==activeProfile?'<button type="button" class="community-gift-quick" data-community-gift-launch="'+escapeHtml(user.username)+'"><img src="assets/gift-animation.gif" alt=""><span>Presentear com moedas</span></button>':'')+
       '</div>'+
      '</div>'+
      '<div class="community-rank-public-stats"><span><strong>✓ '+user.correct.toLocaleString('pt-BR')+'</strong><small>Acertos</small></span><span><strong>✕ '+user.wrong.toLocaleString('pt-BR')+'</strong><small>Erros</small></span><span><strong>⏱️ '+formatStudyTimeCompact(user.timeMs)+'</strong><small>Tempo estudado</small></span></div>'+
@@ -3419,6 +3412,7 @@ async function renderCommunityRanking(){
      '<span class="community-rank-expand">Clique para ver mais informações ▾</span>'+
     '</summary>'+
     '<div class="community-profile-details">'+
+     giftAction+
      '<div class="community-profile-detail-section community-challenge-details"><span class="community-profile-detail-title">⚔️ DESAFIOS</span><div class="community-profile-detail-chips"><span class="community-rank-chip">'+user.challengeTotal+' partidas</span><span class="community-rank-chip">🏆 '+user.challengeWins+' vitórias</span><span class="community-rank-chip">🛡️ '+user.challengeLosses+' derrotas</span><span class="community-rank-chip">🤝 '+user.challengeDraws+' empates</span></div></div>'+
      '<div class="community-profile-detail-grid">'+
       '<div class="community-rank-metric community-coins-metric"><strong><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</strong><small>moedas disponíveis</small></div>'+
@@ -3434,15 +3428,22 @@ async function renderCommunityRanking(){
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏅 MEDALHAS DE NÍVEL</span><div class="community-profile-detail-chips">'+(medals||'<span class="community-profile-empty">Ainda não conquistou medalhas de nível.</span>')+'</div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">✨ CONQUISTAS</span><div class="community-profile-detail-chips">'+(achievementBadges||'<span class="community-profile-empty">Ainda não desbloqueou conquistas.</span>')+'</div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏆 PREMIAÇÕES MENSAIS</span><div class="community-profile-detail-chips">'+(awards||'<span class="community-profile-empty">Nenhuma premiação mensal registrada.</span>')+'</div></div>'+
-     giftAction+
     '</div>'+
    '</details>';
   }).join('');
-  box.querySelectorAll('[data-community-gift-toggle]').forEach(button=>button.addEventListener('click',()=>{
-   const form=button.closest('.community-rank-card')?.querySelector('.community-gift-form');
-   if(!form)return;
-   form.classList.toggle('hidden');
-   if(!form.classList.contains('hidden'))form.querySelector('[data-gift-amount]')?.focus();
+  box.querySelectorAll('[data-community-gift-launch]').forEach(button=>button.addEventListener('click',event=>{
+   event.preventDefault();
+   event.stopPropagation();
+   const card=button.closest('.community-rank-card');
+   const form=card?.querySelector('.community-gift-form');
+   if(!card||!form)return;
+   card.open=true;
+   form.classList.remove('hidden');
+   const input=form.querySelector('[data-gift-amount]');
+   if(input){
+    input.focus({preventScroll:true});
+    form.scrollIntoView({behavior:'smooth',block:'nearest'});
+   }
   }));
   box.querySelectorAll('.community-gift-form').forEach(form=>form.addEventListener('submit',event=>{
    event.preventDefault();
