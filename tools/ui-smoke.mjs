@@ -98,6 +98,9 @@ check(workerSource.includes("const TOURNAMENT_CYCLE_DURATION_MS = 30 * 24 * 60 *
   workerSource.includes("function currentTournamentCycle(date = new Date())")&&
   workerSource.includes("const seenFacts = new Set();")&&
   workerSource.includes("if (seenFacts.has(factKey)) continue;")&&
+  workerSource.includes("function isTournamentSeasonKey(value)")&&
+  workerSource.includes("isTournamentSeasonKey(award.month)")&&
+  workerSource.includes("isTournamentSeasonKey(key)")&&
   workerSource.includes("tournament30DayCycles: true")&&
   workerSource.includes("tournamentUniqueMultiplications: true"),
   "O torneio precisa renovar automaticamente a cada 30 dias e impedir multiplicações repetidas.");
@@ -230,6 +233,11 @@ check(html.includes('id="tournamentRenewalStatus"')&&
   html.includes("Ranking da temporada")&&
   html.includes("uma dificuldade por temporada"),
   "A tela do torneio não mostra a renovação da temporada de 30 dias.");
+check(html.includes("function tournamentSeasonKeyLabel(key)")&&
+  html.includes("/^ciclo-\\d{4}$/")&&
+  html.includes("Torneio · '+escapeHtml(period)")&&
+  html.includes("Torneio '+tournamentSeasonKeyLabel(month)"),
+  "Premiações de torneios de 30 dias não estão aparecendo com o nome da temporada nos perfis e na Comunidade.");
 const profileActionsStart=html.indexOf('<details id="profileActionsDisclosure"');
 const profileActionsEnd=html.indexOf('</details>',profileActionsStart);
 const profileActionsMarkup=profileActionsStart>=0&&profileActionsEnd>profileActionsStart?
