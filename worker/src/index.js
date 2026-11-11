@@ -11,10 +11,12 @@ const PASSWORD_ITERATIONS = 100000;
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 const AVATAR_IMAGE_COUNT = 12;
 const AVATAR_GIF_COUNT = 12;
+const PROFILE_FRAME_STATIC_COUNT = 20;
+const PROFILE_FRAME_ANIMATED_COUNT = 20;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
 const CHALLENGE_PLAYER_METADATA_MAX = 45;
-const WORKER_BUILD_ID = "2026-11-11-tournament-30day-unique-facts-v2";
+const WORKER_BUILD_ID = "2026-11-11-shop-profile-frames-v1";
 const PRESENCE_MIN_WRITE_INTERVAL_MS = 4 * 60 * 1000;
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
@@ -248,7 +250,7 @@ function defaultGameEconomy(currentAvatar = "imagem:0") {
     intelligentTrainingProgress: 0, intelligentTrainingClaimIds: [], errorTrainingClaimIds: [],
     completedStages: [], perfectStages: [], comboStages: [],
     trainingClaimIds: [], ownedAvatars: [...new Set(["imagem:0", legacyAvatar])],
-    achievements: {}
+    ownedFrames: [], achievements: {}
   };
 }
 function validAvatarKey(value) {
@@ -258,6 +260,14 @@ function validAvatarKey(value) {
   const index = Number(match[2]);
   return Number.isInteger(index) && index >= 0 &&
     index < (match[1] === "imagem" ? AVATAR_IMAGE_COUNT : AVATAR_GIF_COUNT);
+}
+function validFrameKey(value) {
+  if (typeof value !== "string") return false;
+  const match = value.match(/^(static|animated):([1-9]|1[0-9]|20)$/);
+  if (!match) return false;
+  const index = Number(match[2]);
+  return Number.isInteger(index) && index >= 1 && index <=
+    (match[1] === "static" ? PROFILE_FRAME_STATIC_COUNT : PROFILE_FRAME_ANIMATED_COUNT);
 }
 function normalizeGameEconomy(record) {
   const profile = record?.profile && typeof record.profile === "object" ? record.profile : {};
@@ -282,7 +292,9 @@ function normalizeGameEconomy(record) {
     perfectStages: [...new Set((Array.isArray(raw?.perfectStages) ? raw.perfectStages : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= ADVENTURE_STAGE_COUNT))],
     comboStages: [...new Set((Array.isArray(raw?.comboStages) ? raw.comboStages : []).map(Number).filter(n => Number.isInteger(n) && n >= 1 && n <= ADVENTURE_STAGE_COUNT))],
     trainingClaimIds: [...new Set((Array.isArray(raw?.trainingClaimIds) ? raw.trainingClaimIds : []).filter(id => typeof id === "string" && id.length <= 100))].slice(-500),
-    ownedAvatars: uniqueOwned, achievements
+    ownedAvatars: uniqueOwned,
+    ownedFrames: [...new Set((Array.isArray(raw?.ownedFrames) ? raw.ownedFrames : []).filter(validFrameKey))],
+    achievements
   };
 }
 function applyTrainingCorrectReward(economy, claimId, correctCount) {
@@ -1349,6 +1361,7 @@ function communitySummary(record) {
     challengeDraws: Number(total.draws) || 0,
     challengeTotal: (Number(total.wins) || 0) + (Number(total.losses) || 0) + (Number(total.draws) || 0),
     tournamentFrame: profile.tournamentFrame || null,
+    profileFrame: profile.profileFrame || "",
     lastOnlineAt: typeof profile.lastOnlineAt === "string" && Number.isFinite(Date.parse(profile.lastOnlineAt)) ? profile.lastOnlineAt : null
   };
 }
@@ -1676,7 +1689,8 @@ async function handleApi(request, env, origin) {
         auth: { username, salt, hash, iterations: PASSWORD_ITERATIONS, createdAt: new Date().toISOString() },
         profile: {
           displayName: username,
-          avatar: "imagem:0"
+          avatar: "imagem:0",
+          profileFrame: ""
         },
         history: { questions: {}, sessions: [] },
         economy: defaultGameEconomy("imagem:0"),
@@ -2247,6 +2261,21 @@ async function handleApi(request, env, origin) {
         } else {
           return json({ error: "Tipo de recompensa inválido." }, 400, origin);
         }
+      } else if (typeof body.frameKey === "string") {
+        const frameKey = body.frameKey;
+        if (!validFrameKey(frameKey)) {
+          return json({ error: "Moldura inválida." }, 400, origin);
+        }
+        if (economy.ownedFrames.includes(frameKey)) {
+          return json({ economy, alreadyOwned: true, coinsAdded: 0, newAchievements: [] }, 200, origin);
+        }
+        const price = frameKey.startsWith("animated:") ? 2000 : 150;
+        if (economy.coins < price) {
+          return json({ error: "Você ainda não tem moedas suficientes. Esta moldura custa " + price + " moedas." }, 400, origin);
+        }
+        economy.coins -= price;
+        economy.ownedFrames.push(frameKey);
+        changed = true;
       } else {
         const avatarKey = body.avatarKey;
         if (!validAvatarKey(avatarKey) || avatarKey === "imagem:0") {
@@ -2330,9 +2359,19 @@ async function handleApi(request, env, origin) {
       const currentAudioAt = parseTime(currentProfile.audioPreferencesSavedAt);
       const mayApplyProfile = baseMatches || (incomingPublicAt > 0 && incomingPublicAt > currentPublicAt);
       const mayApplyAudio = baseMatches || incomingAudioAt > currentAudioAt || (!currentAudioAt && incomingAudioAt > 0);
+      const accountEconomy = normalizeGameEconomy(record.data);
+      const currentOwnedFrame = typeof currentProfile.profileFrame === "string" &&
+        accountEconomy.ownedFrames.includes(currentProfile.profileFrame) ? currentProfile.profileFrame : "";
+      let requestedProfileFrame = currentOwnedFrame;
+      if (mayApplyProfile && Object.prototype.hasOwnProperty.call(incomingProfile, "profileFrame")) {
+        const incomingFrame = typeof incomingProfile.profileFrame === "string" ? incomingProfile.profileFrame : "";
+        requestedProfileFrame = incomingFrame === "" || accountEconomy.ownedFrames.includes(incomingFrame)
+          ? incomingFrame : currentOwnedFrame;
+      }
       const mergedProfile = {
         ...currentProfile,
         ...(mayApplyProfile ? incomingProfile : {}),
+        profileFrame: requestedProfileFrame,
         studyTimeMs: Math.max(
           Number(currentProfile.studyTimeMs) || 0,
           Number(incomingProfile.studyTimeMs) || 0
