@@ -1113,20 +1113,14 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 
 /* Comunidade: presença e cartões de desafios mais claros */
 .community-last-online{display:block;margin-top:2px;color:#58718c;font-size:.68rem;font-weight:750;line-height:1.25}
-.community-gift-quick{display:inline-flex;align-items:center;gap:8px;width:max-content;max-width:100%;margin-top:7px;padding:5px 10px 5px 6px;border:1px solid #be8a4e;border-radius:999px;background:linear-gradient(115deg,#552b2d,#774020 58%,#59401e);color:#fff1bf;font-size:.72rem;font-weight:900;cursor:pointer;box-shadow:0 3px 10px #41200c24;transition:transform .18s,border-color .18s,box-shadow .18s}
-.community-gift-quick:hover{transform:translateY(-1px);border-color:#fcd34d;box-shadow:0 5px 14px #f59e0b26}
-.community-gift-quick img{width:38px;height:34px;flex:0 0 38px;object-fit:contain;filter:drop-shadow(0 3px 5px #0006);animation:communityGiftFloat 2.8s ease-in-out infinite}
-.community-gift-action{display:grid;gap:10px;margin-top:13px;padding:12px;border:1px solid #a66b32;border-radius:15px;background:radial-gradient(circle at 92% 0%,#6b3a1d66,transparent 42%),linear-gradient(130deg,#271d37,#37213b 58%,#3e2a1b);box-shadow:inset 0 1px #ffffff12}
-.community-gift-button{display:flex;align-items:center;gap:12px;width:100%;padding:8px;border:1px solid #be8a4e;border-radius:12px;background:linear-gradient(115deg,#552b2d,#774020 58%,#59401e);color:#fff5d9;text-align:left;cursor:pointer;transition:transform .18s,border-color .18s,box-shadow .18s}
-.community-gift-button:hover{transform:translateY(-2px);border-color:#fcd34d;box-shadow:0 7px 18px #f59e0b26}
-.community-gift-button img{width:76px;height:68px;flex:0 0 76px;object-fit:contain;filter:drop-shadow(0 5px 8px #0007);animation:communityGiftFloat 2.8s ease-in-out infinite}
-.community-gift-button-copy{display:grid;gap:4px;min-width:0}
-.community-gift-button-copy strong{font-size:.9rem;font-weight:950;color:#fff1bf}
-.community-gift-button-copy small{color:#f2d9b2;font-size:.72rem;line-height:1.35}
-.community-gift-button-arrow{margin-left:auto;color:#fcd34d;font-size:1.2rem;font-weight:950}
+.community-rank-card{position:relative}
+.community-rank-identity{padding-right:32px}
+.community-gift-quick{position:absolute;top:5px;right:5px;z-index:5;display:grid;place-items:center;width:36px;height:36px;min-width:36px;margin:0;padding:0;border:0!important;border-radius:0;background:transparent!important;color:inherit;box-shadow:none!important;cursor:pointer;transition:transform .18s}
+.community-gift-quick:hover{transform:translateY(-2px);background:transparent!important;box-shadow:none!important;filter:none}
+.community-gift-quick img{display:block;width:38px;height:36px;object-fit:contain;filter:drop-shadow(0 3px 5px #0006);animation:communityGiftFloat 2.8s ease-in-out infinite}
+.community-gift-quick:focus-visible{outline:2px solid #b77936;outline-offset:1px;border-radius:8px}
 @keyframes communityGiftFloat{0%,100%{transform:translateY(1px) rotate(-2deg)}50%{transform:translateY(-5px) rotate(2deg)}}
 .community-gift-form{display:grid;gap:9px;padding:11px;border:1px solid #91623f;border-radius:11px;background:#1d1d31}
-.community-gift-form.hidden{display:none}
 .community-gift-form label{display:grid;gap:6px;color:#ffe7bd;font-size:.78rem;font-weight:850}
 .community-gift-form input{width:100%;min-height:42px;padding:9px 11px;border:1px solid #94734e;border-radius:9px;background:#101b2e;color:#fff;font:inherit;font-size:1rem}
 .community-gift-form input:focus{outline:2px solid #fbbf24;outline-offset:1px}
@@ -1134,8 +1128,19 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .community-gift-form-actions{display:flex;gap:8px;flex-wrap:wrap}
 .community-gift-form-actions button{flex:1 1 120px;min-height:39px;border-radius:9px;font-size:.78rem;font-weight:900}
 .community-gift-send{background:linear-gradient(110deg,#b45309,#d97706);color:#fff;border:1px solid #fbbf24}
-.community-gift-cancel{background:#263247;color:#e2e8f0;border:1px solid #52647d}
 .community-gift-status{min-height:1em;margin:0;color:#fde68a;font-size:.72rem;line-height:1.35}
+.community-gift-popover{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));z-index:12500;width:min(365px,calc(100vw - 26px));max-height:min(78vh,600px);overflow:auto;padding:15px;border:1px solid #a66b32;border-radius:17px;background:radial-gradient(circle at 92% 0%,#6b3a1d66,transparent 42%),linear-gradient(130deg,#271d37,#37213b 58%,#3e2a1b);color:#fff3dd;box-shadow:0 18px 48px #020617b8,0 0 0 1px #fbbf2422;animation:communityGiftPopoverIn .22s ease-out both}
+.community-gift-popover.hidden{display:none!important}
+.community-gift-popover-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;padding-right:34px}
+.community-gift-popover-heading{display:grid;gap:3px;min-width:0}
+.community-gift-popover-heading strong{color:#fff1bf;font-size:.9rem;font-weight:950}
+.community-gift-popover-heading small{color:#f2d9b2;font-size:.72rem;overflow-wrap:anywhere}
+.community-gift-popover-close{position:absolute;top:9px;right:9px;display:grid;place-items:center;width:30px;height:30px;min-height:30px;padding:0;border:1px solid #ffe0ad66;border-radius:50%;background:#251b2dcc;color:#fff;font-size:1.15rem;font-weight:900;line-height:1;cursor:pointer}
+.community-gift-popover .community-gift-form{padding:0;border:0;background:transparent}
+.community-gift-popover .community-gift-form-actions button{flex:1 1 100%}
+@keyframes communityGiftPopoverIn{from{opacity:0;transform:translateY(9px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:560px){.community-gift-popover{left:50%;right:auto;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(365px,calc(100vw - 22px))}}
+@media(prefers-reduced-motion:reduce){.community-gift-quick img{animation:none}.community-gift-popover{animation:none}}
 .gift-notification-stack{position:fixed;top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));z-index:12000;display:grid;gap:10px;width:min(390px,calc(100vw - 24px));pointer-events:none}
 .gift-toast{position:relative;display:flex;align-items:center;gap:12px;min-height:112px;padding:15px 14px 14px 12px;border:1px solid #fbbf24;border-radius:18px;background:radial-gradient(circle at 100% 0%,#fbbf2440,transparent 45%),linear-gradient(130deg,#49243d,#722c31 58%,#6b3b19);color:#fff7df;box-shadow:0 15px 40px #090d1bcc,0 0 0 3px #f59e0b22;pointer-events:auto;overflow:hidden;animation:giftToastEnter .42s cubic-bezier(.2,.85,.25,1.2) both}
 .gift-toast:before{content:"";position:absolute;inset:-40% auto auto -12%;width:75%;height:150%;background:linear-gradient(110deg,transparent,#ffffff0b,transparent);transform:rotate(18deg);pointer-events:none}
@@ -1720,7 +1725,6 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
  <div id="errorTrainingCard" class="review-training-card hidden"><div><span class="music-kicker">REVISÃO DE ERROS</span><h3>❌ Treine seus erros</h3><p id="errorTrainingSummary" class="hint">Mostra somente contas erradas no modo Treinar. Cada conta precisa de dois acertos seguidos para sair da lista. Ao concluir, o registro de revisão é limpo, mas as estatísticas são mantidas.</p></div><button id="startErrorTraining" class="review-training-button" type="button">Treinar meus erros</button></div>
  <div id="tournamentErrorTrainingCard" class="review-training-card hidden"><div><span class="music-kicker">REVISÃO DO TORNEIO</span><h3>🏆 Revisar erros do torneio</h3><p id="tournamentErrorTrainingSummary" class="hint">Treine somente as contas que você errou no Torneio mensal, sem misturar com outras modalidades.</p></div><button id="startTournamentErrorTraining" class="review-training-button" type="button">Revisar erros do torneio</button></div>
  <div class="review-training-card"><div><span class="music-kicker">ABAIXO DE 90% DE ACERTOS</span><h3>🎯 Treinar minhas dificuldades</h3><p id="difficultyTrainingSummary" class="hint">Aparecem as contas com menos de 90% de acertos. Esta modalidade continua disponível e concede 5 moedas a cada 10 acertos.</p></div><button id="startDifficultyTraining" class="review-training-button" type="button">Carregar minhas dificuldades</button></div>
- <p class="small">No modo normal, a tabuada segue de 1 a 10. No aleatório, a ordem muda.</p>
 </div>
 
 <div id="adventureMapView" class="mode-view hidden">
@@ -3374,19 +3378,6 @@ async function renderCommunityRanking(){
     '<span class="community-rank-chip title community-title-chip community-rank-title-chip '+(selectedTitleItems.length?'is-selected':'is-automatic')+'"'+badgeInfoAttributes(item.title,item.description)+'>'+renderBadgeIcon('achievement:'+item.id)+' '+escapeHtml(item.title)+'</span>'
    ).join('');
    const titleSection='<div class="community-rank-title-section"><span class="community-title-label">TÍTULOS</span><div class="community-rank-titles">'+(titleBadges||'<span class="community-rank-no-titles">Ainda não conquistou títulos.</span>')+'</div></div>';
-   const giftAction=user.username!==activeProfile
-    ?'<section class="community-gift-action">'+
-      '<form class="community-gift-form" data-community-gift-form="'+escapeHtml(user.username)+'">'+
-       '<label>Quantas moedas deseja enviar?'+
-        '<input type="number" min="1" max="'+Math.max(0,Number(gameEconomy.coins)||0)+'" step="1" inputmode="numeric" required placeholder="Ex.: 50" data-gift-amount>'+
-       '</label>'+
-       '<small class="community-gift-wallet">Seu saldo disponível: '+Math.max(0,Number(gameEconomy.coins)||0).toLocaleString('pt-BR')+' moedas. O valor será descontado do seu saldo e creditado à pessoa.</small>'+
-       '<div class="community-gift-form-actions"><button type="submit" class="community-gift-send">Enviar presente 🎁</button><button type="button" class="community-gift-cancel" data-community-gift-cancel>Cancelar</button></div>'+
-       '<p class="community-gift-status" role="status" aria-live="polite"></p>'+
-      '</form>'+
-     '</section>'
-    :'';
-
    const communityTitles=Array.isArray(user.titles)?user.titles:[];
    const achievementBadges=communityTitles.map(title=>{
     const item=ACHIEVEMENT_DEFINITIONS.find(entry=>entry.title===title||entry.id===title);
@@ -3404,15 +3395,14 @@ async function renderCommunityRanking(){
       '<div class="community-rank-identity">'+
        '<div class="community-rank-name-row"><strong class="community-rank-display-title">'+escapeHtml(user.displayName)+'</strong><span class="community-wallet-pill"><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</span></div>'+
        '<small class="community-last-online">'+escapeHtml(formatCommunityLastOnline(user.lastOnlineAt))+'</small>'+
-       (user.username!==activeProfile?'<button type="button" class="community-gift-quick" data-community-gift-launch="'+escapeHtml(user.username)+'"><img src="assets/gift-animation.gif" alt=""><span>Presentear com moedas</span></button>':'')+
       '</div>'+
      '</div>'+
+     (user.username!==activeProfile?'<button type="button" class="community-gift-quick" data-community-gift-launch="'+escapeHtml(user.username)+'" data-community-gift-name="'+escapeHtml(user.displayName)+'" aria-label="Presentear com moedas" title="Presentear com moedas"><img src="assets/gift-animation.gif" alt=""></button>':'')+
      '<div class="community-rank-public-stats"><span><strong>✓ '+user.correct.toLocaleString('pt-BR')+'</strong><small>Acertos</small></span><span><strong>✕ '+user.wrong.toLocaleString('pt-BR')+'</strong><small>Erros</small></span><span><strong>⏱️ '+formatStudyTimeCompact(user.timeMs)+'</strong><small>Tempo estudado</small></span></div>'+
      titleSection+
      '<span class="community-rank-expand">Clique para ver mais informações ▾</span>'+
     '</summary>'+
     '<div class="community-profile-details">'+
-     giftAction+
      '<div class="community-profile-detail-section community-challenge-details"><span class="community-profile-detail-title">⚔️ DESAFIOS</span><div class="community-profile-detail-chips"><span class="community-rank-chip">'+user.challengeTotal+' partidas</span><span class="community-rank-chip">🏆 '+user.challengeWins+' vitórias</span><span class="community-rank-chip">🛡️ '+user.challengeLosses+' derrotas</span><span class="community-rank-chip">🤝 '+user.challengeDraws+' empates</span></div></div>'+
      '<div class="community-profile-detail-grid">'+
       '<div class="community-rank-metric community-coins-metric"><strong><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</strong><small>moedas disponíveis</small></div>'+
@@ -3431,28 +3421,16 @@ async function renderCommunityRanking(){
     '</div>'+
    '</details>';
   }).join('');
-  box.querySelectorAll('[data-community-gift-launch]').forEach(button=>button.addEventListener('click',event=>{
-   event.preventDefault();
-   event.stopPropagation();
-   const card=button.closest('.community-rank-card');
-   const form=card?.querySelector('.community-gift-form');
-   if(!card||!form)return;
-   card.open=true;
-   form.classList.remove('hidden');
-   const input=form.querySelector('[data-gift-amount]');
-   if(input){
-    input.focus({preventScroll:true});
-    form.scrollIntoView({behavior:'smooth',block:'nearest'});
-   }
-  }));
-  box.querySelectorAll('.community-gift-form').forEach(form=>form.addEventListener('submit',event=>{
-   event.preventDefault();
-   sendCommunityGift(form.dataset.communityGiftForm,form);
-  }));
-  box.querySelectorAll('[data-community-gift-cancel]').forEach(button=>button.addEventListener('click',()=>{
-   const form=button.closest('.community-gift-form');
-   if(form){form.classList.add('hidden');form.reset();}
-  }));
+  if(box.dataset.communityGiftBound!=='1'){
+   box.dataset.communityGiftBound='1';
+   box.addEventListener('click',event=>{
+    const button=event.target.closest?.('[data-community-gift-launch]');
+    if(!button||!box.contains(button))return;
+    event.preventDefault();
+    event.stopPropagation();
+    openCommunityGiftPopover(button.dataset.communityGiftLaunch,button.dataset.communityGiftName||'');
+   });
+  }
   box.querySelectorAll('.community-rank-card').forEach(card=>card.addEventListener('toggle',()=>{
    const indicator=card.querySelector('.community-rank-expand');
    if(indicator)indicator.textContent=card.open?'Fechar detalhes ▴':'Clique para ver mais informações ▾';
@@ -3481,8 +3459,75 @@ function syncCommunityGiftBalance(value){
  gameEconomy={...gameEconomy,coins};
  if(activeProfile)saveClientEconomyCache(activeProfile);
  refreshEconomyDisplay();
+ updateCommunityGiftPopoverBalance();
  communityCacheAt=0;
 }
+function updateCommunityGiftPopoverBalance(){
+ const panel=$('communityGiftPopover');
+ if(!panel)return;
+ const coins=Math.max(0,Number(gameEconomy.coins)||0);
+ const wallet=panel.querySelector('#communityGiftWallet');
+ const input=panel.querySelector('[data-gift-amount]');
+ if(wallet)wallet.textContent='Saldo disponível: '+coins.toLocaleString('pt-BR')+' moedas.';
+ if(input)input.max=String(coins);
+}
+function ensureCommunityGiftPopover(){
+ let panel=$('communityGiftPopover');
+ if(panel)return panel;
+ panel=document.createElement('section');
+ panel.id='communityGiftPopover';
+ panel.className='community-gift-popover hidden';
+ panel.setAttribute('role','dialog');
+ panel.setAttribute('aria-modal','false');
+ panel.setAttribute('aria-label','Presentear com moedas');
+ panel.innerHTML=
+  '<header class="community-gift-popover-header">'+
+   '<div class="community-gift-popover-heading"><strong>Presentear com moedas</strong><small id="communityGiftRecipient"></small></div>'+
+   '<button type="button" class="community-gift-popover-close" data-gift-popover-close aria-label="Fechar">×</button>'+
+  '</header>'+
+  '<form class="community-gift-form" id="communityGiftForm">'+
+   '<label>Quantas moedas deseja enviar?'+
+    '<input type="number" min="1" max="'+Math.max(0,Number(gameEconomy.coins)||0)+'" step="1" inputmode="numeric" required placeholder="Ex.: 50" data-gift-amount>'+
+   '</label>'+
+   '<small class="community-gift-wallet" id="communityGiftWallet"></small>'+
+   '<div class="community-gift-form-actions"><button type="submit" class="community-gift-send">Enviar presente 🎁</button></div>'+
+   '<p class="community-gift-status" role="status" aria-live="polite"></p>'+
+  '</form>';
+ document.body.appendChild(panel);
+ panel.querySelector('[data-gift-popover-close]').addEventListener('click',closeCommunityGiftPopover);
+ panel.querySelector('.community-gift-form').addEventListener('submit',event=>{
+  event.preventDefault();
+  const form=event.currentTarget;
+  sendCommunityGift(form.dataset.communityGiftForm,form);
+ });
+ return panel;
+}
+function openCommunityGiftPopover(recipient,displayName){
+ if(!recipient)return;
+ const panel=ensureCommunityGiftPopover();
+ const form=panel.querySelector('.community-gift-form');
+ const input=form.querySelector('[data-gift-amount]');
+ const recipientLabel=panel.querySelector('#communityGiftRecipient');
+ form.dataset.communityGiftForm=recipient;
+ delete form.dataset.giftId;
+ form.reset();
+ input.max=String(Math.max(0,Number(gameEconomy.coins)||0));
+ if(recipientLabel)recipientLabel.textContent=displayName||('@'+recipient);
+ const status=form.querySelector('.community-gift-status');
+ if(status)status.textContent='';
+ updateCommunityGiftPopoverBalance();
+ panel.classList.remove('hidden');
+ requestAnimationFrame(()=>input.focus({preventScroll:true}));
+}
+function closeCommunityGiftPopover(){
+ const panel=$('communityGiftPopover');
+ if(!panel)return;
+ panel.classList.add('hidden');
+ panel.querySelector('.community-gift-form')?.reset();
+}
+document.addEventListener('keydown',event=>{
+ if(event.key==='Escape'&&!$('communityGiftPopover')?.classList.contains('hidden'))closeCommunityGiftPopover();
+});
 async function sendCommunityGift(recipient,form){
  const input=form.querySelector('[data-gift-amount]');
  const amount=Number(String(input?.value||'').trim());
@@ -3511,6 +3556,7 @@ async function sendCommunityGift(recipient,form){
    const fresh=await apiRequest('/api/me');
    hydrateRemoteUser(activeProfile,fresh);
    refreshEconomyDisplay();
+   updateCommunityGiftPopoverBalance();
   }catch(error){console.warn('Não foi possível atualizar os demais dados após o presente:',error);}
  }catch(error){
   if(status)status.textContent='Não foi possível enviar o presente: '+siteErrorMessage(error);
