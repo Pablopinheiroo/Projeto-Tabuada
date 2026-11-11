@@ -215,17 +215,23 @@ const profileActionsStart=html.indexOf('<details id="profileActionsDisclosure"')
 const profileActionsEnd=html.indexOf('</details>',profileActionsStart);
 const profileActionsMarkup=profileActionsStart>=0&&profileActionsEnd>profileActionsStart?
   html.slice(profileActionsStart,profileActionsEnd+10):"";
-const walletMarkup=html.indexOf('id="currentCoins"');
-check(profileActionsMarkup.includes('<summary>⚙️ Mais opções do perfil</summary>')&&
-  profileActionsMarkup.includes('id="openProfile"')&&
+const profileSummaryMarkup=profileActionsMarkup.slice(0,profileActionsMarkup.indexOf('</summary>')+10);
+const profileChevronIndex=profileSummaryMarkup.indexOf('class="profile-actions-chevron"');
+const profileWalletIndex=profileSummaryMarkup.indexOf('class="wallet-inline"');
+check(profileSummaryMarkup.includes('class="profile-card-summary"')&&
+  profileSummaryMarkup.includes('class="profile-box-heading"')&&
+  profileSummaryMarkup.includes('class="profile-identity"')&&
+  profileSummaryMarkup.includes('class="profile-summary-wallet-row"')&&
+  profileChevronIndex>=0&&profileWalletIndex>profileChevronIndex&&
   !/^<details[^>]*\sopen(?:\s|>|=)/i.test(profileActionsMarkup)&&
+  !profileActionsMarkup.includes("Mais opções do perfil")&&
+  profileActionsMarkup.includes('id="openProfile"')&&
   profileActionsMarkup.includes('id="saveProfile"')&&
   profileActionsMarkup.includes('id="openProfileStats"')&&
   profileActionsMarkup.includes('id="openProfileOptions"')&&
   profileActionsMarkup.includes('id="logout"')&&
-  profileActionsMarkup.includes('id="profileLastSavedAt"')&&
-  walletMarkup>=0&&walletMarkup<profileActionsStart,
-  "O painel do perfil deve mostrar identidade, moedas e conquistas, deixando ações e último salvamento dentro de uma seção minimizada.");
+  profileActionsMarkup.includes('id="profileLastSavedAt"'),
+  "O cartão inteiro do Meu perfil deve ser a área clicável, com a seta fora e à esquerda do quadro de moedas/conquistas e as ações recolhidas.");
 const modeHubStart=html.indexOf('<div id="modeHub"');
 const modeHubEnd=html.indexOf('<div id="challengeModeView"',modeHubStart);
 const modeHubMarkup=modeHubStart>=0&&modeHubEnd>modeHubStart?html.slice(modeHubStart,modeHubEnd):"";
@@ -982,6 +988,17 @@ async function testViewport(name, viewport, mobile = false) {
     document.querySelector("#setup").classList.remove("hidden");
     refreshProfileIdentity();
   });
+  await page.evaluate(()=>{document.querySelector("#profileActionsDisclosure").open=false;});
+  await page.locator("#profileActionsDisclosure .profile-identity").click();
+  check(await page.locator("#profileActionsDisclosure").evaluate(el=>el.open),
+    name+": clicar na área de identidade do cartão Meu perfil não expandiu as opções.");
+  await page.locator("#profileActionsDisclosure .profile-box-heading").click();
+  check(!(await page.locator("#profileActionsDisclosure").evaluate(el=>el.open)),
+    name+": clicar no cabeçalho do cartão Meu perfil não recolheu as opções.");
+  await page.locator("#profileActionsDisclosure .wallet-inline").click();
+  check(await page.locator("#profileActionsDisclosure").evaluate(el=>el.open),
+    name+": clicar no quadro de moedas/conquistas não expandiu as opções.");
+  await page.evaluate(()=>{document.querySelector("#profileActionsDisclosure").open=false;});
   await page.locator("#openProfileStats").click();
   check(!(await page.locator("#profileStatsPanel").evaluate(el => el.classList.contains("hidden"))), name + ": o botão Minhas estatísticas não abriu os gráficos.");
   check(await page.locator("#profileMainPanel").evaluate(el => el.classList.contains("hidden")), name + ": a tela principal do perfil não foi substituída pelas estatísticas.");
