@@ -1372,6 +1372,7 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
  line-height:1;
  transition:transform .16s ease,color .16s ease,background .16s ease;
 }
+.profile-actions-disclosure[open]>.profile-actions{margin-top:14px}
 .profile-actions-disclosure[open] .profile-actions-chevron{transform:rotate(180deg)}
 .profile-actions-disclosure>.profile-card-summary:hover .profile-actions-chevron{color:#eaf7ff;background:#ffffff0c}
 .profile-actions-disclosure>.profile-card-summary:focus-visible{outline:2px solid #67e8f9;outline-offset:4px;border-radius:10px}
@@ -1565,8 +1566,8 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
    <div class="profile-box-heading"><span>👤 MEU PERFIL</span><span class="profile-box-badge">PROGRESSO SALVO</span></div>
    <div class="profile-identity"><img id="currentAvatar" alt="Avatar do perfil"><div class="profile-name-wrap"><strong id="currentDisplayName"></strong><small>Conta: <span id="currentUsername"></span></small></div></div>
    <div class="profile-summary-wallet-row">
-    <span class="profile-actions-chevron" aria-hidden="true">⌄</span>
     <div class="wallet-inline"><span><i class="coin-symbol" aria-hidden="true"></i> Moedas: <strong id="currentCoins">0</strong></span><span>🏆 Conquistas: <strong id="currentAchievementCount">0/21</strong></span></div>
+    <span class="profile-actions-chevron" aria-hidden="true">⌄</span>
    </div>
   </summary>
   <div class="profile-actions">
@@ -1882,7 +1883,7 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
  <p id="shopMessage" class="auth-message" role="status" aria-live="polite"></p>
 </section>
 
-<div class="game-return-footer"><button id="bottomReturnToGame" type="button" class="secondary">↑ Voltar ao jogo</button></div>
+<div id="gameReturnFooter" class="game-return-footer hidden"><button id="bottomReturnToGame" type="button" class="secondary">↑ Voltar ao jogo</button></div>
 </section>
 
 <section id="game" class="panel hidden" aria-live="polite">
@@ -5867,6 +5868,8 @@ function setMainContentSections({hub=false,training=false,adventure=false,challe
  }
   const topReturn=$('topReturnToGame');
   if(topReturn)topReturn.classList.toggle('hidden',shop||adventure);
+  const shopReturnFooter=$('gameReturnFooter');
+  if(shopReturnFooter)shopReturnFooter.classList.toggle('hidden',!shop);
 }
 function showCommunityOnly(){
  setMainContentSections({community:true});
