@@ -415,10 +415,13 @@ check(html.includes("function profileLearningStats()")&&html.includes("challenge
   html.includes(".challenge-card-facts")&&html.includes(".challenge-preview-body"),
   "A consulta dos desafios precisa separar informações principais e prévia do ranking em cartões legíveis.");
 check(html.includes('<details id="challengeInboxShell"')&&
-  html.includes("📤 Desafios enviados")&&html.includes("📥 Desafios recebidos")&&html.includes("🏆 Resultados")&&
+  html.includes('id="challengeInboxBadge"')&&
   html.includes("function getSeenChallengeReceipts()")&&html.includes("function challengeUnreadCounts()")&&
-  html.includes("data-challenge-received-card")&&html.includes("data-challenge-result-card"),
-  "A caixa de desafios deve iniciar minimizada e separar enviados, recebidos e resultados com marcação individual de visualização.");
+  html.includes("data-challenge-received-card")&&html.includes("data-challenge-result-card")&&
+  html.includes("group('📤 Desafios enviados'")&&html.includes("group('📥 Desafios recebidos'")&&
+  !html.includes("group('🏆 Resultados'")&&
+  html.includes('<details class="challenge-list-group">')&&html.includes("challengeReceivedGroupBadge"),
+  "A caixa de desafios deve ficar minimizada e, ao abrir, mostrar somente os dois subtópicos também minimizados: enviados e recebidos, com contagem de pendências e marcação individual dos itens.");
 check(html.includes("data-challenge-retry")&&html.includes("Nova aposta (moedas)")&&
   html.includes("Esta é a única nova tentativa permitida")&&
   html.includes("apiRequest('/api/challenges/'+id+'/retry'"),
