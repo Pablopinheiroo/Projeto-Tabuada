@@ -367,7 +367,7 @@ check(html.includes('<button id="navShop" type="button">🛒 Loja</button>')&&
 check(html.includes("const isProfile=containerId==='profileAvatarGrid';")&&html.includes(".filter(item=>!isProfile||item.isOwned)")&&html.includes("function renderAvatarShop()")&&html.includes("/api/game/shop"),
  "O perfil não está limitado aos avatares adquiridos ou a Loja perdeu a compra com moedas.");
 check(html.includes(".avatar-frame-shell{position:relative;isolation:isolate;display:inline-grid;")&&
- html.includes('.avatar-frame-shell.has-frame::before{content:""'),
+ html.includes("function frameArtworkMarkup(key)")&&html.includes(".avatar-frame-art{position:absolute;z-index:2;inset:0;"),
  "As molduras precisam ficar ancoradas em cada miniatura, sem se espalhar pela página.");
 check(html.includes('shop-catalog-disclosure')&&html.includes('Clique aqui para expandir')&&
   html.includes('STATIC_PROFILE_FRAMES')&&html.includes('ANIMATED_PROFILE_FRAMES')&&
