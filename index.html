@@ -1573,7 +1573,7 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
  <h2>👤 Meu perfil</h2>
  <p class="hint">Personalize como você aparece no jogo.</p>
  <div class="profile-identity">
-  <span id="profilePreviewAvatarFrame" class="avatar-frame-shell no-frame"><img id="profilePreviewAvatar" alt="Avatar escolhido"></span>
+  <span id="profilePreviewAvatarFrame" class="avatar-frame-shell no-frame"><img id="profilePreviewAvatar" class="avatar-frame-avatar" alt="Avatar escolhido"></span>
   <div><strong id="profilePreviewName"></strong><small>Seu nome de usuário para entrar não muda.</small></div>
  </div>
  <div class="economy-panel">
@@ -1686,7 +1686,7 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
  <details id="profileActionsDisclosure" class="profile-actions-disclosure">
   <summary class="profile-card-summary" aria-label="Expandir ou recolher opções do perfil">
    <div class="profile-box-heading"><span>👤 MEU PERFIL</span><span class="profile-box-badge">PROGRESSO SALVO</span></div>
-   <div class="profile-identity"><span id="currentAvatarFrame" class="avatar-frame-shell no-frame"><img id="currentAvatar" alt="Avatar do perfil"></span><div class="profile-name-wrap"><strong id="currentDisplayName"></strong><small>Conta: <span id="currentUsername"></span></small></div></div>
+   <div class="profile-identity"><span id="currentAvatarFrame" class="avatar-frame-shell no-frame"><img id="currentAvatar" class="avatar-frame-avatar" alt="Avatar do perfil"></span><div class="profile-name-wrap"><strong id="currentDisplayName"></strong><small>Conta: <span id="currentUsername"></span></small></div></div>
    <div class="profile-summary-wallet-row">
     <div class="wallet-inline"><span><i class="coin-symbol" aria-hidden="true"></i> Moedas: <strong id="currentCoins">0</strong></span><span>🏆 Conquistas: <strong id="currentAchievementCount">0/21</strong></span></div>
     <span class="profile-actions-chevron" aria-hidden="true">⌄</span>
@@ -3784,7 +3784,7 @@ async function renderCommunityRanking(){
     '<summary class="community-rank-summary">'+
      '<div class="community-rank-main">'+
       '<div class="community-rank-place">'+(place===1?'🥇':place===2?'🥈':place===3?'🥉':'#'+place)+'</div>'+
-      '<span class="'+frameShellClass(user.profileFrame||'')+' community-avatar-frame-shell"><img class="community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt=""></span>'+
+      '<span class="'+frameShellClass(user.profileFrame||'')+' community-avatar-frame-shell"><img class="avatar-frame-avatar community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt=""></span>'+
       '<div class="community-rank-identity">'+
        '<div class="community-rank-name-row"><strong class="community-rank-display-title">'+escapeHtml(user.displayName)+'</strong><span class="community-wallet-pill"><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</span></div>'+
        '<small class="community-last-online">'+escapeHtml(formatCommunityLastOnline(user.lastOnlineAt))+'</small>'+
