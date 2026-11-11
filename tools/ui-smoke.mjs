@@ -366,6 +366,9 @@ check(html.includes('<button id="navShop" type="button">🛒 Loja</button>')&&
  "O ícone da Loja não usa o cesto de compras.");
 check(html.includes("const isProfile=containerId==='profileAvatarGrid';")&&html.includes(".filter(item=>!isProfile||item.isOwned)")&&html.includes("function renderAvatarShop()")&&html.includes("/api/game/shop"),
  "O perfil não está limitado aos avatares adquiridos ou a Loja perdeu a compra com moedas.");
+check(html.includes(".avatar-frame-shell{position:relative;isolation:isolate;display:inline-grid;")&&
+ html.includes('.avatar-frame-shell.has-frame::before{content:""'),
+ "As molduras precisam ficar ancoradas em cada miniatura, sem se espalhar pela página.");
 check(html.includes('shop-catalog-disclosure')&&html.includes('Clique aqui para expandir')&&
   html.includes('STATIC_PROFILE_FRAMES')&&html.includes('ANIMATED_PROFILE_FRAMES')&&
   html.includes('Deseja mesmo prosseguir?')&&html.includes('data-shop-confirm')&&
@@ -388,8 +391,9 @@ check(prizeModalCode.includes("data-close-prize")&&prizeModalCode.includes("over
   html.includes("NOVO TÍTULO CONQUISTADO")&&html.includes("showPrizeCelebration({")&&
   html.includes("description:'Você recebeu uma nova conquista no Projeto Tabuada.'"),
  "A tela de comemoração por novos títulos precisa informar a conquista recebida.");check(!html.includes('id="shopBackToGame"')&&!html.includes("$('shopBackToGame').addEventListener")&&
-  html.includes("topReturn.classList.toggle('hidden',shop||adventure)"),
- "A Loja ainda possui mais de uma opção de Voltar ao jogo.");
+  html.includes('id="topReturnToGame"')&&
+  !html.includes("topReturn.classList.toggle('hidden',shop||adventure)"),
+ "O atalho principal Voltar ao jogo deve permanecer disponível sem duplicação.");
 check(html.includes("async function saveProgressNow(")&&!html.includes("ACTIVE_TIME_SYNC_MS")&&
   !html.includes("scheduleCloudSave")&&!html.includes("Próximo salvamento automático"),
   "O salvamento automático por tempo deve estar removido e o salvamento deve ser explícito.");
