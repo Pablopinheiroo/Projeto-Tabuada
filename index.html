@@ -2412,8 +2412,9 @@ function tournamentAwardDescription(award,month=''){
  const rank=Math.max(1,Number(award?.rank)||1);
  const difficulty=String(award?.difficulty||'mensal');
  const score=Math.max(0,Number(award?.score)||0);
+ const period=month||award?.seasonLabel||award?.month||'uma temporada';
  const frame=award?.frame?' Categoria: '+String(award.frame)+'.':'';
- return 'Conquistada ao terminar em '+rank+'º lugar no torneio '+difficulty+' de '+(month||award?.month||'um mês')+', com '+score+'/50 pontos.'+frame;
+ return 'Conquistada ao terminar em '+rank+'º lugar no torneio '+difficulty+' de '+period+', com '+score+'/50 pontos.'+frame;
 }
 let badgeInfoAnchor=null;
 function openBadgeInfoPopover(trigger){
@@ -2526,7 +2527,7 @@ function renderChallengeProfileStats(){
   $('tournamentAwardShelf').innerHTML=awardItems.length?awardItems.map(([month,award])=>{
    const place=Number(award.rank)||0;
    const symbol=renderTournamentAwardIcon(place);
-   const awardTitle=(award.difficulty||'Torneio')+' · '+month;
+   const awardTitle=(award.difficulty||'Torneio')+' · '+tournamentSeasonKeyLabel(month);
    return '<article class="achievement-card challenge-medal unlocked"'+badgeInfoAttributes(awardTitle,tournamentAwardDescription({...award,rank:place},month))+'><span class="achievement-icon">'+symbol+'</span><div><strong>'+escapeHtml(awardTitle)+'</strong><p>'+place+'º lugar · '+award.score+'/50 pontos</p><small>'+escapeHtml(award.frame||'Participação')+'</small></div></article>';
   }).join(''):'<div class="tournament-empty">Suas premiações mensais aparecerão aqui.</div>';
  }
@@ -2546,11 +2547,11 @@ function featuredAwardInfo(id,source={}){
   const wins=Number(source.profile?.challengeStats?.levels?.[key]?.wins)||10;
   return item?{id,icon:challengeMedalIcon(key),label:'Medalha '+item.name,kind:'Medalha',description:challengeMedalDescription(item.name,wins)}:null;
  }
- if(kind==='award'&&/^\d{4}-\d{2}$/.test(key)){
+ if(kind==='award'&&(/^\d{4}-\d{2}$/.test(key)||/^ciclo-\d{4}$/.test(key))){
   const award=(source.awards||[]).find(item=>item.month===key)||(source.profile?.tournamentAwards?.[key]?{month:key,...source.profile.tournamentAwards[key]}:null);
   if(!award)return null;
-  const rank=Number(award.rank)||0;
-  return {id,icon:renderTournamentAwardIcon(rank),label:'Torneio '+key+' · '+rank+'º lugar',kind:'Premiação',description:tournamentAwardDescription(award,key)};
+  const rank=Number(award.rank)||0,period=award.seasonLabel||tournamentSeasonKeyLabel(key);
+  return {id,icon:renderTournamentAwardIcon(rank),label:'Torneio '+period+' · '+rank+'º lugar',kind:'Premiação',description:tournamentAwardDescription(award,period)};
  }
  return null;
 }
@@ -2566,7 +2567,7 @@ function profileFeaturedOptions(){
  }
  for(const [month,award] of Object.entries(profile.tournamentAwards||{})){
   const rank=Number(award?.rank)||0,icon=renderTournamentAwardIcon(rank);
-  if(rank>0)options.push({id:'award:'+month,icon,label:'Torneio '+month+' · '+rank+'º lugar',kind:'Premiação',description:tournamentAwardDescription(award,month)});
+  if(rank>0)options.push({id:'award:'+month,icon,label:'Torneio '+tournamentSeasonKeyLabel(month)+' · '+rank+'º lugar',kind:'Premiação',description:tournamentAwardDescription(award,tournamentSeasonKeyLabel(month))});
  }
  return options;
 }
@@ -3477,7 +3478,7 @@ async function renderCommunityRanking(){
     const name=medal.name||level?.name||medal.id;
     return '<span class="community-rank-chip medal"'+badgeInfoAttributes('Medalha '+name,challengeMedalDescription(name,medal.wins||10))+'>'+challengeMedalIcon(medal.id)+' '+escapeHtml(name)+'</span>';
    }).join('');
-   const awards=user.awards.map(award=>'<span class="community-rank-chip medal"'+badgeInfoAttributes('Torneio mensal · '+award.month+' · '+Number(award.rank)+'º lugar',tournamentAwardDescription(award,award.month))+'>'+renderTournamentAwardIcon(award.rank)+' Torneio mensal · '+escapeHtml(award.month)+' · '+Number(award.rank)+'º lugar</span>').join('');
+   const awards=user.awards.map(award=>{const period=award.seasonLabel||tournamentSeasonKeyLabel(award.month);return '<span class="community-rank-chip medal"'+badgeInfoAttributes('Torneio · '+period+' · '+Number(award.rank)+'º lugar',tournamentAwardDescription(award,period))+'>'+renderTournamentAwardIcon(award.rank)+' Torneio · '+escapeHtml(period)+' · '+Number(award.rank)+'º lugar</span>';}).join('');
    const unlockedTitleItems=user.titles.map(title=>{
     const item=ACHIEVEMENT_DEFINITIONS.find(entry=>entry.title===title||entry.id===title);
     return item&&!item.hidden?item:null;
@@ -5354,6 +5355,10 @@ function backFromTournament(){
 function tournamentMonthName(month){
  const [year,number]=month.split('-').map(Number);
  return new Date(Date.UTC(year,number-1,1)).toLocaleDateString('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'});
+}
+function tournamentSeasonKeyLabel(key){
+ const cycle=String(key||'').match(/^ciclo-(\d{4})$/);
+ return cycle?'Temporada '+(Number(cycle[1])+1):tournamentMonthName(String(key||''));
 }
 function formatTournamentDateTime(value,withTime=true){
  const date=new Date(value);
