@@ -1319,8 +1319,8 @@ function communitySummary(record) {
     : [];
 
   const awards = Object.entries(profile.tournamentAwards && typeof profile.tournamentAwards === "object" ? profile.tournamentAwards : {})
-    .map(([month, award]) => ({ month, difficulty: String(award?.difficulty || "Torneio"), rank: Math.max(0, Number(award?.rank) || 0), score: Math.max(0, Number(award?.score) || 0), frame: String(award?.frame || "") }))
-    .filter(award => /^\d{4}-\d{2}$/.test(award.month) && award.rank > 0)
+    .map(([month, award]) => ({ month, seasonLabel: tournamentSeasonKeyLabel(month), difficulty: String(award?.difficulty || "Torneio"), rank: Math.max(0, Number(award?.rank) || 0), score: Math.max(0, Number(award?.score) || 0), frame: String(award?.frame || "") }))
+    .filter(award => isTournamentSeasonKey(award.month) && award.rank > 0)
     .sort((a, b) => b.month.localeCompare(a.month)).slice(0, 12);
   const featuredAwards = Array.isArray(profile.featuredAwards)
     ? [...new Set(profile.featuredAwards.filter(id => typeof id === "string" && id.length <= 80))]
@@ -1328,7 +1328,7 @@ function communitySummary(record) {
         const [kind, key] = id.split(":");
         if (kind === "achievement") return Object.prototype.hasOwnProperty.call(economy.achievements, key);
         if (kind === "medal") return Number(stats.levels?.[key]?.wins) >= 10;
-        if (kind === "award" && /^\d{4}-\d{2}$/.test(key)) {
+        if (kind === "award" && isTournamentSeasonKey(key)) {
           return Number(profile.tournamentAwards?.[key]?.rank) > 0;
         }
         return false;
@@ -1411,6 +1411,15 @@ function tournamentFilePath(seasonKey) {
   return /^\d{4}-\d{2}$/.test(key)
     ? "torneio-mensal-" + key + ".json"
     : "torneio-" + key + ".json";
+}
+function isTournamentSeasonKey(value) {
+  const key = String(value || "");
+  return /^\d{4}-\d{2}$/.test(key) || /^ciclo-\d{4}$/.test(key);
+}
+function tournamentSeasonKeyLabel(value) {
+  const key = String(value || "");
+  const cycle = key.match(/^ciclo-(\d{4})$/);
+  return cycle ? "Temporada " + (Number(cycle[1]) + 1) : tournamentMonthLabel(key);
 }
 function tournamentMonthLabel(month) {
   const [year, number] = String(month).split("-").map(Number);
