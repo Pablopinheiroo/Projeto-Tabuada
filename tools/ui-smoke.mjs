@@ -112,40 +112,7 @@ check(workerSource.includes("async function writeUsersAtomically")&&
   workerSource.includes("sentGiftIds")&&workerSource.includes("giftInbox")&&
   workerSource.includes("communityCoinGifts: true"),
   "A API deve transferir moedas com gravação atômica dos dois saldos e guardar notificações de presentes.");
-check(html.includes("assets/gift-animation.gif")&&
-  html.includes("aria-label=\"Presentear com moedas\"")&&
-  html.includes("data-community-gift-launch")&&
-  html.includes("function ensureCommunityGiftPopover()")&&
-  html.includes("community-gift-popover hidden")&&
-  html.includes("Quantas moedas deseja enviar?")&&
-  html.includes("Saldo disponível: '+coins.toLocaleString('pt-BR')+' moedas.")&&
-  !html.includes("Seu saldo disponível:")&&
-  !html.includes("community-gift-action")&&
-  !html.includes("O valor será descontado do seu saldo")&&
-  !html.includes("No modo normal, a tabuada segue de 1 a 10.")&&
-  html.includes("function pollGiftInbox()")&&
-  html.includes("data-gift-toast-dismiss")&&
-  !html.includes("community-presence-initial")&&
-  !html.includes("community-presence-dot")&&
-  !html.includes("community-last-online::first-letter"),
-  "A comunidade deve manter o cartão antigo, mostrar apenas o presente animado sem fundo, abrir o formulário em balão flutuante e manter a presença normal.");
-check(html.includes("👤 MEU PERFIL")&&
-  html.includes('id="navProfile" type="button">👤 Meu perfil')&&
-  html.includes('aria-label="Abrir opções do perfil"><span class="profile-actions-chevron"')&&
-  !html.includes("Mais opções do perfil")&&
-  html.includes(".mode-hub-heading-simple .music-kicker{")&&
-  html.includes("color:#eaf7ff;")&&
-  html.includes("font-size:clamp(1.42rem,4.5vw,1.82rem);")&&
-  !html.includes("Os avisos são conferidos automaticamente.")&&
-  !html.includes("Mostrando '+(first+1)")&&
-  !html.includes("community-list-note")&&
-  html.includes("#challengeListStatus:empty{display:none}"),
-  "Perfil, seta de opções, título da jornada e textos de status não seguem o visual minimalista solicitado.");
-check(html.includes(".community-gift-popover{position:fixed;top:max(14px,env(safe-area-inset-top));")&&
-  html.includes("@media(max-width:560px){.community-gift-popover{top:max(12px,env(safe-area-inset-top));")&&
-  html.includes("max-height:min(72dvh,600px)")&&
-  !html.includes(".community-gift-popover{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:"),
-  "O balão de presentear deve ficar no topo, centralizado no celular e fora da área coberta pelo teclado.");
+
 const workerTestSource=workerSource.replace("export default {","globalThis.__workerDefault = {");
 const workerContext={Date,Set,Map,Object,Array,Number,String,Math,RegExp,JSON,TextEncoder,TextDecoder,Uint8Array,Response,Headers,URL};
 vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;globalThis.__normalizeGameEconomy=normalizeGameEconomy;globalThis.__applyTrainingCorrectReward=applyTrainingCorrectReward;globalThis.__applyIntelligentTrainingReward=applyIntelligentTrainingReward;globalThis.__applyErrorTrainingReward=applyErrorTrainingReward;",workerContext);
@@ -223,6 +190,40 @@ check(tiedHistory.questions["9x9"].correct===4&&tiedHistory.questions["9x9"].wro
   "Um snapshot antigo, com a mesma quantidade de tentativas, substituiu o registro atual.");
 
 const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+check(html.includes("assets/gift-animation.gif")&&
+  html.includes("aria-label=\"Presentear com moedas\"")&&
+  html.includes("data-community-gift-launch")&&
+  html.includes("function ensureCommunityGiftPopover()")&&
+  html.includes("community-gift-popover hidden")&&
+  html.includes("Quantas moedas deseja enviar?")&&
+  html.includes("Saldo disponível: '+coins.toLocaleString('pt-BR')+' moedas.")&&
+  !html.includes("Seu saldo disponível:")&&
+  !html.includes("community-gift-action")&&
+  !html.includes("O valor será descontado do seu saldo")&&
+  !html.includes("No modo normal, a tabuada segue de 1 a 10.")&&
+  html.includes("function pollGiftInbox()")&&
+  html.includes("data-gift-toast-dismiss")&&
+  !html.includes("community-presence-initial")&&
+  !html.includes("community-presence-dot")&&
+  !html.includes("community-last-online::first-letter"),
+  "A comunidade deve manter o cartão antigo, mostrar apenas o presente animado sem fundo, abrir o formulário em balão flutuante e manter a presença normal.");
+check(html.includes("👤 MEU PERFIL")&&
+  html.includes('id="navProfile" type="button">👤 Meu perfil')&&
+  html.includes('aria-label="Abrir opções do perfil"><span class="profile-actions-chevron"')&&
+  !html.includes("Mais opções do perfil")&&
+  html.includes(".mode-hub-heading-simple .music-kicker{")&&
+  html.includes("color:#eaf7ff;")&&
+  html.includes("font-size:clamp(1.42rem,4.5vw,1.82rem);")&&
+  !html.includes("Os avisos são conferidos automaticamente.")&&
+  !html.includes("Mostrando '+(first+1)")&&
+  !html.includes("community-list-note")&&
+  html.includes("#challengeListStatus:empty{display:none}"),
+  "Perfil, seta de opções, título da jornada e textos de status não seguem o visual minimalista solicitado.");
+check(html.includes(".community-gift-popover{position:fixed;top:max(14px,env(safe-area-inset-top));")&&
+  html.includes("@media(max-width:560px){.community-gift-popover{top:max(12px,env(safe-area-inset-top));")&&
+  html.includes("max-height:min(72dvh,600px)")&&
+  !html.includes(".community-gift-popover{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:"),
+  "O balão de presentear deve ficar no topo, centralizado no celular e fora da área coberta pelo teclado.");
 check(html.includes('id="tournamentRenewalStatus"')&&
   html.includes("function renderTournamentSeasonStatus(season)")&&
   html.includes("formatTournamentDateTime(season.renewsAt,true)")&&
