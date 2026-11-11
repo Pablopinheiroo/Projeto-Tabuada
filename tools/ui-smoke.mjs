@@ -365,6 +365,15 @@ check(html.includes('<button id="navShop" type="button">🛒 Loja</button>')&&
  "O ícone da Loja não usa o cesto de compras.");
 check(html.includes("const isProfile=containerId==='profileAvatarGrid';")&&html.includes(".filter(item=>!isProfile||item.isOwned)")&&html.includes("function renderAvatarShop()")&&html.includes("/api/game/shop"),
  "O perfil não está limitado aos avatares adquiridos ou a Loja perdeu a compra com moedas.");
+check(html.includes('shop-catalog-disclosure')&&html.includes('Clique aqui para expandir')&&
+  html.includes('STATIC_PROFILE_FRAMES')&&html.includes('ANIMATED_PROFILE_FRAMES')&&
+  html.includes('Deseja mesmo prosseguir?')&&html.includes('data-shop-confirm')&&
+  html.includes('imageSrc')&&html.includes('prize-celebration-item-image')&&
+  html.includes('id="profileFrameGrid"')&&html.includes('profileFrame=selectedProfileFrame')&&
+  workerSource.includes('function validFrameKey(')&&workerSource.includes('ownedFrames')&&
+  workerSource.includes('profileFrame: requestedProfileFrame')&&
+  workerSource.includes('PROFILE_FRAME_STATIC_COUNT = 20')&&workerSource.includes('PROFILE_FRAME_ANIMATED_COUNT = 20'),
+  "A loja deve exibir previews recolhidos, confirmação, imagem adquirida, 20 molduras estáticas e 20 animadas equipáveis no perfil.");
 check(html.includes("Comprar · '+price.toLocaleString('pt-BR')+' moedas")&&!html.includes("Loja de avatares <small class=\"shop-rules\""),
  "Os avatares bloqueados continuam aparecendo no editor do perfil em vez de ficarem na Loja.");
 check(html.includes('id="communitySection"')&&html.includes("function setMainContentSections(")&&
