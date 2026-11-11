@@ -1098,6 +1098,25 @@ async function testViewport(name, viewport, mobile = false) {
   });
   check(await page.locator("#profileFrameGrid [data-profile-frame]").count()===3,
     name+": Meu perfil deve permitir sem moldura e as duas molduras já adquiridas.");
+  const detailedFrameAudit=await page.evaluate(()=>{
+    const all=[...STATIC_PROFILE_FRAMES,...ANIMATED_PROFILE_FRAMES];
+    const designs=all.map(frame=>frame.design);
+    const artwork=all.map(frame=>frameArtworkMarkup(frame.key));
+    return {
+      total:all.length,
+      staticCount:STATIC_PROFILE_FRAMES.length,
+      animatedCount:ANIMATED_PROFILE_FRAMES.length,
+      uniqueDesigns:new Set(designs).size,
+      detailedDrawings:artwork.filter(svg=>(svg.match(/<path /g)||[]).length>=5).length,
+      roseVine:frameArtworkMarkup('animated:1').includes('M17 111C5 94 13 76'),
+      individualPetals:frameArtworkMarkup('animated:1').includes('animated-petal')
+    };
+  });
+  check(detailedFrameAudit.total===40&&detailedFrameAudit.staticCount===20&&detailedFrameAudit.animatedCount===20&&
+    detailedFrameAudit.uniqueDesigns===40&&detailedFrameAudit.detailedDrawings===40,
+    name+": as 40 molduras precisam ter desenhos próprios e elaborados, não apenas variações de cor.");
+  check(detailedFrameAudit.roseVine&&detailedFrameAudit.individualPetals,
+    name+": a moldura floral animada precisa contornar o avatar com ramos em S e pétalas móveis.");
   await page.locator("#profileFrameGrid [data-profile-frame='animated:2']").click();
   check((await page.locator("#profilePreviewAvatarFrame").getAttribute("class")).includes("frame-animated-2"),
     name+": selecionar uma moldura animada não atualizou a prévia do perfil.");
