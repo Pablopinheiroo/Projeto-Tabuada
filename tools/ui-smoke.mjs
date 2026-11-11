@@ -222,7 +222,8 @@ check(profileSummaryMarkup.includes('class="profile-card-summary"')&&
   profileSummaryMarkup.includes('class="profile-box-heading"')&&
   profileSummaryMarkup.includes('class="profile-identity"')&&
   profileSummaryMarkup.includes('class="profile-summary-wallet-row"')&&
-  profileChevronIndex>=0&&profileWalletIndex>profileChevronIndex&&
+  profileWalletIndex>=0&&profileChevronIndex>profileWalletIndex&&
+  html.includes('.profile-actions-disclosure[open]>.profile-actions{margin-top:14px}')&&
   !/^<details[^>]*\sopen(?:\s|>|=)/i.test(profileActionsMarkup)&&
   !profileActionsMarkup.includes("Mais opções do perfil")&&
   profileActionsMarkup.includes('id="openProfile"')&&
@@ -231,7 +232,7 @@ check(profileSummaryMarkup.includes('class="profile-card-summary"')&&
   profileActionsMarkup.includes('id="openProfileOptions"')&&
   profileActionsMarkup.includes('id="logout"')&&
   profileActionsMarkup.includes('id="profileLastSavedAt"'),
-  "O cartão inteiro do Meu perfil deve ser a área clicável, com a seta fora e à esquerda do quadro de moedas/conquistas e as ações recolhidas.");
+  "O cartão inteiro do Meu perfil deve ser clicável, com a seta à direita do quadro de moedas/conquistas e espaço entre o resumo e as opções expandidas.");
 const modeHubStart=html.indexOf('<div id="modeHub"');
 const modeHubEnd=html.indexOf('<div id="challengeModeView"',modeHubStart);
 const modeHubMarkup=modeHubStart>=0&&modeHubEnd>modeHubStart?html.slice(modeHubStart,modeHubEnd):"";
@@ -243,7 +244,9 @@ check(modeCardOrder.every((position,index)=>position>=0&&(index===0||position>mo
   !modeHubMarkup.includes("Você pode treinar livremente"),
   "A jornada deve mostrar somente o título centralizado e os modos na ordem Treinamento, Modo Jogo, Desafio e Torneio.");
 check(html.includes('<div id="communitySection" class="community-ranking hidden">')&&
-  html.includes("if(topReturn)topReturn.classList.toggle('hidden',shop||adventure);"),
+  html.includes("if(topReturn)topReturn.classList.toggle('hidden',shop||adventure);")&&
+  html.includes('<div id="gameReturnFooter" class="game-return-footer hidden">')&&
+  html.includes("shopReturnFooter.classList.toggle('hidden',!shop);"),
   "A Comunidade deve iniciar oculta e o atalho Voltar ao jogo deve desaparecer enquanto o Modo Jogo estiver aberto.");
 const ids = [...html.matchAll(/\bid=["']([^"']+)["']/g)].map(match => match[1]);
 const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
@@ -1703,14 +1706,20 @@ const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && sou
     await assertMusicMenuMinimized(label);
   };
   await assertVisibleSections(["modeHub"],"menu inicial");
+  check(await page.locator("#gameReturnFooter").evaluate(el=>el.classList.contains("hidden")),
+    name + ": o botão Voltar ao jogo do rodapé aparece na página inicial.");
   await page.locator("#navShop").click();
   await assertVisibleSections(["shopScreen"],"Loja");
+  check(!(await page.locator("#gameReturnFooter").evaluate(el=>el.classList.contains("hidden"))),
+    name + ": o botão inferior de retorno não aparece na Loja.");
   const shopReturnButtons=await page.locator("button").evaluateAll(items=>items.filter(button=>
     button.getClientRects().length&&/Voltar ao jogo/i.test(button.textContent||"")).map(button=>button.id));
   check(JSON.stringify(shopReturnButtons)===JSON.stringify(["bottomReturnToGame"]),
     name+": a Loja deve ter uma única opção visível de Voltar ao jogo: "+JSON.stringify(shopReturnButtons));
   await page.locator("#navCommunity").click();
   await assertVisibleSections(["communitySection"],"Comunidade");
+  check(await page.locator("#gameReturnFooter").evaluate(el=>el.classList.contains("hidden")),
+    name + ": o botão Voltar ao jogo do rodapé aparece dentro da Comunidade.");
   check(!(await page.locator("#communitySection").evaluate(el=>el.classList.contains("hidden"))),
     name + ": a Comunidade não apareceu ao entrar no modo Comunidade.");
   await page.locator("#topReturnToGame").click();
@@ -1766,6 +1775,8 @@ const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && sou
   await assertVisibleSections(["adventureMapView"],"Modo Jogo");
   check(await page.locator("#topReturnToGame").evaluate(el=>el.classList.contains("hidden")),
     name + ": o botão Voltar ao jogo continua aparecendo dentro do Modo Jogo.");
+  check(await page.locator("#gameReturnFooter").evaluate(el=>el.classList.contains("hidden")),
+    name + ": o botão Voltar ao jogo do rodapé aparece dentro do Modo Jogo.");
   await page.locator("#backToModeHubMap").click();
   await assertVisibleSections(["modeHub"],"retorno do Modo Jogo");
 
