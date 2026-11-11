@@ -627,6 +627,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .tournament-card .mode-card-icon{background:#5b411b;border-color:#e8c268}
 .tournament-card .mode-card-copy b{color:#fcd34d}
 .tournament-month-status{margin:0 0 12px;padding:11px;border:1px solid #45648c;border-radius:11px;background:#10233f;color:#dbeafe;font-size:.82rem;font-weight:800}
+.tournament-renewal-status{margin:-4px 0 13px;color:#9fc3e8;font-size:.76rem;font-weight:750;line-height:1.45}
 .tournament-difficulty-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
 .tournament-difficulty{display:grid;gap:7px;padding:13px 10px;border:1px solid #45648c;border-radius:14px;background:#122640;color:#edf6ff;text-align:left}
 .tournament-difficulty strong{font-size:.95rem}
@@ -1756,9 +1757,10 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
 
 <div id="tournamentModeView" class="mode-view hidden">
  <div id="tournamentHomePanel">
-  <div class="mode-view-heading"><div><span class="music-kicker">🏆 COMPETIÇÃO DO MÊS</span><h2>Torneio Mensal</h2><p class="hint" style="margin:5px 0 0">50 questões · 5 segundos por questão · uma dificuldade por mês.</p></div><button id="backFromTournament" class="secondary compact-back" type="button">← Modos</button></div>
-  <div class="challenge-rules"><b>Como funciona:</b> escolha Fácil, Médio ou Difícil. A escolha fica bloqueada até o próximo mês. Todos que participarem de uma dificuldade recebem a mesma sequência mensal de contas. O ranking considera acertos e, em caso de empate, o menor tempo.</div>
-  <div id="tournamentMonthStatus" class="tournament-month-status">Carregando torneio...</div>
+  <div class="mode-view-heading"><div><span class="music-kicker">🏆 TEMPORADA DE 30 DIAS</span><h2>Torneio</h2><p class="hint" style="margin:5px 0 0">50 questões · 5 segundos por questão · uma dificuldade por temporada.</p></div><button id="backFromTournament" class="secondary compact-back" type="button">← Modos</button></div>
+  <div class="challenge-rules"><b>Como funciona:</b> escolha Fácil, Médio ou Difícil. A escolha fica bloqueada até a próxima renovação, a cada 30 dias. Todos que participarem de uma dificuldade recebem a mesma sequência aleatória de 50 contas, sem repetir a mesma multiplicação. O ranking considera acertos e, em caso de empate, o menor tempo.</div>
+  <div id="tournamentMonthStatus" class="tournament-month-status">Carregando temporada...</div>
+   <p id="tournamentRenewalStatus" class="tournament-renewal-status">Consultando a data de renovação...</p>
   <div id="tournamentDifficultyCards" class="tournament-difficulty-grid">
    <button type="button" class="tournament-difficulty easy" data-tournament-start="easy"><strong>🌱 Fácil</strong><small>Tabuadas: 1–10</small><b>Participar</b></button>
    <button type="button" class="tournament-difficulty medium" data-tournament-start="medium"><strong>⚔️ Médio</strong><small>Tabuadas: 1–15</small><b>Participar</b></button>
@@ -1767,13 +1769,13 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
   <p id="tournamentLockMessage" class="hint"></p>
   <div id="tournamentFinalNotice" class="tournament-final-notice hidden"></div>
   <div class="tournament-ranking-card">
-   <div class="community-heading"><div><span class="music-kicker">🌐 COMUNIDADE</span><h3>Ranking deste mês</h3></div><label class="ranking-sort">Dificuldade<select id="tournamentRankingDifficulty"><option value="easy">Fácil</option><option value="medium">Médio</option><option value="hard">Difícil</option></select></label></div>
+   <div class="community-heading"><div><span class="music-kicker">🌐 COMUNIDADE</span><h3>Ranking da temporada</h3></div><label class="ranking-sort">Dificuldade<select id="tournamentRankingDifficulty"><option value="easy">Fácil</option><option value="medium">Médio</option><option value="hard">Difícil</option></select></label></div>
    <div id="tournamentRankingList" class="tournament-ranking-list"></div>
   </div>
  </div>
 
  <div id="tournamentPlayPanel" class="hidden">
-  <div class="challenge-play-top"><div><span class="music-kicker">TORNEIO MENSAL</span><h2 id="tournamentPlayTitle">Dificuldade</h2><p id="tournamentPlayMeta" class="hint"></p></div><div class="challenge-live-badge">● EM ANDAMENTO</div><button id="tournamentQuitMatch" class="secondary compact-back" type="button">← Sair do torneio e salvar</button></div>
+  <div class="challenge-play-top"><div><span class="music-kicker">TORNEIO DE 30 DIAS</span><h2 id="tournamentPlayTitle">Dificuldade</h2><p id="tournamentPlayMeta" class="hint"></p></div><div class="challenge-live-badge">● EM ANDAMENTO</div><button id="tournamentQuitMatch" class="secondary compact-back" type="button">← Sair do torneio e salvar</button></div>
   <div class="challenge-countdown-grid">
    <div class="challenge-countdown"><span>TEMPO DA QUESTÃO</span><strong id="tournamentRoundClock">5,0 s</strong></div>
    <div class="challenge-countdown"><span>TEMPO TOTAL</span><strong id="tournamentTotalClock">00:00</strong></div>
@@ -5353,6 +5355,25 @@ function tournamentMonthName(month){
  const [year,number]=month.split('-').map(Number);
  return new Date(Date.UTC(year,number-1,1)).toLocaleDateString('pt-BR',{month:'long',year:'numeric',timeZone:'UTC'});
 }
+function formatTournamentDateTime(value,withTime=true){
+ const date=new Date(value);
+ if(!Number.isFinite(date.getTime()))return 'data indisponível';
+ const options={day:'2-digit',month:'2-digit',year:'numeric',timeZone:'America/Sao_Paulo'};
+ if(withTime){options.hour='2-digit';options.minute='2-digit';}
+ return new Intl.DateTimeFormat('pt-BR',options).format(date);
+}
+function renderTournamentSeasonStatus(season){
+ const status=$('tournamentMonthStatus');
+ const renewal=$('tournamentRenewalStatus');
+ if(!status||!renewal)return;
+ if(!season?.startsAt||!season?.renewsAt){
+  status.textContent='Temporada de 30 dias em andamento.';
+  renewal.textContent='A próxima temporada começa automaticamente após o encerramento.';
+  return;
+ }
+ status.textContent='Temporada '+(Number(season.number)||1)+' · '+formatTournamentDateTime(season.startsAt,false)+' a '+formatTournamentDateTime(season.endsAt||season.renewsAt,false)+'.';
+ renewal.textContent='Encerra e renova em '+formatTournamentDateTime(season.renewsAt,true)+' (horário de Brasília). O próximo torneio começa automaticamente com uma nova sequência aleatória.';
+}
 function renderTournamentRanking(){
  const box=$('tournamentRankingList');if(!box)return;
  const difficulty=$('tournamentRankingDifficulty').value;
@@ -5379,7 +5400,8 @@ function renderTournamentFinalNotice(notice){
  const rows=(notice.top10||[]).map((item,index)=>
   '<div class="tournament-rank-row '+(item.username===activeProfile?'me':'')+'"><strong>#'+(index+1)+'</strong><span>'+escapeHtml(item.username)+(item.username===activeProfile?' · você':'')+'</span><small>'+item.score+'/50 · '+formatDuration(item.totalMs)+'</small></div>'
  ).join('')+(notice.position>10?'<div class="tournament-rank-row me"><strong>#'+notice.position+'</strong><span>'+escapeHtml(activeProfile)+' · sua posição</span><small>'+notice.score+'/50</small></div>':'');
- box.innerHTML='<strong>🏆 Resultado final de '+escapeHtml(tournamentMonthName(notice.month))+' · '+escapeHtml(name)+'</strong>'+
+ const seasonLabel=notice.seasonLabel||tournamentMonthName(notice.month);
+ box.innerHTML='<strong>🏆 Resultado final · '+escapeHtml(seasonLabel)+' · '+escapeHtml(name)+'</strong>'+
   '<p>Você terminou em <b>'+place+'</b>, com '+notice.score+'/50 pontos'+escapeHtml(award)+'.</p>'+
   '<div class="tournament-ranking-list">'+rows+'</div>';
  box.classList.remove('hidden');
@@ -5392,7 +5414,7 @@ function renderTournamentFinalNotice(notice){
     icon:awardRank>0&&awardRank<=3?'🏆':'🎖️',
     kicker:'PREMIAÇÃO DO TORNEIO',
     title:'Parabéns! Você foi premiado!',
-    description:'Sua colocação no torneio mensal foi reconhecida.',
+    description:'Sua colocação no torneio da temporada foi reconhecida.',
     items:[(awardRank?awardRank+'º lugar · ':'')+name+' · '+place,...(notice.award?.frame?['Moldura conquistada: '+notice.award.frame]:[]),...newAchievements.map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||String(id))]
    });
    localStorage.setItem(seenKey,'1');
@@ -5416,7 +5438,7 @@ async function refreshTournamentDashboard(){
  if(!activeProfile||!cloudTokenReady())return;
  try{
   tournamentDashboard=await apiRequest('/api/tournament');
-  $('tournamentMonthStatus').textContent='Competição de '+tournamentMonthName(tournamentDashboard.month)+'. Uma dificuldade por participante neste mês.';
+  renderTournamentSeasonStatus(tournamentDashboard.season);
   const selected=tournamentDashboard.selectedDifficulty;
   const selectedRank=tournamentDashboard.rankings?.find(item=>item.difficulty===selected);
   const completed=!!selectedRank?.own;
@@ -5430,8 +5452,8 @@ async function refreshTournamentDashboard(){
    }
   });
   $('tournamentLockMessage').textContent=selected
-   ?(completed?'Você já concluiu o nível '+selected+'. A próxima escolha será liberada no mês seguinte.':'Você já escolheu '+selected+'. Continue esta mesma tentativa; outra dificuldade fica bloqueada até o próximo mês.')
-   :'Escolha uma dificuldade. Depois de iniciar, não será possível trocar neste mês.';
+   ?(completed?'Você já concluiu o nível '+selected+'. A próxima escolha será liberada na próxima renovação.':'Você já escolheu '+selected+'. Continue esta mesma tentativa; outra dificuldade fica bloqueada até a próxima renovação.')
+   :'Escolha uma dificuldade. Depois de iniciar, não será possível trocar durante esta temporada de 30 dias.';
   renderTournamentRanking();
   renderTournamentFinalNotice(tournamentDashboard.finalNotice);
  }catch(error){
