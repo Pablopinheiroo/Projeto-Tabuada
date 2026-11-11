@@ -103,7 +103,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .community-rank-main>.avatar-frame-shell.no-frame{flex-basis:52px;width:52px;height:52px}
 .community-rank-main>.avatar-frame-shell .avatar-frame-avatar{background:#e0f2fe;box-shadow:none}
 .avatar-frame-art .frame-outline{fill:none;stroke-linecap:round;stroke-linejoin:round}
-.avatar-frame-shell.has-frame .avatar-frame-avatar{position:absolute;left:13.5%;top:13.5%;width:73%;height:73%;border:2px solid #081a24;box-shadow:0 0 0 2px #fff4,inset 0 0 0 1px #0007}
+.avatar-frame-shell.has-frame .avatar-frame-avatar{position:absolute;left:16%;top:16%;width:68%;height:68%;border:2px solid #081a24;box-shadow:0 0 0 2px #fff4,inset 0 0 0 1px #0007}
 .avatar-frame-art{filter:drop-shadow(0 2px 2px #020617aa)}
 .avatar-frame-art .metal-highlight{fill:none;stroke:#fff9;stroke-width:1.1;stroke-linecap:round}
 .avatar-frame-art .deep-shadow{filter:drop-shadow(0 3px 2px #020617aa)}
@@ -555,17 +555,17 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .shop-catalog-disclosure[open] .shop-catalog-heading small{color:#fcd34d}
 .shop-catalog-content{padding:12px}
 .shop-frame-preview{width:62px;height:62px;flex:0 0 62px}
-.shop-frame-preview .avatar-frame-avatar{width:73%;height:73%}
+.shop-frame-preview .avatar-frame-avatar{width:68%;height:68%;left:16%;top:16%}
 .avatar-shop-grid.frame-shop-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .shop-avatar-card .avatar-frame-shell{display:grid;place-items:center;width:86px;height:86px;box-sizing:border-box}
-.shop-avatar-card .avatar-frame-avatar{width:73%;height:73%}
+.shop-avatar-card .avatar-frame-avatar{width:68%;height:68%;left:16%;top:16%}
 .profile-frame-grid{display:grid;gap:10px}
 .profile-frame-group-title{margin:8px 0 6px;color:#9fdcf4;font-size:.75rem;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
 .profile-frame-choice-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .profile-frame-choice{display:grid;justify-items:center;gap:5px;min-width:0;padding:9px 5px;border:1px solid #385477;border-radius:12px;background:#101e35;color:#eaf4ff;font-size:.72rem}
 .profile-frame-choice[aria-pressed="true"]{border-color:#67e8f9;background:linear-gradient(145deg,#143653,#29224a);box-shadow:0 0 0 2px #22d3ee22}
 .profile-frame-choice .avatar-frame-shell{display:grid;place-items:center;width:58px;height:58px;padding:4px}
-.profile-frame-choice .avatar-frame-shell{width:62px;height:62px}.profile-frame-choice .avatar-frame-avatar{width:73%;height:73%}
+.profile-frame-choice .avatar-frame-shell{width:62px;height:62px}.profile-frame-choice .avatar-frame-avatar{width:68%;height:68%;left:16%;top:16%}
 .profile-frame-choice .frame-choice-name{font-weight:850;line-height:1.2;overflow-wrap:anywhere}
 .shop-confirmation-overlay{position:fixed;inset:0;z-index:16000;display:grid;place-items:center;padding:18px;background:#020617cc;backdrop-filter:blur(7px)}
 .shop-confirmation-card{position:relative;width:min(420px,100%);padding:20px;border:1px solid #5ca7cb;border-radius:20px;background:radial-gradient(circle at 50% 0,#24466b,#121a31 62%);color:#f2f8ff;text-align:center;box-shadow:0 25px 70px #000a}
@@ -574,7 +574,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .shop-confirmation-preview{display:grid;place-items:center;min-height:90px;margin:12px 0}
 .shop-confirmation-preview>img{width:82px;height:82px;object-fit:cover;border-radius:50%;border:3px solid #67e8f9}
 .shop-confirmation-preview .avatar-frame-shell{width:86px;height:86px;padding:6px}
-.shop-confirmation-preview .avatar-frame-avatar{width:73%;height:73%}
+.shop-confirmation-preview .avatar-frame-avatar{width:68%;height:68%;left:16%;top:16%}
 .shop-confirmation-cost{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:12px 0}
 .shop-confirmation-cost span{padding:9px;border:1px solid #526a86;border-radius:10px;background:#0b172a;color:#cbd5e1;font-size:.7rem}
 .shop-confirmation-cost strong{display:block;margin-top:3px;color:#fde68a;font-size:.9rem}
@@ -2572,20 +2572,23 @@ function frameArtworkMarkup(key){
    path('M42 142Q80 126 118 142','none',b,4)+gem(80,19,.55);
   break;
  case 'sakura-branch':
-  art=twig('M8 130Q35 111 43 91Q52 69 77 56Q98 45 115 22')+
-   twig('M45 93Q23 78 18 57M72 59Q59 37 62 18M92 43Q111 45 132 37')+
-   twig('M18 57Q29 44 39 34')+
-   [rose(18,55,.74),rose(58,22,.7),rose(116,24,.75),rose(132,39,.55),rose(44,88,.6),rose(83,58,.43)] .join('')+
-   [leaf(34,112,.62,-55),leaf(69,70,.52,25),leaf(99,39,.48,-20)] .join('')+
-   [path('M108 76q5 8 0 13q-5 -5 0 -13Z',a,c,1.2),path('M128 90q5 8 0 13q-5 -5 0 -13Z',a,c,1.2),path('M52 119q5 8 0 13q-5 -5 0 -13Z',a,c,1.2)].join('');
+  art=twig('M9 135Q27 115 21 91Q15 67 32 47Q46 31 51 12')+
+   twig('M12 77Q26 68 35 57M31 47Q18 39 15 26M42 31Q62 29 69 16')+
+   twig('M151 132Q132 111 139 91Q145 69 128 49Q116 35 111 15')+
+   twig('M148 75Q134 67 125 57M129 49Q142 39 145 26M118 34Q99 29 91 16')+
+   [rose(18,27,.63),rose(51,15,.7),rose(111,18,.7),rose(145,29,.63),rose(20,128,.7),rose(140,127,.7)] .join('')+
+   [leaf(24,66,.56,-38),leaf(35,105,.6,35),leaf(135,66,.56,38),leaf(125,105,.6,-35)] .join('')+
+   [path('M64 27q5 8 0 14q-5 -6 0 -14Z',a,c,1.2),path('M95 28q5 8 0 14q-5 -6 0 -14Z',a,c,1.2),path('M56 124q5 8 0 14q-5 -6 0 -14Z',a,c,1.2),path('M104 125q5 8 0 14q-5 -6 0 -14Z',a,c,1.2)].join('');
   break;
  case 'guardian-shield':
-  art=path('M80 8L120 22L146 47L138 102Q126 134 80 152Q34 134 22 102L14 47L40 22Z',b,c,7)+
-   path('M80 17L113 29L136 50L128 98Q118 123 80 140Q42 123 32 98L24 50L47 29Z','none',a,3)+
-   path('M80 26L100 43L80 58L60 43Z',a,c,2)+gem(80,40,.8)+
-   path('M18 60L35 70L20 82M142 60L125 70L140 82M31 112L45 104L50 126M129 112L115 104L110 126','none',a,4)+
-   [22,138].map(x=>[46,80,114].map(y=>circle(x,y,3,'#d7bd87',c,1.6)).join('')).join('')+
-   path('M62 126L80 143L98 126','none',a,3);
+  art=path('M80 6L119 20L148 48L139 103Q126 136 80 154Q34 136 21 103L12 48L41 20Z',b,c,7)+
+   path('M80 15L112 27L137 51L128 99Q116 126 80 141Q44 126 32 99L23 51L48 27Z','none',a,3)+
+   path('M41 45L52 32L62 45L52 58ZM119 45L108 32L98 45L108 58Z',a,c,2)+
+   path('M80 8L92 27L80 40L68 27Z',a,c,2)+gem(80,25,.55)+
+   path('M15 60L34 70L19 84M145 60L126 70L141 84M29 111L45 103L50 127M131 111L115 103L110 127','none',a,4)+
+   [22,138].map(x=>[50,80,110].map(y=>circle(x,y,3,'#d7bd87',c,1.6)).join('')).join('')+
+   path('M59 133L80 151L101 133','none',a,4)+
+   [gem(31,49,.34),gem(129,49,.34)].join('');
   break;
  case 'arcane-prism':
   art=path('M80 6L97 20L119 17L127 39L150 54L137 78L148 103L122 116L112 142L87 135L65 151L49 131L24 128L28 101L10 80L28 59L21 34L49 28L59 9Z','none',c,4)+
@@ -2627,18 +2630,19 @@ function frameArtworkMarkup(key){
    [pearl(60,18,2),pearl(100,18,2),gem(80,12,.45)].join('');
   break;
  case 'celestial-astrolabe':
-  art=path('M80 7L91 31L115 15L109 43L145 50L118 73L149 92L117 105L131 140L99 126L80 153L61 126L29 140L43 105L11 92L42 73L15 50L51 43L45 15L69 31Z','none',c,3)+
-   path('M80 8V152M9 80H151M28 28L132 132M132 28L28 132','none',a,1.5)+
-   circle(80,80,62,'none',b,2)+circle(80,80,68,'none',a,1)+
-   path('M80 23L91 70L80 80L69 70Z',a,c,2)+path('M80 137L69 90L80 80L91 90Z',b,c,2)+
-   [gem(80,11,.55),gem(147,80,.5),gem(80,149,.55),gem(13,80,.5),circle(28,28,8,b,c,2),circle(132,28,8,b,c,2)].join('');
+  art=path('M80 6L91 29L116 16L108 42L148 51L121 72L151 91L119 105L133 141L100 126L80 153L60 126L27 141L41 105L9 91L39 72L12 51L52 42L44 16L69 29Z','none',c,3)+
+   path('M80 8V27M15 80H31M145 80H129M80 133V152','none',a,2)+
+   path('M37 36Q48 20 65 26M123 36Q112 20 95 26M32 121Q47 137 62 132M128 121Q113 137 98 132','none',b,3)+
+   path('M80 13L87 31L80 39L73 31Z',a,c,2)+
+   [circle(28,28,9,b,c,2),circle(132,28,9,b,c,2),circle(28,132,9,b,c,2),circle(132,132,9,b,c,2)].join('')+
+   [gem(28,28,.4),gem(132,28,.4),gem(28,132,.4),gem(132,132,.4),star(80,145,.4)].join('')+
+   [0,1,2,3,4,5,6,7].map(i=>'<g transform="rotate('+(i*45)+' 80 80)">'+path('M80 13L83 20L80 18L77 20Z',a,c,1.2)+'</g>').join('');
   break;
  case 'volcanic-crown':
   art=path('M19 49L7 28L23 34L28 9L47 31L62 6L78 29L96 6L111 32L132 9L137 37L153 28L141 57L149 84L135 103L143 132L115 124L99 151L80 132L61 151L45 124L17 132L25 103L11 84Z',b,c,5)+
-   path('M22 49L39 65L34 83L55 92L48 117L70 128M138 52L121 66L129 85L106 95L115 118L91 130','none',a,3)+
-   path('M20 72L33 67L39 79L28 89M140 74L128 67L121 79L133 91','none','#ffe08a',2)+
-   [gem(27,25,.38),gem(61,20,.4),gem(100,20,.4),gem(133,26,.38)] .join('')+
-   [0,1,2,3,4,5].map(i=>circle(42+i*15,139-(i%2)*6,2.5,a,'none',0,'animated-ember')).join('');
+   path('M20 72L31 66L38 78L29 91L39 104L32 119M140 72L129 66L122 78L131 91L121 104L128 119M55 18L61 32L55 44M105 18L99 32L105 44','none',a,3)+
+   [0,1,2,3,4,5,6,7].map(i=>circle(19+(i*17)%122,50+(i*29)%84,1.5+(i%2),a,'none',0,'animated-part animated-ember')).join('')+
+   [gem(80,19,.42),pearl(16,91,2),pearl(144,91,2)].join('');
   break;
  case 'coral-reef':
   art=twig('M24 140Q13 110 24 86Q31 70 19 56M24 94Q42 83 44 66M19 72Q7 57 12 44')+
@@ -2648,11 +2652,13 @@ function frameArtworkMarkup(key){
    [0,1,2].map(i=>path('M'+(51+i*9)+' 141q-4 -10 2 -17q6 7 2 17Z',a,c,1.5)).join('');
   break;
  case 'fairy-butterflies':
-  art=path('M20 125Q7 91 24 67Q36 50 23 31M140 125Q153 91 136 67Q124 50 137 31M24 31Q45 10 65 23M136 31Q115 10 95 23','none',b,4)+
-   [frameSvgMotif('butterfly',[a,b,c]),frameSvgMotif('flower',[a,b,c])].map((m,i)=>'<g transform="translate('+(i?43:24)+' '+(i?127:29)+') scale(.8)">'+m+'</g>').join('')+
-   '<g transform="translate(136 29) scale(.8)">'+frameSvgMotif('butterfly',[a,b,c])+'</g>'+
-   [leaf(25,77,.7,-40),leaf(135,77,.7,40),leaf(39,111,.65,-70),leaf(121,111,.65,70)] .join('')+
-   [star(80,18,.55),star(80,145,.5),gem(80,80,.55),pearl(18,100,2),pearl(142,100,2)].join('');
+  art=path('M18 127Q5 93 24 66Q35 50 24 31M142 127Q155 93 136 66Q125 50 136 31M24 31Q44 10 62 22M136 31Q116 10 98 22','none',b,4)+
+   '<g transform="translate(24 29) scale(.83)">'+frameSvgMotif('butterfly',[a,b,c])+'</g>'+
+   '<g transform="translate(136 29) scale(.83)">'+frameSvgMotif('butterfly',[a,b,c])+'</g>'+
+   '<g transform="translate(19 119) scale(.6)">'+frameSvgMotif('flower',[a,b,c])+'</g>'+
+   '<g transform="translate(141 119) scale(.6)">'+frameSvgMotif('flower',[a,b,c])+'</g>'+
+   [leaf(25,77,.7,-40),leaf(135,77,.7,40),leaf(38,105,.63,-70),leaf(122,105,.63,70)] .join('')+
+   [star(80,16,.52),star(54,138,.32),star(106,138,.32),gem(80,145,.48),pearl(18,96,2),pearl(142,96,2)].join('');
   break;
  case 'neon-circuit':
   art=path('M23 20H49V10H69M137 20H111V10H91M10 52H25V72H15V100H31V125H57V144H80M150 52H135V72H145V100H129V125H103V144H80','none',a,5)+
@@ -2675,19 +2681,20 @@ function frameArtworkMarkup(key){
    path('M44 24L54 43L47 59M116 24L106 43L113 59','none','#fff',1.8);
   break;
  case 'compass-rose':
-  art=path('M80 6L95 41L130 21L111 57L151 80L111 103L130 139L95 119L80 154L65 119L30 139L49 103L9 80L49 57L30 21L65 41Z','none',c,4)+
-   path('M80 10L85 67L80 80L75 67Z',a,c,2)+path('M80 150L75 93L80 80L85 93Z',b,c,2)+
-   path('M13 80L67 75L80 80L67 85ZM147 80L93 85L80 80L93 75Z',a,c,2)+
-   circle(80,80,9,b,c,2)+circle(80,80,3,'#fff2c0',c,1.2)+
-   [0,45,90,135,180,225,270,315].map(d=>'<g transform="rotate('+d+' 80 80)">'+path('M80 22L84 38L80 34L76 38Z',a,c,1.4)+'</g>').join('')+
-   [pearl(80,15,2.5),pearl(80,145,2.5),pearl(15,80,2.5),pearl(145,80,2.5)].join('');
+  art=path('M80 6L96 37L133 17L116 54L153 80L116 106L133 143L96 123L80 154L64 123L27 143L44 106L7 80L44 54L27 17L64 37Z','none',c,4)+
+   path('M80 10L86 30L80 40L74 30Z',a,c,2)+path('M80 150L74 130L80 120L86 130Z',b,c,2)+
+   path('M10 80L30 74L40 80L30 86ZM150 80L130 86L120 80L130 74Z',a,c,2)+
+   path('M20 43Q30 30 44 27M140 43Q130 30 116 27M20 117Q30 130 44 133M140 117Q130 130 116 133','none',a,2)+
+   [gem(80,13,.5),gem(80,147,.5),gem(13,80,.42),gem(147,80,.42),star(45,29,.32),star(115,29,.32),star(45,131,.32),star(115,131,.32)].join('')+
+   [pearl(25,48,2.6),pearl(135,48,2.6),pearl(25,112,2.6),pearl(135,112,2.6)].join('');
   break;
  case 'rose-vine':
-  art=twig('M20 116C4 96 16 78 31 69C47 60 45 44 34 31C22 17 38 7 55 20C70 31 63 48 54 59C42 73 55 89 70 83C87 76 94 57 85 44C76 31 89 18 107 25C127 34 121 54 106 65C91 76 100 96 118 100C137 104 142 122 127 140')+
-   twig('M16 115C32 126 48 123 56 139M107 65C123 72 144 65 150 51')+
-   [leaf(19,87,.68,-48,'animated-part animated-leaf'),leaf(46,34,.65,45,'animated-part animated-leaf'),leaf(67,90,.62,-20,'animated-part animated-leaf'),leaf(111,92,.68,50,'animated-part animated-leaf'),leaf(137,116,.65,-25,'animated-part animated-leaf')] .join('')+
-   [rose(34,31,.83,'animated-rose'),rose(86,42,.7,'animated-rose'),rose(126,119,.86,'animated-rose'),rose(52,132,.54,'animated-rose')].join('')+
-   path('M25 48Q16 42 14 32M103 112Q119 123 136 114','none',a,2);
+  art=twig('M17 111C5 94 13 76 28 65C44 54 46 39 34 28C22 17 38 7 53 19C66 29 59 41 50 51C41 62 46 74 58 76')+
+   twig('M143 48C155 65 145 81 132 91C118 101 117 117 130 129C141 140 126 151 111 139C98 128 104 116 113 106')+
+   twig('M17 111Q35 129 50 142M143 48Q124 29 110 15')+
+   [leaf(18,84,.7,-48,'animated-part animated-leaf'),leaf(43,31,.65,42,'animated-part animated-leaf'),leaf(54,73,.58,-18,'animated-part animated-leaf'),leaf(135,76,.68,48,'animated-part animated-leaf'),leaf(119,126,.66,-28,'animated-part animated-leaf')] .join('')+
+   [rose(33,28,.79,'animated-rose'),rose(124,48,.8,'animated-rose'),rose(50,140,.72,'animated-rose'),rose(130,132,.65,'animated-rose')].join('')+
+   path('M20 57Q10 49 10 38M139 99Q151 107 151 119','none',a,2);
   break;
  case 'petal-garden':
   art=path('M16 117Q3 89 20 59Q34 33 62 31Q80 8 98 31Q126 33 140 59Q157 89 144 117','none',c,5)+
@@ -2712,35 +2719,36 @@ function frameArtworkMarkup(key){
    [pearl(48,43,2.5),pearl(112,43,2.5),pearl(54,117,2),pearl(106,117,2)].join('');
   break;
  case 'living-constellation':
-  art=path('M24 36L49 18L72 42L101 20L136 47L119 79L144 111L111 137L80 119L49 143L16 111L39 78Z','none',b,3)+
-   path('M24 36L49 18L72 42L101 20L136 47L119 79L144 111L111 137L80 119L49 143L16 111L39 78Z','none',a,1.2)+
-   [[24,36],[49,18],[72,42],[101,20],[136,47],[119,79],[144,111],[111,137],[80,119],[49,143],[16,111],[39,78],[80,62],[58,95],[104,95]].map((p,i)=>circle(p[0],p[1],i%3===0?4:2.5,'#fff5c4',a,1.2,'animated-part animated-star')).join('')+
-   path('M49 18L80 62L101 20M24 36L58 95L16 111M136 47L104 95L144 111M49 143L58 95L80 119L104 95L111 137','none','#d6d8ff',1.6)+
-   [star(80,62,.65,'animated-part animated-star'),star(58,95,.35,'animated-part animated-star'),star(104,95,.35,'animated-part animated-star')].join('');
+  art=path('M20 34L47 16L70 29M90 25L115 13L141 38L127 62M17 122L36 101L50 124M110 119L128 96L146 118','none',b,3)+
+   path('M20 34L47 16L70 29M141 38L127 62L146 77M17 122L36 101L50 124M110 119L128 96L146 118','none','#d6d8ff',1.6)+
+   [[20,34],[47,16],[70,29],[115,13],[141,38],[127,62],[146,77],[17,122],[36,101],[50,124],[110,119],[128,96],[146,118]].map((p,i)=>circle(p[0],p[1],i%3===0?4:2.4,'#fff5c4',a,1.2,'animated-part animated-star')).join('')+
+   [star(80,14,.48,'animated-part animated-star'),star(80,146,.42,'animated-part animated-star'),star(12,78,.32,'animated-part animated-star'),star(148,78,.32,'animated-part animated-star')].join('')+
+   path('M32 53Q19 69 31 85M128 53Q141 69 129 85','none',b,2);
   break;
  case 'mermaid-shells':
-  art=path('M18 113Q5 91 20 72Q35 58 31 42Q55 25 72 43Q80 17 95 41Q119 24 135 43Q128 62 143 76Q157 96 139 116Q113 146 80 136Q47 146 18 113Z','none',c,4)+
-   shell(27,66,1.05,-48)+shell(133,67,1.1,48)+shell(80,133,.78,180)+
-   path('M11 98Q41 75 63 99T111 98T149 98M8 108Q40 86 62 110T112 109T152 108','none',a,3,'animated-part animated-wave')+
-   [circle(46,31,4,a,'#fff',1,'animated-part animated-bubble'),circle(118,31,3,b,'#fff',1,'animated-part animated-bubble'),circle(12,77,2.5,'#fff',a,1,'animated-part animated-bubble'),circle(148,88,3,'#fff',a,1,'animated-part animated-bubble')] .join('')+
-   [pearl(53,126,3),pearl(107,126,3),gem(80,21,.45)].join('');
+  art=path('M17 117Q5 94 21 75Q34 59 29 43Q51 25 68 43Q80 17 96 42Q118 25 137 45Q129 64 143 81Q156 102 138 119Q113 144 80 136Q47 145 17 117Z','none',c,4)+
+   shell(24,63,.92,-48)+shell(136,65,.95,48)+shell(80,136,.66,180)+
+   path('M14 98Q30 86 42 98M146 98Q130 86 118 98M13 108Q29 97 41 109M147 108Q131 97 119 109','none',a,3,'animated-part animated-wave')+
+   [circle(46,31,3.8,a,'#fff',1,'animated-part animated-bubble'),circle(118,31,3,b,'#fff',1,'animated-part animated-bubble'),circle(12,80,2.5,'#fff',a,1,'animated-part animated-bubble'),circle(148,84,3,'#fff',a,1,'animated-part animated-bubble')] .join('')+
+   [pearl(54,129,3),pearl(106,129,3),gem(80,20,.45)].join('');
   break;
  case 'walking-roots':
-  art=twig('M13 129Q37 108 31 83Q23 58 43 46Q64 35 57 14')+
-   twig('M147 129Q123 108 129 83Q137 58 117 46Q96 35 103 14')+
-   twig('M13 129Q38 135 55 149M147 129Q122 135 105 149M31 83Q15 90 9 108M129 83Q145 90 151 108')+
-   path('M37 116Q53 104 62 119Q73 132 80 114Q87 132 98 119Q107 104 123 116','none',a,4,'animated-part animated-root')+
-   mushroom(34,126,.66,'animated-part animated-mushroom')+mushroom(126,126,.66,'animated-part animated-mushroom')+
-   [leaf(43,51,.72,25,'animated-part animated-leaf'),leaf(117,51,.72,-25,'animated-part animated-leaf'),leaf(24,98,.6,55,'animated-part animated-leaf'),leaf(136,98,.6,-55,'animated-part animated-leaf')] .join('')+
-   [pearl(58,19,2),pearl(102,19,2)].join('');
+  art=twig('M13 136Q27 112 24 91Q20 67 39 51Q56 37 54 14')+
+   twig('M147 136Q133 112 136 91Q140 67 121 51Q104 37 106 14')+
+   twig('M14 136Q28 134 42 149M146 136Q132 134 118 149M24 91Q8 92 7 111M136 91Q152 92 153 111')+
+   path('M29 124Q43 112 55 121M131 124Q117 112 105 121','none',a,4,'animated-part animated-root')+
+   mushroom(30,128,.68,'animated-part animated-mushroom')+mushroom(130,128,.68,'animated-part animated-mushroom')+
+   [leaf(40,53,.7,25,'animated-part animated-leaf'),leaf(120,53,.7,-25,'animated-part animated-leaf'),leaf(19,100,.6,55,'animated-part animated-leaf'),leaf(141,100,.6,-55,'animated-part animated-leaf')] .join('')+
+   [pearl(58,17,2),pearl(102,17,2),gem(80,13,.35)].join('');
   break;
  case 'storm-lightning':
   art=path('M18 46Q12 24 36 25Q48 7 65 27Q80 9 95 27Q117 8 130 27Q151 26 142 47','none',b,8)+
    path('M19 44Q40 53 60 41Q81 53 100 41Q120 53 141 44','none',a,2)+
-   path('M32 53L20 86L39 79L25 122L62 72L43 79L55 53Z',a,c,2.5,'animated-part animated-bolt')+
-   path('M128 53L140 86L121 79L135 122L98 72L117 79L105 53Z',a,c,2.5,'animated-part animated-bolt')+
-   [star(80,17,.45,'animated-part animated-star'),circle(44,34,2,'#fff',a,1),circle(116,34,2,'#fff',a,1),pearl(12,131,3),pearl(148,131,3)].join('')+
-   path('M60 141Q80 129 100 141','none',a,3);
+   path('M25 55L14 78L28 74L18 104L43 75L31 78L40 55Z',a,c,2.5,'animated-part animated-bolt')+
+   path('M135 55L146 78L132 74L142 104L117 75L129 78L120 55Z',a,c,2.5,'animated-part animated-bolt')+
+   path('M41 119L34 133L45 130L41 146L58 127','none',a,2.5,'animated-part animated-bolt')+
+   path('M119 119L126 133L115 130L119 146L102 127','none',a,2.5,'animated-part animated-bolt')+
+   [star(80,17,.45,'animated-part animated-star'),circle(44,34,2,'#fff',a,1),circle(116,34,2,'#fff',a,1),pearl(12,131,3),pearl(148,131,3)].join('');
   break;
  case 'phoenix-wings':
   art=Array.from({length:6},(_,i)=>feather(29+i*6,111-i*14,.98,-62+i*17,'animated-part animated-feather')).join('')+
@@ -2751,14 +2759,12 @@ function frameArtworkMarkup(key){
    [star(80,11,.4,'animated-part animated-star'),gem(80,144,.42)].join('');
   break;
  case 'orbital-galaxy':
-  art=ellipse(80,80,70,36,'none',b,3,'animated-part animated-orbit')+
-   ellipse(80,80,36,70,'none',a,2,'animated-part animated-orbit')+
-   ellipse(80,80,58,58,'none','#a8a5f2',1.5)+
-   circle(19,79,10,b,a,2)+circle(19,79,4,a,'#fff',1)+
-   circle(127,39,8,a,b,2)+circle(127,39,3,'#fff',b,1)+
-   circle(109,133,7,b,a,2)+
-   [star(35,28,.38,'animated-part animated-star'),star(140,91,.32,'animated-part animated-star'),star(45,138,.45,'animated-part animated-star'),star(80,12,.5,'animated-part animated-star'),star(80,149,.4,'animated-part animated-star')].join('')+
-   path('M27 51Q48 20 69 25M93 135Q116 144 135 119','none',a,2);
+  art=path('M12 60Q25 20 61 17Q98 9 135 37Q154 52 146 82M14 103Q26 137 59 143Q99 153 131 122','none',b,3,'animated-part animated-orbit')+
+   path('M17 49Q39 11 81 14Q125 12 145 55M15 112Q44 148 82 146Q120 145 145 109','none',a,1.6,'animated-part animated-orbit')+
+   ellipse(24,73,13,6,'none',a,2,'animated-part animated-orbit')+
+   circle(19,75,8,b,a,2)+circle(19,75,3,a,'#fff',1)+circle(137,44,8,a,b,2)+circle(137,44,3,'#fff',b,1)+circle(126,123,7,b,a,2)+
+   [star(36,25,.38,'animated-part animated-star'),star(140,91,.32,'animated-part animated-star'),star(45,140,.45,'animated-part animated-star'),star(80,12,.5,'animated-part animated-star'),star(80,149,.4,'animated-part animated-star'),star(13,117,.35,'animated-part animated-star')].join('')+
+   path('M29 51Q42 35 55 39M103 125Q118 137 133 119','none',a,2);
   break;
  case 'mushroom-grove':
   art=twig('M17 127Q11 95 30 77Q42 64 37 44M143 127Q149 95 130 77Q118 64 123 44M37 44Q55 21 70 29M123 44Q105 21 90 29')+
@@ -2767,10 +2773,11 @@ function frameArtworkMarkup(key){
    [star(62,15,.35,'animated-part animated-star'),star(98,15,.35,'animated-part animated-star'),pearl(14,91,2),pearl(146,91,2)].join('');
   break;
  case 'wind-leaves':
-  art=twig('M7 133Q27 110 39 85Q53 54 79 42Q107 29 142 18')+
-   twig('M20 145Q35 120 61 110Q81 101 91 81Q103 60 132 56')+
-   [leaf(22,115,.86,-50,'animated-part animated-leaf'),leaf(44,83,.83,36,'animated-part animated-leaf'),leaf(69,53,.8,-35,'animated-part animated-leaf'),leaf(102,39,.8,35,'animated-part animated-leaf'),leaf(137,22,.83,-20,'animated-part animated-leaf'),leaf(65,116,.68,35,'animated-part animated-leaf'),leaf(105,83,.72,-40,'animated-part animated-leaf')] .join('')+
-   [path('M112 118q6 8 0 15q-6 -7 0 -15Z',a,c,1.2,'animated-part animated-leaf'),path('M20 32q6 8 0 15q-6 -7 0 -15Z',a,c,1.2,'animated-part animated-leaf'),star(141,117,.36,'animated-part animated-star')].join('');
+  art=twig('M10 137Q28 119 24 96Q20 74 38 58Q52 45 48 22')+
+   twig('M150 137Q132 119 136 96Q140 74 122 58Q108 45 112 22')+
+   twig('M24 96Q9 84 12 68M136 96Q151 84 148 68M48 22Q57 10 68 15M112 22Q103 10 92 15')+
+   [leaf(17,90,.75,-45,'animated-part animated-leaf'),leaf(36,59,.74,38,'animated-part animated-leaf'),leaf(48,26,.68,-36,'animated-part animated-leaf'),leaf(143,90,.75,45,'animated-part animated-leaf'),leaf(124,59,.74,-38,'animated-part animated-leaf'),leaf(112,26,.68,36,'animated-part animated-leaf'),leaf(25,127,.65,30,'animated-part animated-leaf'),leaf(135,127,.65,-30,'animated-part animated-leaf')] .join('')+
+   [path('M58 18q5 8 0 14q-5 -7 0 -14Z',a,c,1.2,'animated-part animated-leaf'),path('M102 18q5 8 0 14q-5 -7 0 -14Z',a,c,1.2,'animated-part animated-leaf'),star(80,145,.36,'animated-part animated-star')].join('');
   break;
  case 'volcano-embers':
   art=path('M18 141L8 105L24 87L11 63L34 47L27 21L53 38L67 11L80 34L96 10L110 39L136 20L129 49L150 65L136 88L151 107L140 142L113 128L96 150L80 131L62 151L45 128Z',b,c,5)+
@@ -2799,22 +2806,22 @@ function frameArtworkMarkup(key){
    [leaf(24,86,.75,-44,'animated-part animated-leaf'),leaf(136,86,.75,44,'animated-part animated-leaf'),gem(80,13,.8),gem(80,147,.75),star(45,28,.35,'animated-part animated-star'),star(115,28,.35,'animated-part animated-star')].join('');
   break;
  case 'honey-bees':
-  art=path('M80 8L111 25L132 49L145 82L132 118L107 139L80 150L53 139L28 118L15 82L28 49L49 25Z','none',c,4)+
-   Array.from({length:11},(_,i)=>{const x=40+(i%4)*27,y=38+Math.floor(i/4)*27;return '<path d="M'+x+' '+(y-10)+'l9 5v10l-9 5l-9 -5V'+(y-5)+'Z" fill="'+(i%2?a:b)+'" fill-opacity=".45" stroke="'+c+'" stroke-width="1.7"/>'}).join('')+
-   path('M80 12Q67 28 80 40Q93 28 80 12Z',a,c,2)+
-   '<g transform="translate(30 48) scale(.78)" class="animated-part animated-bee">'+frameSvgMotif('bee',[a,b,c])+'</g>'+
-   '<g transform="translate(128 103) scale(.78)" class="animated-part animated-bee">'+frameSvgMotif('bee',[a,b,c])+'</g>'+
-   path('M25 105Q40 91 52 106T80 107T108 106T135 105','none',a,3)+[pearl(80,145,3),gem(80,18,.5)].join('');
+  art=path('M80 8L110 24L137 49L149 82L137 115L110 139L80 151L50 139L23 115L11 82L23 49L50 24Z','none',c,4)+
+   Array.from({length:12},(_,i)=>{const points=[[39,28],[67,17],[96,17],[123,28],[22,63],[22,94],[138,63],[138,94],[39,128],[67,143],[96,143],[123,128]][i];const x=points[0],y=points[1];return '<path d="M'+x+' '+(y-9)+'l8 5v9l-8 5l-8 -5v-9Z" fill="'+(i%2?a:b)+'" fill-opacity=".45" stroke="'+c+'" stroke-width="1.7"/>'}).join('')+
+   path('M80 11Q67 28 80 41Q93 28 80 11Z',a,c,2)+
+   '<g transform="translate(27 51) scale(.7)" class="animated-part animated-bee">'+frameSvgMotif('bee',[a,b,c])+'</g>'+
+   '<g transform="translate(133 109) scale(.7)" class="animated-part animated-bee">'+frameSvgMotif('bee',[a,b,c])+'</g>'+
+   path('M16 108Q30 99 40 108M144 108Q130 99 120 108','none',a,3)+[pearl(80,145,3),gem(80,18,.5)].join('');
   break;
  case 'living-tide':
-  art=path('M9 119Q28 93 12 69Q-2 47 24 35Q42 27 56 44Q73 60 80 35Q89 7 112 25Q135 39 127 60Q119 82 148 96Q162 105 144 126Q123 150 99 131Q80 118 62 139Q38 158 20 137Z','none',c,5)+
-   path('M11 111Q33 84 17 66Q4 49 29 42Q48 35 61 56Q77 78 85 49Q94 20 114 34Q132 47 117 68Q102 91 140 103','none',a,5,'animated-part animated-wave')+
-   path('M20 125Q47 104 66 123T108 122T144 119','none',b,4,'animated-part animated-wave')+
-   [shell(24,49,.54,-45),shell(137,111,.58,45),pearl(51,27,3),pearl(108,27,3),circle(16,90,3,'#fff',a,1,'animated-part animated-bubble'),circle(144,72,3,'#fff',a,1,'animated-part animated-bubble'),star(80,145,.42,'animated-part animated-star')].join('');
+  art=path('M10 117Q28 95 14 73Q1 53 23 39Q41 28 54 44M150 117Q132 95 146 73Q159 53 137 39Q119 28 106 44','none',c,5)+
+   path('M9 104Q31 81 17 62Q6 48 31 43Q48 39 59 58M151 104Q129 81 143 62Q154 48 129 43Q112 39 101 58','none',a,5,'animated-part animated-wave')+
+   path('M12 126Q35 109 52 126M148 126Q125 109 108 126M20 137Q39 126 55 139M140 137Q121 126 105 139','none',b,4,'animated-part animated-wave')+
+   [shell(22,52,.58,-45),shell(138,52,.58,45),pearl(50,26,3),pearl(110,26,3),circle(15,91,3,'#fff',a,1,'animated-part animated-bubble'),circle(145,91,3,'#fff',a,1,'animated-part animated-bubble'),star(80,145,.42,'animated-part animated-star')].join('');
   break;
  case 'crystal-snow':
-  art=path('M20 129L10 97L22 80L11 61L31 42L27 19L49 31L64 8L80 29L96 8L111 31L133 19L129 42L149 61L138 80L150 97L140 129L113 123L96 148L80 130L64 148L47 123Z','none',b,c,4)+
-   Array.from({length:8},(_,i)=>'<g transform="translate('+(26+i*15)+' '+(23+(i%2)*10)+')" class="animated-part animated-snow">'+frameSvgMotif('ice',[a,b,c])+'</g>').join('')+
+  art=path('M20 129L10 97L22 80L11 61L31 42L27 19L49 31L64 8L80 29L96 8L111 31L133 19L129 42L149 61L138 80L150 97L140 129L113 123L96 148L80 130L64 148L47 123Z','none',c,4)+
+   Array.from({length:8},(_,i)=>'<g transform="translate('+(26+i*15)+' '+(20+(i%2)*8)+')" class="animated-part animated-snow">'+frameSvgMotif('ice',[a,b,c])+'</g>').join('')+
    path('M18 58L28 72L20 90M142 58L132 72L140 90M49 131L58 113L68 128M111 131L102 113L92 128','none','#fff',2)+
    [star(80,13,.4,'animated-part animated-snow'),gem(80,148,.4,'animated-part animated-snow')].join('');
   break;
