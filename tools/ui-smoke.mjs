@@ -1577,6 +1577,31 @@ const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && sou
   const selectedCommunityTitles = await page.locator(".community-rank-title-section .community-rank-title-chip").allTextContents();
   check(selectedCommunityTitles.length===2&&selectedCommunityTitles.some(value=>value.includes("Explorador"))&&selectedCommunityTitles.some(value=>value.includes("A Jornada Começa")),
     name + ": a comunidade não exibiu somente os títulos selecionados pelo dono do perfil.");
+  const titleGridMetrics=await page.locator(".community-rank-titles").first().evaluate(element=>({
+    columns:getComputedStyle(element).gridTemplateColumns.split(" ").length,
+    fontSize:parseFloat(getComputedStyle(element.querySelector(".community-rank-title-chip")).fontSize)
+  }));
+  check(titleGridMetrics.columns===3&&titleGridMetrics.fontSize<=10,
+    name+": os títulos da comunidade não estão compactos, com três por linha: "+JSON.stringify(titleGridMetrics));
+  await page.evaluate(async()=>{
+    const maria=communityCache[0];
+    communityCache=[maria,{
+      ...maria,username:"coin_leader",displayName:"Líder de moedas",coins:900,totalEarned:1200,
+      correct:2,wrong:0,attempts:2,timeMs:1000,titles:[],featuredTitles:[],featuredAwards:[],medals:[],awards:[]
+    }];
+    communityCacheAt=Date.now();
+  });
+  await page.locator("#communitySort").selectOption("coins");
+  await page.waitForFunction(()=>document.querySelector(".community-rank-display-title")?.textContent?.trim()==="Líder de moedas");
+  check((await page.locator(".community-rank-display-title").first().textContent()).trim()==="Líder de moedas",
+    name+": o ranking de moedas não colocou primeiro quem tem o maior saldo.");
+  await page.locator("#communitySort").selectOption("time");
+  await page.waitForFunction(()=>document.querySelector(".community-rank-display-title")?.textContent?.trim()==="Maria Silva");
+  await page.evaluate(async()=>{
+    communityCache=communityCache.filter(user=>user.username!=="coin_leader");
+    communityCacheAt=Date.now();
+    await renderCommunityRanking();
+  });
   const publicOrder = await page.locator(".community-rank-summary").first().evaluate(element=>{
     const stats=element.querySelector(".community-rank-public-stats");
     const titles=element.querySelector(".community-rank-title-section");
