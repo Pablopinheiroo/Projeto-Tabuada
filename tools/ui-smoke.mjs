@@ -414,6 +414,20 @@ check(html.includes("function profileLearningStats()")&&html.includes("challenge
   html.includes("Ver classificação final")&&html.includes("Ver prévia da classificação")&&
   html.includes(".challenge-card-facts")&&html.includes(".challenge-preview-body"),
   "A consulta dos desafios precisa separar informações principais e prévia do ranking em cartões legíveis.");
+check(html.includes('<details id="challengeInboxShell"')&&
+  html.includes("📤 Desafios enviados")&&html.includes("📥 Desafios recebidos")&&html.includes("🏆 Resultados")&&
+  html.includes("function getSeenChallengeReceipts()")&&html.includes("function challengeUnreadCounts()")&&
+  html.includes("data-challenge-received-card")&&html.includes("data-challenge-result-card"),
+  "A caixa de desafios deve iniciar minimizada e separar enviados, recebidos e resultados com marcação individual de visualização.");
+check(html.includes("data-challenge-retry")&&html.includes("Nova aposta (moedas)")&&
+  html.includes("Esta é a única nova tentativa permitida")&&
+  html.includes("apiRequest('/api/challenges/'+id+'/retry'"),
+  "A carta rejeitada precisa permitir somente uma nova tentativa com ajuste da aposta e resultado original.");
+check(workerSource.includes('status: betMode ? "challenger_playing" : "open"')&&
+  workerSource.includes("const firstBetResult = persistedChallenge.betMode === true")&&
+  workerSource.includes("async function retryRejectedBetChallenge")&&
+  workerSource.includes("challengeRetryMatch")&&workerSource.includes("retryCount: 1"),
+  "A API deve liberar primeiro a partida do desafiante, convidar o outro usuário após o resultado e limitar a uma nova tentativa por partida.");
 check(html.includes("function showPrizeCelebration(")&&html.includes("function playPrizeCelebrationMusic()")&&
   html.includes("prize-celebration-overlay")&&html.includes("melody=[72,76,79,84")&&
   html.includes("if(newTitles.length)")&&html.includes("showCoinRewardNotification(coinsAdded,item)")&&
