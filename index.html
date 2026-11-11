@@ -1112,8 +1112,43 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .training-celebration-close{position:absolute;top:9px;right:10px;display:grid;place-items:center;width:34px;height:34px;min-height:34px;padding:0;border:1px solid #7188a7;border-radius:10px;background:#1d3555;color:#fff;font-size:1.35rem;font-weight:950;line-height:1}
 
 /* Comunidade: presença e cartões de desafios mais claros */
-.community-last-online{display:block;margin-top:2px;color:#58718c;font-size:.68rem;font-weight:750;line-height:1.25}
-.community-last-online::first-letter{color:#16a34a}
+.community-last-online{display:flex;align-items:center;gap:4px;margin-top:3px;color:#58718c;font-size:.7rem;font-weight:750;line-height:1.25}
+.community-presence-initial{color:#16a34a!important;font-weight:1000}
+.community-presence-dot{display:inline-block;flex:0 0 7px;width:7px;height:7px;border-radius:50%;background:#16a34a;box-shadow:0 0 0 3px #16a34a20}
+.community-gift-action{display:grid;gap:10px;margin-top:13px;padding:12px;border:1px solid #a66b32;border-radius:15px;background:radial-gradient(circle at 92% 0%,#6b3a1d66,transparent 42%),linear-gradient(130deg,#271d37,#37213b 58%,#3e2a1b);box-shadow:inset 0 1px #ffffff12}
+.community-gift-button{display:flex;align-items:center;gap:12px;width:100%;padding:8px;border:1px solid #be8a4e;border-radius:12px;background:linear-gradient(115deg,#552b2d,#774020 58%,#59401e);color:#fff5d9;text-align:left;cursor:pointer;transition:transform .18s,border-color .18s,box-shadow .18s}
+.community-gift-button:hover{transform:translateY(-2px);border-color:#fcd34d;box-shadow:0 7px 18px #f59e0b26}
+.community-gift-button img{width:76px;height:68px;flex:0 0 76px;object-fit:contain;filter:drop-shadow(0 5px 8px #0007);animation:communityGiftFloat 2.8s ease-in-out infinite}
+.community-gift-button-copy{display:grid;gap:4px;min-width:0}
+.community-gift-button-copy strong{font-size:.9rem;font-weight:950;color:#fff1bf}
+.community-gift-button-copy small{color:#f2d9b2;font-size:.72rem;line-height:1.35}
+.community-gift-button-arrow{margin-left:auto;color:#fcd34d;font-size:1.2rem;font-weight:950}
+@keyframes communityGiftFloat{0%,100%{transform:translateY(1px) rotate(-2deg)}50%{transform:translateY(-5px) rotate(2deg)}}
+.community-gift-form{display:grid;gap:9px;padding:11px;border:1px solid #91623f;border-radius:11px;background:#1d1d31}
+.community-gift-form label{display:grid;gap:6px;color:#ffe7bd;font-size:.78rem;font-weight:850}
+.community-gift-form input{width:100%;min-height:42px;padding:9px 11px;border:1px solid #94734e;border-radius:9px;background:#101b2e;color:#fff;font:inherit;font-size:1rem}
+.community-gift-form input:focus{outline:2px solid #fbbf24;outline-offset:1px}
+.community-gift-wallet{color:#d6c4ac;font-size:.7rem;line-height:1.35}
+.community-gift-form-actions{display:flex;gap:8px;flex-wrap:wrap}
+.community-gift-form-actions button{flex:1 1 120px;min-height:39px;border-radius:9px;font-size:.78rem;font-weight:900}
+.community-gift-send{background:linear-gradient(110deg,#b45309,#d97706);color:#fff;border:1px solid #fbbf24}
+.community-gift-cancel{background:#263247;color:#e2e8f0;border:1px solid #52647d}
+.community-gift-status{min-height:1em;margin:0;color:#fde68a;font-size:.72rem;line-height:1.35}
+.gift-notification-stack{position:fixed;top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));z-index:12000;display:grid;gap:10px;width:min(390px,calc(100vw - 24px));pointer-events:none}
+.gift-toast{position:relative;display:flex;align-items:center;gap:12px;min-height:112px;padding:15px 14px 14px 12px;border:1px solid #fbbf24;border-radius:18px;background:radial-gradient(circle at 100% 0%,#fbbf2440,transparent 45%),linear-gradient(130deg,#49243d,#722c31 58%,#6b3b19);color:#fff7df;box-shadow:0 15px 40px #090d1bcc,0 0 0 3px #f59e0b22;pointer-events:auto;overflow:hidden;animation:giftToastEnter .42s cubic-bezier(.2,.85,.25,1.2) both}
+.gift-toast:before{content:"";position:absolute;inset:-40% auto auto -12%;width:75%;height:150%;background:linear-gradient(110deg,transparent,#ffffff0b,transparent);transform:rotate(18deg);pointer-events:none}
+.gift-toast-close{position:absolute;top:8px;left:8px;z-index:2;display:grid;place-items:center;width:27px;height:27px;padding:0;border:1px solid #ffe0ad66;border-radius:50%;background:#251b2dcc;color:#fff;font-size:1rem;font-weight:900;line-height:1;cursor:pointer}
+.gift-toast img{width:82px;height:78px;flex:0 0 82px;object-fit:contain;filter:drop-shadow(0 5px 8px #0007)}
+.gift-toast-copy{display:grid;gap:4px;min-width:0;padding:2px 0}
+.gift-toast-kicker{color:#fcd34d;font-size:.63rem;font-weight:950;letter-spacing:.11em}
+.gift-toast-copy strong{font-size:1.02rem;font-weight:1000;color:#fff4cf}
+.gift-toast-copy p{margin:0;color:#fff7e8;font-size:.8rem;line-height:1.38;overflow-wrap:anywhere}
+.gift-toast-copy p b{color:#fde68a}
+.gift-toast-copy small{color:#f7d8ba;font-size:.67rem;line-height:1.3}
+.gift-toast.is-closing{animation:giftToastExit .2s ease-in both}
+@keyframes giftToastEnter{from{opacity:0;transform:translateX(-24px) translateY(-12px) scale(.94)}to{opacity:1;transform:translateX(0) translateY(0) scale(1)}}
+@keyframes giftToastExit{to{opacity:0;transform:translateX(-18px) scale(.94)}}
+@media(max-width:430px){.gift-toast{gap:8px;padding:13px 10px 12px 9px}.gift-toast img{width:66px;height:64px;flex-basis:66px}.gift-toast-copy strong{font-size:.9rem}.gift-toast-copy p{font-size:.74rem}}
 .challenge-list{gap:13px}
 .challenge-list-card{display:grid;grid-template-columns:minmax(0,1fr);align-items:stretch;gap:12px;padding:14px;border:1px solid #37577c;border-radius:16px;background:linear-gradient(145deg,#0e213b,#172441 58%,#211d3d);box-shadow:0 7px 18px #0206172b;color:#eaf4ff}
 .challenge-card-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;min-width:0}
@@ -3261,6 +3296,11 @@ function formatCommunityLastOnline(value){
  }
  return 'Visto por último em '+new Date(timestamp).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
+function renderCommunityLastOnline(value){
+ const text=formatCommunityLastOnline(value);
+ if(text.startsWith('🟢 '))return '<span class="community-presence-dot" aria-hidden="true"></span>'+escapeHtml(text.slice(2));
+ return '<span class="community-presence-initial">'+escapeHtml(text.charAt(0))+'</span>'+escapeHtml(text.slice(1));
+}
 function communityStatsFromRecord(record){
  const profile=record.profile&&typeof record.profile==='object'?record.profile:{};
  const economy=record.economy&&typeof record.economy==='object'?record.economy:{};
@@ -3337,6 +3377,24 @@ async function renderCommunityRanking(){
     '<span class="community-rank-chip title community-title-chip community-rank-title-chip '+(selectedTitleItems.length?'is-selected':'is-automatic')+'"'+badgeInfoAttributes(item.title,item.description)+'>'+renderBadgeIcon('achievement:'+item.id)+' '+escapeHtml(item.title)+'</span>'
    ).join('');
    const titleSection='<div class="community-rank-title-section"><span class="community-title-label">TÍTULOS</span><div class="community-rank-titles">'+(titleBadges||'<span class="community-rank-no-titles">Ainda não conquistou títulos.</span>')+'</div></div>';
+   const giftAction=user.username!==activeProfile
+    ?'<section class="community-gift-action">'+
+      '<button type="button" class="community-gift-button" data-community-gift-toggle="'+escapeHtml(user.username)+'">'+
+       '<img src="assets/gift-animation.gif" alt="Presente animado">'+
+       '<span class="community-gift-button-copy"><strong>Presentear com moedas 🎁</strong><small>Envie um mimo para alegrar o dia de alguém.</small></span>'+
+       '<span class="community-gift-button-arrow" aria-hidden="true">›</span>'+
+      '</button>'+
+      '<form class="community-gift-form hidden" data-community-gift-form="'+escapeHtml(user.username)+'">'+
+       '<label>Quantas moedas deseja enviar?'+
+        '<input type="number" min="1" max="'+Math.max(0,Number(gameEconomy.coins)||0)+'" step="1" inputmode="numeric" required placeholder="Ex.: 50" data-gift-amount>'+
+       '</label>'+
+       '<small class="community-gift-wallet">Seu saldo disponível: '+Math.max(0,Number(gameEconomy.coins)||0).toLocaleString('pt-BR')+' moedas. O valor será descontado do seu saldo e creditado à pessoa.</small>'+
+       '<div class="community-gift-form-actions"><button type="submit" class="community-gift-send">Enviar presente 🎁</button><button type="button" class="community-gift-cancel" data-community-gift-cancel>Cancelar</button></div>'+
+       '<p class="community-gift-status" role="status" aria-live="polite"></p>'+
+      '</form>'+
+     '</section>'
+    :'';
+
    const communityTitles=Array.isArray(user.titles)?user.titles:[];
    const achievementBadges=communityTitles.map(title=>{
     const item=ACHIEVEMENT_DEFINITIONS.find(entry=>entry.title===title||entry.id===title);
@@ -3353,7 +3411,7 @@ async function renderCommunityRanking(){
       '<img class="community-rank-avatar'+frame+'" src="'+avatarImage(user.avatar)+'" alt="">'+
       '<div class="community-rank-identity">'+
        '<div class="community-rank-name-row"><strong class="community-rank-display-title">'+escapeHtml(user.displayName)+'</strong><span class="community-wallet-pill"><i class="coin-symbol" aria-hidden="true"></i>'+user.coins.toLocaleString('pt-BR')+'</span></div>'+
-       '<small class="community-last-online">'+escapeHtml(formatCommunityLastOnline(user.lastOnlineAt))+'</small>'+
+       '<small class="community-last-online">'+renderCommunityLastOnline(user.lastOnlineAt)+'</small>'+
       '</div>'+
      '</div>'+
      '<div class="community-rank-public-stats"><span><strong>✓ '+user.correct.toLocaleString('pt-BR')+'</strong><small>Acertos</small></span><span><strong>✕ '+user.wrong.toLocaleString('pt-BR')+'</strong><small>Erros</small></span><span><strong>⏱️ '+formatStudyTimeCompact(user.timeMs)+'</strong><small>Tempo estudado</small></span></div>'+
@@ -3376,9 +3434,24 @@ async function renderCommunityRanking(){
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏅 MEDALHAS DE NÍVEL</span><div class="community-profile-detail-chips">'+(medals||'<span class="community-profile-empty">Ainda não conquistou medalhas de nível.</span>')+'</div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">✨ CONQUISTAS</span><div class="community-profile-detail-chips">'+(achievementBadges||'<span class="community-profile-empty">Ainda não desbloqueou conquistas.</span>')+'</div></div>'+
      '<div class="community-profile-detail-section"><span class="community-profile-detail-title">🏆 PREMIAÇÕES MENSAIS</span><div class="community-profile-detail-chips">'+(awards||'<span class="community-profile-empty">Nenhuma premiação mensal registrada.</span>')+'</div></div>'+
+     giftAction+
     '</div>'+
    '</details>';
   }).join('');
+  box.querySelectorAll('[data-community-gift-toggle]').forEach(button=>button.addEventListener('click',()=>{
+   const form=button.closest('.community-rank-card')?.querySelector('.community-gift-form');
+   if(!form)return;
+   form.classList.toggle('hidden');
+   if(!form.classList.contains('hidden'))form.querySelector('[data-gift-amount]')?.focus();
+  }));
+  box.querySelectorAll('.community-gift-form').forEach(form=>form.addEventListener('submit',event=>{
+   event.preventDefault();
+   sendCommunityGift(form.dataset.communityGiftForm,form);
+  }));
+  box.querySelectorAll('[data-community-gift-cancel]').forEach(button=>button.addEventListener('click',()=>{
+   const form=button.closest('.community-gift-form');
+   if(form){form.classList.add('hidden');form.reset();}
+  }));
   box.querySelectorAll('.community-rank-card').forEach(card=>card.addEventListener('toggle',()=>{
    const indicator=card.querySelector('.community-rank-expand');
    if(indicator)indicator.textContent=card.open?'Fechar detalhes ▴':'Clique para ver mais informações ▾';
@@ -3395,6 +3468,130 @@ async function renderCommunityRanking(){
  }
 }
 
+let giftInboxTimer=null,giftInboxBusy=false;
+const GIFT_DISMISSED_KEY='projetoTabuadaPresentesFechadosV1';
+function createClientGiftId(){
+ const bytes=crypto.getRandomValues(new Uint8Array(16));
+ return Array.from(bytes,value=>value.toString(16).padStart(2,'0')).join('');
+}
+function syncCommunityGiftBalance(value){
+ const coins=Number(value);
+ if(!Number.isSafeInteger(coins)||coins<0)return;
+ gameEconomy={...gameEconomy,coins};
+ if(activeProfile)saveClientEconomyCache(activeProfile);
+ refreshEconomyDisplay();
+ communityCacheAt=0;
+}
+async function sendCommunityGift(recipient,form){
+ const input=form.querySelector('[data-gift-amount]');
+ const amount=Number(String(input?.value||'').trim());
+ const status=form.querySelector('.community-gift-status');
+ const button=form.querySelector('[type="submit"]');
+ if(!Number.isSafeInteger(amount)||amount<1){
+  if(status)status.textContent='Digite uma quantidade inteira de pelo menos 1 moeda.';
+  input?.focus();return;
+ }
+ if(amount>Number(gameEconomy.coins||0)){
+  if(status)status.textContent='Você não tem moedas suficientes para esse presente.';
+  return;
+ }
+ if(button)button.disabled=true;
+ if(status)status.textContent='Preparando seu presente...';
+ try{
+  const giftId=form.dataset.giftId||createClientGiftId();
+  form.dataset.giftId=giftId;
+  const result=await apiRequest('/api/gifts/send',{method:'POST',body:{to:recipient,amount,giftId}});
+  delete form.dataset.giftId;
+  if(Number.isSafeInteger(Number(result.coins)))syncCommunityGiftBalance(Number(result.coins));
+  if(status)status.textContent='Presente enviado! Você enviou '+amount.toLocaleString('pt-BR')+' moedas para @'+recipient+'. 🎁';
+  input.value='';
+  communityCacheAt=0;
+  try{
+   const fresh=await apiRequest('/api/me');
+   hydrateRemoteUser(activeProfile,fresh);
+   refreshEconomyDisplay();
+  }catch(error){console.warn('Não foi possível atualizar os demais dados após o presente:',error);}
+ }catch(error){
+  if(status)status.textContent='Não foi possível enviar o presente: '+siteErrorMessage(error);
+ }finally{
+  if(button)button.disabled=false;
+ }
+}
+function readDismissedGiftIds(){
+ try{
+  const value=JSON.parse(localStorage.getItem(GIFT_DISMISSED_KEY)||'[]');
+  return Array.isArray(value)?value.filter(id=>typeof id==='string').slice(-200):[];
+ }catch{return [];}
+}
+function rememberDismissedGift(id){
+ const ids=readDismissedGiftIds();
+ if(!ids.includes(id))ids.push(id);
+ try{localStorage.setItem(GIFT_DISMISSED_KEY,JSON.stringify(ids.slice(-200)));}catch{}
+}
+function getGiftNotificationStack(){
+ let stack=$('giftNotificationStack');
+ if(!stack){
+  stack=document.createElement('div');
+  stack.id='giftNotificationStack';
+  stack.className='gift-notification-stack';
+  stack.setAttribute('aria-live','polite');
+  stack.setAttribute('aria-relevant','additions');
+  document.body.appendChild(stack);
+ }
+ return stack;
+}
+function showGiftNotifications(gifts){
+ const stack=getGiftNotificationStack();
+ const dismissed=new Set(readDismissedGiftIds());
+ (Array.isArray(gifts)?gifts:[]).slice(0,8).forEach(gift=>{
+  const id=String(gift?.id||'');
+  if(!/^[a-f0-9]{32}$/.test(id)||dismissed.has(id)||
+    [...stack.querySelectorAll('.gift-toast')].some(node=>node.dataset.giftId===id))return;
+  const amount=Math.max(0,Number(gift.amount)||0).toLocaleString('pt-BR');
+  const name=escapeHtml(gift.fromDisplayName||gift.fromUsername||'Um participante');
+  const username=escapeHtml(gift.fromUsername||'');
+  const wrapper=document.createElement('div');
+  wrapper.innerHTML=
+   '<article class="gift-toast" data-gift-id="'+id+'">'+
+    '<button type="button" class="gift-toast-close" data-gift-toast-dismiss="'+id+'" aria-label="Fechar presente">×</button>'+
+    '<img src="assets/gift-animation.gif" alt="">'+
+    '<div class="gift-toast-copy"><span class="gift-toast-kicker">UM PRESENTE CHEGOU</span><strong>🎉 Parabéns!</strong>'+
+     '<p>Você ganhou <b>'+amount+' moedas</b> de <b>'+name+'</b>'+(username?' (@'+username+')':'')+'.</p>'+
+     '<small>Seu saldo já foi atualizado. Aproveite seu presente! 💛</small></div>'+
+   '</article>';
+  const toast=wrapper.firstElementChild;
+  if(toast)stack.appendChild(toast);
+ });
+}
+async function pollGiftInbox(){
+ if(!activeProfile||!cloudTokenReady()||giftInboxBusy||document.hidden)return;
+ giftInboxBusy=true;
+ try{
+  const result=await apiRequest('/api/gifts/inbox');
+  syncCommunityGiftBalance(result.coins);
+  showGiftNotifications(result.gifts);
+ }catch(error){
+  if(error.status!==404&&!error.sessionExpired)console.warn('Não foi possível consultar os presentes recebidos:',error);
+ }finally{giftInboxBusy=false;}
+}
+function startGiftNotificationPolling(){
+ if(giftInboxTimer!==null)clearInterval(giftInboxTimer);
+ pollGiftInbox();
+ giftInboxTimer=setInterval(pollGiftInbox,45_000);
+}
+document.addEventListener('click',event=>{
+ const close=event.target.closest('[data-gift-toast-dismiss]');
+ if(!close)return;
+ const id=close.dataset.giftToastDismiss;
+ const toast=close.closest('.gift-toast');
+ if(!id||!toast)return;
+ rememberDismissedGift(id);
+ toast.classList.add('is-closing');
+ setTimeout(()=>toast.remove(),220);
+ apiRequest('/api/gifts/'+id+'/read',{method:'POST',body:{}}).catch(error=>{
+  if(!error.sessionExpired)console.warn('O aviso foi fechado neste aparelho, mas não foi possível marcar sua leitura no servidor.',error);
+ });
+});
 async function restoreCloudSession(){
  let rememberedUser=sessionStorage.getItem(AUTH_SESSION_KEY);
  let sessionToken=sessionStorage.getItem(API_TOKEN_KEY);
@@ -3433,6 +3630,7 @@ function enterApp(username){
  selectProfile();renderCommunityRanking();refreshEconomyDisplay();renderChallengeProfileStats();updateReviewTrainingButton();
  startActiveTimeTracking();
  startPresenceTracking();
+ startGiftNotificationPolling();
  setTimeout(retryPendingGameRewards,800);
  refreshChallengeData();startChallengePolling();refreshTournamentDashboard();
 }
@@ -6835,7 +7033,7 @@ document.addEventListener('keydown',event=>{
 document.addEventListener('visibilitychange',()=>{
  if(!activeProfile)return;
  if(document.hidden)sendPresencePing(true);
- else sendPresencePing(true);
+ else{sendPresencePing(true);pollGiftInbox();}
 });
 window.addEventListener('pagehide',()=>{if(activeProfile)sendPresencePing(true);});
 </script>

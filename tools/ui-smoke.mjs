@@ -85,7 +85,7 @@ check(workerSource.includes("invalidateCommunitySummaryCache()")&&
   "O cache público da comunidade não é invalidado ou marcado com a versão dos dados.");
 check(workerSource.includes("mergeHistorySnapshots(")&&workerSource.includes("body.baseSha"),
   "A API não protege o histórico contra snapshots antigos.");
-check(workerSource.includes('const WORKER_BUILD_ID = "2026-11-10-community-presence-and-prize-celebrations-v1"')&&
+check(workerSource.includes('const WORKER_BUILD_ID = "2026-11-11-community-coin-gifts-v1"')&&
   workerSource.includes("PRESENCE_MIN_WRITE_INTERVAL_MS")&&
   workerSource.includes('if (route === "/api/presence" && request.method === "POST")')&&
   workerSource.includes("profile: { ...profile, lastOnlineAt }")&&
@@ -93,6 +93,20 @@ check(workerSource.includes('const WORKER_BUILD_ID = "2026-11-10-community-prese
   workerSource.includes("lastOnlineAt: typeof profile.lastOnlineAt")&&
   workerSource.includes("lastOnlinePresence: true"),
   "A API precisa registrar e devolver a última presença da comunidade, com proteção contra gravações excessivas.");
+check(workerSource.includes("async function writeUsersAtomically")&&
+  workerSource.includes('route === "/api/gifts/send"')&&
+  workerSource.includes('route === "/api/gifts/inbox"')&&
+  workerSource.includes("const giftReadMatch = route.match(")&&
+  workerSource.includes("sentGiftIds")&&workerSource.includes("giftInbox")&&
+  workerSource.includes("communityCoinGifts: true"),
+  "A API deve transferir moedas com gravação atômica dos dois saldos e guardar notificações de presentes.");
+check(html.includes("assets/gift-animation.gif")&&
+  html.includes("Presentear com moedas")&&
+  html.includes("function pollGiftInbox()")&&
+  html.includes("data-gift-toast-dismiss")&&
+  html.includes("community-presence-initial")&&
+  html.includes("renderCommunityLastOnline(user.lastOnlineAt)"),
+  "A comunidade deve exibir o presente animado, a notificação fechável e as iniciais verdes em Visto/Atividade.");
 const workerTestSource=workerSource.replace("export default {","globalThis.__workerDefault = {");
 const workerContext={Date,Set,Map,Object,Array,Number,String,Math,RegExp,JSON,TextEncoder,TextDecoder,Uint8Array,Response,Headers,URL};
 vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;globalThis.__normalizeGameEconomy=normalizeGameEconomy;globalThis.__applyTrainingCorrectReward=applyTrainingCorrectReward;globalThis.__applyIntelligentTrainingReward=applyIntelligentTrainingReward;globalThis.__applyErrorTrainingReward=applyErrorTrainingReward;",workerContext);

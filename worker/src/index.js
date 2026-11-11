@@ -14,7 +14,7 @@ const AVATAR_GIF_COUNT = 12;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
 const CHALLENGE_PLAYER_METADATA_MAX = 45;
-const WORKER_BUILD_ID = "2026-11-10-community-presence-and-prize-celebrations-v1";
+const WORKER_BUILD_ID = "2026-11-11-community-coin-gifts-v1";
 const PRESENCE_MIN_WRITE_INTERVAL_MS = 4 * 60 * 1000;
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
@@ -155,11 +155,11 @@ async function githubRequest(path, env, options = {}) {
   return data;
 }
 
-async function readUser(username, env) {
+async function readUser(username, env, ref = GH_BRANCH) {
   try {
     const file = await githubRequest(
       "/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" +
-      userPath(username) + "?ref=" + encodeURIComponent(GH_BRANCH),
+      userPath(username) + "?ref=" + encodeURIComponent(ref),
       env
     );
     const data = JSON.parse(decodeGithubContent(file.content));
@@ -188,6 +188,52 @@ async function writeUser(username, data, sha, env) {
   );
   invalidateCommunitySummaryCache();
   return result.content.sha;
+}
+
+async function currentBranchHead(env) {
+  const ref = await githubRequest(
+    "/repos/" + GH_OWNER + "/" + GH_REPO + "/git/ref/heads/" + GH_BRANCH,
+    env
+  );
+  if (!ref?.object?.sha) throw new Error("Não foi possível identificar a versão atual dos dados.");
+  return ref.object.sha;
+}
+async function writeUsersAtomically(records, parentSha, env, message) {
+  if (!Array.isArray(records) || !records.length || !parentSha) {
+    throw new Error("Não foi possível preparar a transferência de moedas.");
+  }
+  const parentCommit = await githubRequest(
+    "/repos/" + GH_OWNER + "/" + GH_REPO + "/git/commits/" + parentSha,
+    env
+  );
+  const blobs = await Promise.all(records.map(async item => {
+    const response = await githubRequest(
+      "/repos/" + GH_OWNER + "/" + GH_REPO + "/git/blobs",
+      env,
+      { method: "POST", body: JSON.stringify({
+        content: encodeUtf8Base64(JSON.stringify(item.data, null, 2)),
+        encoding: "base64"
+      }) }
+    );
+    return { path: userPath(item.username), mode: "100644", type: "blob", sha: response.sha };
+  }));
+  const tree = await githubRequest(
+    "/repos/" + GH_OWNER + "/" + GH_REPO + "/git/trees",
+    env,
+    { method: "POST", body: JSON.stringify({ base_tree: parentCommit.tree.sha, tree: blobs }) }
+  );
+  const commit = await githubRequest(
+    "/repos/" + GH_OWNER + "/" + GH_REPO + "/git/commits",
+    env,
+    { method: "POST", body: JSON.stringify({ message, tree: tree.sha, parents: [parentSha] }) }
+  );
+  await githubRequest(
+    "/repos/" + GH_OWNER + "/" + GH_REPO + "/git/refs/heads/" + GH_BRANCH,
+    env,
+    { method: "PATCH", body: JSON.stringify({ sha: commit.sha, force: false }) }
+  );
+  invalidateCommunitySummaryCache();
+  return commit.sha;
 }
 
 function defaultGameEconomy(currentAvatar = "imagem:0") {
@@ -1514,7 +1560,7 @@ async function handleApi(request, env, origin) {
           ok: false,
           service: "Projeto Tabuada API",
           buildId: WORKER_BUILD_ID,
-          features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, trainingCoinsPerTenCorrectAnswers: true, trainingCorrectProgress: true, intelligentTrainingRewards: true, intelligentTrainingProgress: true, errorTrainingRewards: true, difficultyTrainingBelow90Percent: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true, lastOnlinePresence: true, awardCelebrations: true },
+          features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, trainingCoinsPerTenCorrectAnswers: true, trainingCorrectProgress: true, intelligentTrainingRewards: true, intelligentTrainingProgress: true, errorTrainingRewards: true, difficultyTrainingBelow90Percent: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true, lastOnlinePresence: true, awardCelebrations: true, communityCoinGifts: true },
           githubSecretConfigured: false,
           githubConnected: false
         }, 503, origin);
@@ -1532,7 +1578,7 @@ async function handleApi(request, env, origin) {
         ok: true,
         service: "Projeto Tabuada API",
         buildId: WORKER_BUILD_ID,
-        features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, trainingCoinsPerTenCorrectAnswers: true, trainingCorrectProgress: true, intelligentTrainingRewards: true, intelligentTrainingProgress: true, errorTrainingRewards: true, difficultyTrainingBelow90Percent: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true, lastOnlinePresence: true, awardCelebrations: true },
+        features: { groupChallenges: true, monthlyTournament: true, compactCommunity: true, fastestChallengeWins: true, betChallenges: true, publicExpandedProfiles: true, atomicAdventureRewards: true, adventureQuestionStats: true, reviewExitAt90Percent: true, registeredPlayerNames: true, freeCompatible: true, tournamentMinimumScore: 30, adaptiveTournamentTimers: true, publicChallengeStats: true, trainingRewards: true, trainingCoinsPerTenCorrectAnswers: true, trainingCorrectProgress: true, intelligentTrainingRewards: true, intelligentTrainingProgress: true, errorTrainingRewards: true, difficultyTrainingBelow90Percent: true, learningFromErrorsAchievement: true, challengeMusic20: true, provisionalRankTieBreak: true, challengeDraws: true, drawBetRefunds: true, publicChallengeDraws: true, lastOnlinePresence: true, awardCelebrations: true, communityCoinGifts: true },
         githubSecretConfigured: true,
         githubConnected: true,
         githubContentReadAccess: true
@@ -1620,6 +1666,11 @@ async function handleApi(request, env, origin) {
         "A atualização de presença foi solicitada muitas vezes. Aguarde um pouco.", origin);
       if (limited) return limited;
     }
+    if (route.startsWith("/api/gifts")) {
+      const limited = await rateLimitResponse(env.GAME_ACTION_LIMITER, username + ":gifts",
+        "Muitas ações de presente em pouco tempo. Aguarde um minuto e tente novamente.", origin);
+      if (limited) return limited;
+    }
     if ((route === "/api/me/password" && request.method === "POST") ||
         (route === "/api/me" && request.method === "PUT")) {
       const limited = await rateLimitResponse(env.PROFILE_WRITE_LIMITER, username + ":profile-write",
@@ -1657,6 +1708,97 @@ async function handleApi(request, env, origin) {
       const sha = await writeUser(username, updated, record.sha, env);
       invalidateCommunitySummaryCache();
       return json({ ok: true, lastOnlineAt, updated: true, sha, updatedAt: updated.updatedAt }, 200, origin);
+    }
+
+    if (route === "/api/gifts/inbox" && request.method === "GET") {
+      const record = await readUser(username, env);
+      if (!record) return json({ error: "A conta não foi encontrada." }, 404, origin);
+      const inbox = Array.isArray(record.data.giftInbox) ? record.data.giftInbox : [];
+      const gifts = inbox.filter(gift => gift && typeof gift.id === "string" && !gift.readAt).slice(0, 8);
+      return json({ coins: normalizeGameEconomy(record.data).coins, gifts }, 200, origin);
+    }
+
+    if (route === "/api/gifts/send" && request.method === "POST") {
+      const body = await readJson(request);
+      const to = String(body.to || "").trim().toLowerCase();
+      const amount = Number(body.amount);
+      const giftId = String(body.giftId || "").toLowerCase();
+      if (!usernameIsValid(to)) return json({ error: "Escolha um participante válido para receber o presente." }, 400, origin);
+      if (to === username) return json({ error: "Você não pode presentear sua própria conta." }, 400, origin);
+      if (!Number.isSafeInteger(amount) || amount < 1 || amount > 1000000) {
+        return json({ error: "Informe uma quantidade inteira entre 1 e 1.000.000 moedas." }, 400, origin);
+      }
+      if (!/^[a-f0-9]{32}$/.test(giftId)) {
+        return json({ error: "O identificador do presente é inválido. Tente novamente." }, 400, origin);
+      }
+
+      const baseSha = await currentBranchHead(env);
+      const [senderRecord, recipientRecord] = await Promise.all([
+        readUser(username, env, baseSha), readUser(to, env, baseSha)
+      ]);
+      if (!senderRecord) return json({ error: "Sua conta não foi encontrada." }, 404, origin);
+      if (!recipientRecord) return json({ error: "Esse participante não está mais cadastrado." }, 404, origin);
+
+      const sentGiftIds = Array.isArray(senderRecord.data.sentGiftIds) ? senderRecord.data.sentGiftIds : [];
+      const senderEconomy = normalizeGameEconomy(senderRecord.data);
+      if (sentGiftIds.includes(giftId)) {
+        return json({ ok: true, alreadySent: true, coins: senderEconomy.coins }, 200, origin);
+      }
+      if (senderEconomy.coins < amount) {
+        return json({ error: "Você não tem moedas suficientes para esse presente." }, 400, origin);
+      }
+      const recipientEconomy = normalizeGameEconomy(recipientRecord.data);
+      if (recipientEconomy.coins + amount > 1000000000) {
+        return json({ error: "A pessoa está com o saldo máximo de moedas e não pode receber mais agora." }, 400, origin);
+      }
+
+      const now = new Date().toISOString();
+      const senderUpdated = {
+        ...senderRecord.data,
+        economy: { ...senderEconomy, coins: senderEconomy.coins - amount },
+        sentGiftIds: [...sentGiftIds, giftId].slice(-500),
+        updatedAt: now
+      };
+      const senderProfile = senderRecord.data.profile && typeof senderRecord.data.profile === "object"
+        ? senderRecord.data.profile : {};
+      const gift = {
+        id: giftId,
+        fromUsername: username,
+        fromDisplayName: String(senderProfile.displayName || username).slice(0, 24),
+        amount,
+        createdAt: now
+      };
+      const recipientInbox = Array.isArray(recipientRecord.data.giftInbox)
+        ? recipientRecord.data.giftInbox.filter(item => item && typeof item.id === "string").slice(-99) : [];
+      const recipientUpdated = {
+        ...recipientRecord.data,
+        economy: { ...recipientEconomy, coins: recipientEconomy.coins + amount },
+        giftInbox: [...recipientInbox, gift].slice(-100),
+        updatedAt: now
+      };
+
+      await writeUsersAtomically([
+        { username, data: senderUpdated },
+        { username: to, data: recipientUpdated }
+      ], baseSha, env, "Enviar presente de moedas de " + username + " para " + to);
+      return json({ ok: true, gift, coins: senderEconomy.coins - amount }, 201, origin);
+    }
+
+    const giftReadMatch = route.match(/^\/api\/gifts\/([a-f0-9]{32})\/read$/);
+    if (giftReadMatch && request.method === "POST") {
+      const baseSha = await currentBranchHead(env);
+      const record = await readUser(username, env, baseSha);
+      if (!record) return json({ error: "A conta não foi encontrada." }, 404, origin);
+      const inbox = Array.isArray(record.data.giftInbox) ? record.data.giftInbox : [];
+      const gift = inbox.find(item => item && item.id === giftReadMatch[1]);
+      if (!gift) return json({ ok: true, alreadyRead: true }, 200, origin);
+      if (!gift.readAt) {
+        gift.readAt = new Date().toISOString();
+        const updated = { ...record.data, giftInbox: inbox, updatedAt: gift.readAt };
+        await writeUsersAtomically([{ username, data: updated }], baseSha, env,
+          "Marcar presente como lido por " + username);
+      }
+      return json({ ok: true, read: true }, 200, origin);
     }
 
     if (route === "/api/challenges/players" && request.method === "GET") {
