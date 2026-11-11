@@ -117,6 +117,18 @@ check(html.includes("assets/gift-animation.gif")&&
   !html.includes("community-presence-dot")&&
   !html.includes("community-last-online::first-letter"),
   "A comunidade deve manter o cartão antigo, mostrar apenas o presente animado sem fundo, abrir o formulário em balão flutuante e manter a presença normal.");
+check(html.includes("👤 MEU PERFIL")&&
+  html.includes('id="navProfile" type="button">👤 Meu perfil')&&
+  html.includes('aria-label="Abrir opções do perfil"><span class="profile-actions-chevron"')&&
+  !html.includes("Mais opções do perfil")&&
+  html.includes(".mode-hub-heading-simple .music-kicker{")&&
+  html.includes("color:#eaf7ff;")&&
+  html.includes("font-size:clamp(1.42rem,4.5vw,1.82rem);")&&
+  !html.includes("Os avisos são conferidos automaticamente.")&&
+  !html.includes("Mostrando '+(first+1)")&&
+  !html.includes("community-list-note")&&
+  html.includes("#challengeListStatus:empty{display:none}"),
+  "Perfil, seta de opções, título da jornada e textos de status não seguem o visual minimalista solicitado.");
 const workerTestSource=workerSource.replace("export default {","globalThis.__workerDefault = {");
 const workerContext={Date,Set,Map,Object,Array,Number,String,Math,RegExp,JSON,TextEncoder,TextDecoder,Uint8Array,Response,Headers,URL};
 vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;globalThis.__normalizeGameEconomy=normalizeGameEconomy;globalThis.__applyTrainingCorrectReward=applyTrainingCorrectReward;globalThis.__applyIntelligentTrainingReward=applyIntelligentTrainingReward;globalThis.__applyErrorTrainingReward=applyErrorTrainingReward;",workerContext);
