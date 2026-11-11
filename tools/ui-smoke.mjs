@@ -1130,7 +1130,7 @@ async function testViewport(name, viewport, mobile = false) {
   check(shopPurchase?.path==="/api/game/shop"&&shopPurchase?.method==="POST"&&shopPurchase?.body?.avatarKey==="imagem:2",
     name+": a compra não foi enviada ao servidor pela rota oficial da Loja.");
   check(await page.locator("#profileAvatarGrid .avatar-choice").count()===4&&
-    await page.locator("#avatarShopGrid .shop-avatar-card.owned").count()===3&&
+    await page.locator("#avatarShopGrid .shop-avatar-card.owned").count()===5&&
     (await page.locator("#shopCoins").textContent()).trim()==="2.300",
     name+": o avatar comprado não passou para a coleção e o saldo não foi atualizado.");
   check(await page.locator(".prize-celebration-overlay").isVisible()&&
