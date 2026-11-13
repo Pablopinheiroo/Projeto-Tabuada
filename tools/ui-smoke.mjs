@@ -515,6 +515,15 @@ check(html.includes('<div class="training-setup-card"')&&
   html.includes("min-height:40px")&&html.includes(".training-tables-section .tables{margin-top:0"),
   "A ordem e a seleção das tabuadas devem ficar compactas e dentro de um único painel visual.");
 
+
+check(html.includes('id="trainingAdvancedSettings"')&&html.includes('id="trainingFactorTables"')&&
+  html.includes('id="saveTrainingFactorsGlobal"')&&html.includes("function buildTrainingFactorSettings()")&&
+  html.includes("function saveTrainingTablePreset(table)")&&html.includes("function saveTrainingGlobalPreset()")&&
+  html.includes("function currentTrainingFactorSelection(table)")&&html.includes("data-save-training-table")&&
+  html.includes("factors:currentTrainingFactorSelection(number)")&&html.includes("const factors=Array.isArray(t.factors)?t.factors:TRAINING_FACTORS")&&
+  html.includes("const emptyTables=selectedRows.filter")&&html.includes(".training-advanced-settings>summary")&&
+  html.includes(".training-factor-grid{display:grid"),
+  "As Configurações avançadas devem oferecer 20 listas independentes com 10 contas marcadas, salvar por tabuada ou todas e filtrar as questões do treinamento.");
 check(html.includes("challenge-standing-card")&&html.includes("challenge-standing-place")&&
   html.includes("challenge-standing-name")&&html.includes("data-position")&&
   html.includes("rankIcon=place===1"),
@@ -793,6 +802,55 @@ async function testViewport(name, viewport, mobile = false) {
     null,
     { timeout: 30000 }
   );
+
+  const factorPresetCheck=await page.evaluate(()=>{
+    const oldActive=activeProfile,oldSelected=selected;
+    activeProfile="smoke_factor_profile";
+    const key=trainingDefinitionStorageKey(),oldStored=localStorage.getItem(key);
+    try{
+      localStorage.removeItem(key);loadTrainingDefinition();
+      const advanced=document.querySelector("#trainingAdvancedSettings");
+      const panels=[...document.querySelectorAll("[data-training-factor-panel]")];
+      const allStartChecked=[...document.querySelectorAll("[data-training-factor-table]")].length===200&&
+        [...document.querySelectorAll("[data-training-factor-table]")].every(input=>input.checked);
+      const startCollapsed=!!advanced&&!advanced.open&&panels.length===20&&panels.every(panel=>!panel.open);
+      document.querySelector('[data-training-factor-table="2"][data-training-factor="1"]').checked=false;
+      document.querySelector('[data-training-factor-table="2"][data-training-factor="10"]').checked=false;
+      const savedOne=saveTrainingTablePreset(2);
+      const afterOne=readTrainingDefinition().factorSelections;
+      document.querySelector('[data-training-factor-table="3"][data-training-factor="1"]').checked=false;
+      loadTrainingDefinition();
+      const restoredTableTwo=currentTrainingFactorSelection(2);
+      const restoredTableThree=currentTrainingFactorSelection(3);
+      selected=[{n:2,mode:"normal",factors:currentTrainingFactorSelection(2)}];
+      const round=makeRound();
+      document.querySelector('[data-training-factor-table="1"][data-training-factor="2"]').checked=false;
+      document.querySelector('[data-training-factor-table="3"][data-training-factor="10"]').checked=false;
+      const savedAll=saveTrainingGlobalPreset();
+      const global=readTrainingDefinition().factorSelections;
+      loadTrainingDefinition();
+      return {
+        startCollapsed,allStartChecked,panelCount:panels.length,
+        savedOne,tableTwoSaved:JSON.stringify(afterOne?.["2"])===JSON.stringify([2,3,4,5,6,7,8,9]),
+        tableThreeUntouched:!afterOne?.["3"],
+        restoredTableTwo,restoredTableThree,
+        round:round.map(item=>item.b),savedAll,
+        globalTableOne:global?.["1"],globalTableTwo:global?.["2"],globalTableThree:global?.["3"]
+      };
+    }finally{
+      if(oldStored===null)localStorage.removeItem(key);else localStorage.setItem(key,oldStored);
+      activeProfile=oldActive;selected=oldSelected;
+    }
+  });
+  check(factorPresetCheck.startCollapsed&&factorPresetCheck.allStartChecked&&factorPresetCheck.panelCount===20&&
+    factorPresetCheck.savedOne&&factorPresetCheck.tableTwoSaved&&factorPresetCheck.tableThreeUntouched&&
+    JSON.stringify(factorPresetCheck.restoredTableTwo)==="[2,3,4,5,6,7,8,9]"&&
+    JSON.stringify(factorPresetCheck.restoredTableThree)==="[1,2,3,4,5,6,7,8,9,10]"&&
+    JSON.stringify(factorPresetCheck.round)==="[2,3,4,5,6,7,8,9]"&&factorPresetCheck.savedAll&&
+    JSON.stringify(factorPresetCheck.globalTableOne)==="[1,3,4,5,6,7,8,9,10]"&&
+    JSON.stringify(factorPresetCheck.globalTableTwo)==="[2,3,4,5,6,7,8,9]"&&
+    JSON.stringify(factorPresetCheck.globalTableThree)==="[1,2,3,4,5,6,7,8,9]",
+    name+": as pré-definições por tabuada/geral não foram salvas, restauradas ou aplicadas ao sorteio ("+JSON.stringify(factorPresetCheck)+").");
 
   const coinBetButtonState=await page.evaluate(()=>{
     const oldMode=challengeBetMode,oldPlayers=challengePlayers,oldSelected=selectedChallengePlayers,oldCoins=gameEconomy.coins;
