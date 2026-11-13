@@ -2192,9 +2192,11 @@ function trainingDefinitionStorageKey(){
 }
 function readTrainingDefinition(){
  try{
-  const saved=JSON.parse(localStorage.getItem(trainingDefinitionStorageKey())||'null');
-  return saved&&typeof saved==='object'&&saved.version===1?saved:{version:1,globalMode:'individual',tableModes:{},factorSelections:{}};
- }catch(error){return {version:1,globalMode:'individual',tableModes:{},factorSelections:{}};}
+  const raw=localStorage.getItem(trainingDefinitionStorageKey());
+  if(!raw)return null;
+  const saved=JSON.parse(raw);
+  return saved&&typeof saved==='object'&&saved.version===1?saved:null;
+ }catch(error){return null;}
 }
 function normalizeTrainingFactors(values){
  if(!Array.isArray(values))return TRAINING_FACTORS.slice();
@@ -2259,7 +2261,7 @@ function persistTrainingDefinition(definition){
 }
 function saveTrainingTablePreset(table){
  if(!Number.isInteger(table)||table<1||table>20)return false;
- const current=readTrainingDefinition();
+ const current=readTrainingDefinition()||{version:1,globalMode:'individual',tableModes:{},factorSelections:{}};
  const factorSelections={...(current.factorSelections&&typeof current.factorSelections==='object'?current.factorSelections:{})};
  factorSelections[String(table)]=currentTrainingFactorSelection(table);
  const definition={...current,version:1,factorSelections,savedAt:new Date().toISOString()};
@@ -2277,7 +2279,7 @@ function saveTrainingTablePreset(table){
  return true;
 }
 function saveTrainingGlobalPreset(){
- const current=readTrainingDefinition();
+ const current=readTrainingDefinition()||{version:1,globalMode:'individual',tableModes:{},factorSelections:{}};
  const factorSelections=Object.fromEntries(Array.from({length:20},(_,index)=>{
   const table=index+1;
   return [String(table),currentTrainingFactorSelection(table)];
@@ -2298,7 +2300,9 @@ function saveTrainingGlobalPreset(){
  return true;
 }
 function loadTrainingDefinition(){
- const saved=readTrainingDefinition();
+ const storedDefinition=readTrainingDefinition();
+ const hasSavedDefinition=!!storedDefinition;
+ const saved=storedDefinition||{version:1,globalMode:'individual',tableModes:{},factorSelections:{}};
  const validModes=['individual','normal','random'];
  if(validModes.includes(saved.globalMode)){
   $('trainingGlobalMode').value=saved.globalMode;
@@ -2329,11 +2333,11 @@ function loadTrainingDefinition(){
  }
  trainingDefinitionDirty=false;
  updateTrainingGlobalModeControls();
- updateTrainingDefinitionStatus(saved&&saved.version===1?'✓ Preferências salvas carregadas para este perfil.':'Escolha a ordem e toque em “Salvar definição” para guardar sua preferência.');
+ updateTrainingDefinitionStatus(hasSavedDefinition?'✓ Preferências salvas carregadas para este perfil.':'Escolha a ordem e toque em “Salvar definição” para guardar sua preferência.');
  updateTrainingFactorGlobalStatus(saved&&Object.keys(storedFactors).length
   ?'Pré-definições salvas carregadas para este perfil.'
   :'Todas as contas estão marcadas por padrão.',!!(saved&&Object.keys(storedFactors).length));
- return !!(saved&&saved.version===1);
+ return hasSavedDefinition;
 }
 function updateTrainingDefinitionStatus(message){
  const status=$('trainingDefinitionStatus');
@@ -2346,7 +2350,7 @@ function markTrainingDefinitionDirty(){
  updateTrainingDefinitionStatus('Alterações ainda não salvas. Toque em “Salvar definição” para usar esta ordem nos próximos treinos.');
 }
 function saveTrainingDefinition(){
- const current=readTrainingDefinition();
+ const current=readTrainingDefinition()||{version:1,globalMode:'individual',tableModes:{},factorSelections:{}};
  const definition={
   ...current,
   version:1,
@@ -6518,7 +6522,7 @@ function updateStats(){
  $('hits').textContent=hits;
  $('misses').textContent=misses;
  $('round').textContent=Math.max(0,round-1);
- const total=trainingReviewMode?trainingRoundTarget:selected.length*10;
+ const total=trainingRoundTarget;
  $('bar').style.width=(total?roundCorrect.size/total*100:0)+'%';
 }
 function clearCompletedErrorTrainingPool(scope='training',facts=errorTrainingFacts){
