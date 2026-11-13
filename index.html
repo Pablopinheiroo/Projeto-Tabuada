@@ -1411,6 +1411,32 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .training-tables-heading small{color:#a9bfdc;font-size:.67rem;line-height:1.3}
 .training-tables-section .tables{margin-top:0;gap:8px;grid-template-columns:repeat(auto-fit,minmax(min(100%,215px),1fr))}
 .training-tables-section .table-row{padding:9px 10px;border-color:#365477;border-radius:11px;background:linear-gradient(120deg,#132743,#172b49)}
+.training-advanced-settings{margin-top:3px;border:1px solid #345477;border-radius:11px;background:linear-gradient(125deg,#0d1d34,#122744);overflow:hidden}
+.training-advanced-settings>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:34px;padding:7px 10px;color:#cde8ff;font-size:.69rem;font-weight:850;cursor:pointer;list-style:none}
+.training-advanced-settings>summary::-webkit-details-marker,.training-factor-table>summary::-webkit-details-marker{display:none}
+.training-advanced-settings>summary:after{content:"＋";color:#67e8f9;font-size:.9rem;font-weight:900}
+.training-advanced-settings[open]>summary:after{content:"−"}
+.training-advanced-settings>summary small{margin-left:auto;color:#8faecc;font-size:.6rem;font-weight:650;text-align:right}
+.training-advanced-content{display:grid;gap:8px;padding:0 9px 10px;border-top:1px solid #294867}
+.training-factor-intro{margin:8px 0 0;color:#a9bfdc;font-size:.67rem;line-height:1.4}
+.training-factor-save-global{justify-self:start;min-height:31px;padding:6px 10px;border:1px solid #3d83a9;border-radius:8px;background:linear-gradient(110deg,#164e63,#1d4771);color:#ecfeff;font:inherit;font-size:.68rem;font-weight:850}
+.training-factor-global-status{min-height:0;margin:-4px 0 0;color:#9fb8d7;font-size:.63rem;line-height:1.3}
+.training-factor-global-status.is-saved,.training-factor-table-status.is-saved{color:#86efac}
+.training-factor-tables{display:grid;gap:5px}
+.training-factor-table{border:1px solid #294867;border-radius:8px;background:#10223b;overflow:hidden}
+.training-factor-table>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;color:#e2efff;font-size:.68rem;font-weight:800;cursor:pointer;list-style:none}
+.training-factor-table>summary:after{content:"＋";color:#67e8f9;font-size:.78rem}
+.training-factor-table[open]>summary:after{content:"−"}
+.training-factor-count{margin-left:auto;color:#91b7d5;font-size:.61rem;font-weight:700}
+.training-factor-table-body{display:grid;gap:7px;padding:8px;border-top:1px solid #294867}
+.training-factor-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.training-factor-choice{display:flex;align-items:center;justify-content:center;gap:4px;min-width:0;padding:6px 3px;border:1px solid #345477;border-radius:7px;background:#162e4b;color:#d8e8fb;font-size:.65rem;font-weight:750;white-space:nowrap;cursor:pointer}
+.training-factor-choice input{width:14px;height:14px;flex:0 0 14px;margin:0;accent-color:#22c5e5}
+.training-factor-choice:has(input:not(:checked)){opacity:.52;background:#0b1a2d}
+.training-factor-save-one{justify-self:start;min-height:29px;padding:5px 9px;border:1px solid #365f85;border-radius:7px;background:#17385a;color:#e4f4ff;font:inherit;font-size:.63rem;font-weight:800}
+.training-factor-table-status{min-height:0;margin:-3px 0 0;color:#9fb8d7;font-size:.6rem;line-height:1.3}
+.training-factor-table.has-no-factors>summary .training-factor-count{color:#fca5a5}
+.training-factor-save-global:focus-visible,.training-factor-save-one:focus-visible,.training-advanced-settings summary:focus-visible,.training-factor-choice:focus-within{outline:2px solid #67e8f9;outline-offset:2px}
 @media(max-width:560px){
  .training-setup-card{gap:9px;padding:10px;border-radius:15px}
  .training-order-field{grid-template-columns:1fr;gap:5px}
@@ -1418,6 +1444,11 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
  .training-tables-section{gap:8px;padding-top:9px}
  .training-tables-heading{align-items:flex-start;flex-direction:column;gap:2px}
  .training-tables-section .tables{grid-template-columns:minmax(0,1fr);gap:7px}
+ .training-advanced-settings>summary{align-items:flex-start;flex-wrap:wrap}
+ .training-advanced-settings>summary small{flex-basis:100%;margin-left:0;text-align:left}
+ .training-factor-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .training-factor-choice{justify-content:flex-start;padding:8px 9px;font-size:.7rem}
+ .training-factor-save-global,.training-factor-save-one{width:100%;justify-self:stretch}
 }
 
 
@@ -1958,6 +1989,15 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
  <div class="training-tables-section" aria-labelledby="trainingTablesTitle">
   <div class="training-tables-heading"><strong id="trainingTablesTitle">Tabuadas</strong><small>Marque as que deseja praticar.</small></div>
   <div id="tables" class="tables"></div>
+  <details id="trainingAdvancedSettings" class="training-advanced-settings">
+   <summary><span>⚙️ Configurações avançadas</span><small>Personalize as contas de cada tabuada</small></summary>
+   <div class="training-advanced-content">
+    <p class="training-factor-intro">Desmarque as multiplicações que não deseja ver no treinamento. Cada tabuada pode ter uma pré-definição própria.</p>
+    <button id="saveTrainingFactorsGlobal" class="training-factor-save-global" type="button">💾 Salvar pré-definição Geral</button>
+    <p id="trainingFactorsGlobalStatus" class="training-factor-global-status" role="status" aria-live="polite">Todas as contas estão marcadas por padrão.</p>
+    <div id="trainingFactorTables" class="training-factor-tables" aria-label="Personalização das contas por tabuada"></div>
+   </div>
+  </details>
  </div>
  </div>
  <button id="start" class="primary">▶ Iniciar treinamento livre</button>
@@ -2143,10 +2183,157 @@ function updateTrainingGlobalModeControls(){
   :mode==='normal'?'Todas as tabuadas seguem a ordem padrão, de 1 a 10.':'Todas as tabuadas terão questões em ordem aleatória.';
 }
 const TRAINING_DEFINITION_STORAGE_PREFIX='projetoTabuadaTreinoDefinitionV1:';
+const TRAINING_FACTORS=Array.from({length:10},(_,index)=>index+1);
 let trainingDefinitionDirty=false;
+let savedTrainingFactorSelections={};
 function trainingDefinitionStorageKey(){
  const profile=String(activeProfile||$('profileName')?.value||'sem-perfil').trim().toLowerCase()||'sem-perfil';
  return TRAINING_DEFINITION_STORAGE_PREFIX+encodeURIComponent(profile);
+}
+function readTrainingDefinition(){
+ try{
+  const saved=JSON.parse(localStorage.getItem(trainingDefinitionStorageKey())||'null');
+  return saved&&typeof saved==='object'&&saved.version===1?saved:{version:1,globalMode:'individual',tableModes:{},factorSelections:{}};
+ }catch(error){return {version:1,globalMode:'individual',tableModes:{},factorSelections:{}};}
+}
+function normalizeTrainingFactors(values){
+ if(!Array.isArray(values))return TRAINING_FACTORS.slice();
+ return [...new Set(values.map(Number).filter(value=>Number.isInteger(value)&&value>=1&&value<=10))].sort((a,b)=>a-b);
+}
+function trainingFactorInputs(table){
+ const host=$('trainingFactorTables');
+ return host?[...host.querySelectorAll('[data-training-factor-table="'+table+'"]')]:[];
+}
+function currentTrainingFactorSelection(table){
+ return trainingFactorInputs(table).filter(input=>input.checked).map(input=>Number(input.dataset.trainingFactor));
+}
+function updateTrainingFactorTableCount(table){
+ const selectedCount=currentTrainingFactorSelection(table).length;
+ const panel=$('trainingFactorTables')?.querySelector('[data-training-factor-panel="'+table+'"]');
+ const counter=panel?.querySelector('[data-training-factor-count="'+table+'"]');
+ if(counter)counter.textContent=selectedCount+'/10 marcadas';
+ panel?.classList.toggle('has-no-factors',selectedCount===0);
+}
+function updateTrainingFactorGlobalStatus(message,isSaved=false){
+ const status=$('trainingFactorsGlobalStatus');
+ if(!status)return;
+ if(message!==undefined)status.textContent=message;
+ status.classList.toggle('is-saved',isSaved);
+}
+function markTrainingFactorDraftDirty(table){
+ const panel=$('trainingFactorTables')?.querySelector('[data-training-factor-panel="'+table+'"]');
+ const status=panel?.querySelector('[data-training-factor-status="'+table+'"]');
+ if(status){status.textContent='Alterações ainda não salvas.';status.classList.remove('is-saved');}
+ updateTrainingFactorGlobalStatus('Há alterações não salvas. Salve cada tabuada ou use “Salvar pré-definição Geral”.');
+ updateTrainingFactorTableCount(table);
+}
+function buildTrainingFactorSettings(){
+ const host=$('trainingFactorTables');
+ if(!host||host.dataset.built==='true')return;
+ host.dataset.built='true';
+ host.innerHTML=Array.from({length:20},(_,index)=>{
+  const table=index+1;
+  const choices=TRAINING_FACTORS.map(factor=>
+   '<label class="training-factor-choice"><input type="checkbox" checked data-training-factor-table="'+table+'" data-training-factor="'+factor+'" aria-label="'+table+' vezes '+factor+'"><span>'+table+' × '+factor+'</span></label>'
+  ).join('');
+  return '<details class="training-factor-table" data-training-factor-panel="'+table+'">'+
+   '<summary><strong>Tabuada '+table+'</strong><small class="training-factor-count" data-training-factor-count="'+table+'">10/10 marcadas</small></summary>'+
+   '<div class="training-factor-table-body"><div class="training-factor-grid">'+choices+'</div>'+
+   '<button class="training-factor-save-one" type="button" data-save-training-table="'+table+'">💾 Salvar pré-definição Tabuada '+table+'</button>'+
+   '<small class="training-factor-table-status" data-training-factor-status="'+table+'">Padrão: todas as contas marcadas.</small></div></details>';
+ }).join('');
+ host.addEventListener('change',event=>{
+  const input=event.target.closest('[data-training-factor-table]');
+  if(!input)return;
+  markTrainingFactorDraftDirty(Number(input.dataset.trainingFactorTable));
+ });
+ host.addEventListener('click',event=>{
+  const button=event.target.closest('[data-save-training-table]');
+  if(button)saveTrainingTablePreset(Number(button.dataset.saveTrainingTable));
+ });
+ $('saveTrainingFactorsGlobal')?.addEventListener('click',saveTrainingGlobalPreset);
+}
+function persistTrainingDefinition(definition){
+ try{localStorage.setItem(trainingDefinitionStorageKey(),JSON.stringify(definition));return true;}
+ catch(error){return false;}
+}
+function saveTrainingTablePreset(table){
+ if(!Number.isInteger(table)||table<1||table>20)return false;
+ const current=readTrainingDefinition();
+ const factorSelections={...(current.factorSelections&&typeof current.factorSelections==='object'?current.factorSelections:{})};
+ factorSelections[String(table)]=currentTrainingFactorSelection(table);
+ const definition={...current,version:1,factorSelections,savedAt:new Date().toISOString()};
+ if(!persistTrainingDefinition(definition)){
+  const panel=$('trainingFactorTables')?.querySelector('[data-training-factor-panel="'+table+'"]');
+  const status=panel?.querySelector('[data-training-factor-status="'+table+'"]');
+  if(status)status.textContent='Não foi possível salvar neste aparelho.';
+  return false;
+ }
+ savedTrainingFactorSelections[String(table)]=factorSelections[String(table)].slice();
+ const panel=$('trainingFactorTables')?.querySelector('[data-training-factor-panel="'+table+'"]');
+ const status=panel?.querySelector('[data-training-factor-status="'+table+'"]');
+ if(status){status.textContent='✓ Pré-definição da Tabuada '+table+' salva neste perfil.';status.classList.add('is-saved');}
+ updateTrainingFactorGlobalStatus('✓ Pré-definição da Tabuada '+table+' salva. As outras tabuadas não foram alteradas.',true);
+ return true;
+}
+function saveTrainingGlobalPreset(){
+ const current=readTrainingDefinition();
+ const factorSelections=Object.fromEntries(Array.from({length:20},(_,index)=>{
+  const table=index+1;
+  return [String(table),currentTrainingFactorSelection(table)];
+ }));
+ const definition={...current,version:1,factorSelections,savedAt:new Date().toISOString()};
+ if(!persistTrainingDefinition(definition)){
+  updateTrainingFactorGlobalStatus('Não foi possível salvar neste aparelho. Verifique o espaço disponível.');
+  return false;
+ }
+ savedTrainingFactorSelections=Object.fromEntries(Object.entries(factorSelections).map(([key,values])=>[key,values.slice()]));
+ for(let table=1;table<=20;table++){
+  const panel=$('trainingFactorTables')?.querySelector('[data-training-factor-panel="'+table+'"]');
+  const status=panel?.querySelector('[data-training-factor-status="'+table+'"]');
+  if(status){status.textContent='✓ Pré-definição salva.';status.classList.add('is-saved');}
+  updateTrainingFactorTableCount(table);
+ }
+ updateTrainingFactorGlobalStatus('✓ Pré-definição Geral salva para as 20 tabuadas deste perfil.',true);
+ return true;
+}
+function loadTrainingDefinition(){
+ const saved=readTrainingDefinition();
+ const validModes=['individual','normal','random'];
+ if(validModes.includes(saved.globalMode)){
+  $('trainingGlobalMode').value=saved.globalMode;
+  const tableModes=saved.tableModes&&typeof saved.tableModes==='object'?saved.tableModes:{};
+  tablesEl.querySelectorAll('.table-row').forEach(row=>{
+   const number=row.querySelector('input').value;
+   const mode=tableModes[number];
+   row.querySelector('.mode').value=mode==='random'?'random':'normal';
+  });
+ }else{
+  $('trainingGlobalMode').value='individual';
+  tablesEl.querySelectorAll('.table-row .mode').forEach(select=>{select.value='normal';});
+ }
+ const storedFactors=saved.factorSelections&&typeof saved.factorSelections==='object'?saved.factorSelections:{};
+ savedTrainingFactorSelections={};
+ for(let table=1;table<=20;table++){
+  const hasSaved=Object.prototype.hasOwnProperty.call(storedFactors,String(table))&&Array.isArray(storedFactors[String(table)]);
+  const factors=hasSaved?normalizeTrainingFactors(storedFactors[String(table)]):TRAINING_FACTORS.slice();
+  savedTrainingFactorSelections[String(table)]=factors.slice();
+  trainingFactorInputs(table).forEach(input=>{input.checked=factors.includes(Number(input.dataset.trainingFactor));});
+  const panel=$('trainingFactorTables')?.querySelector('[data-training-factor-panel="'+table+'"]');
+  const status=panel?.querySelector('[data-training-factor-status="'+table+'"]');
+  if(status){
+   status.textContent=hasSaved?'✓ Pré-definição salva carregada.':'Padrão: todas as contas marcadas.';
+   status.classList.toggle('is-saved',hasSaved);
+  }
+  updateTrainingFactorTableCount(table);
+ }
+ trainingDefinitionDirty=false;
+ updateTrainingGlobalModeControls();
+ updateTrainingDefinitionStatus(saved&&saved.version===1?'✓ Preferências salvas carregadas para este perfil.':'Escolha a ordem e toque em “Salvar definição” para guardar sua preferência.');
+ updateTrainingFactorGlobalStatus(saved&&Object.keys(storedFactors).length
+  ?'Pré-definições salvas carregadas para este perfil.'
+  :'Todas as contas estão marcadas por padrão.',!!(saved&&Object.keys(storedFactors).length));
+ return !!(saved&&saved.version===1);
 }
 function updateTrainingDefinitionStatus(message){
  const status=$('trainingDefinitionStatus');
@@ -2158,48 +2345,28 @@ function markTrainingDefinitionDirty(){
  trainingDefinitionDirty=true;
  updateTrainingDefinitionStatus('Alterações ainda não salvas. Toque em “Salvar definição” para usar esta ordem nos próximos treinos.');
 }
-function loadTrainingDefinition(){
- let saved=null;
- try{saved=JSON.parse(localStorage.getItem(trainingDefinitionStorageKey())||'null');}catch(error){saved=null;}
- const validModes=['individual','normal','random'];
- if(saved&&saved.version===1&&validModes.includes(saved.globalMode)){
-  $('trainingGlobalMode').value=saved.globalMode;
-  const tableModes=saved.tableModes&&typeof saved.tableModes==='object'?saved.tableModes:{};
-  tablesEl.querySelectorAll('.table-row').forEach(row=>{
-   const number=row.querySelector('input').value;
-   const mode=tableModes[number];
-   row.querySelector('.mode').value=mode==='random'?'random':'normal';
-  });
-  trainingDefinitionDirty=false;
-  updateTrainingGlobalModeControls();
-  updateTrainingDefinitionStatus('✓ Definição salva carregada para este perfil.');
-  return true;
- }
- trainingDefinitionDirty=false;
- updateTrainingGlobalModeControls();
- updateTrainingDefinitionStatus('Escolha a ordem e toque em “Salvar definição” para guardar sua preferência.');
- return false;
-}
 function saveTrainingDefinition(){
+ const current=readTrainingDefinition();
  const definition={
+  ...current,
   version:1,
   globalMode:$('trainingGlobalMode')?.value||'individual',
   tableModes:Object.fromEntries([...tablesEl.querySelectorAll('.table-row')].map(row=>[
    row.querySelector('input').value,row.querySelector('.mode').value==='random'?'random':'normal'
   ])),
+  factorSelections:current.factorSelections&&typeof current.factorSelections==='object'?current.factorSelections:{},
   savedAt:new Date().toISOString()
  };
- try{
-  localStorage.setItem(trainingDefinitionStorageKey(),JSON.stringify(definition));
+ if(persistTrainingDefinition(definition)){
   trainingDefinitionDirty=false;
   updateTrainingDefinitionStatus('✓ Definição salva! Ela será carregada sempre que você voltar ao treinamento neste perfil.');
   return true;
- }catch(error){
-  trainingDefinitionDirty=true;
-  updateTrainingDefinitionStatus('Não foi possível salvar neste aparelho. Verifique o espaço disponível.');
-  return false;
  }
+ trainingDefinitionDirty=true;
+ updateTrainingDefinitionStatus('Não foi possível salvar neste aparelho. Verifique o espaço disponível.');
+ return false;
 }
+buildTrainingFactorSettings();
 let selected=[],deck=[],position=0,round=0,hits=0,misses=0,current=null,revealed=false;
 let trainingReviewMode=false,trainingReviewFacts=[],errorTrainingFacts=[],trainingModeType='standard',errorTrainingCompleted=false,trainingRoundTarget=0,currentQuestionTimeMs=0,currentQuestionTimeStopped=false,currentDifficultyMarked=false;
 const DEFAULT_AUDIO_PREFERENCES={music:70,interface:90,game:4};
@@ -6461,8 +6628,17 @@ function start(){
   const facts=(trainingModeType==='errors'||trainingModeType==='tournamentErrors')?errorTrainingFacts:trainingReviewFacts;
   selected=[...new Set(facts.map(item=>item.a))].sort((a,b)=>a-b).map(n=>({n,mode:'normal'}));
  }else{
-  selected=[...tablesEl.querySelectorAll('.table-row')].filter(r=>r.querySelector('input').checked)
-   .map(r=>({n:Number(r.querySelector('input').value),mode:globalMode==='individual'?r.querySelector('select').value:globalMode}));
+  const selectedRows=[...tablesEl.querySelectorAll('.table-row')].filter(row=>row.querySelector('input').checked);
+  const emptyTables=selectedRows.filter(row=>currentTrainingFactorSelection(Number(row.querySelector('input').value)).length===0)
+   .map(row=>Number(row.querySelector('input').value));
+  if(emptyTables.length){
+   alert('A tabuada '+emptyTables.join(', ')+' está selecionada, mas todas as suas contas foram desmarcadas nas Configurações avançadas. Marque pelo menos uma conta ou desmarque a tabuada principal.');
+   return;
+  }
+  selected=selectedRows.map(row=>{
+   const number=Number(row.querySelector('input').value);
+   return {n:number,mode:globalMode==='individual'?row.querySelector('.mode').value:globalMode,factors:currentTrainingFactorSelection(number)};
+  });
  }
  if(!selected.length){alert(trainingReviewMode?'Não há contas pendentes nesta modalidade.':'Selecione pelo menos uma tabuada para começar.');return;}
  trainingSessionGeneration++;
@@ -7141,7 +7317,8 @@ function makeRound(){
  const allRandom=selected.every(t=>t.mode==='random');
  const questions=[];
  selected.forEach(t=>{
-  const part=Array.from({length:10},(_,i)=>({a:t.n,b:i+1}));
+  const factors=Array.isArray(t.factors)?t.factors:TRAINING_FACTORS;
+  const part=factors.map(factor=>({a:t.n,b:factor}));
   if(t.mode==='random')shuffle(part);
   questions.push(...part);
  });
