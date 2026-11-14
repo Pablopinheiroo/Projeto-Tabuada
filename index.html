@@ -2387,7 +2387,7 @@ const LAST_TRACK_STORAGE_KEY='projetoTabuadaUltimaFaixaV2:';
 let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,questionClockPaused=false,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0,sessionCompletedQuestionCount=0,trainingSessionSaving=false,trainingSessionGeneration=0;
 let sessionTrainingCorrectClaimed=0,sessionTrainingCorrectNext=10,sessionCompletedTrainingCycles=0,sessionRewardQueue=Promise.resolve();
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
-let gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,trainingCorrectProgress:0,trainingCorrectClaimIds:[],intelligentTrainingProgress:0,intelligentTrainingClaimIds:[],errorTrainingClaimIds:[],completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
+let gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,trainingCorrectProgress:0,trainingCorrectClaimIds:[],trainingSessionFinishClaimIds:[],intelligentTrainingProgress:0,intelligentTrainingClaimIds:[],errorTrainingClaimIds:[],completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
 let rewardSyncBusy=false;
 let selectedChallengePlayers=new Set();
 let challengePlayerPage=0;
