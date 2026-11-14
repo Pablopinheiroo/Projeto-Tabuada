@@ -75,6 +75,11 @@ check(sfxPaths.size===14&&sfxHashes.size===14,"Esperados 14 arquivos OGG origina
 check(sfxManifest.effects.click.length===3&&sfxManifest.generated_effects?.click?.length===4,"O clique padrão deve ter três sons originais e quatro variações suaves novas.");
 
 const workerSource = fs.readFileSync(path.join(ROOT, "worker/src/index.js"), "utf8");
+const workerConfig = fs.readFileSync(path.join(ROOT, "worker/wrangler.toml"), "utf8");
+check(workerConfig.includes('name = "GIFT_MESSAGES"') &&
+  workerConfig.includes('class_name = "GiftMessageStore"') &&
+  workerConfig.includes('storage = "sqlite"'),
+  "O Worker precisa de armazenamento Durable Object separado para mensagens temporárias.");
 check(workerSource.includes("const featuredTitles = Array.isArray(profile.featuredTitles)") &&
   workerSource.includes("selectableTitleIds.has(id)") &&
   workerSource.includes("featuredAwards, featuredTitles"),
@@ -85,7 +90,7 @@ check(workerSource.includes("invalidateCommunitySummaryCache()")&&
   "O cache público da comunidade não é invalidado ou marcado com a versão dos dados.");
 check(workerSource.includes("mergeHistorySnapshots(")&&workerSource.includes("body.baseSha"),
   "A API não protege o histórico contra snapshots antigos.");
-check(workerSource.includes('const WORKER_BUILD_ID = "2026-11-11-shop-profile-frames-v1"')&&
+check(workerSource.includes('const WORKER_BUILD_ID = "2026-11-14-private-gift-messages-v1"')&&
   workerSource.includes("PRESENCE_MIN_WRITE_INTERVAL_MS")&&
   workerSource.includes('if (route === "/api/presence" && request.method === "POST")')&&
   workerSource.includes("profile: { ...profile, lastOnlineAt }")&&
@@ -113,10 +118,16 @@ check(workerSource.includes("async function writeUsersAtomically")&&
   workerSource.includes('route === "/api/gifts/inbox"')&&
   workerSource.includes("const giftReadMatch = route.match(")&&
   workerSource.includes("sentGiftIds")&&workerSource.includes("giftInbox")&&
-  workerSource.includes("communityCoinGifts: true"),
-  "A API deve transferir moedas com gravação atômica dos dois saldos e guardar notificações de presentes.");
+  workerSource.includes("communityCoinGifts: true")&&
+  workerSource.includes("export class GiftMessageStore")&&
+  workerSource.includes("GIFT_MESSAGE_TTL_MS")&&
+  workerSource.includes("await storeGiftMessage(env, giftId, to, message)")&&
+  workerSource.includes("await deleteGiftMessage(env, gift.id, username)")&&
+  workerSource.includes("await readGiftMessage(env, gift.id, username)")&&
+  !workerSource.includes("message: message"),
+  "A API deve transferir moedas e guardar a mensagem cifrada fora do GitHub, apagando-a ao confirmar a leitura.");
 
-const workerTestSource=workerSource.replace("export default {","globalThis.__workerDefault = {");
+const workerTestSource=workerSource.replace("export class GiftMessageStore","class GiftMessageStore").replace("export default {","globalThis.__workerDefault = {");
 const workerContext={Date,Set,Map,Object,Array,Number,String,Math,RegExp,JSON,TextEncoder,TextDecoder,Uint8Array,Response,Headers,URL};
 vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;globalThis.__normalizeGameEconomy=normalizeGameEconomy;globalThis.__applyTrainingCorrectReward=applyTrainingCorrectReward;globalThis.__applyIntelligentTrainingReward=applyIntelligentTrainingReward;globalThis.__applyErrorTrainingReward=applyErrorTrainingReward;",workerContext);
 const normalizedEconomy=workerContext.__normalizeGameEconomy({
@@ -199,13 +210,18 @@ check(html.includes("assets/gift-animation.gif")&&
   html.includes("function ensureCommunityGiftPopover()")&&
   html.includes("community-gift-popover hidden")&&
   html.includes("Quantas moedas deseja enviar?")&&
+  html.includes("data-gift-message")&&
+  html.includes('maxlength="500"')&&
+  html.includes("A mensagem não é salva no GitHub.")&&
   html.includes("Saldo disponível: '+coins.toLocaleString('pt-BR')+' moedas.")&&
   !html.includes("Seu saldo disponível:")&&
   !html.includes("community-gift-action")&&
   !html.includes("O valor será descontado do seu saldo")&&
   !html.includes("No modo normal, a tabuada segue de 1 a 10.")&&
   html.includes("function pollGiftInbox()")&&
-  html.includes("data-gift-toast-dismiss")&&
+  html.includes("data-gift-toast-read")&&
+  !html.includes("data-gift-toast-dismiss")&&
+  !html.includes("GIFT_DISMISSED_KEY")&&
   !html.includes("community-presence-initial")&&
   !html.includes("community-presence-dot")&&
   !html.includes("community-last-online::first-letter"),
@@ -222,7 +238,10 @@ check(html.includes("👤 MEU PERFIL")&&
   !html.includes("community-list-note")&&
   html.includes("#challengeListStatus:empty{display:none}"),
   "Perfil, seta de opções, título da jornada e textos de status não seguem o visual minimalista solicitado.");
-check(html.includes(".community-gift-popover{position:fixed;top:max(14px,env(safe-area-inset-top));")&&
+check(html.includes(".community-gift-form textarea{")&&
+  html.includes(".gift-toast-message{")&&
+  html.includes(".gift-toast-read{")&&
+  html.includes(".community-gift-popover{position:fixed;top:max(14px,env(safe-area-inset-top));")&&
   html.includes("@media(max-width:560px){.community-gift-popover{top:max(12px,env(safe-area-inset-top));")&&
   html.includes("max-height:min(72dvh,600px)")&&
   !html.includes(".community-gift-popover{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:"),
