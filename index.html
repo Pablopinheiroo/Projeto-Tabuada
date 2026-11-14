@@ -625,8 +625,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 @keyframes coinRewardNoticeIn{from{opacity:0;transform:translateY(-7px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:560px){.game-reward-toast.coin-reward-notification{left:12px;right:12px;width:auto;max-width:none;text-align:center;padding:9px 12px}}
 
-.game-reward-toast.achievement-congrats{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;z-index:10001;box-sizing:border-box;width:min(560px,calc(100vw - 24px));max-width:calc(100vw - 24px);margin:0;padding:15px 16px;border:2px solid #fbbf24;border-radius:17px;background:linear-gradient(120deg,#713f12,#49306f 58%,#12395b);color:#fff7d6;font-size:.96rem;line-height:1.45;text-align:center;overflow-wrap:anywhere;transform:translateX(-50%);box-shadow:0 15px 42px #020617cc,0 0 0 3px #fbbf2422;animation:achievementRewardPop .24s ease-out}
-@keyframes achievementRewardPop{from{opacity:0;transform:translate(-50%,-9px) scale(.97)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
+.game-reward-toast.achievement-congrats{position:fixed;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:10002;box-sizing:border-box;width:max-content;max-width:min(380px,calc(100vw - 24px));margin:0;padding:11px 14px;border:1px solid #8b6a36;border-left:4px solid #fbbf24;border-radius:12px;background:linear-gradient(120deg,#402b18,#39264f 62%,#17334b);color:#fff7d6;font-size:.82rem;font-weight:850;line-height:1.4;text-align:left;white-space:pre-line;overflow-wrap:anywhere;box-shadow:0 8px 24px #02061777;pointer-events:none;animation:achievementRewardPop .2s ease-out}
+@keyframes achievementRewardPop{from{opacity:0;transform:translateY(-7px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:560px){.game-reward-toast.achievement-congrats{left:12px;right:12px;width:auto;max-width:none;text-align:center;padding:10px 12px}}
 @keyframes rewardPop{from{opacity:0;transform:translateY(-7px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:620px){.wallet-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.achievement-shelf{grid-template-columns:1fr}.wallet-inline{align-items:flex-start}}
 @media(prefers-reduced-motion:reduce){.game-reward-toast{animation:none}}
@@ -3686,29 +3687,22 @@ function showPrizeCelebration({icon='🏆',imageSrc='',kicker='CONQUISTA DESBLOQ
  document.body.appendChild(overlay);
  playPrizeCelebrationMusic();
 }
-function showGameRewardToast(message,achievement=false){
+function showGameRewardToast(message,achievement=false,durationMs=0){
  const toast=$('gameRewardToast');if(!toast)return;
- toast.textContent=message;
- toast.classList.remove('coin-reward-notification');
- toast.classList.toggle('achievement-congrats',!!achievement);
+ toast.textContent=String(message||'');
+ toast.classList.remove('coin-reward-notification','achievement-congrats');
+ if(achievement)toast.classList.add('achievement-congrats');
  toast.classList.remove('hidden');
  if(rewardToastTimer!==null)clearTimeout(rewardToastTimer);
+ const duration=Number(durationMs)>0?Number(durationMs):(achievement?7000:3800);
  rewardToastTimer=setTimeout(()=>{
   toast.classList.add('hidden');
   toast.classList.remove('achievement-congrats','coin-reward-notification');
- },achievement?7000:3800);
+  rewardToastTimer=null;
+ },duration);
 }
 function showTrainingRewardNotification(message){
- const toast=$('gameRewardToast');if(!toast)return;
- toast.textContent=String(message||'');
- toast.classList.remove('achievement-congrats');
- toast.classList.add('coin-reward-notification');
- toast.classList.remove('hidden');
- if(rewardToastTimer!==null)clearTimeout(rewardToastTimer);
- rewardToastTimer=setTimeout(()=>{
-  toast.classList.add('hidden');
-  toast.classList.remove('coin-reward-notification');
- },4200);
+ showGameRewardToast('🎉 PARABÉNS!\n'+String(message||'Você conquistou uma nova recompensa.'),true,6500);
 }
 function showCoinRewardNotification(coinsAdded,item={},newTitles=[]){
  const toast=$('gameRewardToast');if(!toast)return;
@@ -3729,17 +3723,29 @@ function showCoinRewardNotification(coinsAdded,item={},newTitles=[]){
  rewardToastTimer=setTimeout(()=>{
   toast.classList.add('hidden');
   toast.classList.remove('coin-reward-notification');
+  rewardToastTimer=null;
  },4200);
 }
-function showAchievementCongratulations(ids,extra=''){
+function showAchievementNotification({icon='🏅',title='Parabéns! Você conquistou!',description='Sua conquista foi confirmada no seu perfil.',items=[],coinsAdded=0}={}){
+ const lines=[String(icon||'🏅')+' '+String(title||'Parabéns!')];
+ if(description)lines.push(String(description));
+ (Array.isArray(items)?items:[]).filter(Boolean).slice(0,6).forEach(item=>lines.push('• '+String(item)));
+ const coins=Math.max(0,Math.floor(Number(coinsAdded)||0));
+ if(coins>0)lines.push('🪙 +'+coins.toLocaleString('pt-BR')+' moedas');
+ showGameRewardToast(lines.join('\n'),true,7000);
+}
+function showAchievementCongratulations(ids,extra='',coinsAdded=0){
  const names=(Array.isArray(ids)?ids:[]).map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||String(id));
- if(!names.length)return;
- showPrizeCelebration({
-  icon:'🏅',kicker:'NOVO TÍTULO CONQUISTADO',title:names.length===1?'Parabéns! Novo título!':'Novas conquistas desbloqueadas!',
-  description:'Você recebeu uma nova conquista no Projeto Tabuada.',
-  items:[...names,...(extra?[extra]:[])]
+ if(!names.length&&!extra&&!Number(coinsAdded))return;
+ showAchievementNotification({
+  icon:'🏅',
+  title:names.length===1?'Parabéns! Nova conquista!':'Parabéns! Novas conquistas!',
+  description:names.length?'Você desbloqueou uma nova conquista no Projeto Tabuada.':'Você recebeu uma nova felicitação no Projeto Tabuada.',
+  items:[...names,...(extra?[extra]:[])],
+  coinsAdded
  });
 }
+
 function readPendingGameRewards(){
  try{
   const list=JSON.parse(localStorage.getItem(PENDING_REWARDS_KEY)||'[]');
@@ -3760,17 +3766,8 @@ async function deliverPendingGameReward(item){
  updateProfileLastSavedAt();
  const newTitles=(result.newAchievements||[]).map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||String(id));
  const coinsAdded=Math.max(0,Number(result.coinsAdded)||0);
- const trainingRewardTypes=['training_cycle','training_questions','intelligent_training_questions','error_training_complete','training_session_finish'];
- if(trainingRewardTypes.includes(item.type)){
-  if(coinsAdded>0)showCoinRewardNotification(coinsAdded,item,newTitles);
-  else if(newTitles.length)showTrainingRewardNotification('🏅 Novo título: '+newTitles.join(' · '));
- }else if(newTitles.length){
-  showPrizeCelebration({
-   icon:'🏅',kicker:'RECOMPENSA E CONQUISTA',
-   title:newTitles.length===1?'Parabéns! Você conquistou!':'Parabéns! Você conquistou!',
-   description:'Sua conquista foi confirmada e adicionada à sua conta.',
-   items:[...newTitles,...(coinsAdded>0?['+'+coinsAdded.toLocaleString('pt-BR')+' moedas']:[])]
-  });
+ if(newTitles.length){
+  showAchievementCongratulations(result.newAchievements,'Sua conquista foi confirmada e adicionada à sua conta.',coinsAdded);
  }else if(coinsAdded>0){
   showCoinRewardNotification(coinsAdded,item);
  }
@@ -3895,10 +3892,12 @@ async function purchaseShopItem(item){
   if(!result.alreadyOwned){
    const itemName=isFrame?frameDefinition(key)?.name:(key.startsWith('gif:')?GIF_AVATARS[Number(key.split(':')[1])]?.name:AVATARS[Number(key.split(':')[1])]?.name);
    const newTitles=(result.newAchievements||[]).map(id=>ACHIEVEMENT_DEFINITIONS.find(entry=>entry.id===id)?.title||String(id));
-   showPrizeCelebration({icon:isFrame?'🖼️':'🎨',imageSrc:isFrame?'':avatarImage(key),kicker:'NOVO ITEM DESBLOQUEADO',
-    title:isFrame?'Nova moldura na sua coleção!':'Novo avatar na sua coleção!',
+   showAchievementNotification({
+    icon:isFrame?'🖼️':'🎨',
+    title:isFrame?'Parabéns! Nova moldura desbloqueada!':'Parabéns! Novo avatar desbloqueado!',
     description:isFrame?'Você desbloqueou uma moldura para personalizar seu perfil.':'Você desbloqueou um novo visual para o seu perfil.',
-    items:[itemName||'Novo item',...newTitles]});
+    items:[itemName||'Novo item',...newTitles]
+   });
   }else if(result.newAchievements?.length)showAchievementCongratulations(result.newAchievements);
  }catch(error){if(message)message.textContent=error.message||'Não foi possível concluir a compra.';}
 }
@@ -5961,10 +5960,9 @@ async function refreshChallengeData(){
     ...newMedals.map(id=>'Medalha conquistada: '+(CHALLENGE_PRESETS_UI.find(level=>level.id===id)?.name||id)),
     ...newTitles.map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||String(id))
    ];
-   showPrizeCelebration({
+   showAchievementNotification({
     icon:newMedals.length?'🏅':newTitles.length?'✨':recentWins.length?'🏆':'🪙',
-    kicker:'VITÓRIA E RECOMPENSAS',
-    title:recentWins.length?'Parabéns pela vitória!':'Você conquistou uma recompensa!',
+    title:recentWins.length?'Parabéns pela vitória!':'Parabéns! Nova conquista!',
     description:'Sua conquista foi confirmada no seu perfil.',
     items:lines
    });
@@ -6479,9 +6477,8 @@ function renderTournamentFinalNotice(notice){
   const newAchievements=notice.award?.newAchievements||[];
   const awardRank=Number(notice.award?.rank)||Number(notice.position)||0;
   if(notice.award||newAchievements.length){
-   showPrizeCelebration({
+   showAchievementNotification({
     icon:awardRank>0&&awardRank<=3?'🏆':'🎖️',
-    kicker:'PREMIAÇÃO DO TORNEIO',
     title:'Parabéns! Você foi premiado!',
     description:'Sua colocação no torneio da temporada foi reconhecida.',
     items:[(awardRank?awardRank+'º lugar · ':'')+name+' · '+place,...(notice.award?.frame?['Moldura conquistada: '+notice.award.frame]:[]),...newAchievements.map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||String(id))]
