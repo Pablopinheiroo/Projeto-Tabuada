@@ -16,7 +16,7 @@ const PROFILE_FRAME_ANIMATED_COUNT = 20;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
 const CHALLENGE_PLAYER_METADATA_MAX = 45;
-const WORKER_BUILD_ID = "2026-11-11-shop-profile-frames-v1";
+const WORKER_BUILD_ID = "2026-11-14-private-gift-messages-v1";
 const PRESENCE_MIN_WRITE_INTERVAL_MS = 4 * 60 * 1000;
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
@@ -99,6 +99,75 @@ function fromB64url(value) {
   const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
   const binary = atob(normalized + "=".repeat((4 - normalized.length % 4) % 4));
   return Uint8Array.from(binary, char => char.charCodeAt(0));
+}
+
+const GIFT_MESSAGE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+async function giftMessageEncryptionKey(env) {
+  if (!env.GITHUB_TOKEN) throw new Error("A chave temporária de mensagens não está disponível.");
+  const material = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode("projeto-tabuada:gift-messages:v1:" + env.GITHUB_TOKEN)
+  );
+  return crypto.subtle.importKey("raw", material, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+}
+async function encryptGiftMessage(env, giftId, recipient, message) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await giftMessageEncryptionKey(env);
+  const payload = new TextEncoder().encode(JSON.stringify({ giftId, recipient, message }));
+  const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, payload);
+  return {
+    algorithm: "AES-256-GCM",
+    iv: b64url(iv),
+    ciphertext: b64url(new Uint8Array(ciphertext))
+  };
+}
+async function decryptGiftMessage(env, giftId, recipient, envelope) {
+  if (!envelope || envelope.algorithm !== "AES-256-GCM" || !envelope.iv || !envelope.ciphertext) {
+    throw new Error("A mensagem do presente está em formato inválido.");
+  }
+  const key = await giftMessageEncryptionKey(env);
+  const plaintext = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: fromB64url(envelope.iv) },
+    key,
+    fromB64url(envelope.ciphertext)
+  );
+  const payload = JSON.parse(new TextDecoder().decode(plaintext));
+  if (payload.giftId !== giftId || payload.recipient !== recipient || typeof payload.message !== "string") {
+    throw new Error("A mensagem não corresponde a este presente.");
+  }
+  return payload.message;
+}
+function giftMessageStub(env, giftId) {
+  if (!env.GIFT_MESSAGES) throw new Error("O armazenamento privado de mensagens ainda não foi ativado no Worker.");
+  if (!/^[a-f0-9]{32}$/.test(giftId)) throw new Error("Identificador de presente inválido.");
+  const id = env.GIFT_MESSAGES.idFromName("gift:" + giftId);
+  return env.GIFT_MESSAGES.get(id);
+}
+async function storeGiftMessage(env, giftId, recipient, message) {
+  const envelope = await encryptGiftMessage(env, giftId, recipient, message);
+  const response = await giftMessageStub(env, giftId).fetch("https://gift-message.internal/store", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ giftId, recipient, envelope })
+  });
+  if (!response.ok) throw new Error("Não foi possível guardar a mensagem privada do presente.");
+}
+async function readGiftMessage(env, giftId, recipient) {
+  const response = await giftMessageStub(env, giftId).fetch(
+    "https://gift-message.internal/read?recipient=" + encodeURIComponent(recipient)
+  );
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error("Não foi possível consultar a mensagem privada do presente.");
+  const stored = await response.json();
+  return decryptGiftMessage(env, giftId, recipient, stored.envelope);
+}
+async function deleteGiftMessage(env, giftId, recipient) {
+  const response = await giftMessageStub(env, giftId).fetch("https://gift-message.internal/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ recipient })
+  });
+  if (!response.ok) throw new Error("Não foi possível apagar a mensagem privada do presente.");
 }
 
 function encodeUtf8Base64(value) {
@@ -1798,7 +1867,16 @@ async function handleApi(request, env, origin) {
       const record = await readUser(username, env);
       if (!record) return json({ error: "A conta não foi encontrada." }, 404, origin);
       const inbox = Array.isArray(record.data.giftInbox) ? record.data.giftInbox : [];
-      const gifts = inbox.filter(gift => gift && typeof gift.id === "string" && !gift.readAt).slice(0, 8);
+      const pendingGifts = inbox.filter(gift => gift && typeof gift.id === "string" && !gift.readAt).slice(0, 8);
+      const gifts = await Promise.all(pendingGifts.map(async gift => {
+        if (gift.hasMessage !== true) return gift;
+        try {
+          const message = await readGiftMessage(env, gift.id, username);
+          return message ? { ...gift, message } : gift;
+        } catch {
+          return gift;
+        }
+      }));
       return json({ coins: normalizeGameEconomy(record.data).coins, gifts }, 200, origin);
     }
 
@@ -1807,6 +1885,10 @@ async function handleApi(request, env, origin) {
       const to = String(body.to || "").trim().toLowerCase();
       const amount = Number(body.amount);
       const giftId = String(body.giftId || "").toLowerCase();
+      const message = typeof body.message === "string" ? body.message.trim() : "";
+      if (message.length > 500) {
+        return json({ error: "A mensagem pode ter no máximo 500 caracteres." }, 400, origin);
+      }
       if (!usernameIsValid(to)) return json({ error: "Escolha um participante válido para receber o presente." }, 400, origin);
       if (to === username) return json({ error: "Você não pode presentear sua própria conta." }, 400, origin);
       if (!Number.isSafeInteger(amount) || amount < 1 || amount > 1000000) {
@@ -1850,6 +1932,7 @@ async function handleApi(request, env, origin) {
         fromUsername: username,
         fromDisplayName: String(senderProfile.displayName || username).slice(0, 24),
         amount,
+        hasMessage: Boolean(message),
         createdAt: now
       };
       const recipientInbox = Array.isArray(recipientRecord.data.giftInbox)
@@ -1861,10 +1944,18 @@ async function handleApi(request, env, origin) {
         updatedAt: now
       };
 
-      await writeUsersAtomically([
-        { username, data: senderUpdated },
-        { username: to, data: recipientUpdated }
-      ], baseSha, env, "Enviar presente de moedas de " + username + " para " + to);
+      if (message) await storeGiftMessage(env, giftId, to, message);
+      try {
+        await writeUsersAtomically([
+          { username, data: senderUpdated },
+          { username: to, data: recipientUpdated }
+        ], baseSha, env, "Enviar presente de moedas de " + username + " para " + to);
+      } catch (error) {
+        if (message) {
+          try { await deleteGiftMessage(env, giftId, to); } catch {}
+        }
+        throw error;
+      }
       return json({ ok: true, gift, coins: senderEconomy.coins - amount }, 201, origin);
     }
 
@@ -1876,6 +1967,7 @@ async function handleApi(request, env, origin) {
       const inbox = Array.isArray(record.data.giftInbox) ? record.data.giftInbox : [];
       const gift = inbox.find(item => item && item.id === giftReadMatch[1]);
       if (!gift) return json({ ok: true, alreadyRead: true }, 200, origin);
+      if (gift.hasMessage === true) await deleteGiftMessage(env, gift.id, username);
       if (!gift.readAt) {
         gift.readAt = new Date().toISOString();
         const updated = { ...record.data, giftInbox: inbox, updatedAt: gift.readAt };
@@ -2465,3 +2557,79 @@ export default {
     return withCors(response, origin);
   }
 };
+
+
+export class GiftMessageStore {
+  constructor(state, env) {
+    this.state = state;
+    this.env = env;
+  }
+
+  async fetch(request) {
+    const url = new URL(request.url);
+    if (url.pathname === "/store" && request.method === "POST") {
+      let body;
+      try { body = await request.json(); } catch { return new Response("{}", { status: 400 }); }
+      if (!/^[a-f0-9]{32}$/.test(String(body.giftId || "")) ||
+          !/^[a-z0-9_.-]{3,20}$/.test(String(body.recipient || "")) ||
+          !body.envelope || body.envelope.algorithm !== "AES-256-GCM" ||
+          typeof body.envelope.iv !== "string" || typeof body.envelope.ciphertext !== "string") {
+        return new Response("{}", { status: 400 });
+      }
+      const existing = await this.state.storage.get("gift-message");
+      if (existing) {
+        if (existing.recipient !== body.recipient) return new Response("{}", { status: 409 });
+        return new Response(JSON.stringify({ ok: true, alreadyStored: true }), {
+          headers: { "Content-Type": "application/json" }
+        });
+      }
+      const storedAt = Date.now();
+      const record = {
+        recipient: body.recipient,
+        envelope: body.envelope,
+        storedAt,
+        expiresAt: storedAt + GIFT_MESSAGE_TTL_MS
+      };
+      await this.state.storage.put("gift-message", record);
+      await this.state.storage.setAlarm(record.expiresAt);
+      return new Response(JSON.stringify({ ok: true, expiresAt: record.expiresAt }), {
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    if (url.pathname === "/read" && request.method === "GET") {
+      const recipient = String(url.searchParams.get("recipient") || "");
+      const record = await this.state.storage.get("gift-message");
+      if (!record) return new Response("{}", { status: 404 });
+      if (record.expiresAt <= Date.now()) {
+        await this.state.storage.delete("gift-message");
+        await this.state.storage.deleteAlarm();
+        return new Response("{}", { status: 404 });
+      }
+      if (record.recipient !== recipient) return new Response("{}", { status: 403 });
+      return new Response(JSON.stringify({ envelope: record.envelope }), {
+        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" }
+      });
+    }
+
+    if (url.pathname === "/delete" && request.method === "POST") {
+      let body;
+      try { body = await request.json(); } catch { return new Response("{}", { status: 400 }); }
+      const record = await this.state.storage.get("gift-message");
+      if (record && record.recipient !== String(body.recipient || "")) {
+        return new Response("{}", { status: 403 });
+      }
+      await this.state.storage.delete("gift-message");
+      await this.state.storage.deleteAlarm();
+      return new Response(JSON.stringify({ ok: true, deleted: Boolean(record) }), {
+        headers: { "Content-Type": "application/json" }
+      });
+    }
+
+    return new Response("{}", { status: 404 });
+  }
+
+  async alarm() {
+    await this.state.storage.delete("gift-message");
+  }
+}
