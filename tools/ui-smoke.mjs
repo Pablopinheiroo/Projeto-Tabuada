@@ -124,7 +124,10 @@ check(workerSource.includes("async function writeUsersAtomically")&&
   workerSource.includes("await storeGiftMessage(env, giftId, to, message)")&&
   workerSource.includes("await deleteGiftMessage(env, gift.id, username)")&&
   workerSource.includes("await readGiftMessage(env, gift.id, username)")&&
-  !workerSource.includes("message: message"),
+  !/const gift = \{[\s\S]{0,500}?\bmessage\s*:/.test(workerSource.slice(
+    workerSource.indexOf('if (route === "/api/gifts/send"'),
+    workerSource.indexOf('const giftReadMatch = route.match(')
+  )),
   "A API deve transferir moedas e guardar a mensagem cifrada fora do GitHub, apagando-a ao confirmar a leitura.");
 
 const workerTestSource=workerSource.replace("export class GiftMessageStore","class GiftMessageStore").replace("export default {","globalThis.__workerDefault = {");
