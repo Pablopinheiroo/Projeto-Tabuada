@@ -1436,9 +1436,11 @@ check(html.includes("function showCoinRewardNotification(coinsAdded,item={},newT
   html.includes(".game-reward-toast.coin-reward-notification{position:fixed")&&
   html.includes("pointer-events:none")&&html.includes("(batches*10)")&&html.includes("acertos nesta sessão")&&
   !coinToastCode.includes("playPrizeCelebrationMusic();")&&
-  rewardDelivery.includes("trainingRewardTypes=['training_cycle','training_questions','intelligent_training_questions','error_training_complete','training_session_finish']")&&
-  rewardDelivery.includes("showTrainingRewardNotification(")&&
-  rewardDelivery.includes("showCoinRewardNotification(coinsAdded,item,newTitles)"),
+  rewardDelivery.includes("if(newTitles.length){")&&
+  rewardDelivery.includes("showAchievementCongratulations(result.newAchievements")&&
+  rewardDelivery.includes("else if(coinsAdded>0){")&&
+  rewardDelivery.includes("showCoinRewardNotification(coinsAdded,item)")&&
+  !rewardDelivery.includes("showPrizeCelebration({"),
   "Recompensas de treino devem aparecer em aviso pequeno, sem modal, música ou bloqueio da partida.");
   check(liveRewardMilestones.freshNineDidNotClaim&&JSON.stringify(liveRewardMilestones.standardFresh)===JSON.stringify([
     {type:'training_questions',count:10}
