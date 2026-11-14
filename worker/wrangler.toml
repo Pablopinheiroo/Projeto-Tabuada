@@ -49,6 +49,14 @@ namespace_id = "8731006"
 limit = 12
 period = 60
 
+[[durable_objects.bindings]]
+name = "GIFT_MESSAGES"
+class_name = "GiftMessageStore"
+
+[exports.GiftMessageStore]
+type = "durable-object"
+storage = "sqlite"
+
 [triggers]
 # 00:05 no horário de Brasília; garante a criação da nova temporada após 30 dias.
 crons = ["5 3 * * *"]
