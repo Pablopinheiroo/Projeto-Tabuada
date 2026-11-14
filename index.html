@@ -2385,7 +2385,7 @@ let soundtrackAudio=null,musicWasPlayingBeforeHide=false,trackQueue=[],trackQueu
 let profileOptionsOpen=false,profileOptionsResumeMusic=false,sfxPreviewTimer=null,gameSfxPreviewTimers=[],optionMusicPreviewTimer=null,optionMusicPreviewActive=false,optionPreviewSources=new Set();
 const LAST_TRACK_STORAGE_KEY='projetoTabuadaUltimaFaixaV2:';
 let questionStartedAt=0,questionTimer=null,questionElapsedBeforeStart=0,questionClockPaused=false,sessionStartedAt=0,sessionAnswers=[],sessionSkipped=0,sessionQuestionTimeMs=0,sessionCompletedQuestionCount=0,trainingSessionSaving=false,trainingSessionGeneration=0;
-let sessionTrainingCorrectClaimed=0,sessionTrainingCorrectNext=10,sessionRewardQueue=Promise.resolve();
+let sessionTrainingCorrectClaimed=0,sessionTrainingCorrectNext=10,sessionCompletedTrainingCycles=0,sessionRewardQueue=Promise.resolve();
 let activeProfile='',profilesData=loadProfiles(),roundCorrect=new Set();
 let gameEconomy={version:1,coins:0,totalEarned:0,trainingCycles:0,trainingCorrectProgress:0,trainingCorrectClaimIds:[],intelligentTrainingProgress:0,intelligentTrainingClaimIds:[],errorTrainingClaimIds:[],completedStages:[],perfectStages:[],comboStages:[],trainingClaimIds:[],ownedAvatars:['imagem:0'],achievements:{}};
 let rewardSyncBusy=false;
@@ -3311,8 +3311,9 @@ function normalizeClientEconomy(value,currentAvatar='imagem:0'){
   version:1,coins:Math.max(0,Math.floor(Number(raw.coins)||0)),
   totalEarned:Math.max(0,Math.floor(Number(raw.totalEarned)||0)),
   trainingCycles:Math.max(0,Math.floor(Number(raw.trainingCycles)||0)),
-  trainingCorrectProgress:Math.max(0,Math.min(9,Math.floor(Number(raw.trainingCorrectProgress)||0))),
+  trainingCorrectProgress:0,
   trainingCorrectClaimIds:Array.isArray(raw.trainingCorrectClaimIds)?raw.trainingCorrectClaimIds.filter(id=>typeof id==='string').slice(-500):[],
+  trainingSessionFinishClaimIds:Array.isArray(raw.trainingSessionFinishClaimIds)?raw.trainingSessionFinishClaimIds.filter(id=>typeof id==='string').slice(-500):[],
   intelligentTrainingProgress:Math.max(0,Math.min(9,Math.floor(Number(raw.intelligentTrainingProgress)||0))),
   intelligentTrainingClaimIds:Array.isArray(raw.intelligentTrainingClaimIds)?raw.intelligentTrainingClaimIds.filter(id=>typeof id==='string').slice(-500):[],
   errorTrainingClaimIds:Array.isArray(raw.errorTrainingClaimIds)?raw.errorTrainingClaimIds.filter(id=>typeof id==='string').slice(-500):[],
@@ -3657,8 +3658,10 @@ function showCoinRewardNotification(coinsAdded,item={},newTitles=[]){
  if(!coins)return;
  const batches=Math.max(1,Math.floor(coins/5));
  const detail=item.type==='training_questions'
-  ?' · '+(batches*10)+' acertos acumulados'
-  :' · recompensa adicionada';
+  ?' · '+(batches*10)+' acertos nesta sessão'
+  :item.type==='training_session_finish'
+   ?' · ciclo de tabuada concluído'
+   :' · recompensa adicionada';
  const titleDetail=Array.isArray(newTitles)&&newTitles.length?' · '+newTitles.join(', '):'';
  toast.textContent='🎉 +'+coins.toLocaleString('pt-BR')+' moedas!'+detail+titleDetail+'.';
  toast.classList.remove('achievement-congrats');
@@ -3699,7 +3702,7 @@ async function deliverPendingGameReward(item){
  updateProfileLastSavedAt();
  const newTitles=(result.newAchievements||[]).map(id=>ACHIEVEMENT_DEFINITIONS.find(item=>item.id===id)?.title||String(id));
  const coinsAdded=Math.max(0,Number(result.coinsAdded)||0);
- const trainingRewardTypes=['training_cycle','training_questions','intelligent_training_questions','error_training_complete'];
+ const trainingRewardTypes=['training_cycle','training_questions','intelligent_training_questions','error_training_complete','training_session_finish'];
  if(trainingRewardTypes.includes(item.type)){
   if(coinsAdded>0)showCoinRewardNotification(coinsAdded,item,newTitles);
   else if(newTitles.length)showTrainingRewardNotification('🏅 Novo título: '+newTitles.join(' · '));
@@ -3744,11 +3747,14 @@ async function claimGameReward(type,payload){
     ?{type,claimId:payload.claimId,questionCount:Math.max(0,Math.floor(Number(payload.questionCount)||0)),history:normalizeHistory(historyData)}
     :type==='error_training_complete'
      ?{type,claimId:payload.claimId,history:normalizeHistory(historyData)}
-     :{type,stageId:payload.stageId,...(type==='adventure_stage'?{...(payload.adventureProgress?{adventureProgress:payload.adventureProgress}:{}),history:normalizeHistory(historyData)}:{})};
+     :type==='training_session_finish'
+      ?{type,claimId:payload.claimId}
+      :{type,stageId:payload.stageId,...(type==='adventure_stage'?{...(payload.adventureProgress?{adventureProgress:payload.adventureProgress}:{}),history:normalizeHistory(historyData)}:{})};
  const key=type==='training_cycle'?'training:'+payload.claimId:
   type==='training_questions'?'training-questions:'+payload.claimId:
   type==='intelligent_training_questions'?'intelligent-training:'+payload.claimId:
-  type==='error_training_complete'?'error-training:'+payload.claimId:'stage:'+payload.stageId;
+  type==='error_training_complete'?'error-training:'+payload.claimId:
+  type==='training_session_finish'?'training-session-finish:'+payload.claimId:'stage:'+payload.stageId;
  const pending=readPendingGameRewards();
  if(!pending.some(item=>item.username===activeProfile&&item.key===key)){
   pending.push({username:activeProfile,key,type,body});savePendingGameRewards(pending);
@@ -4976,30 +4982,39 @@ async function finishSession(){
   }
   showReport(false);
   $('report').dataset.trainingSessionGeneration=String(finishingGeneration);
-  let queuedReward=null;
-  if(trainingModeType!=='errors'&&trainingModeType!=='tournamentErrors'){
+  const rewardPromises=[];
+  // A sobra de acertos não forma um lote: somente blocos completos de 10 da sessão geram +5.
+  if(finishingMode==='intelligent'||finishingMode==='difficulties'){
    const remainder=hits-sessionTrainingCorrectClaimed;
    if(remainder>0){
     sessionTrainingCorrectClaimed+=remainder;
-    queuedReward=queueTrainingSessionReward('training_questions',{
+    rewardPromises.push(queueTrainingSessionReward('training_questions',{
      claimId:newTrainingRewardClaimId('training-correct'),correctCount:remainder
-    });
+    }));
    }
+  }
+  // No modo Tabuadas, o bônus de +10 é único ao encerrar a sessão e exige ao menos um ciclo completo.
+  if(finishingMode==='standard'&&sessionCompletedTrainingCycles>0){
+   rewardPromises.push(queueTrainingSessionReward('training_session_finish',{
+    claimId:newTrainingRewardClaimId('training-session-finish')
+   }));
   }
   const exitOverlay=showTrainingExitCelebration();
   try{await sessionRewardQueue;}catch(error){console.warn('Não foi possível concluir a fila de recompensas:',error);}
-  let reward=null;
-  if(queuedReward){
-   try{reward=await queuedReward;}catch(error){console.warn('Não foi possível confirmar a recompensa final do treino:',error);}
+  const rewards=[];
+  for(const pendingReward of rewardPromises){
+   try{const result=await pendingReward;if(result)rewards.push(result);}
+   catch(error){console.warn('Não foi possível confirmar uma recompensa final do treino:',error);}
   }
+  const rewardCoinsAdded=rewards.reduce((sum,item)=>sum+(Number(item.coinsAdded)||0),0);
   let saved=false;
   try{saved=await saveProgressNow('Treinamento');}
   catch(error){console.warn('Não foi possível sincronizar o resultado do treino:',error);}
   if($('report').dataset.trainingSessionGeneration===String(finishingGeneration)){
-   if(reward?.coinsAdded>0){
-    $('reportIntro').textContent+=' Você ganhou '+reward.coinsAdded+' moedas.';
-   }else if(finishingMode==='intelligent'&&finishingCompletedQuestions>0){
-    $('reportIntro').textContent+=' As questões treinadas foram somadas para a próxima recompensa de 5 moedas a cada 10 questões.';
+   if(rewardCoinsAdded>0){
+    $('reportIntro').textContent+=' Você ganhou '+rewardCoinsAdded+' moedas nesta conclusão.';
+   }else if(finishingMode==='standard'&&finishingCompletedQuestions>0&&sessionCompletedTrainingCycles===0){
+    $('reportIntro').textContent+=' Para receber as 10 moedas de conclusão, complete pelo menos 1 ciclo inteiro da tabuada.';
    }
    if(!saved&&hadActiveProfile){
     $('reportIntro').textContent+=' O resultado ficou guardado neste aparelho e será sincronizado quando possível.';
@@ -6602,6 +6617,7 @@ function next(){
      const isReview=trainingReviewMode;
      const completingGeneration=trainingSessionGeneration;
      const claimId=crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random().toString(36).slice(2);
+     if(trainingModeType==='standard')sessionCompletedTrainingCycles++;
      queueTrainingSessionReward('training_cycle',{claimId,learningFromErrors:isReview});
      if(trainingReviewMode){
       const remaining=getCurrentReviewFacts();
@@ -6668,7 +6684,8 @@ function start(){
  currentQuestionTimeMs=0;currentQuestionTimeStopped=false;currentDifficultyMarked=false;
  sessionAnswers=[];sessionSkipped=0;sessionQuestionTimeMs=0;sessionCompletedQuestionCount=0;trainingSessionSaving=false;sessionStartedAt=performance.now();
  sessionTrainingCorrectClaimed=0;
- sessionTrainingCorrectNext=Math.max(1,10-Math.max(0,Math.min(9,Number(gameEconomy.trainingCorrectProgress)||0)));
+ sessionTrainingCorrectNext=10;
+ sessionCompletedTrainingCycles=0;
  sessionRewardQueue=Promise.resolve();
  $('report').classList.add('hidden');$('setup').classList.add('hidden');$('game').classList.remove('hidden');
  if(soundOn)ensureAudio();
