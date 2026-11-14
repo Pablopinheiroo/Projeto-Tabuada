@@ -63,6 +63,37 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .report-stat{background:#f1f5f9;border-radius:14px;padding:13px;text-align:center}
 .report-stat span{display:block;color:#64748b;font-size:.8rem}
 .report-stat strong{display:block;font-size:1.4rem;margin-top:3px;font-variant-numeric:tabular-nums}
+.report-insights{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:9px;margin:10px 0 20px}
+.report-insight{min-width:0;padding:13px;border:1px solid #dbeafe;border-radius:14px;background:linear-gradient(145deg,#f8fbff,#f1f5ff)}
+.report-insight span{display:block;color:#64748b;font-size:.78rem;font-weight:700}
+.report-insight strong{display:block;margin-top:5px;color:#172554;font-size:1.18rem;overflow-wrap:anywhere}
+.report-insight small{display:block;margin-top:4px;color:#64748b;font-size:.76rem;line-height:1.35;overflow-wrap:anywhere}
+.report-analysis{display:grid;gap:12px;margin:8px 0 22px}
+.report-chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:12px;min-width:0}
+.report-chart-card{min-width:0;padding:15px;border:1px solid #e2e8f0;border-radius:15px;background:#fbfdff}
+.report-chart-card h3{margin:0 0 5px;color:#172554;font-size:1rem}
+.report-chart-card>p{margin:0 0 13px;color:#64748b;font-size:.78rem;line-height:1.45}
+.report-distribution-bar{display:flex;width:100%;height:23px;overflow:hidden;border-radius:99px;background:#e2e8f0}
+.report-distribution-correct{height:100%;background:#16a34a;transition:width .25s}
+.report-distribution-wrong{height:100%;background:#ef4444;transition:width .25s}
+.report-chart-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:11px;color:#475569;font-size:.78rem}
+.report-chart-legend span{display:inline-flex;align-items:center;gap:6px}
+.report-chart-dot{display:inline-block;width:9px;height:9px;border-radius:50%}
+.report-chart-dot.correct{background:#16a34a}.report-chart-dot.wrong{background:#ef4444}
+.report-table-bars{display:grid;gap:10px}
+.report-table-bar-row{display:grid;grid-template-columns:82px minmax(30px,1fr) 48px;gap:8px;align-items:center;min-width:0}
+.report-table-bar-label{color:#475569;font-size:.78rem;font-weight:750;white-space:nowrap}
+.report-table-bar-track{height:10px;overflow:hidden;border-radius:99px;background:#e2e8f0}
+.report-table-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#2563eb,#38bdf8)}
+.report-table-bar-value{text-align:right;color:#172554;font-size:.78rem;font-weight:800;font-variant-numeric:tabular-nums}
+.report-table-bar-detail{grid-column:2/4;margin-top:-7px;color:#64748b;font-size:.7rem}
+.report-progress-svg{display:block;width:100%;height:auto;max-width:100%;overflow:visible}
+.report-progress-gridline{stroke:#e2e8f0;stroke-width:1}
+.report-progress-axis{fill:#64748b;font-size:11px}
+.report-progress-path{fill:none;stroke:#2563eb;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.report-progress-point{fill:#2563eb;stroke:#fff;stroke-width:2}
+.report-chart-empty{padding:17px;border:1px dashed #cbd5e1;border-radius:11px;color:#64748b;text-align:center;font-size:.84rem}
+.report-chart-note{margin:9px 0 0;color:#64748b;font-size:.72rem;line-height:1.4}
 .filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:18px 0}
 .filters label{display:grid;gap:6px;color:#475569;font-size:.86rem;font-weight:700}
 .filters select{width:100%;min-width:0;padding:10px;border:1px solid #cbd5e1;border-radius:10px;background:white;color:#172554;font:inherit;font-size:.92rem}
@@ -2126,6 +2157,33 @@ body.challenge-match-active #challengePlayPanel .challenge-play-top{padding-righ
   <div class="report-stat"><span>Precisão</span><strong id="reportAccuracy">0%</strong></div>
   <div class="report-stat"><span>Sem classificação</span><strong id="reportSkipped">0</strong></div>
  </div>
+ <h2>🌟 Destaques da partida</h2>
+ <div class="report-insights" aria-label="Destaques do desempenho nesta partida">
+  <article class="report-insight"><span>Maior sequência de acertos</span><strong id="reportBestStreak">0</strong><small>respostas corretas seguidas</small></article>
+  <article class="report-insight"><span>Resposta mais rápida</span><strong id="reportFastestTime">—</strong><small id="reportFastestQuestion">Nenhuma resposta registrada</small></article>
+  <article class="report-insight"><span>Melhor tabuada</span><strong id="reportBestTable">—</strong><small id="reportBestTableDetail">Sem dados</small></article>
+  <article class="report-insight"><span>Precisa de mais atenção</span><strong id="reportFocusTable">—</strong><small id="reportFocusTableDetail">Sem dados</small></article>
+ </div>
+ <section class="report-analysis" aria-label="Gráficos do desempenho nesta partida">
+  <h2>📈 Gráficos da partida</h2>
+  <div class="report-chart-grid">
+   <article class="report-chart-card">
+    <h3>Distribuição das respostas</h3>
+    <p>Comparação entre as questões que você acertou e errou.</p>
+    <div id="reportAnswerDistribution"><div class="report-chart-empty">Os dados aparecerão após responder às questões.</div></div>
+   </article>
+   <article class="report-chart-card">
+    <h3>Precisão por tabuada</h3>
+    <p>Percentual de acertos em cada tabuada praticada nesta partida.</p>
+    <div id="reportTablePerformance"><div class="report-chart-empty">Ainda não há dados por tabuada.</div></div>
+   </article>
+   <article class="report-chart-card" style="grid-column:1/-1">
+    <h3>Evolução durante o treino</h3>
+    <p>Precisão em grupos de cinco questões, na ordem em que foram respondidas.</p>
+    <div id="reportProgressChart"><div class="report-chart-empty">Responda às questões para visualizar sua evolução.</div></div>
+   </article>
+  </div>
+ </section>
  <h2>Ranking das contas</h2>
  <p class="hint" style="margin-bottom:8px">Escolha como deseja analisar seu desempenho. As contas com mais erros aparecem primeiro conforme o filtro selecionado.</p>
  <div class="filters">
@@ -4926,6 +4984,110 @@ function renderRanking(){
   '<div class="rank-cell"><strong>'+Math.round(row.accuracy*100)+'%</strong><small>de acerto</small></div></div>'
  ).join('');
 }
+function buildTrainingReportAnalytics(){
+ const answers=Array.isArray(sessionAnswers)?sessionAnswers:[];
+ const tableMap=new Map();
+ let currentStreak=0,maxStreak=0,fastest=null;
+ answers.forEach((entry,index)=>{
+  const table=Number(entry.a);
+  const timeMs=Math.max(0,Number(entry.timeMs)||0);
+  if(Number.isFinite(table)){
+   if(!tableMap.has(table))tableMap.set(table,{table,attempts:0,correct:0,wrong:0,totalTimeMs:0});
+   const row=tableMap.get(table);
+   row.attempts++;
+   if(entry.correct)row.correct++;else row.wrong++;
+   row.totalTimeMs+=timeMs;
+  }
+  if(entry.correct){currentStreak++;maxStreak=Math.max(maxStreak,currentStreak);}
+  else currentStreak=0;
+  if(!fastest||timeMs<fastest.timeMs)fastest={...entry,timeMs,index};
+ });
+ const tables=[...tableMap.values()].map(row=>({
+  ...row,
+  accuracy:row.attempts?row.correct/row.attempts:0,
+  avgTime:row.attempts?row.totalTimeMs/row.attempts:0
+ })).sort((a,b)=>a.table-b.table);
+ const progress=[];
+ for(let start=0;start<answers.length;start+=5){
+  const chunk=answers.slice(start,start+5);
+  const correct=chunk.filter(item=>item.correct).length;
+  progress.push({
+   start:start+1,end:start+chunk.length,
+   accuracy:chunk.length?correct/chunk.length*100:0,
+   correct,wrong:chunk.length-correct
+  });
+ }
+ return {answers,tables,progress,maxStreak,fastest};
+}
+function renderTrainingReportAnalytics(){
+ const data=buildTrainingReportAnalytics();
+ const answered=data.answers.length;
+ const correct=data.answers.filter(item=>item.correct).length;
+ const wrong=answered-correct;
+ $('reportBestStreak').textContent=String(data.maxStreak);
+ $('reportFastestTime').textContent=data.fastest?formatDuration(data.fastest.timeMs):'—';
+ $('reportFastestQuestion').textContent=data.fastest
+  ?data.fastest.a+' × '+data.fastest.b+' · questão '+(data.fastest.index+1)
+  :'Nenhuma resposta registrada';
+ const strongest=data.tables.slice().sort((a,b)=>b.accuracy-a.accuracy||b.attempts-a.attempts||a.table-b.table)[0];
+ const weakest=data.tables.filter(row=>row.wrong>0).sort((a,b)=>a.accuracy-b.accuracy||b.wrong-a.wrong||a.table-b.table)[0];
+ $('reportBestTable').textContent=strongest?'Tabuada '+strongest.table:'—';
+ $('reportBestTableDetail').textContent=strongest
+  ?Math.round(strongest.accuracy*100)+'% de acerto · '+strongest.correct+'/'+strongest.attempts+' questões'
+  :'Sem dados';
+ $('reportFocusTable').textContent=weakest?'Tabuada '+weakest.table:(answered?'Sem erros':'—');
+ $('reportFocusTableDetail').textContent=weakest
+  ?Math.round(weakest.accuracy*100)+'% de acerto · '+weakest.wrong+' erro(s)'
+  :answered?'Você acertou todas as questões desta partida.':'Sem dados';
+
+ if(!answered){
+  $('reportAnswerDistribution').innerHTML='<div class="report-chart-empty">Nenhuma questão foi classificada nesta partida.</div>';
+  $('reportTablePerformance').innerHTML='<div class="report-chart-empty">Ainda não há dados por tabuada.</div>';
+  $('reportProgressChart').innerHTML='<div class="report-chart-empty">Não há respostas para montar a evolução.</div>';
+  return;
+ }
+ const correctPercent=correct/answered*100;
+ const wrongPercent=wrong/answered*100;
+ $('reportAnswerDistribution').innerHTML=
+  '<div class="report-distribution-bar" role="img" aria-label="'+correct+' acertos e '+wrong+' erros">'+
+   '<span class="report-distribution-correct" style="width:'+correctPercent.toFixed(2)+'%"></span>'+
+   '<span class="report-distribution-wrong" style="width:'+wrongPercent.toFixed(2)+'%"></span></div>'+
+  '<div class="report-chart-legend">'+
+   '<span><i class="report-chart-dot correct"></i>Acertos: <strong>'+correct+'</strong> ('+Math.round(correctPercent)+'%)</span>'+
+   '<span><i class="report-chart-dot wrong"></i>Erros: <strong>'+wrong+'</strong> ('+Math.round(wrongPercent)+'%)</span></div>';
+ $('reportTablePerformance').innerHTML='<div class="report-table-bars">'+data.tables.map(row=>{
+  const percent=Math.round(row.accuracy*100);
+  return '<div class="report-table-bar-row">'+
+   '<span class="report-table-bar-label">Tabuada '+row.table+'</span>'+
+   '<div class="report-table-bar-track" role="img" aria-label="Tabuada '+row.table+': '+percent+'% de acerto">'+
+    '<div class="report-table-bar-fill" style="width:'+percent+'%"></div></div>'+
+   '<strong class="report-table-bar-value">'+percent+'%</strong>'+
+   '<small class="report-table-bar-detail">'+row.correct+' acerto(s) · '+row.wrong+' erro(s) · '+row.attempts+' questão(ões)</small></div>';
+ }).join('')+'</div>';
+ const points=data.progress,width=640,height=230,left=44,right=18,top=20,bottom=42;
+ const plotWidth=width-left-right,plotHeight=height-top-bottom;
+ const xFor=index=>points.length===1?left+plotWidth/2:left+index*plotWidth/(points.length-1);
+ const yFor=percent=>top+(100-percent)/100*plotHeight;
+ const grid=[100,50,0].map(value=>{
+  const y=yFor(value);
+  return '<line class="report-progress-gridline" x1="'+left+'" y1="'+y.toFixed(1)+'" x2="'+(width-right)+'" y2="'+y.toFixed(1)+'"></line>'+
+   '<text class="report-progress-axis" x="'+(left-9)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end">'+value+'%</text>';
+ }).join('');
+ const path=points.map((point,index)=>xFor(index).toFixed(1)+','+yFor(point.accuracy).toFixed(1)).join(' ');
+ const labelStep=Math.max(1,Math.ceil(points.length/8));
+ const labels=points.map((point,index)=>{
+  if(index%labelStep!==0&&index!==points.length-1)return '';
+  return '<text class="report-progress-axis" x="'+xFor(index).toFixed(1)+'" y="'+(height-13)+'" text-anchor="middle">'+point.start+'–'+point.end+'</text>';
+ }).join('');
+ const circles=points.map((point,index)=>{
+  const x=xFor(index),y=yFor(point.accuracy);
+  return '<circle class="report-progress-point" cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="5"><title>Questões '+point.start+' a '+point.end+': '+Math.round(point.accuracy)+'% de acerto ('+point.correct+' acerto(s), '+point.wrong+' erro(s))</title></circle>';
+ }).join('');
+ $('reportProgressChart').innerHTML=
+  '<svg class="report-progress-svg" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Evolução da precisão por grupos de cinco questões">'+
+   grid+'<polyline class="report-progress-path" points="'+path+'"></polyline>'+circles+labels+'</svg>'+
+  '<p class="report-chart-note">Cada ponto representa um grupo de até cinco questões. O último grupo pode ter menos de cinco.</p>';
+}
 function showReport(display=true){
  $('game').classList.add('hidden');
  $('setup').classList.add('hidden');
@@ -4949,6 +5111,7 @@ function showReport(display=true){
  $('reportType').value='all';
  $('reportSort').value='errors';
  const rankingDetails=$('rankingCaption')?.closest('details');if(rankingDetails)rankingDetails.open=false;
+ renderTrainingReportAnalytics();
  renderRanking();
 }
 async function finishSession(){
