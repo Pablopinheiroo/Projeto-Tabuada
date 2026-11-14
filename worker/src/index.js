@@ -16,7 +16,7 @@ const PROFILE_FRAME_ANIMATED_COUNT = 20;
 const ADVENTURE_STAGE_COUNT = 26;
 const COMMUNITY_MAX_USERS = 40;
 const CHALLENGE_PLAYER_METADATA_MAX = 45;
-const WORKER_BUILD_ID = "2026-11-14-private-gift-messages-v1";
+const WORKER_BUILD_ID = "2026-11-14-training-session-coins-v2";
 const PRESENCE_MIN_WRITE_INTERVAL_MS = 4 * 60 * 1000;
 const COMMUNITY_CACHE_TTL_MS = 45_000;
 const CHALLENGE_INDEX_DIRECTORY = "desafios/participantes";
@@ -316,6 +316,7 @@ function defaultGameEconomy(currentAvatar = "imagem:0") {
   return {
     version: 1, coins: 0, totalEarned: 0, trainingCycles: 0,
     trainingCorrectProgress: 0, trainingCorrectClaimIds: [],
+    trainingSessionFinishClaimIds: [],
     intelligentTrainingProgress: 0, intelligentTrainingClaimIds: [], errorTrainingClaimIds: [],
     completedStages: [], perfectStages: [], comboStages: [],
     trainingClaimIds: [], ownedAvatars: [...new Set(["imagem:0", legacyAvatar])],
@@ -352,8 +353,10 @@ function normalizeGameEconomy(record) {
     coins: safeInt(raw?.coins),
     totalEarned: safeInt(raw?.totalEarned),
     trainingCycles: safeInt(raw?.trainingCycles),
-    trainingCorrectProgress: safeInt(raw?.trainingCorrectProgress, 9),
+    // A contagem para moedas começa novamente em cada sessão; restos antigos não são reaproveitados.
+    trainingCorrectProgress: 0,
     trainingCorrectClaimIds: [...new Set((Array.isArray(raw?.trainingCorrectClaimIds) ? raw.trainingCorrectClaimIds : []).filter(id => typeof id === "string" && id.length <= 100))].slice(-500),
+    trainingSessionFinishClaimIds: [...new Set((Array.isArray(raw?.trainingSessionFinishClaimIds) ? raw.trainingSessionFinishClaimIds : []).filter(id => typeof id === "string" && id.length <= 100))].slice(-500),
     intelligentTrainingProgress: safeInt(raw?.intelligentTrainingProgress, 9),
     intelligentTrainingClaimIds: [...new Set((Array.isArray(raw?.intelligentTrainingClaimIds) ? raw.intelligentTrainingClaimIds : []).filter(id => typeof id === "string" && id.length <= 100))].slice(-500),
     errorTrainingClaimIds: [...new Set((Array.isArray(raw?.errorTrainingClaimIds) ? raw.errorTrainingClaimIds : []).filter(id => typeof id === "string" && id.length <= 100))].slice(-500),
@@ -372,9 +375,10 @@ function applyTrainingCorrectReward(economy, claimId, correctCount) {
   }
   economy.trainingCorrectClaimIds.push(claimId);
   economy.trainingCorrectClaimIds = economy.trainingCorrectClaimIds.slice(-500);
-  const totalCorrect = Math.max(0, Number(economy.trainingCorrectProgress) || 0) + correctCount;
-  const earnedBatches = Math.floor(totalCorrect / 10);
-  economy.trainingCorrectProgress = totalCorrect % 10;
+  // Cada lote recebido representa somente acertos feitos nesta sessão.
+  // Não soma sobras de sessões anteriores.
+  economy.trainingCorrectProgress = 0;
+  const earnedBatches = Math.floor(Math.max(0, Number(correctCount) || 0) / 10);
   const coinsAdded = earnedBatches * 5;
   if (coinsAdded > 0) {
     economy.coins += coinsAdded;
@@ -405,6 +409,16 @@ function applyErrorTrainingReward(economy, claimId) {
   }
   economy.errorTrainingClaimIds.push(claimId);
   economy.errorTrainingClaimIds = economy.errorTrainingClaimIds.slice(-500);
+  economy.coins += 10;
+  economy.totalEarned += 10;
+  return { coinsAdded: 10, alreadyClaimed: false, changed: true };
+}
+function applyTrainingSessionFinishReward(economy, claimId) {
+  if (economy.trainingSessionFinishClaimIds.includes(claimId)) {
+    return { coinsAdded: 0, alreadyClaimed: true, changed: false };
+  }
+  economy.trainingSessionFinishClaimIds.push(claimId);
+  economy.trainingSessionFinishClaimIds = economy.trainingSessionFinishClaimIds.slice(-500);
   economy.coins += 10;
   economy.totalEarned += 10;
   return { coinsAdded: 10, alreadyClaimed: false, changed: true };
@@ -2257,6 +2271,15 @@ async function handleApi(request, env, origin) {
             record.data.history = mergeHistorySnapshots(record.data.history, body.history);
             changed = true;
           }
+        } else if (body.type === "training_session_finish") {
+          const claimId = typeof body.claimId === "string" ? body.claimId : "";
+          if (!/^[A-Za-z0-9:_-]{8,100}$/.test(claimId)) {
+            return json({ error: "Identificador do bônus de encerramento inválido." }, 400, origin);
+          }
+          const reward = applyTrainingSessionFinishReward(economy, claimId);
+          coinsAdded = reward.coinsAdded;
+          alreadyClaimed = reward.alreadyClaimed;
+          changed = changed || reward.changed;
         } else if (body.type === "intelligent_training_questions") {
           const claimId = typeof body.claimId === "string" ? body.claimId : "";
           const questionCount = Math.max(0, Math.min(100_000, Math.floor(Number(body.questionCount) || 0)));
