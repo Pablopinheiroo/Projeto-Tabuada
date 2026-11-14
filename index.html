@@ -1258,7 +1258,9 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .community-gift-form{display:grid;gap:9px;padding:11px;border:1px solid #91623f;border-radius:11px;background:#1d1d31}
 .community-gift-form label{display:grid;gap:6px;color:#ffe7bd;font-size:.78rem;font-weight:850}
 .community-gift-form input{width:100%;min-height:42px;padding:9px 11px;border:1px solid #94734e;border-radius:9px;background:#101b2e;color:#fff;font:inherit;font-size:1rem}
-.community-gift-form input:focus{outline:2px solid #fbbf24;outline-offset:1px}
+.community-gift-form input:focus,.community-gift-form textarea:focus{outline:2px solid #fbbf24;outline-offset:1px}
+.community-gift-form textarea{width:100%;min-height:76px;max-height:132px;padding:9px 11px;border:1px solid #94734e;border-radius:9px;background:#101b2e;color:#fff;font:inherit;font-size:.9rem;line-height:1.4;resize:vertical}
+.community-gift-message-note{color:#d6c4ac;font-size:.66rem;line-height:1.4}
 .community-gift-wallet{color:#d6c4ac;font-size:.7rem;line-height:1.35}
 .community-gift-form-actions{display:flex;gap:8px;flex-wrap:wrap}
 .community-gift-form-actions button{flex:1 1 120px;min-height:39px;border-radius:9px;font-size:.78rem;font-weight:900}
@@ -1287,6 +1289,10 @@ button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visi
 .gift-toast-copy p{margin:0;color:#fff7e8;font-size:.8rem;line-height:1.38;overflow-wrap:anywhere}
 .gift-toast-copy p b{color:#fde68a}
 .gift-toast-copy small{color:#f7d8ba;font-size:.67rem;line-height:1.3}
+.gift-toast-message{max-height:96px;overflow:auto;margin-top:5px;padding:8px 9px;border:1px solid #fcd34d66;border-radius:9px;background:#1b172b88;color:#fff7e8;font-size:.76rem;line-height:1.4;overflow-wrap:anywhere;white-space:pre-wrap}
+.gift-toast-message p{margin:3px 0 0;white-space:pre-wrap}
+.gift-toast-read{justify-self:start;min-height:34px;margin-top:5px;padding:7px 11px;border:1px solid #fde68a;border-radius:9px;background:linear-gradient(110deg,#a16207,#b45309);color:#fff;font-size:.72rem;font-weight:900;cursor:pointer}
+.gift-toast-read:disabled{opacity:.65;cursor:wait}
 .gift-toast.is-closing{animation:giftToastExit .2s ease-in both}
 @keyframes giftToastEnter{from{opacity:0;transform:translateX(-24px) translateY(-12px) scale(.94)}to{opacity:1;transform:translateX(0) translateY(0) scale(1)}}
 @keyframes giftToastExit{to{opacity:0;transform:translateX(-18px) scale(.94)}}
@@ -4419,7 +4425,6 @@ async function renderCommunityRanking(){
 }
 
 let giftInboxTimer=null,giftInboxBusy=false;
-const GIFT_DISMISSED_KEY='projetoTabuadaPresentesFechadosV1';
 function createClientGiftId(){
  const bytes=crypto.getRandomValues(new Uint8Array(16));
  return Array.from(bytes,value=>value.toString(16).padStart(2,'0')).join('');
@@ -4460,6 +4465,10 @@ function ensureCommunityGiftPopover(){
    '<label>Quantas moedas deseja enviar?'+
     '<input type="number" min="1" max="'+Math.max(0,Number(gameEconomy.coins)||0)+'" step="1" inputmode="numeric" required placeholder="Ex.: 50" data-gift-amount>'+
    '</label>'+
+   '<label>Mensagem junto com o presente (opcional)'+
+    '<textarea rows="3" maxlength="500" placeholder="Escreva uma mensagem pessoal..." data-gift-message></textarea>'+
+   '</label>'+
+   '<small class="community-gift-message-note">A mensagem não é salva no GitHub. Ela é apagada quando a pessoa confirmar que leu; mensagens não lidas expiram em 30 dias.</small>'+
    '<small class="community-gift-wallet" id="communityGiftWallet"></small>'+
    '<div class="community-gift-form-actions"><button type="submit" class="community-gift-send">Enviar presente 🎁</button></div>'+
    '<p class="community-gift-status" role="status" aria-live="polite"></p>'+
@@ -4483,6 +4492,7 @@ function openCommunityGiftPopover(recipient,displayName){
  if(previousRecipient!==recipient){
   delete form.dataset.giftId;
   delete form.dataset.giftAmount;
+  delete form.dataset.giftMessage;
  }
  form.dataset.communityGiftForm=recipient;
  form.reset();
@@ -4505,7 +4515,9 @@ document.addEventListener('keydown',event=>{
 });
 async function sendCommunityGift(recipient,form){
  const input=form.querySelector('[data-gift-amount]');
+ const messageInput=form.querySelector('[data-gift-message]');
  const amount=Number(String(input?.value||'').trim());
+ const message=String(messageInput?.value||'').trim();
  const status=form.querySelector('.community-gift-status');
  const button=form.querySelector('[type="submit"]');
  if(!Number.isSafeInteger(amount)||amount<1){
@@ -4516,21 +4528,28 @@ async function sendCommunityGift(recipient,form){
   if(status)status.textContent='Você não tem moedas suficientes para esse presente.';
   return;
  }
+ if(message.length>500){
+  if(status)status.textContent='A mensagem pode ter no máximo 500 caracteres.';
+  messageInput?.focus();return;
+ }
  if(button)button.disabled=true;
  if(status)status.textContent='Preparando seu presente...';
  try{
   let giftId=form.dataset.giftId;
-  if(!giftId||form.dataset.giftAmount!==String(amount)){
+  if(!giftId||form.dataset.giftAmount!==String(amount)||form.dataset.giftMessage!==message){
    giftId=createClientGiftId();
    form.dataset.giftId=giftId;
    form.dataset.giftAmount=String(amount);
+   form.dataset.giftMessage=message;
   }
-  const result=await apiRequest('/api/gifts/send',{method:'POST',body:{to:recipient,amount,giftId}});
+  const result=await apiRequest('/api/gifts/send',{method:'POST',body:{to:recipient,amount,giftId,message}});
   delete form.dataset.giftId;
   delete form.dataset.giftAmount;
+  delete form.dataset.giftMessage;
   if(Number.isSafeInteger(Number(result.coins)))syncCommunityGiftBalance(Number(result.coins));
-  if(status)status.textContent='Presente enviado! Você enviou '+amount.toLocaleString('pt-BR')+' moedas para @'+recipient+'. 🎁';
+  if(status)status.textContent='Presente enviado! Você enviou '+amount.toLocaleString('pt-BR')+' moedas para @'+recipient+(message?' com uma mensagem.':'')+' 🎁';
   input.value='';
+  if(messageInput)messageInput.value='';
   communityCacheAt=0;
   try{
    const fresh=await apiRequest('/api/me');
@@ -4543,17 +4562,6 @@ async function sendCommunityGift(recipient,form){
  }finally{
   if(button)button.disabled=false;
  }
-}
-function readDismissedGiftIds(){
- try{
-  const value=JSON.parse(localStorage.getItem(GIFT_DISMISSED_KEY)||'[]');
-  return Array.isArray(value)?value.filter(id=>typeof id==='string').slice(-200):[];
- }catch{return [];}
-}
-function rememberDismissedGift(id){
- const ids=readDismissedGiftIds();
- if(!ids.includes(id))ids.push(id);
- try{localStorage.setItem(GIFT_DISMISSED_KEY,JSON.stringify(ids.slice(-200)));}catch{}
 }
 function getGiftNotificationStack(){
  let stack=$('giftNotificationStack');
@@ -4569,22 +4577,25 @@ function getGiftNotificationStack(){
 }
 function showGiftNotifications(gifts){
  const stack=getGiftNotificationStack();
- const dismissed=new Set(readDismissedGiftIds());
  (Array.isArray(gifts)?gifts:[]).slice(0,8).forEach(gift=>{
   const id=String(gift?.id||'');
-  if(!/^[a-f0-9]{32}$/.test(id)||dismissed.has(id)||
+  if(!/^[a-f0-9]{32}$/.test(id)||
     [...stack.querySelectorAll('.gift-toast')].some(node=>node.dataset.giftId===id))return;
   const amount=Math.max(0,Number(gift.amount)||0).toLocaleString('pt-BR');
   const name=escapeHtml(gift.fromDisplayName||gift.fromUsername||'Um participante');
   const username=escapeHtml(gift.fromUsername||'');
+  const message=typeof gift.message==='string'?gift.message.trim():'';
+  const messageMarkup=message?'<div class="gift-toast-message"><b>Mensagem:</b><p>'+escapeHtml(message)+'</p></div>':'';
+  const readLabel=message?'Li a mensagem e apagar':'Marcar como lido';
   const wrapper=document.createElement('div');
   wrapper.innerHTML=
    '<article class="gift-toast" data-gift-id="'+id+'">'+
-    '<button type="button" class="gift-toast-close" data-gift-toast-dismiss="'+id+'" aria-label="Fechar presente">×</button>'+
     '<img src="assets/gift-animation.gif" alt="">'+
     '<div class="gift-toast-copy"><span class="gift-toast-kicker">UM PRESENTE CHEGOU</span><strong>🎉 Parabéns!</strong>'+
      '<p>Você ganhou <b>'+amount+' moedas</b> de <b>'+name+'</b>'+(username?' (@'+username+')':'')+'.</p>'+
-     '<small>Seu saldo já foi atualizado. Aproveite seu presente! 💛</small></div>'+
+     messageMarkup+
+     '<small>Seu saldo já foi atualizado. '+(message?'Leia a mensagem e confirme para apagá-la.':'Aproveite seu presente! 💛')+'</small>'+
+     '<button type="button" class="gift-toast-read" data-gift-toast-read="'+id+'">'+readLabel+'</button></div>'+
    '</article>';
   const toast=wrapper.firstElementChild;
   if(toast)stack.appendChild(toast);
@@ -4606,18 +4617,25 @@ function startGiftNotificationPolling(){
  pollGiftInbox();
  giftInboxTimer=setInterval(pollGiftInbox,45_000);
 }
-document.addEventListener('click',event=>{
- const close=event.target.closest('[data-gift-toast-dismiss]');
- if(!close)return;
- const id=close.dataset.giftToastDismiss;
- const toast=close.closest('.gift-toast');
- if(!id||!toast)return;
- rememberDismissedGift(id);
- toast.classList.add('is-closing');
- setTimeout(()=>toast.remove(),220);
- apiRequest('/api/gifts/'+id+'/read',{method:'POST',body:{}}).catch(error=>{
-  if(!error.sessionExpired)console.warn('O aviso foi fechado neste aparelho, mas não foi possível marcar sua leitura no servidor.',error);
- });
+document.addEventListener('click',async event=>{
+ const read=event.target.closest('[data-gift-toast-read]');
+ if(!read)return;
+ const id=read.dataset.giftToastRead;
+ const toast=read.closest('.gift-toast');
+ if(!id||!toast||read.disabled)return;
+ read.disabled=true;
+ read.textContent='Apagando mensagem...';
+ try{
+  await apiRequest('/api/gifts/'+id+'/read',{method:'POST',body:{}});
+  toast.classList.add('is-closing');
+  setTimeout(()=>toast.remove(),220);
+ }catch(error){
+  read.disabled=false;
+  read.textContent='Tentar novamente';
+  const status=toast.querySelector('.gift-toast-copy small');
+  if(status)status.textContent='Não foi possível apagar a mensagem agora. Ela continua guardada com segurança; tente novamente.';
+  if(!error.sessionExpired)console.warn('Não foi possível confirmar a leitura do presente.',error);
+ }
 });
 async function restoreCloudSession(){
  let rememberedUser=sessionStorage.getItem(AUTH_SESSION_KEY);
