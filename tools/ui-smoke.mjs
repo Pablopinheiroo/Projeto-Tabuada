@@ -1278,7 +1278,7 @@ async function testViewport(name, viewport, mobile = false) {
     (await page.locator("#shopConfirmTitle").textContent()).includes("Deseja mesmo prosseguir?"),
     name+": tocar em comprar deve pedir confirmação antes de gastar moedas.");
   await page.locator("[data-shop-confirm]").click();
-  await page.waitForFunction(()=>!!window.__shopRequest&&!!document.querySelector(".prize-celebration-overlay"));
+  await page.waitForFunction(()=>!!window.__shopRequest&&document.querySelector("#gameRewardToast.achievement-congrats")?.textContent.includes("Novo avatar desbloqueado"));
   await page.evaluate(()=>{window.apiRequest=window.__originalShopApiRequest;});
   const shopPurchase=await page.evaluate(()=>window.__shopRequest);
   check(shopPurchase?.path==="/api/game/shop"&&shopPurchase?.method==="POST"&&shopPurchase?.body?.avatarKey==="imagem:2",
@@ -1287,11 +1287,15 @@ async function testViewport(name, viewport, mobile = false) {
     await page.locator("#avatarShopGrid .shop-avatar-card.owned").count()===5&&
     (await page.locator("#shopCoins").textContent()).trim()==="2.300",
     name+": o avatar comprado não passou para a coleção e o saldo não foi atualizado.");
-  check(await page.locator(".prize-celebration-overlay").isVisible()&&
-    (await page.locator(".prize-celebration-card h2").textContent()).includes("Novo avatar")&&
-    await page.locator(".prize-celebration-item-image").getAttribute("src")==await page.evaluate(()=>avatarImage("imagem:2")),
-    name+": a comemoração precisa mostrar a imagem exata que foi comprada.");
-  await page.locator(".prize-celebration-overlay [data-close-prize]").click();
+  const avatarNotice=await page.locator("#gameRewardToast").textContent();
+  check(avatarNotice.includes("Parabéns!")&&avatarNotice.includes("Coroa")&&
+    !(await page.locator(".prize-celebration-overlay").count()),
+    name+": o avatar comprado não apareceu na caixa de felicitações sem modal.");
+  await page.evaluate(()=>{
+    const toast=document.querySelector("#gameRewardToast");
+    toast.classList.add("hidden");toast.classList.remove("achievement-congrats");
+    if(rewardToastTimer!==null)clearTimeout(rewardToastTimer);rewardToastTimer=null;
+  });
   await page.evaluate(()=>{
     document.querySelector("#profileScreen").classList.add("hidden");
     document.querySelector("#setup").classList.remove("hidden");
@@ -1502,13 +1506,14 @@ check(html.includes("function showCoinRewardNotification(coinsAdded,item={},newT
       Object.assign(window,originals);
     }
   });
-  check(compactTrainingRewards.cycle.visible&&compactTrainingRewards.cycle.compact&&
-    compactTrainingRewards.cycle.text.includes('Novo título')&&!compactTrainingRewards.cycle.modal,
-    name+": completar um ciclo abriu um quadrado de comemoração em vez de aviso pequeno: "+JSON.stringify(compactTrainingRewards.cycle));
-  check(compactTrainingRewards.coins.visible&&compactTrainingRewards.coins.compact&&
-    compactTrainingRewards.coins.text.includes('+10 moedas')&&!compactTrainingRewards.coins.modal&&
-    compactTrainingRewards.coins.pointerEvents==='none'&&compactTrainingRewards.coins.clockRunning,
-    name+": recompensa de moedas interrompeu a partida ou abriu modal: "+JSON.stringify(compactTrainingRewards.coins));
+  check(compactTrainingRewards.cycle.visible&&compactTrainingRewards.cycle.text.includes('Parabéns!')&&
+    compactTrainingRewards.cycle.text.includes('Primeiro Ciclo')&&
+    compactTrainingRewards.cycle.modal===false,
+    name+": uma conquista recebida no ciclo não apareceu na caixa de felicitações: "+JSON.stringify(compactTrainingRewards.cycle));
+  check(compactTrainingRewards.coins.visible&&compactTrainingRewards.coins.text.includes('Parabéns!')&&
+    compactTrainingRewards.coins.text.includes('Novo título')&&compactTrainingRewards.coins.text.includes('+10 moedas')&&
+    !compactTrainingRewards.coins.modal&&compactTrainingRewards.coins.pointerEvents==='none'&&compactTrainingRewards.coins.clockRunning,
+    name+": a recompensa com título e moedas não apareceu como felicitação sem interromper a partida: "+JSON.stringify(compactTrainingRewards.coins));
   const pendingLegacyRewards=await page.evaluate(()=>{
     const old=localStorage.getItem(PENDING_REWARDS_KEY);
     localStorage.setItem(PENDING_REWARDS_KEY,JSON.stringify([
@@ -1545,24 +1550,28 @@ check(html.includes("function showCoinRewardNotification(coinsAdded,item={},newT
   check(clockAfterResume>clockPausedAfter,
     name+": o cronômetro não retomou a contagem depois de fechar a tela de prêmio.");
   await page.evaluate(()=>{
-    if(questionTimer!==null)clearInterval(questionTimer);
-    questionTimer=null;questionStartedAt=0;questionElapsedBeforeStart=0;questionClockPaused=false;
     current=null;document.querySelector("#game").classList.add("hidden");
     showAchievementCongratulations(["training_first"]);
   });
-  check(await page.locator(".prize-celebration-overlay").isVisible()&&
-    (await page.locator(".prize-celebration-card h2").textContent()).includes("Novo título")&&
-    (await page.locator(".prize-celebration-items").textContent()).includes("Primeiro Ciclo"),
-    name+": a conquista não mostrou a tela de prêmio com o título recebido.");
-  await page.waitForTimeout(300);
-  const prizeCardBounds=await page.locator(".prize-celebration-card").evaluate(el=>{
+  const titleNotice=await page.locator("#gameRewardToast");
+  check(await titleNotice.isVisible()&&
+    (await titleNotice.getAttribute("class")).includes("achievement-congrats")&&
+    (await titleNotice.textContent()).includes("Parabéns!")&&
+    (await titleNotice.textContent()).includes("Primeiro Ciclo")&&
+    !(await page.locator(".prize-celebration-overlay").count()),
+    name+": a conquista precisa aparecer numa caixa de felicitações, sem abrir uma janela que interrompa a tela.");
+  const prizeCardBounds=await titleNotice.evaluate(el=>{
     const rect=el.getBoundingClientRect();
     return {left:rect.left,right:rect.right,width:rect.width,center:rect.left+rect.width/2,viewport:innerWidth};
   });
   check(prizeCardBounds.left>=-1&&prizeCardBounds.right<=prizeCardBounds.viewport+1&&
     Math.abs(prizeCardBounds.center-prizeCardBounds.viewport/2)<=1,
-    name+": a tela de prêmio ficou descentralizada ou ultrapassou a tela ("+JSON.stringify(prizeCardBounds)+").");
-  await page.locator(".prize-celebration-overlay [data-close-prize]").click();
+    name+": a caixa de felicitações ficou fora da área visível ("+JSON.stringify(prizeCardBounds)+").");
+  await page.evaluate(()=>{
+    const toast=document.querySelector("#gameRewardToast");
+    toast.classList.add("hidden");toast.classList.remove("achievement-congrats");
+    if(rewardToastTimer!==null)clearTimeout(rewardToastTimer);rewardToastTimer=null;
+  });
   await page.evaluate(()=>document.querySelector("#setup").classList.remove("hidden"));
   const answerReplacement=await page.evaluate(()=>{
     if(questionTimer!==null){clearInterval(questionTimer);questionTimer=null;}
