@@ -221,6 +221,13 @@ check(tiedHistory.questions["9x9"].correct===4&&tiedHistory.questions["9x9"].wro
   "Um snapshot antigo, com a mesma quantidade de tentativas, substituiu o registro atual.");
 
 const html = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
+check(html.includes('id="reportBestStreak"')&&html.includes('id="reportFastestTime"')&&
+  html.includes('id="reportBestTable"')&&html.includes('id="reportFocusTable"')&&
+  html.includes('id="reportAnswerDistribution"')&&html.includes('id="reportTablePerformance"')&&
+  html.includes('id="reportProgressChart"')&&html.includes("function buildTrainingReportAnalytics()")&&
+  html.includes("function renderTrainingReportAnalytics()")&&
+  html.includes("const labelStep=Math.max(1,Math.ceil(points.length/8))"),
+  "O resultado do treino precisa mostrar destaques e três gráficos calculados com os dados da própria partida.");
 check(html.includes("assets/gift-animation.gif")&&
   html.includes("aria-label=\"Presentear com moedas\"")&&
   html.includes("data-community-gift-launch")&&
@@ -2039,6 +2046,76 @@ const musicWasPlayingBeforeOptions = await page.evaluate(() => !!(soundOn && sou
   await page.close();
 }
 
+async function testTrainingReportAnalytics(browser) {
+  const page = await browser.newPage({ viewport: { width: 360, height: 800 }, isMobile: true, hasTouch: true, locale: "pt-BR" });
+  const pageErrors = [];
+  page.on("pageerror", error => pageErrors.push(error.message));
+  await page.addInitScript(() => localStorage.setItem("projetoTabuadaUltimaFaixaV2:principal", "0"));
+  await page.route("https://projeto-tabuada-api.nuvemx.workers.dev/**", route =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({}) })
+  );
+  try {
+    await page.goto(SITE_URL, { waitUntil: "domcontentloaded", timeout: 60000 });
+    await page.locator("#authScreen").waitFor({ state: "visible", timeout: 20000 });
+    const result = await page.evaluate(() => {
+      const sample = [
+        {a:2,b:3,correct:true,timeMs:1200},
+        {a:2,b:4,correct:false,timeMs:2200},
+        {a:2,b:5,correct:true,timeMs:1000},
+        {a:3,b:3,correct:true,timeMs:800},
+        {a:3,b:4,correct:false,timeMs:1700},
+        {a:3,b:5,correct:true,timeMs:900},
+        {a:4,b:3,correct:true,timeMs:700},
+        {a:4,b:4,correct:true,timeMs:1100},
+        {a:4,b:5,correct:false,timeMs:2300},
+        {a:5,b:2,correct:true,timeMs:600},
+        {a:5,b:3,correct:true,timeMs:800}
+      ];
+      $('authScreen').classList.add('hidden');
+      sessionAnswers = sample;
+      hits = sample.filter(item=>item.correct).length;
+      misses = sample.length-hits;
+      sessionSkipped = 1;
+      sessionQuestionTimeMs = sample.reduce((sum,item)=>sum+item.timeMs,0)+500;
+      showReport(true);
+      return {
+        visible:!$('report').classList.contains('hidden'),
+        answered:$('reportAnswered').textContent,
+        hits:$('reportHits').textContent,
+        misses:$('reportMisses').textContent,
+        streak:$('reportBestStreak').textContent,
+        fastest:$('reportFastestQuestion').textContent,
+        bestTable:$('reportBestTable').textContent,
+        focusTable:$('reportFocusTable').textContent,
+        distribution:$('reportAnswerDistribution').getAttribute('aria-label')||
+          $('reportAnswerDistribution').querySelector('[role="img"]')?.getAttribute('aria-label'),
+        tableRows:$('reportTablePerformance').querySelectorAll('.report-table-bar-row').length,
+        progressPoints:$('reportProgressChart').querySelectorAll('.report-progress-point').length,
+        svg:!!$('reportProgressChart').querySelector('svg')
+      };
+    });
+    check(result.visible && result.answered==="11" && result.hits==="8" && result.misses==="3",
+      "O relatório da partida não exibiu os totais corretos de respostas, acertos e erros.");
+    check(result.streak==="3" && result.fastest==="5 × 2 · questão 10" &&
+      result.bestTable==="Tabuada 5" && result.focusTable==="Tabuada 2",
+      "Os destaques da partida não foram calculados a partir da sequência, do tempo e do desempenho por tabuada.");
+    check(result.tableRows===4 && result.progressPoints===3 && result.svg,
+      "Os gráficos por tabuada e da evolução não representam os grupos de respostas desta partida.");
+    const overflow = await page.evaluate(() => ({
+      viewport:window.innerWidth,
+      document:document.documentElement.scrollWidth,
+      report:Math.round($('report').getBoundingClientRect().width),
+      chart:Math.round($('reportProgressChart').getBoundingClientRect().width)
+    }));
+    check(overflow.document<=overflow.viewport+1,
+      "Os gráficos do resultado criaram rolagem horizontal no celular: "+JSON.stringify(overflow));
+    check(pageErrors.length===0,"O relatório gerou erros JavaScript: "+pageErrors.join(" | "));
+    return { result:"PASS", stats:result, mobileOverflow:overflow };
+  } finally {
+    await page.close();
+  }
+}
+
 async function testExplicitSave(browser) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 }, locale: "pt-BR" });
   const writes = [];
@@ -2156,6 +2233,7 @@ async function testExplicitSave(browser) {
 }
 
 try {
+  var reportAnalyticsResult = await testTrainingReportAnalytics(browser);
   await testViewport("celular", { width: 390, height: 844 }, true);
   await testViewport("celular-pequeno", { width: 360, height: 800 }, true);
   await testViewport("computador", { width: 1366, height: 900 }, false);
@@ -2181,5 +2259,6 @@ console.log(JSON.stringify({
     explicitSave: explicitSaveContract
   },
   explicitSave: explicitSaveResult,
+  trainingReport: reportAnalyticsResult,
   browser: viewportResults
 }, null, 2));
