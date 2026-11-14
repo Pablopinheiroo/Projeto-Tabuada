@@ -96,7 +96,9 @@ check(workerSource.includes('const WORKER_BUILD_ID = "2026-11-14-private-gift-me
   workerSource.includes("profile: { ...profile, lastOnlineAt }")&&
   workerSource.includes("invalidateCommunitySummaryCache();")&&
   workerSource.includes("lastOnlineAt: typeof profile.lastOnlineAt")&&
-  workerSource.includes("lastOnlinePresence: true"),
+  workerSource.includes("lastOnlinePresence: true")&&
+  workerSource.includes("privateGiftMessages: true")&&
+  workerSource.includes("giftMessagesExpireAfterDays: 30"),
   "A API precisa registrar e devolver a última presença da comunidade, com proteção contra gravações excessivas.");
 check(workerSource.includes("const TOURNAMENT_CYCLE_DURATION_MS = 30 * 24 * 60 * 60 * 1000;")&&
   workerSource.includes('const TOURNAMENT_CYCLE_EPOCH_MS = Date.parse("2026-11-11T00:00:00-03:00");')&&
