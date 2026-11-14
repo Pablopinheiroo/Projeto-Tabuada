@@ -1382,11 +1382,13 @@ async function testViewport(name, viewport, mobile = false) {
       const standardFresh=requests.map(item=>({type:item.type,count:item.correctCount}));
       requests.length=0;
       trainingModeType='standard';sessionRewardQueue=Promise.resolve();
-      sessionTrainingCorrectClaimed=0;sessionTrainingCorrectNext=2;hits=1;
+      // Nova sessão: os 9 acertos da sessão anterior não completam o primeiro lote.
+      sessionTrainingCorrectClaimed=0;sessionTrainingCorrectNext=10;hits=9;
       checkTrainingSessionRewardMilestones();
-      hits=2;checkTrainingSessionRewardMilestones();
-      hits=11;checkTrainingSessionRewardMilestones();
-      hits=12;checkTrainingSessionRewardMilestones();
+      const newSessionNineDidNotClaim=requests.length===0;
+      hits=10;checkTrainingSessionRewardMilestones();
+      hits=19;checkTrainingSessionRewardMilestones();
+      hits=20;checkTrainingSessionRewardMilestones();
       await sessionRewardQueue;
       const standard=requests.map(item=>({type:item.type,count:item.correctCount}));
       requests.length=0;
@@ -1401,7 +1403,7 @@ async function testViewport(name, viewport, mobile = false) {
       checkTrainingSessionRewardMilestones();
       await sessionRewardQueue;
       const intelligentAt20Correct=requests.map(item=>({type:item.type,count:item.correctCount}));
-      return {standardFresh,freshNineDidNotClaim,standard,intelligentAt19WithDifficulty,intelligentAt20Correct};
+      return {standardFresh,freshNineDidNotClaim,standard,newSessionNineDidNotClaim,intelligentAt19WithDifficulty,intelligentAt20Correct};
     }finally{
       claimGameReward=original;trainingModeType='standard';sessionRewardQueue=Promise.resolve();
       sessionTrainingCorrectClaimed=0;sessionTrainingCorrectNext=10;sessionCompletedQuestionCount=0;
@@ -1414,18 +1416,18 @@ const coinToastCode=html.slice(html.indexOf("function showCoinRewardNotification
 check(html.includes("function showCoinRewardNotification(coinsAdded,item={},newTitles=[])")&&
   html.includes("function showTrainingRewardNotification(message)")&&
   html.includes(".game-reward-toast.coin-reward-notification{position:fixed")&&
-  html.includes("pointer-events:none")&&html.includes("(batches*10)")&&html.includes("acertos acumulados")&&
+  html.includes("pointer-events:none")&&html.includes("(batches*10)")&&html.includes("acertos nesta sessão")&&
   !coinToastCode.includes("playPrizeCelebrationMusic();")&&
-  rewardDelivery.includes("trainingRewardTypes=['training_cycle','training_questions','intelligent_training_questions','error_training_complete']")&&
+  rewardDelivery.includes("trainingRewardTypes=['training_cycle','training_questions','intelligent_training_questions','error_training_complete','training_session_finish']")&&
   rewardDelivery.includes("showTrainingRewardNotification(")&&
   rewardDelivery.includes("showCoinRewardNotification(coinsAdded,item,newTitles)"),
   "Recompensas de treino devem aparecer em aviso pequeno, sem modal, música ou bloqueio da partida.");
   check(liveRewardMilestones.freshNineDidNotClaim&&JSON.stringify(liveRewardMilestones.standardFresh)===JSON.stringify([
     {type:'training_questions',count:10}
   ]),name+": o treino comum precisa esperar o décimo acerto quando não existe saldo anterior ("+JSON.stringify({freshNineDidNotClaim:liveRewardMilestones.freshNineDidNotClaim,standardFresh:liveRewardMilestones.standardFresh})+").");
-  check(JSON.stringify(liveRewardMilestones.standard)===JSON.stringify([
-    {type:'training_questions',count:2},{type:'training_questions',count:10}
-  ]),name+": 5 moedas não foram solicitadas no décimo acerto acumulado ou o lote seguinte não voltou a contar 10 ("+JSON.stringify(liveRewardMilestones.standard)+").");
+  check(liveRewardMilestones.newSessionNineDidNotClaim&&JSON.stringify(liveRewardMilestones.standard)===JSON.stringify([
+    {type:'training_questions',count:10},{type:'training_questions',count:10}
+  ]),name+": os 9 acertos de uma sessão anterior foram reaproveitados, ou o lote de 10 não reiniciou na nova sessão ("+JSON.stringify(liveRewardMilestones)+").");
   check(JSON.stringify(liveRewardMilestones.intelligentAt19WithDifficulty)===JSON.stringify([
     {type:'training_questions',count:10}
   ]),name+": 19 acertos + 1 dificuldade geraram moeda como se fossem 20 acertos ("+JSON.stringify(liveRewardMilestones.intelligentAt19WithDifficulty)+").");
