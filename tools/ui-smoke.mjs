@@ -90,7 +90,7 @@ check(workerSource.includes("invalidateCommunitySummaryCache()")&&
   "O cache público da comunidade não é invalidado ou marcado com a versão dos dados.");
 check(workerSource.includes("mergeHistorySnapshots(")&&workerSource.includes("body.baseSha"),
   "A API não protege o histórico contra snapshots antigos.");
-check(workerSource.includes('const WORKER_BUILD_ID = "2026-11-14-private-gift-messages-v1"')&&
+check(workerSource.includes('const WORKER_BUILD_ID = "2026-11-14-training-session-coins-v2"')&&
   workerSource.includes("PRESENCE_MIN_WRITE_INTERVAL_MS")&&
   workerSource.includes('if (route === "/api/presence" && request.method === "POST")')&&
   workerSource.includes("profile: { ...profile, lastOnlineAt }")&&
@@ -134,14 +134,16 @@ check(workerSource.includes("async function writeUsersAtomically")&&
 
 const workerTestSource=workerSource.replace("export class GiftMessageStore","class GiftMessageStore").replace("export default {","globalThis.__workerDefault = {");
 const workerContext={Date,Set,Map,Object,Array,Number,String,Math,RegExp,JSON,TextEncoder,TextDecoder,Uint8Array,Response,Headers,URL};
-vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;globalThis.__normalizeGameEconomy=normalizeGameEconomy;globalThis.__applyTrainingCorrectReward=applyTrainingCorrectReward;globalThis.__applyIntelligentTrainingReward=applyIntelligentTrainingReward;globalThis.__applyErrorTrainingReward=applyErrorTrainingReward;",workerContext);
+vm.runInNewContext(workerTestSource+"\nglobalThis.__mergeHistorySnapshots=mergeHistorySnapshots;globalThis.__normalizeGameEconomy=normalizeGameEconomy;globalThis.__applyTrainingCorrectReward=applyTrainingCorrectReward;globalThis.__applyIntelligentTrainingReward=applyIntelligentTrainingReward;globalThis.__applyErrorTrainingReward=applyErrorTrainingReward;globalThis.__applyTrainingSessionFinishReward=applyTrainingSessionFinishReward;",workerContext);
 const normalizedEconomy=workerContext.__normalizeGameEconomy({
   profile:{avatar:"imagem:0"},
   economy:{coins:15,totalEarned:20,trainingCorrectProgress:8,trainingCorrectClaimIds:["claim-1"],
     trainingQuestionProgress:9,trainingQuestionClaimIds:["legacy-claim"]}
 });
-check(normalizedEconomy.trainingCorrectProgress===8&&normalizedEconomy.trainingCorrectClaimIds.includes("claim-1"),
-  "A economia do usuário não preserva as questões acertadas pendentes para a próxima recompensa.");
+check(normalizedEconomy.trainingCorrectProgress===0&&normalizedEconomy.trainingCorrectClaimIds.includes("claim-1"),
+  "A economia do usuário ainda carrega saldo parcial de questões de sessões anteriores.");
+check(Array.isArray(normalizedEconomy.trainingSessionFinishClaimIds),
+  "A economia não inicializa os identificadores dos bônus de encerramento.");
 check(normalizedEconomy.trainingCorrectProgress!==9,
   "O progresso antigo de questões respondidas foi convertido incorretamente em questões acertadas.");
 check(normalizedEconomy.intelligentTrainingProgress===0&&Array.isArray(normalizedEconomy.intelligentTrainingClaimIds)&&
@@ -152,6 +154,8 @@ const trainingRewardBranch=workerSource.slice(
   workerSource.indexOf('} else if (body.type === "adventure_stage")')
 );
 check(trainingRewardBranch.includes('body.type === "training_questions"')&&
+  trainingRewardBranch.includes('body.type === "training_session_finish"')&&
+  trainingRewardBranch.includes("applyTrainingSessionFinishReward(economy, claimId)")&&
   trainingRewardBranch.includes("applyTrainingCorrectReward(economy, claimId, correctCount)")&&
   trainingRewardBranch.includes("body.correctCount")&&
   trainingRewardBranch.includes('body.type === "intelligent_training_questions"')&&
@@ -161,24 +165,32 @@ check(trainingRewardBranch.includes('body.type === "training_questions"')&&
   trainingRewardBranch.includes("mergeHistorySnapshots(record.data.history, body.history)"),
   "A API não aplica as recompensas das três modalidades e não preserva o histórico.");
 const rewardEconomy=workerContext.__normalizeGameEconomy({
-  profile:{avatar:"imagem:0"},economy:{coins:0,totalEarned:0,trainingCorrectProgress:0}
+  profile:{avatar:"imagem:0"},economy:{coins:0,totalEarned:0,trainingCorrectProgress:8}
 });
 const rewardNine=workerContext.__applyTrainingCorrectReward(rewardEconomy,"training-correct-0001",9);
 const afterNine={coins:rewardEconomy.coins,progress:rewardEconomy.trainingCorrectProgress};
-const rewardOne=workerContext.__applyTrainingCorrectReward(rewardEconomy,"training-correct-0002",1);
-const afterOne={coins:rewardEconomy.coins,progress:rewardEconomy.trainingCorrectProgress};
+const rewardOneNextSession=workerContext.__applyTrainingCorrectReward(rewardEconomy,"training-correct-0002",1);
+const afterOneNextSession={coins:rewardEconomy.coins,progress:rewardEconomy.trainingCorrectProgress};
 const rewardDuplicate=workerContext.__applyTrainingCorrectReward(rewardEconomy,"training-correct-0002",1);
-const afterDuplicate={coins:rewardEconomy.coins,progress:rewardEconomy.trainingCorrectProgress};
-const rewardTwenty=workerContext.__applyTrainingCorrectReward(rewardEconomy,"training-correct-0003",20);
+const rewardTen=workerContext.__applyTrainingCorrectReward(rewardEconomy,"training-correct-0003",10);
+const afterTen={coins:rewardEconomy.coins,totalEarned:rewardEconomy.totalEarned,progress:rewardEconomy.trainingCorrectProgress};
+const rewardTwenty=workerContext.__applyTrainingCorrectReward(rewardEconomy,"training-correct-0004",20);
 const afterTwenty={coins:rewardEconomy.coins,totalEarned:rewardEconomy.totalEarned,progress:rewardEconomy.trainingCorrectProgress};
-check(rewardNine.coinsAdded===0&&afterNine.progress===9&&afterNine.coins===0,
-  "As primeiras 9 questões acertadas não ficaram acumuladas para a próxima saída.");
-check(rewardOne.coinsAdded===5&&afterOne.coins===5&&afterOne.progress===0,
-  "A décima questão acertada não concedeu exatamente 5 moedas.");
-check(rewardDuplicate.alreadyClaimed&&rewardDuplicate.coinsAdded===0&&afterDuplicate.coins===5,
+check(rewardNine.coinsAdded===0&&afterNine.progress===0&&afterNine.coins===0,
+  "9 acertos feitos nesta sessão não devem gerar moedas nem permanecer para a próxima.");
+check(rewardOneNextSession.coinsAdded===0&&afterOneNextSession.progress===0&&afterOneNextSession.coins===0,
+  "1 acerto de uma nova sessão não pode completar 10 com acertos anteriores.");
+check(rewardTen.coinsAdded===5&&afterTen.coins===5&&afterTen.totalEarned===5&&afterTen.progress===0,
+  "10 acertos na mesma sessão devem gerar exatamente 5 moedas.");
+check(rewardDuplicate.alreadyClaimed&&rewardDuplicate.coinsAdded===0,
   "Uma mesma sessão duplicada concedeu moedas mais de uma vez.");
-check(rewardTwenty.coinsAdded===10&&afterTwenty.coins===15&&afterTwenty.totalEarned===15,
-  "20 questões acertadas não concederam 10 moedas ou não preservaram o total ganho.");
+check(rewardTwenty.coinsAdded===10&&afterTwenty.coins===15&&afterTwenty.totalEarned===15&&afterTwenty.progress===0,
+  "20 acertos na mesma sessão devem gerar exatamente 10 moedas, sem deixar saldo parcial.");
+const finishReward=workerContext.__applyTrainingSessionFinishReward(rewardEconomy,"training-session-finish-0001");
+const finishRewardDuplicate=workerContext.__applyTrainingSessionFinishReward(rewardEconomy,"training-session-finish-0001");
+check(finishReward.coinsAdded===10&&finishRewardDuplicate.alreadyClaimed&&finishRewardDuplicate.coinsAdded===0&&
+  rewardEconomy.coins===25&&rewardEconomy.totalEarned===25,
+  "O encerramento com ciclo completo deve conceder +10 moedas uma única vez.");
 const intelligentEconomy=workerContext.__normalizeGameEconomy({profile:{avatar:"imagem:0"},economy:{coins:0,totalEarned:0}});
 const intelligentNine=workerContext.__applyIntelligentTrainingReward(intelligentEconomy,"intelligent-claim-0001",9);
 const intelligentOne=workerContext.__applyIntelligentTrainingReward(intelligentEconomy,"intelligent-claim-0002",1);
@@ -223,6 +235,12 @@ check(html.includes("assets/gift-animation.gif")&&
   !html.includes("community-gift-action")&&
   !html.includes("O valor será descontado do seu saldo")&&
   !html.includes("No modo normal, a tabuada segue de 1 a 10.")&&
+  html.includes("sessionTrainingCorrectNext=10;")&&
+  html.includes("sessionCompletedTrainingCycles=0;")&&
+  html.includes("if(trainingModeType==='standard')sessionCompletedTrainingCycles++")&&
+  html.includes("finishingMode==='standard'&&sessionCompletedTrainingCycles>0")&&
+  html.includes("type==='training_session_finish'")&&
+  !html.includes("sessionTrainingCorrectNext=Math.max(1,10-Math.max(0,Math.min(9,Number(gameEconomy.trainingCorrectProgress)||0)))")&&
   html.includes("function pollGiftInbox()")&&
   html.includes("data-gift-toast-read")&&
   !html.includes("data-gift-toast-dismiss")&&
