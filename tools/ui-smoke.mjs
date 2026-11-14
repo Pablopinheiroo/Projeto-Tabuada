@@ -495,8 +495,10 @@ check(html.includes("const remainder=hits-sessionTrainingCorrectClaimed")&&
   html.includes("await sessionRewardQueue"),
   "Ao sair da partida, o restante dos acertos precisa ser salvo sem repetir as moedas já solicitadas.");
 check(!html.includes("item.errorTrainingResolved")&&!html.includes("item.errorTrainingCorrectStreak")&&
-  html.includes("trainingModeType!=='errors'&&trainingModeType!=='tournamentErrors'"),
-  "Os dois treinos de erros não podem compartilhar estado, nem conceder moedas por acertos como treino normal.");
+  html.includes("if(trainingModeType==='standard'||trainingModeType==='intelligent'||trainingModeType==='difficulties')")&&
+  html.includes("if(finishingMode==='standard'&&sessionCompletedTrainingCycles>0)")&&
+  html.includes("queueTrainingSessionReward('error_training_complete'"),
+  "Os treinos de erros devem ficar fora das recompensas por acertos e receber somente o bônus próprio após a conclusão.");
 check(html.includes("function showTrainingExitCelebration()")&&html.includes("data-exit-close")&&
   html.includes("data-exit-training")&&html.includes("data-open-training-report")&&
   html.includes("PARTIDA FINALIZADA")&&html.includes("TREINO COMPLETO")&&
