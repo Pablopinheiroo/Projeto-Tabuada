@@ -440,10 +440,13 @@ const prizeModalCode=html.slice(html.indexOf("function showPrizeCelebration("),h
 check(prizeModalCode.includes("data-close-prize")&&prizeModalCode.includes("overlay.remove()")&&
   prizeModalCode.includes("document.removeEventListener('keydown',onEscape)")&&
   !prizeModalCode.includes("setTimeout("),
- "A comemoração dos prêmios precisa permanecer na tela até ser fechada pela pessoa.");check(html.includes("function showAchievementCongratulations(ids,extra='')")&&
-  html.includes("NOVO TÍTULO CONQUISTADO")&&html.includes("showPrizeCelebration({")&&
-  html.includes("description:'Você recebeu uma nova conquista no Projeto Tabuada.'"),
- "A tela de comemoração por novos títulos precisa informar a conquista recebida.");check(!html.includes('id="shopBackToGame"')&&!html.includes("$('shopBackToGame').addEventListener")&&
+ "O componente de comemoração legado deve manter fechamento seguro.");check(html.includes("function showAchievementNotification(")&&
+  html.includes("function showAchievementCongratulations(ids,extra='',coinsAdded=0)")&&
+  html.includes("showGameRewardToast(lines.join('\\n'),true,7000)")&&
+  html.includes("showAchievementCongratulations(result.newAchievements")&&
+  html.includes("showAchievementNotification({")&&
+  html.includes("Sua conquista foi confirmada no seu perfil."),
+ "Conquistas, títulos e recompensas precisam usar a caixa de felicitações, sem abrir uma janela que interrompa a partida.");check(!html.includes('id="shopBackToGame"')&&!html.includes("$('shopBackToGame').addEventListener")&&
   html.includes('id="topReturnToGame"')&&
   !html.includes("topReturn.classList.toggle('hidden',shop||adventure)"),
  "O atalho principal Voltar ao jogo deve permanecer disponível sem duplicação.");
@@ -536,9 +539,10 @@ check((html.match(/training-celebration-overlay\{position:fixed;inset:0;z-index:
   html.includes("width:100vw;height:100vh;height:100dvh")&&
   html.includes(".training-exit-close{position:absolute;top:9px;right:10px")&&
   html.includes(".training-exit-actions{display:grid;gap:10px;margin-top:22px}")&&
-  html.includes(".game-reward-toast.achievement-congrats{position:fixed;top:max(12px,env(safe-area-inset-top));left:50%;z-index:10001;box-sizing:border-box")&&
-  html.includes("transform:translateX(-50%);box-shadow:0 15px 42px #020617cc,0 0 0 3px #fbbf2422;animation:achievementRewardPop"),
-  "A tela de parabéns e a notificação precisam ficar centralizadas e caber na largura/altura do celular.");
+  html.includes(".game-reward-toast.achievement-congrats{position:fixed;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));z-index:10002;box-sizing:border-box")&&
+  html.includes("border-left:4px solid #fbbf24")&&html.includes("white-space:pre-line")&&
+  html.includes("@media(max-width:560px){.game-reward-toast.achievement-congrats{left:12px;right:12px;width:auto"),
+  "A notificação de felicitações precisa seguir o estilo da caixa de moedas e caber em celulares.");
 check(html.includes("getDifficultyTrainingFacts()")&&html.includes("item.accuracy<.90")&&
   workerSource.includes("difficultyTrainingBelow90Percent: true"),
   "O modo de dificuldades precisa usar percentual estritamente inferior a 90% e estar declarado na API.");
@@ -625,14 +629,21 @@ check(workerSource.includes('status: betMode ? "challenger_playing" : "open"')&&
 check(html.includes("if(challengeCurrent.status==='challenger_playing')")&&
   html.includes("A partida antes do convite será ativada após a atualização do servidor."),
   "A interface deve manter compatibilidade com o Worker antigo até a atualização do servidor, sem travar a partida de aposta.");
-check(html.includes("function showPrizeCelebration(")&&html.includes("function playPrizeCelebrationMusic()")&&
-  html.includes("prize-celebration-overlay")&&html.includes("melody=[72,76,79,84")&&
-  html.includes("if(newTitles.length)")&&html.includes("showCoinRewardNotification(coinsAdded,item)")&&
-  html.includes("earnedChallengeMedalIds(nextStats)")&&html.includes("PREMIAÇÃO DO TORNEIO"),
-  "Prêmios, moedas, medalhas e títulos precisam usar uma tela única com música própria ao serem conquistados.");
-check(html.includes("if(!result.alreadyOwned){")&&html.includes("NOVO ITEM DESBLOQUEADO")&&
-  html.includes("Novo avatar na sua coleção!")&&html.includes("const newTitles=(result.newAchievements||[])"),
-  "Um avatar realmente desbloqueado deve receber comemoração, sem confundir isso com uma compra repetida.");
+const deliveryRewardCode=html.slice(html.indexOf("async function deliverPendingGameReward("),html.indexOf("async function retryPendingGameRewards(",html.indexOf("async function deliverPendingGameReward(")));
+const shopRewardCode=html.slice(html.indexOf("async function requestShopPurchase("),html.indexOf("function purchaseAvatar(",html.indexOf("async function requestShopPurchase(")));
+const challengeRewardCode=html.slice(html.indexOf("async function refreshChallengeData("),html.indexOf("function startChallengePolling(",html.indexOf("async function refreshChallengeData(")));
+const tournamentNoticeCode=html.slice(html.indexOf("function renderTournamentFinalNotice("),html.indexOf("async function refreshTournamentDashboard(",html.indexOf("function renderTournamentFinalNotice(")));
+check(deliveryRewardCode.includes("showAchievementCongratulations(result.newAchievements")&&
+  shopRewardCode.includes("showAchievementNotification({")&&
+  challengeRewardCode.includes("showAchievementNotification({")&&
+  tournamentNoticeCode.includes("showAchievementNotification({")&&
+  !deliveryRewardCode.includes("showPrizeCelebration({")&&
+  !challengeRewardCode.includes("showPrizeCelebration({")&&
+  !tournamentNoticeCode.includes("showPrizeCelebration({"),
+  "Títulos, medalhas, vitórias, avatares e premiações precisam avisar por caixa de felicitações, sem modal em tela cheia.");
+check(html.includes("if(!result.alreadyOwned){")&&html.includes("Parabéns! Novo avatar desbloqueado!")&&
+  html.includes("Parabéns! Nova moldura desbloqueada!")&&html.includes("const newTitles=(result.newAchievements||[])"),
+  "Avatares e molduras adquiridos precisam receber uma felicitação, sem confundir compra repetida com desbloqueio.");
 const trainingCycleCode=html.slice(html.indexOf("function showTrainingCycleCelebration("),html.indexOf("function makeRound()",html.indexOf("function showTrainingCycleCelebration(")));
 check(trainingCycleCode&&!trainingCycleCode.includes("showPrizeCelebration(")&&!trainingCycleCode.includes("playCelebrationSound()"),
   "Concluir um ciclo sem ganhar prêmio não deve abrir uma comemoração de recompensa.");
@@ -2116,6 +2127,52 @@ async function testTrainingReportAnalytics(browser) {
   }
 }
 
+async function testAchievementNotifications(browser) {
+  const page = await browser.newPage({ viewport:{width:390,height:844}, isMobile:true, hasTouch:true, locale:"pt-BR" });
+  const pageErrors=[];
+  page.on("pageerror",error=>pageErrors.push(error.message));
+  await page.addInitScript(()=>localStorage.setItem("projetoTabuadaUltimaFaixaV2:principal","0"));
+  await page.route("https://projeto-tabuada-api.nuvemx.workers.dev/**",route=>
+    route.fulfill({status:200,contentType:"application/json",body:JSON.stringify({})})
+  );
+  try {
+    await page.goto(SITE_URL,{waitUntil:"domcontentloaded",timeout:60000});
+    await page.locator("#authScreen").waitFor({state:"visible",timeout:20000});
+    const result=await page.evaluate(()=>{
+      const ids=ACHIEVEMENT_DEFINITIONS.slice(0,2).map(item=>item.id);
+      const expected=ACHIEVEMENT_DEFINITIONS.slice(0,2).map(item=>item.title);
+      showAchievementCongratulations(ids,"Teste de felicitação",15);
+      const toast=$("gameRewardToast");
+      const box=toast.getBoundingClientRect();
+      return {
+        visible:!toast.classList.contains("hidden"),
+        classes:toast.className,
+        text:toast.textContent,
+        expected,
+        position:getComputedStyle(toast).position,
+        whiteSpace:getComputedStyle(toast).whiteSpace,
+        bounds:{left:box.left,right:box.right,width:box.width},
+        viewport:window.innerWidth,
+        blockingModal:!!document.querySelector(".prize-celebration-overlay")
+      };
+    });
+    check(result.visible&&result.classes.includes("achievement-congrats")&&!result.classes.includes("coin-reward-notification"),
+      "A conquista não abriu a caixa própria de felicitações.");
+    check(result.expected.every(name=>result.text.includes(name))&&
+      result.text.includes("Parabéns!")&&result.text.includes("Teste de felicitação")&&
+      result.text.includes("+15 moedas"),
+      "A notificação não mostrou as conquistas, as felicitações e as moedas adicionais.");
+    check(result.position==="fixed"&&result.whiteSpace==="pre-line"&&!result.blockingModal,
+      "A felicitação precisa aparecer como aviso flutuante, sem abrir janela em tela cheia.");
+    check(result.bounds.left>=0&&result.bounds.right<=result.viewport+1,
+      "A caixa de felicitações ultrapassou a largura do celular: "+JSON.stringify(result.bounds));
+    check(pageErrors.length===0,"A notificação gerou erros JavaScript: "+pageErrors.join(" | "));
+    return {result:"PASS",notification:result};
+  } finally {
+    await page.close();
+  }
+}
+
 async function testExplicitSave(browser) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 }, locale: "pt-BR" });
   const writes = [];
@@ -2233,6 +2290,7 @@ async function testExplicitSave(browser) {
 }
 
 try {
+  var achievementNotificationResult = await testAchievementNotifications(browser);
   var reportAnalyticsResult = await testTrainingReportAnalytics(browser);
   await testViewport("celular", { width: 390, height: 844 }, true);
   await testViewport("celular-pequeno", { width: 360, height: 800 }, true);
@@ -2260,5 +2318,6 @@ console.log(JSON.stringify({
   },
   explicitSave: explicitSaveResult,
   trainingReport: reportAnalyticsResult,
+  achievementNotifications: achievementNotificationResult,
   browser: viewportResults
 }, null, 2));
