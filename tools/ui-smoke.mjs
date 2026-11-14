@@ -1511,7 +1511,7 @@ check(html.includes("function showCoinRewardNotification(coinsAdded,item={},newT
     compactTrainingRewards.cycle.modal===false,
     name+": uma conquista recebida no ciclo não apareceu na caixa de felicitações: "+JSON.stringify(compactTrainingRewards.cycle));
   check(compactTrainingRewards.coins.visible&&compactTrainingRewards.coins.text.includes('Parabéns!')&&
-    compactTrainingRewards.coins.text.includes('Novo título')&&compactTrainingRewards.coins.text.includes('+10 moedas')&&
+    compactTrainingRewards.coins.text.includes('Nova conquista')&&compactTrainingRewards.coins.text.includes('+10 moedas')&&
     !compactTrainingRewards.coins.modal&&compactTrainingRewards.coins.pointerEvents==='none'&&compactTrainingRewards.coins.clockRunning,
     name+": a recompensa com título e moedas não apareceu como felicitação sem interromper a partida: "+JSON.stringify(compactTrainingRewards.coins));
   const pendingLegacyRewards=await page.evaluate(()=>{
