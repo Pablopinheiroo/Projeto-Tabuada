@@ -630,7 +630,7 @@ check(html.includes("if(challengeCurrent.status==='challenger_playing')")&&
   html.includes("A partida antes do convite será ativada após a atualização do servidor."),
   "A interface deve manter compatibilidade com o Worker antigo até a atualização do servidor, sem travar a partida de aposta.");
 const deliveryRewardCode=html.slice(html.indexOf("async function deliverPendingGameReward("),html.indexOf("async function retryPendingGameRewards(",html.indexOf("async function deliverPendingGameReward(")));
-const shopRewardCode=html.slice(html.indexOf("async function requestShopPurchase("),html.indexOf("function purchaseAvatar(",html.indexOf("async function requestShopPurchase(")));
+const shopRewardCode=html.slice(html.indexOf("function requestShopPurchase("),html.indexOf("function purchaseAvatar(",html.indexOf("function requestShopPurchase(")));
 const challengeRewardCode=html.slice(html.indexOf("async function refreshChallengeData("),html.indexOf("function startChallengePolling(",html.indexOf("async function refreshChallengeData(")));
 const tournamentNoticeCode=html.slice(html.indexOf("function renderTournamentFinalNotice("),html.indexOf("async function refreshTournamentDashboard(",html.indexOf("function renderTournamentFinalNotice(")));
 check(deliveryRewardCode.includes("showAchievementCongratulations(result.newAchievements")&&
