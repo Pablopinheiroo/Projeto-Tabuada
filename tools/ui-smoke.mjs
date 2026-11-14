@@ -1564,9 +1564,11 @@ check(html.includes("function showCoinRewardNotification(coinsAdded,item={},newT
     const rect=el.getBoundingClientRect();
     return {left:rect.left,right:rect.right,width:rect.width,center:rect.left+rect.width/2,viewport:innerWidth};
   });
-  check(prizeCardBounds.left>=-1&&prizeCardBounds.right<=prizeCardBounds.viewport+1&&
-    Math.abs(prizeCardBounds.center-prizeCardBounds.viewport/2)<=1,
-    name+": a caixa de felicitações ficou fora da área visível ("+JSON.stringify(prizeCardBounds)+").");
+  const notificationAligned=prizeCardBounds.viewport<=560
+    ?Math.abs(prizeCardBounds.center-prizeCardBounds.viewport/2)<=1
+    :prizeCardBounds.right<=prizeCardBounds.viewport-10&&prizeCardBounds.right>=prizeCardBounds.viewport-14;
+  check(prizeCardBounds.left>=-1&&prizeCardBounds.right<=prizeCardBounds.viewport+1&&notificationAligned,
+    name+": a caixa de felicitações ficou fora da área visível ou desalinhada ("+JSON.stringify(prizeCardBounds)+").");
   await page.evaluate(()=>{
     const toast=document.querySelector("#gameRewardToast");
     toast.classList.add("hidden");toast.classList.remove("achievement-congrats");
