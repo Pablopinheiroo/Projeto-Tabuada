@@ -984,7 +984,7 @@ async function testViewport(name, viewport, mobile = false) {
     }finally{playPrizeCelebrationMusic=originalMusic;}
   });
   check(coinNotification.visible&&coinNotification.position==="fixed"&&coinNotification.pointerEvents==="none"&&
-    coinNotification.overlayCount===0&&coinNotification.text.includes("10 acertos acumulados"),
+    coinNotification.overlayCount===0&&coinNotification.text.includes("10 acertos nesta sessão"),
     name+": a recompensa em moedas não apareceu como notificação compacta sem bloquear a partida ("+JSON.stringify(coinNotification)+").");
   const homeOverflow = await page.evaluate(() => ({
     viewport: window.innerWidth,
