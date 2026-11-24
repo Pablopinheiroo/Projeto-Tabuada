@@ -2397,8 +2397,15 @@ function loadTrainingDefinition(){
   updateTrainingFactorTableCount(table);
  }
  trainingDefinitionDirty=false;
+ if(Array.isArray(saved.selectedTables)){
+  const selectedTables=new Set(saved.selectedTables.map(Number).filter(value=>Number.isInteger(value)&&value>=1&&value<=20));
+  tablesEl.querySelectorAll('.table-row').forEach(row=>{
+   const input=row.querySelector('input[type="checkbox"]');
+   input.checked=selectedTables.has(Number(input.value));
+  });
+ }
  updateTrainingGlobalModeControls();
- updateTrainingDefinitionStatus(hasSavedDefinition?'✓ Preferências salvas carregadas para este perfil.':'Escolha a ordem e toque em “Salvar definição” para guardar sua preferência.');
+ updateTrainingDefinitionStatus(hasSavedDefinition?'✓ Preferências salvas carregadas para este perfil.':'Escolha a ordem, marque as tabuadas e toque em “Salvar definição”.');
  updateTrainingFactorGlobalStatus(saved&&Object.keys(storedFactors).length
   ?'Pré-definições salvas carregadas para este perfil.'
   :'Todas as contas estão marcadas por padrão.',!!(saved&&Object.keys(storedFactors).length));
@@ -2423,12 +2430,15 @@ function saveTrainingDefinition(){
   tableModes:Object.fromEntries([...tablesEl.querySelectorAll('.table-row')].map(row=>[
    row.querySelector('input').value,row.querySelector('.mode').value==='random'?'random':'normal'
   ])),
+  selectedTables:[...tablesEl.querySelectorAll('.table-row')]
+   .filter(row=>row.querySelector('input[type="checkbox"]').checked)
+   .map(row=>Number(row.querySelector('input[type="checkbox"]').value)),
   factorSelections:current.factorSelections&&typeof current.factorSelections==='object'?current.factorSelections:{},
   savedAt:new Date().toISOString()
  };
  if(persistTrainingDefinition(definition)){
   trainingDefinitionDirty=false;
-  updateTrainingDefinitionStatus('✓ Definição salva! Ela será carregada sempre que você voltar ao treinamento neste perfil.');
+  updateTrainingDefinitionStatus('✓ Definição salva! A ordem e as tabuadas selecionadas serão carregadas sempre que você voltar ao treinamento neste perfil.');
   return true;
  }
  trainingDefinitionDirty=true;
@@ -8308,7 +8318,7 @@ $('saveProfile').addEventListener('click',()=>saveProfile(true));
 
 
 $('trainingGlobalMode').addEventListener('change',()=>{updateTrainingGlobalModeControls();markTrainingDefinitionDirty();});
-tablesEl.addEventListener('change',event=>{if(event.target.matches('.mode'))markTrainingDefinitionDirty();});
+tablesEl.addEventListener('change',event=>{if(event.target.matches('.mode, .table-row input[type="checkbox"]'))markTrainingDefinitionDirty();});
 $('saveTrainingDefinition').addEventListener('click',saveTrainingDefinition);
 $('start').addEventListener('click',()=>{trainingModeType='standard';trainingReviewMode=false;trainingReviewFacts=[];errorTrainingFacts=[];start()});
 $('verify').addEventListener('click',verify);
