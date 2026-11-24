@@ -555,7 +555,8 @@ check(html.includes("await saveProgressNow('Perfil')")&&html.includes("await sav
   "As modificações do perfil, senha ou opções não executam salvamento explícito.");
 check(html.includes('id="saveTrainingDefinition"')&&html.includes('id="trainingDefinitionStatus"')&&
   html.includes("function loadTrainingDefinition()")&&html.includes("function saveTrainingDefinition()")&&
-  html.includes("TRAINING_DEFINITION_STORAGE_PREFIX")&&html.includes("loadTrainingDefinition();")&&
+  html.includes("TRAINING_DEFINITION_STORAGE_PREFIX")&&html.includes("selectedTables:[...tablesEl.querySelectorAll('.table-row')]")&&
+  html.includes("if(Array.isArray(saved.selectedTables))")&&html.includes("loadTrainingDefinition();")&&
   html.includes("markTrainingDefinitionDirty();")&&html.includes("appearance:none")&&
   html.includes("training-order-select-wrap:after"),
   "A definição da ordem do treinamento precisa ter seletor visível, botão de salvar e restauração por perfil.");
@@ -869,6 +870,8 @@ async function testViewport(name, viewport, mobile = false) {
     const oldActive=activeProfile,oldSelected=selected;
     activeProfile="smoke_factor_profile";
     const key=trainingDefinitionStorageKey(),oldStored=localStorage.getItem(key);
+    const originalGlobalMode=$('trainingGlobalMode').value;
+    const originalTableChecks=[...tablesEl.querySelectorAll('.table-row input[type="checkbox"]')].map(input=>input.checked);
     try{
       localStorage.removeItem(key);loadTrainingDefinition();
       const advanced=document.querySelector("#trainingAdvancedSettings");
@@ -891,16 +894,29 @@ async function testViewport(name, viewport, mobile = false) {
       const savedAll=saveTrainingGlobalPreset();
       const global=readTrainingDefinition().factorSelections;
       loadTrainingDefinition();
+      tablesEl.querySelectorAll('.table-row input[type="checkbox"]').forEach(input=>{input.checked=Number(input.value)===2;});
+      $('trainingGlobalMode').value='random';
+      const selectionSaved=saveTrainingDefinition();
+      const savedTables=readTrainingDefinition().selectedTables;
+      tablesEl.querySelectorAll('.table-row input[type="checkbox"]').forEach(input=>{input.checked=false;});
+      $('trainingGlobalMode').value='individual';
+      loadTrainingDefinition();
+      const restoredSelectedTables=[...tablesEl.querySelectorAll('.table-row input[type="checkbox"]:checked')].map(input=>Number(input.value));
+      const restoredGlobalMode=$('trainingGlobalMode').value;
       return {
         startCollapsed,allStartChecked,panelCount:panels.length,
         savedOne,tableTwoSaved:JSON.stringify(afterOne?.["2"])===JSON.stringify([2,3,4,5,6,7,8,9]),
         tableThreeUntouched:!afterOne?.["3"],
         restoredTableTwo,restoredTableThree,
         round:round.map(item=>item.b),savedAll,
-        globalTableOne:global?.["1"],globalTableTwo:global?.["2"],globalTableThree:global?.["3"]
+        globalTableOne:global?.["1"],globalTableTwo:global?.["2"],globalTableThree:global?.["3"],
+        selectionSaved,savedTables,restoredSelectedTables,restoredGlobalMode
       };
     }finally{
       if(oldStored===null)localStorage.removeItem(key);else localStorage.setItem(key,oldStored);
+      [...tablesEl.querySelectorAll('.table-row input[type="checkbox"]')].forEach((input,index)=>{input.checked=!!originalTableChecks[index];});
+      $('trainingGlobalMode').value=originalGlobalMode;
+      updateTrainingGlobalModeControls();
       activeProfile=oldActive;selected=oldSelected;
     }
   });
@@ -911,8 +927,10 @@ async function testViewport(name, viewport, mobile = false) {
     JSON.stringify(factorPresetCheck.round)==="[2,3,4,5,6,7,8,9]"&&factorPresetCheck.savedAll&&
     JSON.stringify(factorPresetCheck.globalTableOne)==="[1,3,4,5,6,7,8,9,10]"&&
     JSON.stringify(factorPresetCheck.globalTableTwo)==="[2,3,4,5,6,7,8,9]"&&
-    JSON.stringify(factorPresetCheck.globalTableThree)==="[1,2,3,4,5,6,7,8,9]",
-    name+": as pré-definições por tabuada/geral não foram salvas, restauradas ou aplicadas ao sorteio ("+JSON.stringify(factorPresetCheck)+").");
+    JSON.stringify(factorPresetCheck.globalTableThree)==="[1,2,3,4,5,6,7,8,9]"&&factorPresetCheck.selectionSaved&&
+    JSON.stringify(factorPresetCheck.savedTables)==="[2]"&&JSON.stringify(factorPresetCheck.restoredSelectedTables)==="[2]"&&
+    factorPresetCheck.restoredGlobalMode==="random",
+    name+": as pré-definições de contas, ordem e tabuadas selecionadas não foram salvas/restauradas ("+JSON.stringify(factorPresetCheck)+").");
 
   const coinBetButtonState=await page.evaluate(()=>{
     const oldMode=challengeBetMode,oldPlayers=challengePlayers,oldSelected=selectedChallengePlayers,oldCoins=gameEconomy.coins;
