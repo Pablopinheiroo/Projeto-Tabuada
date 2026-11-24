@@ -2257,7 +2257,7 @@ function trainingDefinitionStorageKey(){
 }
 function readTrainingDefinition(){
  try{
-  const raw=localStorage.getItem(trainingDefinitionStorageKey());
+  const raw=localStorage.getItem(trainingDefinitionStorageKey())||localStorage.getItem(TRAINING_DEFINITION_STORAGE_PREFIX+'global');
   if(!raw)return null;
   const saved=JSON.parse(raw);
   return saved&&typeof saved==='object'&&saved.version===1?saved:null;
@@ -2321,8 +2321,12 @@ function buildTrainingFactorSettings(){
  $('saveTrainingFactorsGlobal')?.addEventListener('click',saveTrainingGlobalPreset);
 }
 function persistTrainingDefinition(definition){
- try{localStorage.setItem(trainingDefinitionStorageKey(),JSON.stringify(definition));return true;}
- catch(error){return false;}
+ try{
+  const serialized=JSON.stringify(definition);
+  localStorage.setItem(trainingDefinitionStorageKey(),serialized);
+  localStorage.setItem(TRAINING_DEFINITION_STORAGE_PREFIX+'global',serialized);
+  return true;
+ }catch(error){return false;}
 }
 function saveTrainingTablePreset(table){
  if(!Number.isInteger(table)||table<1||table>20)return false;
